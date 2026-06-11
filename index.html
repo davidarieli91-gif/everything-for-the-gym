@@ -7664,6 +7664,7 @@
                     <button class="action-btn print-btn mode-nutrition-only" onclick="printPlan()" data-i18n="btnPrint">🖨️ Печать</button>
                     <button class="action-btn save-btn mode-nutrition-only" onclick="savePlan()" data-i18n="btnSave">💾 Сохранить</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printWorkout()" data-i18n="btnPrint">🖨️ Печать</button>
+                    <button class="action-btn print-btn mode-workout-only" onclick="printPrivateGym()" style="background: linear-gradient(135deg, #2563EB, #1e40af);" data-i18n="btnPrintPG">🖨️ Private Gym</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="saveWorkoutPlan(); showToast(t('wkSaved'))" data-i18n="btnSave">💾 Сохранить</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="sendWorkoutToClient()" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8); color:white; border:none;" title="Отправить текущую тренировку клиенту">📤 <span data-i18n="btnSendClient">Клиенту</span></button>
                     <button class="icon-btn" onclick="openSettingsModal()" data-tooltip="Настройки" aria-label="Настройки">⚙️</button>
@@ -10818,6 +10819,8 @@
                 trPasswordPh: 'Введите пароль',
                 trBtnLogin: 'Войти',
                 trBtnBack: '← Назад',
+                btnPrintPG: '🖨️ Печать Private Gym',
+
                 themePresetsTitle: '🕐 Темы по времени суток',
                 themePresetsDesc: 'Подберите тему под утро, день, вечер или ночь — у каждой свой фон',
                 trWrongPassword: 'Неверный пароль!',
@@ -11599,6 +11602,8 @@
                 trPasswordPh: 'Enter password',
                 trBtnLogin: 'Login',
                 trBtnBack: '← Back',
+                btnPrintPG: '🖨️ Print Private Gym',
+
                 themePresetsTitle: '🕐 Time-of-day themes',
                 themePresetsDesc: 'Pick a theme for morning, day, evening or night — each with its own background',
                 trWrongPassword: 'Wrong password!',
@@ -12287,6 +12292,8 @@
                 trPasswordPh: 'הזן סיסמה',
                 trBtnLogin: 'כניסה',
                 trBtnBack: '← חזרה',
+                btnPrintPG: '🖨️ הדפסת Private Gym',
+
                 themePresetsTitle: '🕐 ערכות נושא לפי שעות היום',
                 themePresetsDesc: 'בחרו ערכה לבוקר, יום, ערב או לילה — לכל אחת רקע משלה',
                 trWrongPassword: 'סיסמה שגויה!',
@@ -17006,6 +17013,237 @@
         }
 
         // ---------- ПЕЧАТЬ ----------
+        // ============================================================
+        // ПЕЧАТЬ «PRIVATE GYM» — умная печать на готовый бланк A4.
+        // Карточка вставляется в принтер, печатается ТОЛЬКО текст
+        // в нужных клетках (без линий и фона).
+        // Все координаты в мм — при необходимости калибруются ниже
+        // или прямо в окне печати (смещение X/Y, сетка для проверки).
+        // ============================================================
+        const PG_LAYOUT = {
+            /* верхние поля анкеты */
+            fields: {
+                lastName: { x:132, y:24.5, w:36 },   // שם משפחה
+                firstName:{ x:76,  y:24.5, w:38 },   // שם פרטי
+                age:      { x:156, y:31.5, w:12 },   // גיל
+                weight:   { x:122, y:31.5, w:20 },   // משקל
+                fromDate: { x:130, y:38.5, w:28 },   // מתאריך
+                toDate:   { x:82,  y:38.5, w:34 },   // עד תאריך
+                goal:     { x:86,  y:52,   w:72 },   // מטרה
+                perWeek:  { x:112, y:59,   w:24 },   // מס' פעמים בשבוע
+                trainer:  { x:56,  y:59,   w:44 }    // שם המדריך
+            },
+            genderMark: { zx:103.2, nx:98.2, y:30.8 }, // отметка מין: ז / נ
+            /* колонки основной таблицы (мм слева) */
+            cols: {
+                name:   { x:53,   w:122 },
+                sets:   { x:41.8, w:10  },
+                reps:   { x:30.6, w:11  },
+                weight: { x:6,    w:23  }
+            },
+            /* секции таблицы: верх первой строки, кол-во строк, высота строки */
+            sections: {
+                chest:     { top:68.0,  rows:5, rowH:5.1, label:'חזה' },
+                back:      { top:93.5,  rows:5, rowH:5.3, label:'גב' },
+                front_arm: { top:120.0, rows:3, rowH:5.4, label:'יד קידמית' },
+                rear_arm:  { top:136.2, rows:3, rowH:5.4, label:'יד אחורית' },
+                erectors:  { top:152.4, rows:3, rowH:5.1, label:'זוקפי גב' },
+                abs:       { top:167.7, rows:4, rowH:5.1, label:'בטן' },
+                shoulders: { top:188.1, rows:3, rowH:6.0, label:'כתפיים' },
+                legs:      { top:206.1, rows:5, rowH:4.9, label:'רגליים' }
+            },
+            /* нижняя таблица «פעילות אירובית»: 3 строки */
+            aero: {
+                rows: [ { y:245.0, h:10.4 }, { y:255.4, h:10.4 }, { y:265.8, h:7.6 } ],
+                nameX: 84,  nameW: 66,   // пишем название в зону הערות/שיפוע/דופק
+                timeX: 167.5, timeW: 15.5 // משך זמן
+            }
+        };
+
+        // Какая строка карточки соответствует группе/подгруппе упражнения
+        function pgTargetRow(e) {
+            const g = e.groupId || '';
+            const sub = e.subId || '';
+            if (g === 'warmup' || g === 'stretch') return 'aero_warm';
+            if (g === 'cardio') return 'aero_cardio';
+            if (g === 'chest') return 'chest';
+            if (g === 'back') return sub === 'back_lower' ? 'erectors' : 'back';
+            if (g === 'neck') return 'erectors';
+            if (g === 'shoulders') return 'shoulders';
+            if (g === 'biceps' || g === 'forearms') return 'front_arm';
+            if (g === 'triceps') return 'rear_arm';
+            if (g === 'abs') return 'abs';
+            if (g === 'quads' || g === 'hamstrings' || g === 'glutes' || g === 'calves') return 'legs';
+            if (g === 'fullbody') {
+                // функциональные: пытаемся перенаправить к целевым мышцам
+                const key = ((e.exId || '') + ' ' + (e.name || '')).toLowerCase();
+                if (/pullup|pull-up|подтяг|row|тяга|מתח/.test(key)) return 'back';
+                if (/pushup|push-up|отжим|שכיבות/.test(key)) return 'chest';
+                if (/press|жим(?!.*ног)|לחיצת כתפ/.test(key) && !/leg|ног/.test(key)) return 'shoulders';
+                return 'legs';
+            }
+            return 'legs';
+        }
+
+        function pgEsc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+        function printPrivateGym() {
+            const data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);
+            if (!data.length) { showToast(t('wkNoData') || 'Нет данных'); return; }
+            const user = currentUserId ? getUsers().find(u => u.id === currentUserId) : null;
+
+            /* собрать все упражнения всех тренировок и разложить по строкам карточки */
+            const buckets = { chest:[], back:[], front_arm:[], rear_arm:[], erectors:[], abs:[], shoulders:[], legs:[], aero_warm:[], aero_cardio:[] };
+            data.forEach(w => (w.exercises || []).forEach(e => {
+                const found = e.exId ? findExerciseById(e.exId, e.groupId, e.subId) : null;
+                const exName = found ? getExName(found.ex) : (e.name || '');
+                if (!exName) return;
+                buckets[pgTargetRow(e)].push({ name: exName, sets: e.sets || '', reps: e.reps || '', weight: e.weight || '', note: e.note || '' });
+            }));
+
+            /* калибровка из localStorage */
+            let cal = { x: 0, y: 0 };
+            try { cal = JSON.parse(localStorage.getItem('pgPrintCal') || '{"x":0,"y":0}'); } catch(err) {}
+
+            const L = PG_LAYOUT;
+            const cell = (x, y, w, txt, opts) => {
+                opts = opts || {};
+                if (txt == null || txt === '') return '';
+                return '<div class="c" style="left:' + x + 'mm; top:' + y + 'mm; width:' + w + 'mm;' +
+                    (opts.center ? 'text-align:center;' : 'text-align:right;') +
+                    (opts.fs ? 'font-size:' + opts.fs + 'pt;' : '') +
+                    '">' + pgEsc(txt) + '</div>';
+            };
+
+            let body = '';
+
+            /* ---- анкета ---- */
+            if (user) {
+                const parts = String(user.name || '').trim().split(/\s+/);
+                const firstName = user.lastName ? user.name : (parts[0] || '');
+                const lastName = user.lastName || parts.slice(1).join(' ');
+                body += cell(L.fields.lastName.x, L.fields.lastName.y, L.fields.lastName.w, lastName, {center:1});
+                body += cell(L.fields.firstName.x, L.fields.firstName.y, L.fields.firstName.w, firstName, {center:1});
+                body += cell(L.fields.age.x, L.fields.age.y, L.fields.age.w, user.age || '', {center:1});
+                body += cell(L.fields.weight.x, L.fields.weight.y, L.fields.weight.w, user.weight || '', {center:1});
+                const goalMap = { lose:'ירידה במשקל', maintain:'שמירה על משקל', gain:'עלייה במסת שריר' };
+                body += cell(L.fields.goal.x, L.fields.goal.y, L.fields.goal.w, goalMap[user.goal] || '', {center:1});
+                if (user.gender === 'male' || user.gender === 'female') {
+                    const gx = user.gender === 'male' ? L.genderMark.zx : L.genderMark.nx;
+                    body += '<div class="gmark" style="left:' + gx + 'mm; top:' + L.genderMark.y + 'mm;"></div>';
+                }
+            }
+            const today = new Date();
+            const dstr = String(today.getDate()).padStart(2,'0') + '.' + String(today.getMonth()+1).padStart(2,'0') + '.' + today.getFullYear();
+            body += cell(L.fields.fromDate.x, L.fields.fromDate.y, L.fields.fromDate.w, dstr, {center:1});
+            body += cell(L.fields.perWeek.x, L.fields.perWeek.y, L.fields.perWeek.w, data.length, {center:1});
+            try {
+                if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.name) {
+                    body += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, currentTrainer.name, {center:1});
+                }
+            } catch(err) {}
+
+            /* ---- основная таблица ---- */
+            Object.keys(L.sections).forEach(secId => {
+                const sec = L.sections[secId];
+                const items = buckets[secId] || [];
+                if (!items.length) return;
+                /* если упражнений больше, чем строк — лишние приклеиваем к последней строке */
+                const rows = [];
+                items.forEach((it, i) => {
+                    if (i < sec.rows) rows.push([it]);
+                    else rows[sec.rows - 1].push(it);
+                });
+                rows.forEach((arr, r) => {
+                    const y = sec.top + r * sec.rowH + (sec.rowH - 4.2) / 2;
+                    const multi = arr.length > 1;
+                    const nm = arr.map(a => a.name).join(' | ');
+                    const fs = multi ? 6.5 : (nm.length > 55 ? 7 : 8.5);
+                    body += cell(L.cols.name.x, y, L.cols.name.w, nm, { fs: fs });
+                    body += cell(L.cols.sets.x, y, L.cols.sets.w, arr[0].sets, { center:1 });
+                    body += cell(L.cols.reps.x, y, L.cols.reps.w, multi ? arr.map(a=>a.reps).filter(Boolean).join('/') : arr[0].reps, { center:1, fs: multi ? 6.5 : null });
+                    body += cell(L.cols.weight.x, y, L.cols.weight.w, multi ? arr.map(a=>a.weight).filter(Boolean).join('/') : arr[0].weight, { center:1, fs: multi ? 6.5 : null });
+                });
+            });
+
+            /* ---- нижняя таблица: разминка → строка 1, кардио → строки 2 и 3 ---- */
+            const aeroPut = (rowIdx, items) => {
+                if (!items.length) return;
+                const row = L.aero.rows[rowIdx];
+                const y = row.y + (row.h - 4.2) / 2;
+                const nm = items.map(a => a.name + (a.sets && a.reps ? ' ' + a.sets + '×' + a.reps : '')).join(' | ');
+                body += cell(L.aero.nameX, y, L.aero.nameW, nm, { fs: items.length > 1 ? 6.5 : 8 });
+                const tm = items.map(a => a.note || a.reps).filter(Boolean)[0] || '';
+                body += cell(L.aero.timeX, y, L.aero.timeW, tm, { center:1 });
+            };
+            aeroPut(0, buckets.aero_warm);
+            const cardio = buckets.aero_cardio;
+            if (cardio.length) {
+                aeroPut(1, [cardio[0]]);
+                if (cardio.length > 1) aeroPut(2, cardio.slice(1));
+            }
+
+            /* ---- калибровочная сетка (для пробной печати на чистом листе) ---- */
+            let grid = '<div id="pgGrid" style="display:none;">';
+            Object.keys(L.sections).forEach(secId => {
+                const s = L.sections[secId];
+                for (let r = 0; r < s.rows; r++) {
+                    grid += '<div class="g" style="left:5mm; top:' + (s.top + r*s.rowH) + 'mm; width:185mm; height:' + s.rowH + 'mm;">' +
+                        (r === 0 ? '<span>' + s.label + '</span>' : '') + '</div>';
+                }
+            });
+            L.aero.rows.forEach((row, i) => {
+                grid += '<div class="g" style="left:82mm; top:' + row.y + 'mm; width:124mm; height:' + row.h + 'mm;"><span>' + (i+1) + '</span></div>';
+            });
+            grid += '</div>';
+
+            const html = '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>Private Gym</title><style>' +
+                '@page { size: A4 portrait; margin: 0; }' +
+                'html,body{margin:0;padding:0;}' +
+                'body{font-family:Arial,"Segoe UI",sans-serif;}' +
+                '#sheet{position:relative; width:210mm; height:297mm; overflow:hidden;}' +
+                '.c{position:absolute; font-size:8.5pt; font-weight:600; color:#111; line-height:1.05; white-space:nowrap; overflow:hidden; direction:rtl;}' +
+                '.gmark{position:absolute; width:5.5mm; height:5mm; border:0.5mm solid #111; border-radius:50%;}' +
+                '#pgGrid .g{position:absolute; border:0.2mm dashed #c00; color:#c00; font-size:7pt;}' +
+                '#pgGrid .g span{position:absolute; right:1mm; top:0;}' +
+                '#bar{position:fixed; top:0; left:0; right:0; background:#0F172A; color:#fff; padding:10px 14px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:14px; z-index:10; direction:ltr;}' +
+                '#bar input[type=number]{width:64px; padding:4px; border-radius:6px; border:none; text-align:center;}' +
+                '#bar button{padding:8px 18px; border:none; border-radius:8px; background:#10B981; color:#fff; font-weight:700; cursor:pointer;}' +
+                '#bar label{display:flex; align-items:center; gap:5px;}' +
+                'body{padding-top:0;} #spacer{height:56px;}' +
+                '@media print { #bar,#spacer{display:none !important;} }' +
+                '</style></head><body>' +
+                '<div id="bar">' +
+                    '<b>Private Gym</b>' +
+                    '<label>X (мм): <input type="number" id="offX" step="0.5" value="' + (cal.x || 0) + '"></label>' +
+                    '<label>Y (мм): <input type="number" id="offY" step="0.5" value="' + (cal.y || 0) + '"></label>' +
+                    '<label><input type="checkbox" id="gridChk"> сетка (проба на чистом листе)</label>' +
+                    '<button onclick="window.print()">🖨️ Печать</button>' +
+                    '<span style="opacity:.7; font-size:12px;">Вставьте бланк в принтер. Если текст съехал — поправьте X/Y и напечатайте снова.</span>' +
+                '</div><div id="spacer"></div>' +
+                '<div id="sheet">' + body + grid + '</div>' +
+                '<scr' + 'ipt>' +
+                'var sheet=document.getElementById("sheet");' +
+                'function apply(){' +
+                    'var x=parseFloat(document.getElementById("offX").value)||0;' +
+                    'var y=parseFloat(document.getElementById("offY").value)||0;' +
+                    'sheet.style.transform="translate("+x+"mm,"+y+"mm)";' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintCal", JSON.stringify({x:x,y:y})); }catch(e){}' +
+                '}' +
+                'document.getElementById("offX").addEventListener("input",apply);' +
+                'document.getElementById("offY").addEventListener("input",apply);' +
+                'document.getElementById("gridChk").addEventListener("change",function(){' +
+                    'document.getElementById("pgGrid").style.display=this.checked?"block":"none";' +
+                '});' +
+                'apply();' +
+                '</scr' + 'ipt></body></html>';
+
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+        }
+
+
         function printWorkout() {
             const user = currentUserId ? getUsers().find(u => u.id === currentUserId) : null;
             const userInfo = user ? (user.avatar + ' ' + user.name) : '';
@@ -19707,11 +19945,60 @@
             updateExIconPreview();
         }
         // Миниатюра упражнения: своя картинка/GIF > SVG-сцена
+        // Папка с GIF-анимациями упражнений (рядом с index.html на сайте).
+        // Файлы должны называться по id упражнения: например gifs/bb_bench_press.gif
+        window.EX_GIF_BASE = window.EX_GIF_BASE || 'gifs/';
+        window.__exGifMiss = window.__exGifMiss || {};
+
+        // ===== ФОТО-ДЕМОНСТРАЦИИ из открытой базы free-exercise-db (MIT/Public Domain) =====
+        // Карта: id нашего упражнения -> "папка|кол-во кадров" в базе yuhonas/free-exercise-db
+        const EX_PHOTO_CDN = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+        const EX_PHOTO_MAP = {"incline_bb_press":"Barbell_Incline_Bench_Press_-_Medium_Grip|2","incline_db_press":"Incline_Dumbbell_Press|2","incline_db_fly":"Incline_Dumbbell_Flyes|2","incline_smith_press":"Smith_Machine_Incline_Bench_Press|2","low_to_high_crossover":"Cable_Crossover|2","incline_pushup":"Decline_Push-Up|2","landmine_press":"Landmine_Linear_Jammer|2","incline_hammer_press":"Leverage_Incline_Chest_Press|2","close_grip_incline_bb":"Close-Grip_Barbell_Bench_Press|2","incline_db_press_fitball":"Hammer_Grip_Incline_DB_Bench_Press|2","bb_bench_press":"Barbell_Bench_Press_-_Medium_Grip|2","db_bench_press":"Dumbbell_Bench_Press|2","db_fly":"Dumbbell_Flyes|2","smith_bench":"Smith_Machine_Bench_Press|2","hammer_chest_press":"Leverage_Chest_Press|2","machine_chest_press":"Leverage_Chest_Press|2","pec_deck":"Butterfly|2","cable_crossover":"Cable_Crossover|2","pushup":"Pushups|2","pushup_plates":"Pushups|2","trx_chest_press":"Cable_Chest_Press|2","svend_press":"Svend_Press|2","kb_floor_press":"One-Arm_Kettlebell_Floor_Press|2","band_chest_press":"Cable_Chest_Press|2","decline_bb_press":"Decline_Barbell_Bench_Press|2","decline_db_press":"Decline_Dumbbell_Bench_Press|2","chest_dips":"Dips_-_Chest_Version|2","high_to_low_crossover":"Cable_Crossover|2","db_pullover":"Bent-Arm_Dumbbell_Pullover|2","decline_smith_press":"Decline_Smith_Press|2","decline_db_fly":"Decline_Dumbbell_Flyes|2","close_grip_bench":"Close-Grip_Barbell_Bench_Press|2","diamond_pushup":"Push-Ups_-_Close_Triceps_Position|2","plate_squeeze_press":"Standing_Olympic_Plate_Hand_Squeeze|2","db_press_bosu":"Arnold_Dumbbell_Press|2","db_press_fitball":"Arnold_Dumbbell_Press|2","pushup_bosu_hands":"Pushups|2","pushup_bosu_feet":"Push-Ups_With_Feet_Elevated|2","pushup_fitball_hands":"Push-Ups_With_Feet_On_An_Exercise_Ball|2","pushup_fitball_feet":"Push-Ups_With_Feet_On_An_Exercise_Ball|2","crossover_single_low":"Low_Cable_Crossover|2","crossover_single_mid":"Cable_Crossover|2","crossover_single_high":"Cable_Crossover|2","fly_cable_low":"Standing_Cable_Lift|2","fly_cable_high":"Standing_Cable_Lift|2","fly_cable_mid":"Standing_Cable_Lift|2","machine_chest_press_lower":"Leverage_Chest_Press|2","pullup_wide":"Wide-Grip_Rear_Pull-Up|2","lat_pulldown_wide":"Wide-Grip_Lat_Pulldown|2","lat_pulldown_reverse":"Wide-Grip_Lat_Pulldown|2","lat_pulldown_neutral":"Wide-Grip_Lat_Pulldown|2","straight_arm_pulldown":"Straight-Arm_Pulldown|2","pullover_machine":"Bent-Arm_Barbell_Pullover|2","trx_pullup":"Band_Assisted_Pull-Up|2","band_lat_pulldown":"Wide-Grip_Lat_Pulldown|2","kb_pullover":"Kettlebell_Figure_8|2","lat_pulldown_machine":"Wide-Grip_Lat_Pulldown|2","pullup_mixed":"Mixed_Grip_Chin|2","bb_row":"Upright_Barbell_Row|2","pendlay_row":"T-Bar_Row_with_Handle|2","meadows_row":"T-Bar_Row_with_Handle|2","tbar_row":"Lying_T-Bar_Row|2","one_arm_db_row":"One-Arm_Dumbbell_Row|2","chest_supported_db_row":"Dumbbell_Incline_Row|2","smith_row":"Smith_Machine_Upright_Row|2","seated_cable_row":"Seated_Cable_Rows|2","narrow_cable_row":"Upright_Cable_Row|2","machine_row":"Leverage_High_Row|2","inverted_row":"Inverted_Row|2","trx_row":"Sled_Row|2","kb_row":"Alternating_Kettlebell_Row|2","band_row":"Band_Good_Morning|2","bosu_cable_row":"Upright_Cable_Row|2","cable_row_elbow":"Upright_Cable_Row|2","lying_cable_pullover":"Lying_Cable_Curl|2","scap_shrug_machine":"Leverage_Shrug|2","scap_shrug_cable":"Cable_Crossover|2","bw_row_smith":"Bodyweight_Mid_Row|2","deadlift":"Barbell_Deadlift|2","sumo_deadlift":"Sumo_Deadlift|2","romanian_deadlift":"Romanian_Deadlift|2","rack_pull":"Rack_Pull_with_Bands|2","hyperextension":"Reverse_Hyperextension|2","reverse_hyper":"Reverse_Hyperextension|2","good_morning":"Good_Morning|2","superman":"Superman|2","back_ext_standing_weight":"Standing_Dumbbell_Triceps_Extension|2","back_ext_standing_3way":"Standing_Dumbbell_Triceps_Extension|2","back_ext_cable":"Cable_Incline_Triceps_Extension|2","back_ext_machine_seated":"Machine_Triceps_Extension|2","bb_shrug":"Barbell_Shrug|2","db_shrug":"Dumbbell_Shrug|2","smith_shrug":"Smith_Machine_Squat|2","ohp":"Smith_Machine_Overhead_Shoulder_Press|2","seated_db_press":"Seated_Dumbbell_Press|2","arnold_press":"Arnold_Dumbbell_Press|2","smith_ohp":"Smith_Machine_Overhead_Shoulder_Press|2","machine_shoulder_press":"Machine_Shoulder_Military_Press|2","hammer_shoulder_press":"Machine_Shoulder_Military_Press|2","bb_front_raise":"Front_Barbell_Squat|2","db_front_raise":"Front_Dumbbell_Raise|2","plate_front_raise":"Front_Plate_Raise|2","cable_front_raise":"Front_Cable_Raise|2","kb_front_raise":"Front_Cable_Raise|2","band_front_raise":"Front_Cable_Raise|2","landmine_shoulder_press":"Machine_Shoulder_Military_Press|2","pike_pushup":"Handstand_Push-Ups|2","db_lateral_raise":"Dumbbell_Raise|2","db_lateral_raise_seated":"Seated_Side_Lateral_Raise|2","leaning_lateral_raise":"Side_Lateral_Raise|2","cable_lateral_raise":"Cable_Seated_Lateral_Raise|2","machine_lateral":"Lateral_Raise_-_With_Bands|2","upright_row_wide":"Upright_Barbell_Row|2","smith_upright_row":"Smith_Machine_Upright_Row|2","behind_neck_press":"Calf_Press|2","kb_lateral_raise":"Lateral_Raise_-_With_Bands|2","trx_lateral_raise":"Lateral_Raise_-_With_Bands|2","band_lateral_raise":"Lateral_Raise_-_With_Bands|2","plate_lateral_raise":"Front_Plate_Raise|2","db_lateral_fitball":"Cable_Seated_Lateral_Raise|2","bent_over_db_raise":"Dumbbell_Raise|2","rear_delt_fly":"Reverse_Hyperextension|2","face_pull":"Face_Pull|2","cross_cable_rear":"Cable_Rear_Delt_Fly|2","bent_over_cable_raise":"Front_Cable_Raise|2","upright_row_narrow":"Upright_Barbell_Row|2","rear_delt_hammer":"Barbell_Rear_Delt_Row|2","trx_y_t_raise":"Front_Plate_Raise|2","band_pull_apart":"Band_Good_Morning|2","kb_rear_swing":"Kettlebell_Figure_8|2","db_shoulder_press_60":"Machine_Shoulder_Military_Press|2","db_front_raise_fitball":"Front_Dumbbell_Raise|2","db_lateral_seated":"Seated_Side_Lateral_Raise|2","cable_front_raise_low":"Front_Cable_Raise|2","cable_front_raise_single":"Front_Cable_Raise|2","cable_lateral_single":"Cable_Seated_Lateral_Raise|2","cable_lateral_cross":"Cable_Seated_Lateral_Raise|2","smith_shoulder_press":"Machine_Shoulder_Military_Press|2","machine_shoulder_press_narrow":"Machine_Shoulder_Military_Press|2","smith_shoulder_press_60":"Machine_Shoulder_Military_Press|2","smith_upright_front_back":"Smith_Machine_Upright_Row|2","cable_row_upright":"Upright_Cable_Row|2","cable_external_rotation":"External_Rotation_with_Cable|2","cable_internal_rotation":"Cable_Internal_Rotation|2","db_external_rotation":"External_Rotation|2","db_internal_rotation":"Cable_Internal_Rotation|2","band_external_rotation":"External_Rotation_with_Band|2","band_internal_rotation":"Internal_Rotation_with_Band|2","cuban_press":"Cuban_Press|2","cuban_rotation_ezbar":"EZ-Bar_Curl|2","face_pull_external":"Face_Pull|2","scapular_pullup":"Scapular_Pull-Up|2","lying_db_powell_raise":"Dumbbell_Raise|2","bb_curl_narrow":"Barbell_Curl|2","ez_curl_narrow":"Close-Grip_EZ_Bar_Curl|2","incline_db_curl":"Incline_Dumbbell_Curl|2","cable_curl_narrow":"Cable_Preacher_Curl|2","bayesian_curl":"Cable_Preacher_Curl|2","drag_curl":"Drag_Curl|2","machine_curl_narrow":"Machine_Bicep_Curl|2","bb_curl_wide":"Barbell_Curl|2","ez_curl_wide":"Close-Grip_EZ_Bar_Curl|2","preacher_curl":"Preacher_Curl|2","db_preacher_curl":"Two-Arm_Dumbbell_Preacher_Curl|2","machine_preacher":"Preacher_Curl|2","concentration_curl":"Standing_Concentration_Curl|2","cable_curl_wide":"Cable_Preacher_Curl|2","spider_curl":"Spider_Curl|2","high_cable_curl":"Cable_Preacher_Curl|2","band_curl":"Close-Grip_EZ-Bar_Curl_with_Band|2","trx_curl":"Incline_Inner_Biceps_Curl|2","db_curl_seated_60":"Seated_Dumbbell_Curl|2","db_curl_incline_prone":"Dumbbell_Prone_Incline_Curl|2","db_curl_inner_thigh":"Standing_Concentration_Curl|2","curl_777_db":"Zottman_Curl|2","curl_777_cable":"Cable_Preacher_Curl|2","curl_777_bar":"Barbell_Curl|2","cable_curl_back":"Cable_Preacher_Curl|2","hammer_curl":"Alternate_Hammer_Curl|2","incline_hammer":"Incline_Hammer_Curls|2","cross_body_hammer":"Alternate_Hammer_Curl|2","rope_hammer":"Alternate_Hammer_Curl|2","zottman_curl":"Zottman_Curl|2","kb_hammer_curl":"Alternate_Hammer_Curl|2","band_hammer_curl":"Alternate_Hammer_Curl|2","trx_hammer_curl":"Alternate_Hammer_Curl|2","reverse_bb_curl":"Barbell_Curl|2","reverse_ez_curl":"EZ-Bar_Curl|2","reverse_db_curl":"Dumbbell_Bicep_Curl|2","reverse_cable_curl":"Cable_Preacher_Curl|2","reverse_preacher_curl":"Preacher_Curl|2","reverse_band_curl":"Reverse_Band_Deadlift|2","lying_tri_ext":"Cable_Lying_Triceps_Extension|2","seated_ez_ext":"Machine_Triceps_Extension|2","overhead_db_ext":"Decline_Dumbbell_Triceps_Extension|2","overhead_rope_ext":"Triceps_Overhead_Extension_with_Rope|2","overhead_band_ext":"Speed_Band_Overhead_Triceps|2","kb_overhead_ext":"One-Arm_Overhead_Kettlebell_Squats|2","machine_overhead_ext":"Triceps_Overhead_Extension_with_Rope|2","overhead_bb_ext":"Standing_Overhead_Barbell_Triceps_Extension|2","overhead_ez_ext":"Machine_Triceps_Extension|2","pushdown_bar":"Triceps_Pushdown|2","pushdown_rope":"Triceps_Pushdown_-_Rope_Attachment|2","close_grip_bp":"Close-Grip_Barbell_Bench_Press|2","close_grip_smith":"Smith_Machine_Close-Grip_Bench_Press|2","machine_tri_pushdown":"Triceps_Pushdown|2","bench_dips":"Bench_Dips|2","band_pushdown":"Band_Good_Morning|2","pushdown_vbar":"Cable_Incline_Pushdown|2","reverse_pushdown":"Triceps_Pushdown|2","kickback":"Seated_Triceps_Press|2","cable_kickback":"One-Legged_Cable_Kickback|2","dips_narrow":"Bench_Dips|2","diamond_pushup_tri":"Handstand_Push-Ups|2","trx_tri_ext":"Machine_Triceps_Extension|2","skull_crusher_ez":"Band_Skull_Crusher|2","overhead_cable_single":"Cable_Rope_Overhead_Triceps_Extension|2","bb_wrist_curl":"Seated_Palm-Up_Barbell_Wrist_Curl|2","db_wrist_curl":"Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench|2","cable_wrist_curl":"Cable_Wrist_Curl|2","behind_back_bb_curl":"Cable_Wrist_Curl|2","band_wrist_curl":"Cable_Wrist_Curl|2","bb_wrist_ext":"Incline_Barbell_Triceps_Extension|2","db_wrist_ext":"Decline_Dumbbell_Triceps_Extension|2","cable_wrist_ext":"Cable_Wrist_Curl|2","farmer_walk":"Farmers_Walk|2","farmer_walk_kb":"Farmers_Walk|2","plate_pinch":"Plate_Pinch|2","towel_pullup":"Wide-Grip_Rear_Pull-Up|2","back_squat":"Barbell_Squat|2","front_squat":"Front_Barbell_Squat|2","hack_squat":"Hack_Squat|2","leg_press":"Leg_Press|2","overhead_squat":"Overhead_Squat|2","goblet_squat":"Goblet_Squat|2","box_squat":"Box_Squat|2","leg_ext":"Single-Leg_Leg_Extension|2","sissy_squat":"Weighted_Sissy_Squat|2","bb_lunge":"Barbell_Lunge|2","bulgarian_split":"Split_Squat_with_Dumbbells|2","db_squat_bosu":"Dumbbell_Squat|2","cable_squat_cross":"Cable_Crossover|2","smith_squat":"Smith_Machine_Squat|2","smith_lunge":"Lunge_Sprint|2","leg_press_machine":"Leg_Press|2","leg_press_single":"Leg_Press|2","smith_hip_thrust":"Smith_Machine_Hip_Raise|2","db_dynamic_lunge":"Dynamic_Back_Stretch|2","box_step_up_single":"Single_Leg_Push-off|2","squat_bw_bosu":"Bodyweight_Squat|2","sumo_db_single":"Dumbbell_Squat|2","pistol_smith_assisted":"Smith_Machine_Pistol_Squat|2","box_jump_bw":"Box_Jump_Multiple_Response|2","rdl_bb":"Romanian_Deadlift|2","stiff_leg_db":"Stiff-Legged_Dumbbell_Deadlift|2","good_morning_h":"Good_Morning|2","hip_thrust":"Barbell_Hip_Thrust|2","lying_leg_curl":"Lying_Leg_Curls|2","seated_leg_curl":"Seated_Leg_Curl|2","standing_leg_curl":"Standing_Biceps_Cable_Curl|2","nordic_curl":"Seated_Band_Hamstring_Curl|2","standing_leg_curl_machine":"Standing_Leg_Curl|2","prone_leg_curl_cable":"Cable_Preacher_Curl|2","leg_curl_bw_box":"Ball_Leg_Curl|2","smith_rdl":"Smith_Machine_Squat|2","smith_deadlift":"Smith_Machine_Stiff-Legged_Deadlift|2","leg_ext_single":"Single-Leg_Leg_Extension|2","leg_curl_single":"Standing_Leg_Curl|2","glute_bridge":"Barbell_Glute_Bridge|2","smith_hip_thrust_glute":"Smith_Machine_Hip_Raise|2","hip_thrust_machine":"Barbell_Hip_Thrust|2","rev_lunge":"Crossover_Reverse_Lunge|2","kickback_cable":"Glute_Kickback|2","hip_thrust_barbell_mat":"Barbell_Hip_Thrust|2","cable_hip_ext":"Cable_Hip_Adduction|2","glute_raise_smith":"Glute_Ham_Raise|2","glute_raise_band":"Glute_Ham_Raise|2","hip_ext_low_cable":"Low_Cable_Triceps_Extension|2","hip_ext_6way":"Hip_Extension_with_Bands|2","hip_abduction":"Smith_Machine_Hip_Raise|2","cable_abduction":"Cable_Hip_Adduction|2","clamshell":"Band_Good_Morning|2","side_lunge":"Dumbbell_Rear_Lunge|2","standing_calf":"Rocking_Standing_Calf_Raise|2","smith_calf":"Smith_Machine_Calf_Raise|2","db_calf":"Calf_Raise_On_A_Dumbbell|2","leg_press_calf":"Calf_Press_On_The_Leg_Press_Machine|2","single_leg_calf":"Calf_Raise_On_A_Dumbbell|2","seated_calf":"Seated_Calf_Raise|2","seated_bb_calf":"Barbell_Seated_Calf_Raise|2","crunch":"Crunches|2","bench_crunch":"Crunches|2","cable_crunch":"Cable_Crunch|2","machine_crunch":"Ab_Crunch_Machine|2","sit_up":"Sit-Up|2","crunch_bosu_to_stand":"Standing_Rope_Crunch|2","hanging_leg_raise":"Hanging_Leg_Raise|2","knee_raise_captain":"Step-up_with_Knee_Raise|2","reverse_crunch":"Reverse_Crunch|2","bicycle_crunch":"Cross-Body_Crunch|2","leg_lift":"Flat_Bench_Lying_Leg_Raise|2","rev_crunch_hanging":"Reverse_Crunch|2","rev_crunch_captain":"Reverse_Crunch|2","pelvic_tilt_lying":"Standing_Pelvic_Tilt|2","pelvic_tilt_hanging":"Standing_Pelvic_Tilt|2","side_crunch":"Cross-Body_Crunch|2","russian_twist":"Russian_Twist|2","db_side_bend":"Dumbbell_Side_Bend|2","side_plank":"Plank|2","wood_chop":"Standing_Cable_Wood_Chop|2","rotation_cable_standing":"Cable_Internal_Rotation|2","side_bend_roman":"Barbell_Side_Bend|2","oblique_twist_decline":"Decline_Oblique_Crunch|2","plank":"Plank|2","plank_shoulder_tap":"Plank|2","mountain_climber":"Mountain_Climbers|2","ab_wheel":"Barbell_Ab_Rollout|2","dead_bug":"Dead_Bug|2","pallof_press":"Pallof_Press|2","oblique_arc_lying":"Lying_Crossover|2","pelvic_tilt_apparatus":"Standing_Pelvic_Tilt|2","crunch_dips_bosu":"Dip_Machine|2","rotation_cable":"Cable_Internal_Rotation|2","cable_crunch_side":"Cable_Crunch|2","cable_oblique_rope":"Cable_Crunch|2","oblique_decline":"Decline_Oblique_Crunch|2","crunch_single_cable":"Cable_Crunch|2","walking":"Walking_Treadmill|2","elliptical_steady":"Elliptical_Trainer|2","stairmaster":"Stairmaster|2","rowing":"Rowing_Stationary|2","airbike_hiit":"Air_Bike|2","sled_push":"Sled_Push|2","power_clean":"Power_Clean|2","snatch":"Snatch|2","clean_jerk":"Clean_and_Jerk|2","thruster":"Kettlebell_Thruster|2","kb_swing":"Kettlebell_Figure_8|2","turkish_getup":"Kettlebell_Turkish_Get-Up_Lunge_style|2","kb_goblet":"Goblet_Squat|2","kb_press":"One-Arm_Kettlebell_Floor_Press|2","kb_snatch":"Double_Kettlebell_Snatch|2","box_jump":"Box_Jump_Multiple_Response|2","clap_pushup":"Handstand_Push-Ups|2","pistol_squat":"Kettlebell_Pistol_Squat|2","handstand_pushup":"Handstand_Push-Ups|2","neck_flex":"Lying_Face_Down_Plate_Neck_Resistance|2","neck_ext":"Lying_Face_Down_Plate_Neck_Resistance|2","neck_harness":"Seated_Head_Harness_Neck_Resistance|2","wu_hip_circles":"Hip_Circles_prone|2","wu_knee_circles":"Knee_Circles|2","wu_knee_circles_bent":"Knee_Circles|2","wu_ankle_circles":"Ankle_Circles|2","wu_shoulder_circles":"Shoulder_Circles|2","wu_arm_circles":"Arm_Circles|2","wu_arm_circles_single":"Arm_Circles|2","wu_elbow_circles":"Elbow_Circles|2","wu_wrist_circles":"Wrist_Circles|2","wu_spine_rotation":"Standing_Hip_Circles|2","str_hamstring_stretch":"Hamstring_Stretch|2","str_hamstring_rdl":"Hamstring_Stretch|2","str_hamstring_band":"Hamstring_Stretch|2","str_calf_seated_machine":"Seated_Calf_Stretch|2","str_calf_smith_seated":"Seated_Calf_Stretch|2","str_calf_standing_smith":"Standing_Gastrocnemius_Calf_Stretch|2","str_calf_step":"Seated_Calf_Stretch|2","str_quad_standing":"Quad_Stretch|2","str_quad_kneeling":"Quad_Stretch|2","str_hip_adductor":"Adductor|2","str_hip_smith_bar":"Smith_Machine_Hip_Raise|2","str_hip_flexor_split":"Intermediate_Hip_Flexor_and_Quad_Stretch|2","str_hip_flexor_trx":"Intermediate_Hip_Flexor_and_Quad_Stretch|2","str_shoulder_band":"Shoulder_Stretch|2","str_shoulder_box_band":"Shoulder_Stretch|2","str_shoulder_smith_bar":"Shoulder_Stretch|2","str_shoulder_cross":"Shoulder_Stretch|2","str_triceps_overhead":"Overhead_Triceps|2","str_biceps_wall":"Standing_Biceps_Stretch|2","str_forearm_ext":"Kneeling_Forearm_Stretch|2","str_forearm_flex":"Kneeling_Forearm_Stretch|2","str_chest_doorway":"Chin_To_Chest_Stretch|2","str_back_child":"Childs_Pose|2","bb_squat":"Barbell_Squat|2","squat_bb":"Barbell_Squat|2","deadlift_classic":"Barbell_Deadlift|2","bb_deadlift":"Barbell_Deadlift|2","chin_up":"Chin-Up|2","chinup":"Chin-Up|2"};
+        window.__exPhotoMiss = window.__exPhotoMiss || {};
+        function getExercisePhotoUrls(exId) {
+            const v = EX_PHOTO_MAP[exId];
+            if (!v) return null;
+            const parts = v.split('|');
+            const folder = parts[0];
+            const n = parseInt(parts[1]) || 1;
+            const urls = [];
+            for (let i = 0; i < n; i++) urls.push(EX_PHOTO_CDN + encodeURIComponent(folder) + '/' + i + '.jpg');
+            return urls;
+        }
         function getExerciseThumbHtml(ex, group, color) {
             if (ex && ex.__image) {
                 return '<img src="' + ex.__image + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">';
             }
+            // 1) свой GIF из папки gifs/ (если загружен на сайт)
+            if (ex && ex.id && /^[\w-]+$/.test(ex.id) && !window.__exGifMiss[ex.id] && window.EX_GIF_BASE) {
+                var photos0 = getExercisePhotoUrls(ex.id);
+                var fb = (photos0 && !window.__exPhotoMiss[ex.id]) ? buildExercisePhotoHtml(ex.id, photos0, ex, group, color) : makeExerciseSceneSVG(ex, group, color);
+                var u = window.EX_GIF_BASE + ex.id + '.gif';
+                return '<span style="display:block; width:100%; height:100%; position:relative;">' +
+                    '<img src="' + u + '" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block; background:#fff;"' +
+                    ' onerror="window.__exGifMiss[\'' + ex.id + '\']=1; var w=this.parentNode; this.style.display=\'none\'; var f=w.querySelector(\'.ex-gif-fb\'); if(f) f.style.display=\'block\';">' +
+                    '<span class="ex-gif-fb" style="display:none; width:100%; height:100%; position:absolute; inset:0;">' + fb + '</span>' +
+                '</span>';
+            }
+            // 2) фото-демонстрация из открытой базы
+            if (ex && ex.id && !window.__exPhotoMiss[ex.id]) {
+                var photos = getExercisePhotoUrls(ex.id);
+                if (photos) return buildExercisePhotoHtml(ex.id, photos, ex, group, color);
+            }
             return makeExerciseSceneSVG(ex, group, color);
+        }
+
+        // Два кадра (старт/финиш) с CSS-анимацией перелистывания
+        function buildExercisePhotoHtml(exId, urls, ex, group, color) {
+            var svgFb = makeExerciseSceneSVG(ex, group, color);
+            var h = '<span class="exph" style="display:block; width:100%; height:100%; position:relative; background:#fff; overflow:hidden;">';
+            h += '<img src="' + urls[0] + '" alt="" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#fff;"' +
+                 ' onerror="window.__exPhotoMiss[\'' + exId + '\']=1; var w=this.closest(\'.exph\'); if(w){ w.innerHTML=\'\'; }">';
+            if (urls.length > 1) {
+                h += '<img src="' + urls[1] + '" alt="" loading="lazy" class="exph-frame2" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#fff;" onerror="this.remove()">';
+            }
+            h += '</span>';
+            return h;
         }
         // переводы для UI
         try {
@@ -26773,6 +27060,12 @@ body.layout-desktop:not(.mode-workout) .product-card .product-nutrition .nutriti
 body.layout-desktop:not(.mode-workout) .product-card .product-nutrition { grid-template-columns: 1fr !important; display: grid !important; }
 
 
+
+/* ===== Фото-демонстрации упражнений (2 кадра, перелистывание) ===== */
+.exph-frame2 { opacity: 0; animation: exphFlip 2s steps(1) infinite; }
+@keyframes exphFlip { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .exph-frame2 { animation: none; opacity: 0; } }
+
 /* ===== CLOUD SYNC UI ===== */
 #cloudDock { position: fixed; top: 10px; right: 12px; z-index: 9000; display: flex; align-items: center; gap: 8px; }
 body[dir="rtl"] #cloudDock { right: auto; left: 12px; }
@@ -27592,6 +27885,7 @@ window.mpOpenActions = function(){
     items += '<button class="mp-action-item" onclick="mpCloseSheet(); mpSaveCurrent();"><span class="ico">💾</span>' + mt('save') + '</button>';
     if (wk){
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printWorkout();"><span class="ico">🖨️</span>' + mt('print') + '</button>';
+        items += '<button class="mp-action-item" onclick="mpCloseSheet(); printPrivateGym();"><span class="ico">🖨️</span>' + mt('print') + ' Private Gym</button>';
         if (typeof exportWorkouts === 'function')
             items += '<button class="mp-action-item" onclick="mpCloseSheet(); exportWorkouts();"><span class="ico">📤</span>' + mt('exportX') + '</button>';
         if (typeof sendWorkoutToClient === 'function')
@@ -29577,5 +29871,5 @@ if (document.readyState === 'loading'){
 
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0a0f89a4d102674',t:'MTc4MTE4NDYzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0a3d9792adce8f3',t:'MTc4MTIxNDgxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
