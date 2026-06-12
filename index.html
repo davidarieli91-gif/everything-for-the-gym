@@ -7680,9 +7680,11 @@
                 <div style="display:flex; align-items:center; gap:8px;">
                     <span id="currentUserLabel" style="font-size:0.85em; color:var(--text-secondary); font-weight:500;"></span>
                     <button class="action-btn print-btn mode-nutrition-only" onclick="printPlan()" data-i18n="btnPrint">🖨️ Печать</button>
+                    <button class="action-btn print-btn mode-nutrition-only" onclick="shareProgramImage('nutrition')" style="background: linear-gradient(135deg, #25D366, #128C7E);" data-i18n="btnShareWA">📤 WhatsApp</button>
                     <button class="action-btn save-btn mode-nutrition-only" onclick="savePlan()" data-i18n="btnSave">💾 Сохранить</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printWorkout()" data-i18n="btnPrint">🖨️ Печать</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printPrivateGym()" style="background: linear-gradient(135deg, #2563EB, #1e40af);" data-i18n="btnPrintPG">🖨️ Private Gym</button>
+                    <button class="action-btn print-btn mode-workout-only" onclick="shareProgramImage('workout')" style="background: linear-gradient(135deg, #25D366, #128C7E);" data-i18n="btnShareWA">📤 WhatsApp</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="saveWorkoutPlan(); showToast(t('wkSaved'))" data-i18n="btnSave">💾 Сохранить</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="sendWorkoutToClient()" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8); color:white; border:none;" title="Отправить текущую тренировку клиенту">📤 <span data-i18n="btnSendClient">Клиенту</span></button>
                     <button class="icon-btn" onclick="openSettingsModal()" data-tooltip="Настройки" aria-label="Настройки">⚙️</button>
@@ -10837,6 +10839,8 @@
                 trPasswordPh: 'Введите пароль',
                 trBtnLogin: 'Войти',
                 trBtnBack: '← Назад',
+                btnShareWA: '📤 WhatsApp',
+
                 googleSignBtn: 'Войти / регистрация через Google',
                 googleOr: '— или по паролю —',
                 googleTrainerNew: '✅ Профиль тренера создан через Google',
@@ -11626,6 +11630,8 @@
                 trPasswordPh: 'Enter password',
                 trBtnLogin: 'Login',
                 trBtnBack: '← Back',
+                btnShareWA: '📤 WhatsApp',
+
                 googleSignBtn: 'Sign in / register with Google',
                 googleOr: '— or with a password —',
                 googleTrainerNew: '✅ Trainer profile created via Google',
@@ -12322,6 +12328,8 @@
                 trPasswordPh: 'הזן סיסמה',
                 trBtnLogin: 'כניסה',
                 trBtnBack: '← חזרה',
+                btnShareWA: '📤 WhatsApp',
+
                 googleSignBtn: 'כניסה / הרשמה עם Google',
                 googleOr: '— או עם סיסמה —',
                 googleTrainerNew: '✅ פרופיל מאמן נוצר דרך Google',
@@ -17352,6 +17360,314 @@
             const win = window.open('', '_blank');
             win.document.write(html);
             win.document.close();
+        }
+
+
+        // ============================================================
+        // ЭКСПОРТ ПРОГРАММЫ КАРТИНКОЙ (PNG) ДЛЯ WHATSAPP / TELEGRAM
+        // Рисуем брендовую карточку на canvas → navigator.share (файл)
+        // или скачивание PNG, если share недоступен (ПК).
+        // ============================================================
+        var SHARE_T = {
+            shareBtn:   { ru:'📤 WhatsApp', en:'📤 WhatsApp', he:'📤 WhatsApp' },
+            wkTitle:    { ru:'ПРОГРАММА ТРЕНИРОВОК', en:'WORKOUT PROGRAM', he:'תוכנית אימונים' },
+            ntTitle:    { ru:'ПЛАН ПИТАНИЯ', en:'NUTRITION PLAN', he:'תוכנית תזונה' },
+            forName:    { ru:'для', en:'for', he:'עבור' },
+            setsX:      { ru:'подх.', en:'sets', he:'סטים' },
+            repsX:      { ru:'повт.', en:'reps', he:'חזרות' },
+            kgX:        { ru:'кг', en:'kg', he:'ק"ג' },
+            restX:      { ru:'отдых', en:'rest', he:'מנוחה' },
+            kcalX:      { ru:'ккал', en:'kcal', he:'קק"ל' },
+            totalX:     { ru:'Итого за день', en:'Daily total', he:'סה"כ ליום' },
+            proteinX:   { ru:'Белки', en:'Protein', he:'חלבון' },
+            fatX:       { ru:'Жиры', en:'Fat', he:'שומן' },
+            carbsX:     { ru:'Углеводы', en:'Carbs', he:'פחמימות' },
+            noData:     { ru:'Сначала составьте программу', en:'Create a program first', he:'קודם בנו תוכנית' },
+            downloaded: { ru:'🖼 Картинка сохранена — отправьте её клиенту в WhatsApp', en:'🖼 Image saved — send it to the client in WhatsApp', he:'🖼 התמונה נשמרה — שלחו אותה ללקוח ב-WhatsApp' },
+            shared:     { ru:'📤 Отправлено!', en:'📤 Shared!', he:'📤 נשלח!' },
+            madeWith:   { ru:'Private Gym • הכושר כדרך חיים', en:'Private Gym • הכושר כדרך חיים', he:'Private Gym • הכושר כדרך חיים' }
+        };
+        function sht(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (SHARE_T[k] && (SHARE_T[k][l] || SHARE_T[k].ru)) || k; }
+
+        function shareClientName(){
+            try {
+                if (typeof currentUserId !== 'undefined' && currentUserId && typeof getUsers === 'function'){
+                    var u = getUsers().find(function(x){ return x.id === currentUserId; });
+                    if (u) return (u.name || '') + (u.lastName ? ' ' + u.lastName : '');
+                }
+            } catch(e){}
+            return '';
+        }
+
+        /* перенос строки по ширине */
+        function shareWrap(ctx, text, maxW){
+            text = String(text == null ? '' : text);
+            if (ctx.measureText(text).width <= maxW) return [text];
+            var words = text.split(' ');
+            var lines = [], cur = '';
+            words.forEach(function(w){
+                var probe = cur ? cur + ' ' + w : w;
+                if (ctx.measureText(probe).width <= maxW) cur = probe;
+                else { if (cur) lines.push(cur); cur = w; }
+            });
+            if (cur) lines.push(cur);
+            return lines.slice(0, 2); /* максимум 2 строки */
+        }
+
+        function shareRound(ctx, x, y, w, h, r){
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        /* ---------- сбор данных ---------- */
+        function shareCollectWorkouts(){
+            var out = [];
+            document.querySelectorAll('#workoutsContainer .workout').forEach(function(w){
+                var data = serializeWorkout(w);
+                if ((data.exercises || []).length) out.push(data);
+            });
+            return out;
+        }
+        function shareCollectMeals(){
+            var meals = [];
+            document.querySelectorAll('#mealsContainer .meal').forEach(function(meal){
+                var m = { title: (meal.querySelector('.meal-title') || {}).value || '', items: [], kcal: 0 };
+                meal.querySelectorAll('.meal-body tr').forEach(function(tr){
+                    var sel = tr.querySelector('.product-select');
+                    if (!sel || sel.value === '') return;
+                    var p = allProducts[parseInt(sel.value)];
+                    if (!p) return;
+                    var qty = (tr.querySelector('.weight-input') || {}).value || '';
+                    var unit = (tr.querySelector('.unit-select') || {}).value || 'gram';
+                    var kc = parseFloat((tr.querySelector('.product-calories') || {}).textContent) || 0;
+                    m.items.push({
+                        name: (typeof getProductName === 'function') ? (getProductName(p, currentLang) || p.name) : p.name,
+                        qty: qty + ' ' + ((typeof getUnitShortLabel === 'function') ? getUnitShortLabel(unit) : unit),
+                        kcal: Math.round(kc)
+                    });
+                    m.kcal += kc;
+                });
+                if (m.items.length || m.title) meals.push(m);
+            });
+            return meals;
+        }
+
+        /* ---------- отрисовка ---------- */
+        function shareDrawCard(mode){
+            var W = 1080, P = 64;
+            var rtl = (typeof currentLang !== 'undefined' && currentLang === 'he');
+            var clientName = shareClientName();
+            var dateStr = new Date().toLocaleDateString(currentLang === 'he' ? 'he-IL' : (currentLang === 'en' ? 'en-US' : 'ru-RU'));
+            var GC = { chest:'#EF4444', back:'#3B82F6', shoulders:'#F59E0B', biceps:'#8B5CF6', triceps:'#06B6D4',
+                forearms:'#10B981', quads:'#F97316', hamstrings:'#A855F7', glutes:'#EC4899', calves:'#14B8A6',
+                abs:'#84CC16', cardio:'#DC2626', fullbody:'#6366F1', neck:'#9333EA', warmup:'#22C55E', stretch:'#0EA5E9' };
+
+            var workouts = mode === 'workout' ? shareCollectWorkouts() : [];
+            var meals = mode === 'nutrition' ? shareCollectMeals() : [];
+            if ((mode === 'workout' && !workouts.length) || (mode === 'nutrition' && !meals.length)){
+                if (typeof showToast === 'function') showToast(sht('noData'));
+                return null;
+            }
+
+            /* высота: прикидка */
+            var H = 360; /* шапка */
+            if (mode === 'workout'){
+                workouts.forEach(function(w){
+                    H += 110; /* заголовок тренировки */
+                    H += (w.exercises || []).length * 96;
+                    H += 30;
+                });
+            } else {
+                meals.forEach(function(m){
+                    H += 104;
+                    H += m.items.length * 78;
+                    H += 26;
+                });
+                H += 150; /* итог дня */
+            }
+            H += 130; /* футер */
+
+            var canvas = document.createElement('canvas');
+            canvas.width = W; canvas.height = H;
+            var ctx = canvas.getContext('2d');
+            if (!ctx) return null;
+
+            var FONT = '"Inter","Segoe UI",Arial,sans-serif';
+            var primary = mode === 'workout' ? '#DC2626' : '#10B981';
+            var primaryDark = mode === 'workout' ? '#7F1D1D' : '#047857';
+
+            /* фон */
+            var bg = ctx.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#F8FAFC'); bg.addColorStop(1, '#EEF2F7');
+            ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+            /* шапка */
+            var hg = ctx.createLinearGradient(0, 0, W, 0);
+            hg.addColorStop(0, primary); hg.addColorStop(1, primaryDark);
+            ctx.fillStyle = hg; ctx.fillRect(0, 0, W, 300);
+            /* декоративные круги */
+            ctx.globalAlpha = 0.12; ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(W - 100, 40, 130, 0, 7); ctx.fill();
+            ctx.beginPath(); ctx.arc(60, 270, 90, 0, 7); ctx.fill();
+            ctx.globalAlpha = 1;
+
+            ctx.textAlign = rtl ? 'right' : 'left';
+            var ax = rtl ? W - P : P; /* основная сторона */
+            ctx.fillStyle = '#fff';
+            ctx.font = '700 34px ' + FONT;
+            ctx.fillText('🏋️ Private Gym', ax, 84);
+            ctx.font = '900 58px ' + FONT;
+            ctx.fillText(mode === 'workout' ? sht('wkTitle') : sht('ntTitle'), ax, 168);
+            ctx.font = '500 34px ' + FONT;
+            ctx.globalAlpha = 0.92;
+            var sub = (clientName ? sht('forName') + ' ' + clientName + '  •  ' : '') + dateStr;
+            ctx.fillText(sub, ax, 232);
+            ctx.globalAlpha = 1;
+
+            var y = 360;
+
+            if (mode === 'workout'){
+                workouts.forEach(function(w){
+                    /* заголовок тренировки */
+                    ctx.fillStyle = '#0F172A';
+                    ctx.font = '800 40px ' + FONT;
+                    var wt = w.title || 'Workout';
+                    ctx.fillText(wt, ax, y);
+                    ctx.font = '500 28px ' + FONT;
+                    ctx.fillStyle = '#64748B';
+                    var meta = (w.date ? '📅 ' + w.date : '') + (w.duration ? '  ⏱ ' + w.duration + "'" : '');
+                    if (meta) ctx.fillText(meta, ax, y + 40);
+                    y += 76;
+
+                    (w.exercises || []).forEach(function(e, i){
+                        var color = GC[e.groupId] || '#3B82F6';
+                        /* карточка упражнения */
+                        ctx.fillStyle = '#FFFFFF';
+                        shareRound(ctx, P - 14, y - 8, W - 2 * (P - 14), 82, 18);
+                        ctx.fill();
+                        ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 2; ctx.stroke();
+                        /* цветная полоска группы */
+                        ctx.fillStyle = color;
+                        var barX = rtl ? (W - P + 14 - 10) : (P - 14);
+                        shareRound(ctx, barX, y - 8, 10, 82, 5);
+                        ctx.fill();
+                        /* номер */
+                        ctx.fillStyle = color;
+                        ctx.font = '800 30px ' + FONT;
+                        var numX = rtl ? W - P - 18 : P + 18;
+                        ctx.fillText(String(i + 1) + '.', numX, y + 30);
+                        /* название (локализованное) */
+                        var nm = (typeof localizedExName === 'function') ? (localizedExName(e) || e.name || '') : (e.name || '');
+                        ctx.fillStyle = '#0F172A';
+                        ctx.font = '700 32px ' + FONT;
+                        var nameX = rtl ? W - P - 78 : P + 78;
+                        var maxNameW = W - 2 * P - 360;
+                        var nmLine = nm;
+                        while (ctx.measureText(nmLine).width > maxNameW && nmLine.length > 4) nmLine = nmLine.slice(0, -2);
+                        if (nmLine !== nm) nmLine += '…';
+                        ctx.fillText(nmLine, nameX, y + 30);
+                        /* параметры */
+                        ctx.font = '600 27px ' + FONT;
+                        ctx.fillStyle = '#475569';
+                        var params = (e.sets || '–') + '×' + (e.reps || '–') +
+                            (e.weight ? '  •  ' + e.weight + ' ' + sht('kgX') : '') +
+                            (e.rest ? '  •  ⏱' + e.rest + '"' : '');
+                        ctx.fillText(params, nameX, y + 64);
+                        /* сторона напротив: группа эмодзи-инвентарь не обяз. */
+                        y += 96;
+                    });
+                    y += 30;
+                });
+            } else {
+                var totK = 0;
+                meals.forEach(function(m){
+                    ctx.fillStyle = '#0F172A';
+                    ctx.font = '800 38px ' + FONT;
+                    ctx.fillText('🍽 ' + (m.title || ''), ax, y);
+                    ctx.font = '700 30px ' + FONT;
+                    ctx.fillStyle = '#047857';
+                    ctx.textAlign = rtl ? 'left' : 'right';
+                    ctx.fillText(Math.round(m.kcal) + ' ' + sht('kcalX'), rtl ? P : W - P, y);
+                    ctx.textAlign = rtl ? 'right' : 'left';
+                    y += 56;
+                    m.items.forEach(function(it){
+                        ctx.fillStyle = '#FFFFFF';
+                        shareRound(ctx, P - 14, y - 6, W - 2 * (P - 14), 64, 16);
+                        ctx.fill();
+                        ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 2; ctx.stroke();
+                        ctx.fillStyle = '#0F172A';
+                        ctx.font = '600 30px ' + FONT;
+                        var nm2 = it.name;
+                        var maxW2 = W - 2 * P - 340;
+                        while (ctx.measureText(nm2).width > maxW2 && nm2.length > 4) nm2 = nm2.slice(0, -2);
+                        if (nm2 !== it.name) nm2 += '…';
+                        ctx.fillText(nm2, rtl ? W - P - 16 : P + 16, y + 36);
+                        ctx.font = '500 26px ' + FONT;
+                        ctx.fillStyle = '#64748B';
+                        ctx.textAlign = rtl ? 'left' : 'right';
+                        ctx.fillText(it.qty + '   •   ' + it.kcal + ' ' + sht('kcalX'), rtl ? P + 16 : W - P - 16, y + 36);
+                        ctx.textAlign = rtl ? 'right' : 'left';
+                        y += 78;
+                    });
+                    totK += m.kcal;
+                    y += 26;
+                });
+                /* итог дня */
+                var tp = parseFloat((document.getElementById('totalProtein') || {}).textContent) || 0;
+                var tf = parseFloat((document.getElementById('totalFat') || {}).textContent) || 0;
+                var tc = parseFloat((document.getElementById('totalCarbs') || {}).textContent) || 0;
+                ctx.fillStyle = '#ECFDF5';
+                shareRound(ctx, P - 14, y - 6, W - 2 * (P - 14), 110, 20);
+                ctx.fill();
+                ctx.strokeStyle = '#10B981'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.fillStyle = '#047857';
+                ctx.font = '800 34px ' + FONT;
+                ctx.fillText(sht('totalX') + ': ' + Math.round(totK) + ' ' + sht('kcalX'), rtl ? W - P - 20 : P + 20, y + 42);
+                ctx.font = '600 28px ' + FONT;
+                ctx.fillText(sht('proteinX') + ' ' + Math.round(tp) + '  •  ' + sht('fatX') + ' ' + Math.round(tf) + '  •  ' + sht('carbsX') + ' ' + Math.round(tc), rtl ? W - P - 20 : P + 20, y + 86);
+                y += 134;
+            }
+
+            /* футер */
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(0, H - 92, W, 92);
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 26px ' + FONT;
+            ctx.textAlign = 'center';
+            ctx.fillText(sht('madeWith'), W / 2, H - 36);
+            return canvas;
+        }
+
+        /* ---------- отправка / скачивание ---------- */
+        window.shareProgramImage = function(mode){
+            var canvas = shareDrawCard(mode || (document.body.classList.contains('mode-workout') ? 'workout' : 'nutrition'));
+            if (!canvas) return;
+            var fname = (mode === 'nutrition' ? 'nutrition_' : 'workout_') + new Date().toISOString().slice(0, 10) + '.png';
+            canvas.toBlob(function(blob){
+                if (!blob) return;
+                var file;
+                try { file = new File([blob], fname, { type: 'image/png' }); } catch(e){ file = null; }
+                if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share){
+                    navigator.share({ files: [file], title: 'Private Gym' })
+                        .then(function(){ if (typeof showToast === 'function') showToast(sht('shared')); })
+                        .catch(function(){ shareDownload(blob, fname); });
+                } else {
+                    shareDownload(blob, fname);
+                }
+            }, 'image/png');
+        };
+        function shareDownload(blob, fname){
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = fname;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+            if (typeof showToast === 'function') showToast(sht('downloaded'));
         }
 
 
@@ -27198,6 +27514,66 @@ body.layout-mobile .info-modal-content, body.layout-tablet .info-modal-content {
 body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top: calc(14px + env(safe-area-inset-top, 0px)); }
 
 
+
+/* ===== BODY MEASURES (bm) ===== */
+#bmOverlay { display: none; position: fixed; inset: 0; z-index: 130000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.bm-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 560px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #bmOverlay { padding: 0; } .bm-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.bm-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #3B82F6, #1e40af); color: #fff; flex-shrink: 0; }
+.bm-title { font-weight: 800; font-size: 1.05em; }
+.bm-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bm-tabs { display: flex; gap: 8px; padding: 10px 14px 0; flex-shrink: 0; }
+.bm-tab { flex: 1; padding: 9px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--surface-color); color: var(--text-secondary); font-weight: 700; font-size: .85em; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.bm-tab.active { border-color: #3B82F6; background: rgba(59,130,246,.1); color: #3B82F6; }
+.bm-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.bm-add-btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 14px; background: linear-gradient(135deg, #3B82F6, #1e40af); color: #fff; font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(59,130,246,.35); -webkit-tap-highlight-color: transparent; }
+.bm-empty { text-align: center; padding: 40px 16px; color: var(--text-light); font-size: .95em; line-height: 1.6; }
+.bm-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.bm-card { background: var(--surface-color); border: 1px solid var(--border-color); border-top: 3px solid; border-radius: 13px; padding: 9px 6px; text-align: center; }
+.bm-card-ico { font-size: 1.1em; }
+.bm-card-val { font-weight: 800; font-size: 1.15em; color: var(--text-primary); display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.bm-delta { font-size: .62em; font-weight: 800; padding: 1px 5px; border-radius: 6px; }
+.bm-delta.down { background: rgba(16,185,129,.12); color: #059669; }
+.bm-delta.up { background: rgba(245,158,11,.15); color: #B45309; }
+.bm-card-lbl { font-size: .62em; color: var(--text-light); margin-top: 1px; }
+.bm-sec-title { font-weight: 800; font-size: .9em; color: var(--text-primary); margin: 14px 2px 8px; }
+.bm-chart { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 14px; padding: 10px 12px 6px; margin-bottom: 9px; }
+.bm-chart-head { display: flex; align-items: baseline; gap: 8px; font-size: .82em; color: var(--text-secondary); margin-bottom: 4px; }
+.bm-chart-head b { margin-inline-start: auto; font-size: 1.15em; }
+.bm-chart-head small { font-weight: 800; }
+.bm-chart-head small.down { color: #059669; }
+.bm-chart-head small.up { color: #B45309; }
+.bm-row { display: flex; align-items: center; gap: 10px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 13px; padding: 10px 12px; margin-bottom: 7px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bm-row:active { transform: scale(.99); }
+.bm-row-date { font-weight: 700; font-size: .8em; color: var(--text-primary); white-space: nowrap; }
+.bm-row-vals { flex: 1; min-width: 0; font-size: .78em; color: var(--text-secondary); }
+.bm-row-note { color: var(--text-light); margin-top: 2px; }
+.bm-row-edit { color: var(--text-light); }
+#bmFormOverlay { display: none; position: fixed; inset: 0; z-index: 131000; background: rgba(15,23,42,.55); align-items: center; justify-content: center; padding: 16px; }
+.bm-form-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 480px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+@media (max-width: 920px) { .bm-form-sheet { max-height: 96dvh; } }
+.bm-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+@media (max-width: 480px) { .bm-form-grid { grid-template-columns: 1fr 1fr; } }
+.bm-f label { display: block; font-size: .68em; font-weight: 700; color: var(--text-secondary); margin-bottom: 3px; }
+.bm-f input { width: 100%; padding: 10px 8px; border: 1.5px solid var(--border-color); border-radius: 10px; font-size: 1em; font-weight: 700; text-align: center; background: var(--surface-color); color: var(--text-primary); font-family: inherit; }
+.bm-f input[type="date"], .bm-f input[type="text"] { text-align: start; font-weight: 600; }
+.bm-form-actions { display: flex; gap: 9px; margin-top: 14px; }
+.bm-btn-save { flex: 2; padding: 13px; border: none; border-radius: 13px; background: linear-gradient(135deg, #10B981, #047857); color: #fff; font-weight: 800; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.bm-btn-del { flex: 1; padding: 13px; border: 1px solid var(--border-color); border-radius: 13px; background: var(--surface-color); color: #EF4444; font-weight: 700; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.bm-photo-hint { font-size: .72em; color: var(--text-light); text-align: center; margin: -6px 0 12px; }
+.bm-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.bm-cmp-col img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 14px; border: 1px solid var(--border-color); cursor: pointer; }
+.bm-cmp-lbl { text-align: center; font-size: .75em; font-weight: 700; color: var(--text-secondary); margin-top: 5px; line-height: 1.35; }
+.bm-photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bm-photo-cell { position: relative; cursor: pointer; }
+.bm-photo-cell img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 11px; border: 1px solid var(--border-color); }
+.bm-photo-date { position: absolute; bottom: 4px; left: 4px; right: 4px; text-align: center; font-size: .62em; font-weight: 700; color: #fff; background: rgba(15,23,42,.65); border-radius: 7px; padding: 2px; }
+#bmPhotoView { display: none; position: fixed; inset: 0; z-index: 132000; background: rgba(2,6,23,.92); flex-direction: column; }
+#bmPhotoView img { flex: 1; object-fit: contain; min-height: 0; }
+.bm-pv-top { display: flex; align-items: center; gap: 10px; padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); color: #fff; font-weight: 700; }
+.bm-pv-top span { flex: 1; }
+.bm-pv-top button { width: 38px; height: 38px; border: none; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; font-size: 1em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
 /* ===== PWA UI ===== */
 
 #pwaHelpOverlay { position: fixed; inset: 0; z-index: 215000; background: rgba(15,23,42,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 22px; }
@@ -27233,23 +27609,32 @@ body.mp-active #pwaInstallBtn, body.layout-mobile #pwaInstallBtn { bottom: calc(
 body.pwa-offline #cloudDock { opacity: .85; }
 
 /* ===== CLOUD SYNC UI ===== */
-#cloudDock { position: fixed; top: 10px; right: 12px; z-index: 9000; display: flex; align-items: center; gap: 8px; }
-body[dir="rtl"] #cloudDock { right: auto; left: 12px; }
-#cloudSignInBtn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--surface-color); color: var(--text-primary); font-weight: 700; font-size: .85em; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.1); font-family: inherit; -webkit-tap-highlight-color: transparent; }
-#cloudSignInBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
-#cloudChip { display: flex; align-items: center; gap: 7px; padding: 5px 8px 5px 5px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--surface-color); box-shadow: 0 2px 10px rgba(0,0,0,.1); font-size: .8em; }
-#cloudChip img, #cloudChip .cc-ava { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--border-color); flex-shrink: 0; }
-#cloudChip .cc-name { font-weight: 700; color: var(--text-primary); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#cloudChip .cc-state { font-weight: 600; white-space: nowrap; }
+#cloudDock { position: fixed; bottom: 10px; left: 10px; z-index: 9000; display: flex; align-items: center; gap: 6px; }
+body[dir="rtl"] #cloudDock { left: auto; right: 10px; }
+#cloudSignInBtn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--surface-color); color: var(--text-primary); font-weight: 700; font-size: .68em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.12); font-family: inherit; -webkit-tap-highlight-color: transparent; opacity: .92; }
+#cloudSignInBtn svg { width: 13px; height: 13px; }
+#cloudSignInBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.16); opacity: 1; }
+/* свернутый чип: только аватар + точка статуса; раскрывается по клику/наведению */
+#cloudChip { display: flex; align-items: center; gap: 5px; padding: 3px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--surface-color); box-shadow: 0 2px 8px rgba(0,0,0,.12); font-size: .68em; cursor: pointer; opacity: .9; transition: all .18s; }
+#cloudChip:hover, #cloudChip.expanded { opacity: 1; padding: 3px 6px 3px 3px; }
+#cloudChip img, #cloudChip .cc-ava { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--border-color); flex-shrink: 0; font-size: 11px; position: relative; }
+#cloudChip .cc-name { display: none; }
+#cloudChip .cc-state { display: none; font-weight: 600; white-space: nowrap; }
+#cloudChip:hover .cc-state, #cloudChip.expanded .cc-state { display: inline; }
 #cloudChip .cc-state.ok { color: #10B981; }
 #cloudChip .cc-state.syncing { color: #3B82F6; }
 #cloudChip .cc-state.offline { color: #F59E0B; }
-#cloudChip .cc-out { border: none; background: none; cursor: pointer; font-size: 1.05em; color: var(--text-light); padding: 2px 4px; }
+#cloudChip .cc-out { display: none; border: none; background: none; cursor: pointer; font-size: 1em; color: var(--text-light); padding: 1px 3px; }
+#cloudChip:hover .cc-out, #cloudChip.expanded .cc-out { display: inline; }
 #cloudChip .cc-out:hover { color: #EF4444; }
-/* не мешать мобильному планировщику и клиенту: чуть ниже топбара */
-body.mp-active #cloudDock, body.layout-mobile #cloudDock { top: auto; bottom: 84px; right: 10px; }
-body[dir="rtl"].mp-active #cloudDock, body[dir="rtl"].layout-mobile #cloudDock { right: auto; left: 10px; }
-body.mp-active #cloudChip .cc-name { display: none; }
+/* точка-статус на аватаре в свернутом виде */
+#cloudChip .cc-dot { position: absolute; bottom: -1px; right: -1px; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--surface-color); }
+#cloudChip .cc-dot.ok { background: #10B981; }
+#cloudChip .cc-dot.syncing { background: #3B82F6; }
+#cloudChip .cc-dot.offline { background: #F59E0B; }
+/* мобильный: над нижней навигацией, в углу */
+body.mp-active #cloudDock, body.layout-mobile #cloudDock { bottom: 90px; left: 8px; }
+body[dir="rtl"].mp-active #cloudDock, body[dir="rtl"].layout-mobile #cloudDock { left: auto; right: 8px; }
 @media (max-width: 640px) { #cloudChip .cc-name { display: none; } }
 
 /* кнопка ▶ на карточках тренировок тренера (десктоп) */
@@ -28059,6 +28444,7 @@ window.mpOpenActions = function(){
     if (wk){
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printWorkout();"><span class="ico">🖨️</span>' + mt('print') + '</button>';
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printPrivateGym();"><span class="ico">🖨️</span>' + mt('print') + ' Private Gym</button>';
+        items += '<button class="mp-action-item" onclick="mpCloseSheet(); shareProgramImage(\'workout\');"><span class="ico">📤</span>WhatsApp</button>';
         if (typeof exportWorkouts === 'function')
             items += '<button class="mp-action-item" onclick="mpCloseSheet(); exportWorkouts();"><span class="ico">📤</span>' + mt('exportX') + '</button>';
         if (typeof sendWorkoutToClient === 'function')
@@ -28066,6 +28452,7 @@ window.mpOpenActions = function(){
         items += '<button class="mp-action-item danger" onclick="mpCloseSheet(); clearAllWorkouts(); mpRenderBody();"><span class="ico">🗑️</span>' + mt('clear') + '</button>';
     } else {
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printPlan();"><span class="ico">🖨️</span>' + mt('print') + '</button>';
+        items += '<button class="mp-action-item" onclick="mpCloseSheet(); shareProgramImage(\'nutrition\');"><span class="ico">📤</span>WhatsApp</button>';
         if (typeof exportToExcel === 'function')
             items += '<button class="mp-action-item" onclick="mpCloseSheet(); exportToExcel();"><span class="ico">📤</span>' + mt('exportX') + ' Excel</button>';
         items += '<button class="mp-action-item danger" onclick="mpCloseSheet(); clearPlan(); mpRenderBody();"><span class="ico">🗑️</span>' + mt('clear') + '</button>';
@@ -29828,7 +30215,7 @@ function cl(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; retur
 var SYNC_EXACT = ['nutritionUsers','trainersList','tasksList','calendarEvents','shopItems','shopSales','leadsList',
     'customExercisesDatabase','customProductsDatabase','systemExOverrides','taskTemplates','customAppLogo',
     'workoutPlan','nutritionPlan'];
-var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_',
+var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_','bodyMeasures_',
     'clientNutriDone_','trainerProfile_','trainerFiles_','clientLastSync_'];
 function isSyncKey(k){
     if (!k || k.charAt(0) === '_') return false;
@@ -30168,10 +30555,12 @@ function updateCloudUI(){
         else { ic = '☁️'; txt = cl('synced'); cls = 'ok'; }
         var name = fb.user.displayName || fb.user.email || '';
         chip.innerHTML =
-            (fb.user.photoURL ? '<img src="' + fb.user.photoURL + '" alt="" referrerpolicy="no-referrer">' : '<span class="cc-ava">👤</span>') +
-            '<span class="cc-name">' + name.replace(/</g,'&lt;') + '</span>' +
+            (fb.user.photoURL
+                ? '<span class="cc-ava" style="background:none;"><img src="' + fb.user.photoURL + '" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;border-radius:50%;"><span class="cc-dot ' + cls + '"></span></span>'
+                : '<span class="cc-ava">👤<span class="cc-dot ' + cls + '"></span></span>') +
             '<span class="cc-state ' + cls + '">' + ic + ' ' + txt + '</span>' +
-            '<button class="cc-out" onclick="cloudSignOut()" title="' + cl('signOut') + '">⎋</button>';
+            '<button class="cc-out" onclick="event.stopPropagation(); cloudSignOut()" title="' + cl('signOut') + '">⎋</button>';
+        chip.onclick = function(){ chip.classList.toggle('expanded'); };
         chip.style.display = 'flex';
         if (btn) btn.style.display = 'none';
     } else {
@@ -30214,6 +30603,458 @@ if (document.readyState === 'loading'){
 
 </script>
 
+
+<script>
+/* ============================================================
+   BODY MEASURES (bm) — замеры тела и фото-прогресс
+   Хранение: localStorage['bodyMeasures_<userId>'] = {
+     entries: [{ d:'2026-06-12', w, waist, chest, hips, biceps, thigh, calf, neck, fat, note }],
+     photos:  [{ d:'2026-06-12', img:<dataURL>, note }]
+   }
+   Доступ: тренер (полный) + клиент (свой, полный).
+   ============================================================ */
+(function(){
+'use strict';
+
+var BM_T = {
+    title:      { ru:'📏 Замеры тела', en:'📏 Body measurements', he:'📏 מדדי גוף' },
+    photos:     { ru:'📸 Фото-прогресс', en:'📸 Photo progress', he:'📸 התקדמות בתמונות' },
+    addEntry:   { ru:'➕ Добавить замер', en:'➕ Add measurement', he:'➕ הוסף מדידה' },
+    addPhoto:   { ru:'📷 Добавить фото', en:'📷 Add photo', he:'📷 הוסף תמונה' },
+    date:       { ru:'Дата', en:'Date', he:'תאריך' },
+    weight:     { ru:'Вес (кг)', en:'Weight (kg)', he:'משקל (ק"ג)' },
+    waist:      { ru:'Талия (см)', en:'Waist (cm)', he:'מותן (ס"מ)' },
+    chest:      { ru:'Грудь (см)', en:'Chest (cm)', he:'חזה (ס"מ)' },
+    hips:       { ru:'Бёдра/таз (см)', en:'Hips (cm)', he:'אגן (ס"מ)' },
+    biceps:     { ru:'Бицепс (см)', en:'Biceps (cm)', he:'יד קדמית (ס"מ)' },
+    thigh:      { ru:'Бедро (см)', en:'Thigh (cm)', he:'ירך (ס"מ)' },
+    calf:       { ru:'Икра (см)', en:'Calf (cm)', he:'תאומים (ס"מ)' },
+    neck:       { ru:'Шея (см)', en:'Neck (cm)', he:'צוואר (ס"מ)' },
+    fat:        { ru:'Жир (%)', en:'Body fat (%)', he:'אחוז שומן' },
+    note:       { ru:'Заметка', en:'Note', he:'הערה' },
+    save:       { ru:'💾 Сохранить', en:'💾 Save', he:'💾 שמירה' },
+    del:        { ru:'Удалить', en:'Delete', he:'מחיקה' },
+    confirmDel: { ru:'Удалить запись?', en:'Delete this entry?', he:'למחוק את הרשומה?' },
+    noData:     { ru:'Пока нет замеров.<br>Добавьте первый — и появятся графики прогресса!', en:'No measurements yet.<br>Add the first one to see progress charts!', he:'אין מדידות עדיין.<br>הוסיפו את הראשונה ויופיעו גרפים!' },
+    noPhotos:   { ru:'Пока нет фото. Снимайте раз в 2–4 недели в одинаковой позе и освещении.', en:'No photos yet. Shoot every 2–4 weeks in the same pose and lighting.', he:'אין תמונות עדיין. צלמו כל 2–4 שבועות באותה תנוחה ותאורה.' },
+    saved:      { ru:'✅ Замер сохранён', en:'✅ Measurement saved', he:'✅ המדידה נשמרה' },
+    photoSaved: { ru:'✅ Фото добавлено', en:'✅ Photo added', he:'✅ התמונה נוספה' },
+    history:    { ru:'История', en:'History', he:'היסטוריה' },
+    charts:     { ru:'Графики', en:'Charts', he:'גרפים' },
+    compare:    { ru:'Сравнить', en:'Compare', he:'השוואה' },
+    before:     { ru:'Было', en:'Before', he:'לפני' },
+    after:      { ru:'Стало', en:'After', he:'אחרי' },
+    delta30:    { ru:'за 30 дней', en:'in 30 days', he:'ב-30 יום' },
+    measuresBtn:{ ru:'📏 Замеры', en:'📏 Measures', he:'📏 מדדים' },
+    close:      { ru:'Закрыть', en:'Close', he:'סגירה' },
+    photoHint:  { ru:'Фото сжимается до ~800px и хранится в приложении', en:'Photo is compressed to ~800px and stored in the app', he:'התמונה נדחסת ל~800px ונשמרת באפליקציה' }
+};
+function bt(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; return (BM_T[k]&&(BM_T[k][l]||BM_T[k].ru))||k; }
+function be(s){ return (typeof escapeHtml==='function')?escapeHtml(String(s==null?'':s)):String(s); }
+
+var FIELDS = [
+    { id:'w',      icon:'⚖️', color:'#3B82F6' },
+    { id:'waist',  icon:'📍', color:'#F59E0B', key:'waist' },
+    { id:'chest',  icon:'🫁', color:'#EF4444', key:'chest' },
+    { id:'hips',   icon:'🍑', color:'#EC4899', key:'hips' },
+    { id:'biceps', icon:'💪', color:'#8B5CF6', key:'biceps' },
+    { id:'thigh',  icon:'🦵', color:'#F97316', key:'thigh' },
+    { id:'calf',   icon:'🦶', color:'#14B8A6', key:'calf' },
+    { id:'neck',   icon:'🧣', color:'#6366F1', key:'neck' },
+    { id:'fat',    icon:'🔥', color:'#DC2626', key:'fat' }
+];
+function fieldLabel(f){ return bt(f.id === 'w' ? 'weight' : f.id); }
+
+function bmKey(uid){ return 'bodyMeasures_' + uid; }
+function bmLoad(uid){
+    try { var d = JSON.parse(localStorage.getItem(bmKey(uid)) || 'null'); if (d && d.entries) return d; } catch(e){}
+    return { entries: [], photos: [] };
+}
+function bmSave(uid, data){
+    try { localStorage.setItem(bmKey(uid), JSON.stringify(data)); } catch(e){
+        if (typeof showToast === 'function') showToast('⚠️ Storage full');
+    }
+}
+function bmUid(){
+    if (window.__bmUid) return window.__bmUid;
+    return null;
+}
+function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+/* ---------- открытие модуля ---------- */
+window.openBodyMeasures = function(uid, readonly){
+    window.__bmUid = uid;
+    window.__bmReadonly = !!readonly;
+    window.__bmTab = 'measures';
+    bmRender();
+    var ov = document.getElementById('bmOverlay');
+    if (ov) ov.style.display = 'flex';
+};
+window.closeBodyMeasures = function(){
+    var ov = document.getElementById('bmOverlay');
+    if (ov) ov.style.display = 'none';
+};
+window.bmSwitchTab = function(tab){
+    window.__bmTab = tab;
+    bmRender();
+};
+
+/* ---------- рендер ---------- */
+function bmRender(){
+    var box = document.getElementById('bmBody');
+    var tabs = document.getElementById('bmTabs');
+    if (!box || !bmUid()) return;
+    var tab = window.__bmTab || 'measures';
+    if (tabs){
+        tabs.innerHTML =
+            '<button class="bm-tab' + (tab==='measures'?' active':'') + '" onclick="bmSwitchTab(\'measures\')">' + bt('title') + '</button>' +
+            '<button class="bm-tab' + (tab==='photos'?' active':'') + '" onclick="bmSwitchTab(\'photos\')">' + bt('photos') + '</button>';
+    }
+    box.innerHTML = tab === 'photos' ? bmPhotosHtml() : bmMeasuresHtml();
+}
+
+function bmMeasuresHtml(){
+    var data = bmLoad(bmUid());
+    var es = data.entries.slice().sort(function(a,b){ return (a.d||'').localeCompare(b.d||''); });
+    var h = '';
+
+    if (!window.__bmReadonly || true){ /* клиент тоже может добавлять свои замеры */
+        h += '<button class="bm-add-btn" onclick="bmOpenEntryForm(-1)">' + bt('addEntry') + '</button>';
+    }
+
+    if (!es.length){
+        h += '<div class="bm-empty">📏<br>' + bt('noData') + '</div>';
+        return h;
+    }
+
+    /* сводка: последний замер + динамика за 30 дней */
+    var last = es[es.length-1];
+    var prev30 = null;
+    var lastD = new Date(last.d);
+    for (var i = es.length-2; i >= 0; i--){
+        var dd = (lastD - new Date(es[i].d)) / 86400000;
+        if (dd >= 25){ prev30 = es[i]; break; }
+        prev30 = es[i];
+    }
+    h += '<div class="bm-cards">';
+    FIELDS.forEach(function(f){
+        var v = parseFloat(last[f.id]);
+        if (isNaN(v)) return;
+        var dtxt = '';
+        if (prev30){
+            var pv = parseFloat(prev30[f.id]);
+            if (!isNaN(pv)){
+                var d = Math.round((v - pv) * 10) / 10;
+                if (d !== 0) dtxt = '<span class="bm-delta ' + (d < 0 ? 'down' : 'up') + '">' + (d > 0 ? '+' : '') + d + '</span>';
+            }
+        }
+        h += '<div class="bm-card" style="border-top-color:' + f.color + ';">' +
+            '<div class="bm-card-ico">' + f.icon + '</div>' +
+            '<div class="bm-card-val">' + v + dtxt + '</div>' +
+            '<div class="bm-card-lbl">' + fieldLabel(f) + '</div>' +
+        '</div>';
+    });
+    h += '</div>';
+
+    /* графики */
+    h += '<div class="bm-sec-title">📈 ' + bt('charts') + '</div>';
+    FIELDS.forEach(function(f){
+        var pts = es.map(function(e){ return { d: e.d, v: parseFloat(e[f.id]) }; }).filter(function(p){ return !isNaN(p.v); });
+        if (pts.length < 2) return;
+        h += bmChart(fieldLabel(f), f.color, pts);
+    });
+
+    /* история */
+    h += '<div class="bm-sec-title">📋 ' + bt('history') + '</div>';
+    es.slice().reverse().forEach(function(e){
+        var idx = data.entries.indexOf(e);
+        var vals = FIELDS.map(function(f){
+            var v = e[f.id];
+            return (v !== '' && v != null && !isNaN(parseFloat(v))) ? (f.icon + ' ' + v) : null;
+        }).filter(Boolean).join(' · ');
+        h += '<div class="bm-row" onclick="bmOpenEntryForm(' + idx + ')">' +
+            '<div class="bm-row-date">' + be(e.d) + '</div>' +
+            '<div class="bm-row-vals">' + vals + (e.note ? '<div class="bm-row-note">📝 ' + be(e.note) + '</div>' : '') + '</div>' +
+            '<span class="bm-row-edit">✎</span>' +
+        '</div>';
+    });
+    return h;
+}
+
+function bmChart(label, color, pts){
+    var W = 320, H = 70, P = 8;
+    var vs = pts.map(function(p){ return p.v; });
+    var min = Math.min.apply(null, vs), max = Math.max.apply(null, vs);
+    if (max - min < 0.5){ max += 0.5; min -= 0.5; }
+    var xy = pts.map(function(p, i){
+        var x = P + i * (W - 2*P) / Math.max(1, pts.length - 1);
+        var y = H - P - (p.v - min) / (max - min) * (H - 2*P);
+        return { x: x, y: y };
+    });
+    var poly = xy.map(function(p){ return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+    var dots = xy.map(function(p){ return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="2.6" fill="' + color + '"/>'; }).join('');
+    var lastV = vs[vs.length-1], firstV = vs[0];
+    var delta = Math.round((lastV - firstV) * 10) / 10;
+    return '<div class="bm-chart">' +
+        '<div class="bm-chart-head"><span>' + label + '</span>' +
+        '<b style="color:' + color + ';">' + lastV + '</b>' +
+        '<small class="' + (delta < 0 ? 'down' : 'up') + '">' + (delta > 0 ? '+' : '') + delta + '</small></div>' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%; height:64px; display:block;">' +
+            '<polyline points="' + poly + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>' +
+            dots +
+        '</svg></div>';
+}
+
+/* ---------- форма замера ---------- */
+window.bmOpenEntryForm = function(idx){
+    var data = bmLoad(bmUid());
+    var e = idx >= 0 ? data.entries[idx] : { d: todayStr() };
+    if (!e) return;
+    var fieldsH = '';
+    FIELDS.forEach(function(f){
+        fieldsH += '<div class="bm-f"><label>' + f.icon + ' ' + fieldLabel(f) + '</label>' +
+            '<input type="number" inputmode="decimal" step="0.1" min="0" id="bmf_' + f.id + '" value="' + (e[f.id] != null ? e[f.id] : '') + '" placeholder="—"></div>';
+    });
+    var h = '<div class="bm-form-grid">' +
+        '<div class="bm-f" style="grid-column:1/-1;"><label>📅 ' + bt('date') + '</label>' +
+        '<input type="date" id="bmf_d" value="' + be(e.d || todayStr()) + '"></div>' +
+        fieldsH +
+        '<div class="bm-f" style="grid-column:1/-1;"><label>📝 ' + bt('note') + '</label>' +
+        '<input type="text" id="bmf_note" value="' + be(e.note || '') + '"></div>' +
+    '</div>' +
+    '<div class="bm-form-actions">' +
+        (idx >= 0 ? '<button class="bm-btn-del" onclick="bmDeleteEntry(' + idx + ')">🗑 ' + bt('del') + '</button>' : '') +
+        '<button class="bm-btn-save" onclick="bmSaveEntry(' + idx + ')">' + bt('save') + '</button>' +
+    '</div>';
+    var fb = document.getElementById('bmFormBody');
+    var fo = document.getElementById('bmFormOverlay');
+    if (fb) fb.innerHTML = h;
+    if (fo) fo.style.display = 'flex';
+};
+window.bmCloseForm = function(){
+    var fo = document.getElementById('bmFormOverlay');
+    if (fo) fo.style.display = 'none';
+};
+window.bmSaveEntry = function(idx){
+    var data = bmLoad(bmUid());
+    var e = idx >= 0 ? data.entries[idx] : {};
+    e.d = (document.getElementById('bmf_d') || {}).value || todayStr();
+    FIELDS.forEach(function(f){
+        var v = (document.getElementById('bmf_' + f.id) || {}).value;
+        e[f.id] = (v === '' || v == null) ? '' : parseFloat(v);
+    });
+    e.note = (document.getElementById('bmf_note') || {}).value || '';
+    if (idx < 0) data.entries.push(e);
+    bmSave(bmUid(), data);
+    /* вес замера → обновить вес в профиле клиента (если есть) */
+    try {
+        if (e.w && typeof getUsers === 'function'){
+            var users = getUsers();
+            var u = users.find(function(x){ return x.id === bmUid(); });
+            if (u){ u.weight = e.w; localStorage.setItem('nutritionUsers', JSON.stringify(users)); }
+        }
+    } catch(err){}
+    bmCloseForm();
+    bmRender();
+    if (typeof showToast === 'function') showToast(bt('saved'));
+};
+window.bmDeleteEntry = function(idx){
+    if (!confirm(bt('confirmDel'))) return;
+    var data = bmLoad(bmUid());
+    data.entries.splice(idx, 1);
+    bmSave(bmUid(), data);
+    bmCloseForm();
+    bmRender();
+};
+
+/* ---------- фото-прогресс ---------- */
+function bmPhotosHtml(){
+    var data = bmLoad(bmUid());
+    var ps = data.photos.slice().sort(function(a,b){ return (a.d||'').localeCompare(b.d||''); });
+    var h = '<button class="bm-add-btn" onclick="document.getElementById(\'bmPhotoInput\').click()">' + bt('addPhoto') + '</button>' +
+        '<div class="bm-photo-hint">' + bt('photoHint') + '</div>';
+
+    if (ps.length >= 2){
+        var first = ps[0], last = ps[ps.length-1];
+        h += '<div class="bm-sec-title">🔁 ' + bt('compare') + '</div>' +
+        '<div class="bm-compare">' +
+            '<div class="bm-cmp-col"><img src="' + first.img + '" onclick="bmViewPhoto(0)"><div class="bm-cmp-lbl">' + bt('before') + '<br>' + be(first.d) + '</div></div>' +
+            '<div class="bm-cmp-col"><img src="' + last.img + '" onclick="bmViewPhoto(' + (ps.length-1) + ')"><div class="bm-cmp-lbl">' + bt('after') + '<br>' + be(last.d) + '</div></div>' +
+        '</div>';
+    }
+
+    if (!ps.length){
+        h += '<div class="bm-empty">📸<br>' + bt('noPhotos') + '</div>';
+        return h;
+    }
+    h += '<div class="bm-sec-title">📋 ' + bt('history') + '</div><div class="bm-photo-grid">';
+    ps.forEach(function(p, i){
+        h += '<div class="bm-photo-cell" onclick="bmViewPhoto(' + i + ')">' +
+            '<img src="' + p.img + '" loading="lazy">' +
+            '<div class="bm-photo-date">' + be(p.d) + '</div>' +
+        '</div>';
+    });
+    h += '</div>';
+    return h;
+}
+
+window.bmHandlePhoto = function(ev){
+    var f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!f) return;
+    var doSave = function(url){
+        var data = bmLoad(bmUid());
+        data.photos.push({ d: todayStr(), img: url });
+        bmSave(bmUid(), data);
+        bmRender();
+        if (typeof showToast === 'function') showToast(bt('photoSaved'));
+    };
+    if (typeof compressImageToDataURL === 'function'){
+        compressImageToDataURL(f, 800, 0.78).then(doSave).catch(function(){ alert('Photo error'); });
+    } else {
+        var r = new FileReader();
+        r.onload = function(e){ doSave(e.target.result); };
+        r.readAsDataURL(f);
+    }
+};
+
+window.bmViewPhoto = function(i){
+    var data = bmLoad(bmUid());
+    var ps = data.photos.slice().sort(function(a,b){ return (a.d||'').localeCompare(b.d||''); });
+    var p = ps[i]; if (!p) return;
+    var realIdx = data.photos.indexOf(p);
+    var v = document.getElementById('bmPhotoView');
+    if (!v) return;
+    v.innerHTML = '<div class="bm-pv-top">' +
+            '<span>' + be(p.d) + '</span>' +
+            '<button onclick="bmDeletePhoto(' + realIdx + ')">🗑</button>' +
+            '<button onclick="document.getElementById(\'bmPhotoView\').style.display=\'none\'">✕</button>' +
+        '</div>' +
+        '<img src="' + p.img + '">';
+    v.style.display = 'flex';
+};
+window.bmDeletePhoto = function(idx){
+    if (!confirm(bt('confirmDel'))) return;
+    var data = bmLoad(bmUid());
+    data.photos.splice(idx, 1);
+    bmSave(bmUid(), data);
+    var v = document.getElementById('bmPhotoView');
+    if (v) v.style.display = 'none';
+    bmRender();
+};
+
+/* ---------- интеграция: кнопки ---------- */
+function bmInjectButtons(){
+    /* тренер: рядом с заголовком клиента в шапке */
+    var lbl = document.getElementById('currentUserLabel');
+    if (lbl && !document.getElementById('bmTrainerBtn')){
+        var b = document.createElement('button');
+        b.id = 'bmTrainerBtn';
+        b.className = 'icon-btn';
+        b.textContent = '📏';
+        b.title = bt('title');
+        b.style.cssText = 'background:rgba(59,130,246,.12); color:#3B82F6; margin-inline-start:6px; width:30px; height:30px; border-radius:8px; vertical-align:middle;';
+        b.onclick = function(){
+            if (typeof currentUserId !== 'undefined' && currentUserId) openBodyMeasures(currentUserId, false);
+            else if (typeof showToast === 'function') showToast('⚠️');
+        };
+        lbl.parentNode.insertBefore(b, lbl.nextSibling);
+    }
+}
+/* клиент: пункт в меню «Ещё» — патчим csOpenMore */
+(function(){
+    var orig = window.csOpenMore;
+    if (typeof orig !== 'function') return;
+    window.csOpenMore = function(){
+        orig.apply(this, arguments);
+        try {
+            var sheet = document.getElementById('csSheet');
+            if (!sheet) return;
+            var body = sheet.querySelector('.mp-sheet-body');
+            if (!body || body.querySelector('.bm-menu-item')) return;
+            var btn = document.createElement('button');
+            btn.className = 'mp-action-item bm-menu-item';
+            btn.innerHTML = '<span class="ico">📏</span>' + bt('measuresBtn');
+            btn.onclick = function(){
+                if (typeof csCloseSheet === 'function') csCloseSheet();
+                if (typeof __clientUser !== 'undefined' && __clientUser) openBodyMeasures(__clientUser.id, false);
+            };
+            var first = body.firstChild;
+            body.insertBefore(btn, first);
+        } catch(e){}
+    };
+})();
+
+/* ---------- DOM оверлеев ---------- */
+function bmBuildDom(){
+    if (document.getElementById('bmOverlay')) return;
+    var ov = document.createElement('div');
+    ov.id = 'bmOverlay';
+    ov.innerHTML =
+        '<div class="bm-sheet">' +
+            '<div class="bm-head">' +
+                '<div class="bm-title">' + bt('title') + '</div>' +
+                '<button class="bm-x" onclick="closeBodyMeasures()">✕</button>' +
+            '</div>' +
+            '<div class="bm-tabs" id="bmTabs"></div>' +
+            '<div class="bm-scroll"><div id="bmBody"></div></div>' +
+        '</div>';
+    ov.addEventListener('click', function(e){ if (e.target === ov) closeBodyMeasures(); });
+    document.body.appendChild(ov);
+
+    var fo = document.createElement('div');
+    fo.id = 'bmFormOverlay';
+    fo.innerHTML = '<div class="bm-form-sheet">' +
+        '<div class="bm-head"><div class="bm-title">📏</div><button class="bm-x" onclick="bmCloseForm()">✕</button></div>' +
+        '<div class="bm-scroll"><div id="bmFormBody"></div></div>' +
+    '</div>';
+    fo.addEventListener('click', function(e){ if (e.target === fo) bmCloseForm(); });
+    document.body.appendChild(fo);
+
+    var pv = document.createElement('div');
+    pv.id = 'bmPhotoView';
+    document.body.appendChild(pv);
+
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.id = 'bmPhotoInput';
+    inp.accept = 'image/*';
+    inp.capture = 'environment';
+    inp.style.display = 'none';
+    inp.onchange = bmHandlePhoto;
+    document.body.appendChild(inp);
+}
+
+function bmInit(){
+    bmBuildDom();
+    bmInjectButtons();
+    /* перерисовка при смене языка */
+    var origAL = window.applyLanguage;
+    if (typeof origAL === 'function' && !window.__bmLangHook){
+        window.__bmLangHook = true;
+        window.applyLanguage = function(){
+            var r = origAL.apply(this, arguments);
+            try {
+                var ov = document.getElementById('bmOverlay');
+                if (ov && ov.style.display === 'flex') bmRender();
+                var btn = document.getElementById('bmTrainerBtn');
+                if (btn) btn.title = bt('title');
+            } catch(e){}
+            return r;
+        };
+    }
+}
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(bmInit, 500); });
+} else {
+    setTimeout(bmInit, 500);
+}
+})();
+
+</script>
 
 <script>
 /* ============================================================
@@ -30396,5 +31237,6 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aa8e298aace8b9',t:'MTc4MTI4NTEzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aae4820e622212',t:'MTc4MTI4ODY2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
