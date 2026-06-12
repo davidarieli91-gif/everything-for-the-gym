@@ -27199,6 +27199,13 @@ body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top
 
 
 /* ===== PWA UI ===== */
+
+#pwaHelpOverlay { position: fixed; inset: 0; z-index: 215000; background: rgba(15,23,42,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 22px; }
+.pwa-help-box { background: var(--surface-color); border-radius: 20px; padding: 22px 20px 16px; max-width: 380px; width: 100%; box-shadow: 0 24px 70px rgba(0,0,0,.45); }
+.pwa-help-title { font-weight: 800; font-size: 1.1em; color: var(--text-primary); margin-bottom: 12px; text-align: center; }
+.pwa-help-line { font-size: .9em; color: var(--text-secondary); padding: 9px 12px; background: var(--background-color); border-radius: 12px; margin-bottom: 8px; line-height: 1.45; }
+.pwa-help-ok { display: block; width: 100%; margin-top: 6px; padding: 12px; border: none; border-radius: 13px; background: linear-gradient(135deg,#3B82F6,#1e40af); color: #fff; font-weight: 800; font-size: .98em; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+
 #pwaInstallBtn {
     position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
     z-index: 9500; padding: 13px 22px; border: none; border-radius: 999px;
@@ -30222,7 +30229,13 @@ var PWA_T = {
     updateBtn: { ru:'Обновить', en:'Update', he:'עדכן' },
     offline:   { ru:'📴 Нет сети — работаем офлайн', en:'📴 Offline mode', he:'📴 אין רשת — מצב לא מקוון' },
     online:    { ru:'✅ Сеть восстановлена', en:'✅ Back online', he:'✅ החיבור חזר' },
-    iosHint:   { ru:'На iPhone: Поделиться → «На экран Домой»', en:'On iPhone: Share → "Add to Home Screen"', he:'באייפון: שיתוף ← "הוסף למסך הבית"' }
+    iosHint:   { ru:'На iPhone: Поделиться → «На экран Домой»', en:'On iPhone: Share → "Add to Home Screen"', he:'באייפון: שיתוף ← "הוסף למסך הבית"' },
+    howTitle:  { ru:'Как установить приложение', en:'How to install the app', he:'איך להתקין את האפליקציה' },
+    howChrome: { ru:'Chrome: меню ⋮ (справа сверху) → «Установить приложение» или «Добавить на гл. экран»', en:'Chrome: menu ⋮ (top right) → "Install app" or "Add to Home screen"', he:'Chrome: תפריט ⋮ (למעלה) ← "התקנת אפליקציה" או "הוספה למסך הבית"' },
+    howYandex: { ru:'Яндекс Браузер: меню ⋮ → «Добавить ярлык» (или откройте сайт в Chrome)', en:'Yandex Browser: menu ⋮ → "Add shortcut" (or open the site in Chrome)', he:'דפדפן Yandex: תפריט ⋮ ← "הוסף קיצור" (או פתחו ב-Chrome)' },
+    howIos:    { ru:'iPhone (Safari): кнопка «Поделиться» → «На экран Домой»', en:'iPhone (Safari): "Share" button → "Add to Home Screen"', he:'אייפון (Safari): כפתור שיתוף ← "הוסף למסך הבית"' },
+    howWhatsapp:{ ru:'⚠️ Если открыли из WhatsApp/Telegram — сначала нажмите «Открыть в браузере»', en:'⚠️ If opened from WhatsApp/Telegram — first tap "Open in browser"', he:'⚠️ אם נפתח מ-WhatsApp/Telegram — קודם לחצו "פתח בדפדפן"' },
+    gotIt:     { ru:'Понятно', en:'Got it', he:'הבנתי' }
 };
 function pt(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; return (PWA_T[k]&&(PWA_T[k][l]||PWA_T[k].ru))||k; }
 
@@ -30261,26 +30274,66 @@ window.addEventListener('beforeinstallprompt', function(e){
     pwaShowInstallBtn();
 });
 
+function pwaIsStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function pwaShowInstallHelp(){
+    var old = document.getElementById('pwaHelpOverlay');
+    if (old) old.remove();
+    var ua = navigator.userAgent.toLowerCase();
+    var lines = [];
+    lines.push(pt('howWhatsapp'));
+    if (/iphone|ipad|ipod/.test(ua)) {
+        lines.push(pt('howIos'));
+    } else {
+        if (/yabrowser/.test(ua)) lines.push(pt('howYandex'));
+        lines.push(pt('howChrome'));
+    }
+    var ov = document.createElement('div');
+    ov.id = 'pwaHelpOverlay';
+    ov.innerHTML = '<div class="pwa-help-box">' +
+        '<div class="pwa-help-title">📲 ' + pt('howTitle') + '</div>' +
+        lines.map(function(l){ return '<div class="pwa-help-line">' + l + '</div>'; }).join('') +
+        '<button class="pwa-help-ok" onclick="document.getElementById(\'pwaHelpOverlay\').remove()">' + pt('gotIt') + '</button>' +
+    '</div>';
+    ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+}
+window.pwaShowInstallHelp = pwaShowInstallHelp;
+
 function pwaShowInstallBtn(){
     if (document.getElementById('pwaInstallBtn')) return;
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (pwaIsStandalone()) return;
     var b = document.createElement('button');
     b.id = 'pwaInstallBtn';
     b.textContent = pt('install');
     b.onclick = function(){
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function(res){
-            if (res && res.outcome === 'accepted'){
-                if (typeof showToast === 'function') showToast(pt('installed'));
-            }
-            deferredPrompt = null;
-            b.remove();
-        });
+        if (deferredPrompt){
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(res){
+                if (res && res.outcome === 'accepted'){
+                    if (typeof showToast === 'function') showToast(pt('installed'));
+                }
+                deferredPrompt = null;
+                b.remove();
+            });
+        } else {
+            /* системный диалог недоступен (Яндекс/Safari/WhatsApp-браузер) — показываем инструкцию */
+            pwaShowInstallHelp();
+        }
     };
     document.body.appendChild(b);
     setTimeout(function(){ try{ b.classList.add('pwa-min'); }catch(e){} }, 30000);
 }
+
+/* На мобильных показываем кнопку всегда (не только после beforeinstallprompt) */
+window.addEventListener('load', function(){
+    setTimeout(function(){
+        var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+        if (isMobile && !pwaIsStandalone()) pwaShowInstallBtn();
+    }, 2500);
+});
 
 window.addEventListener('appinstalled', function(){
     if (typeof showToast === 'function') showToast(pt('installed'));
@@ -30343,5 +30396,5 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aa5f07bc482212',t:'MTc4MTI4MzIwMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aa8e298aace8b9',t:'MTc4MTI4NTEzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
