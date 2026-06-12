@@ -6534,7 +6534,7 @@
         .info-modal {
             display: none;
             position: fixed;
-            z-index: 9999;
+            z-index: 120000;
             inset: 0;
             background: rgba(15, 23, 42, 0.55);
             backdrop-filter: blur(4px);
@@ -15671,7 +15671,7 @@
             smith:     { ru: 'Смит',        en: 'Smith Machine',   he: 'מכונת סמית' },
             cable:     { ru: 'Блок',        en: 'Cable',           he: 'כבל' },
             machine:   { ru: 'Тренажёр',    en: 'Machine',         he: 'מכונה' },
-            hammer:    { ru: 'Хаммер',      en: 'Hammer Strength', he: 'האמר' },
+            hammer:    { ru: 'Тренажёр (рычажный)', en: 'Machine (leverage)', he: 'מכונה' },
             tbar:      { ru: 'Т-гриф',      en: 'T-Bar',           he: 'מוט T' },
             bench:     { ru: 'Скамья',      en: 'Bench',           he: 'ספסל' },
             pullup:    { ru: 'Турник',      en: 'Pull-up Bar',     he: 'מתח' },
@@ -15813,7 +15813,7 @@
                     { id: 'landmine_press', equip: 'barbell',
                       ru: 'Жим Лэндмайн стоя', en: 'Landmine press', he: 'לחיצת לנדמיין' },
                     { id: 'incline_hammer_press', equip: 'hammer',
-                      ru: 'Жим в Хаммере на наклонной', en: 'Incline Hammer Strength press', he: 'לחיצת האמר בשיפוע עליון' },
+                      ru: 'Жим в тренажёре на наклонной', en: 'Incline machine press', he: 'לחיצת חזה במכונה בשיפוע עליון' },
                     { id: 'close_grip_incline_bb', equip: 'barbell',
                       ru: 'Жим штанги узким хватом на наклонной', en: 'Close-grip incline barbell press', he: 'לחיצת חזה אחיזה צרה בשיפוע חיובי כנגד מוט' },
                     { id: 'incline_db_press_fitball', equip: 'fitball',
@@ -15824,7 +15824,7 @@
                     { id: 'db_bench_press', equip: 'dumbbell', ru: 'Жим гантелей лёжа', en: 'Dumbbell bench press', he: 'לחיצת חזה במשקולות' },
                     { id: 'db_fly', equip: 'dumbbell', ru: 'Разводка гантелей лёжа', en: 'Dumbbell fly', he: 'פתיחת חזה במשקולות' },
                     { id: 'smith_bench', equip: 'smith', ru: 'Жим в Смите лёжа', en: 'Smith bench press', he: 'לחיצת חזה במכונת סמית' },
-                    { id: 'hammer_chest_press', equip: 'hammer', ru: 'Жим в Хаммере', en: 'Hammer chest press', he: 'לחיצת חזה האמר' },
+                    { id: 'hammer_chest_press', equip: 'hammer', ru: 'Жим в рычажном тренажёре', en: 'Leverage machine chest press', he: 'לחיצת חזה במכונה' },
                     { id: 'machine_chest_press', equip: 'machine', ru: 'Жим в тренажёре сидя', en: 'Machine chest press', he: 'לחיצת חזה במכונה' },
                     { id: 'pec_deck', equip: 'machine', ru: 'Сведение "Бабочка"', en: 'Pec deck', he: 'פרפר חזה' },
                     { id: 'cable_crossover', equip: 'cable', ru: 'Кроссовер на блоке (прямой)', en: 'Cable crossover', he: 'קרוסאובר בכבלים' },
@@ -15901,7 +15901,7 @@
                     { id: 'lat_pulldown_reverse', equip: 'cable', ru: 'Тяга верхнего блока обратным хватом', en: 'Reverse-grip lat pulldown', he: 'פולי עליון אחיזה הפוכה' },
                     { id: 'lat_pulldown_neutral', equip: 'cable', ru: 'Тяга верхнего блока параллельным хватом', en: 'Neutral-grip lat pulldown', he: 'פולי עליון אחיזה ניטרלית' },
                     { id: 'straight_arm_pulldown', equip: 'cable', ru: 'Пуловер на блоке (прямые руки)', en: 'Straight-arm cable pulldown', he: 'פולאובר בכבל זרועות ישרות' },
-                    { id: 'hammer_high_row', equip: 'hammer', ru: 'Тяга в Хаммере одной рукой', en: 'Hammer single-arm row', he: 'חתירה האמר ביד אחת' },
+                    { id: 'hammer_high_row', equip: 'hammer', ru: 'Тяга в тренажёре одной рукой', en: 'Machine single-arm row', he: 'חתירה במכונה ביד אחת' },
                     { id: 'pullover_machine', equip: 'machine', ru: 'Пуловер в тренажёре', en: 'Machine pullover', he: 'פולאובר במכונה' },
                     { id: 'trx_pullup', equip: 'trx', ru: 'Подтягивания в TRX', en: 'TRX pull-up', he: 'מתח ב-TRX' },
                     { id: 'band_lat_pulldown', equip: 'band', ru: 'Тяга с резинкой к корпусу', en: 'Band lat pulldown', he: 'משיכת גומיה לגוף' },
@@ -15921,7 +15921,7 @@
                     { id: 'smith_row', equip: 'smith', ru: 'Тяга в Смите в наклоне', en: 'Smith bent-over row', he: 'חתירה בסמית בכפיפה' },
                     { id: 'seated_cable_row', equip: 'cable', ru: 'Горизонтальная тяга в блоке', en: 'Seated cable row', he: 'חתירת מושב בכבל' },
                     { id: 'narrow_cable_row', equip: 'cable', ru: 'Тяга нижнего блока узким хватом', en: 'Narrow-grip cable row', he: 'חתירה בכבל אחיזה צרה' },
-                    { id: 'hammer_row_machine', equip: 'hammer', ru: 'Тяга в Хаммере горизонтально', en: 'Hammer Strength row', he: 'חתירה האמר אופקי' },
+                    { id: 'hammer_row_machine', equip: 'hammer', ru: 'Горизонтальная тяга в тренажёре', en: 'Leverage machine row', he: 'חתירה אופקית במכונה' },
                     { id: 'machine_row', equip: 'machine', ru: 'Тяга в тренажёре сидя', en: 'Seated machine row', he: 'חתירה במכונה' },
                     { id: 'inverted_row', equip: 'bw', ru: 'Австралийские подтягивания', en: 'Inverted row', he: 'מתח אוסטרלי' },
                     { id: 'trx_row', equip: 'trx', ru: 'Тяга в TRX', en: 'TRX row', he: 'חתירה ב-TRX' },
@@ -15987,7 +15987,7 @@
                     { id: 'arnold_press', equip: 'dumbbell', ru: 'Жим Арнольда', en: 'Arnold press', he: 'לחיצת ארנולד' },
                     { id: 'smith_ohp', equip: 'smith', ru: 'Жим в Смите стоя', en: 'Smith overhead press', he: 'לחיצה מעל הראש בסמית' },
                     { id: 'machine_shoulder_press', equip: 'machine', ru: 'Жим плеч в тренажёре', en: 'Machine shoulder press', he: 'לחיצת כתפיים במכונה' },
-                    { id: 'hammer_shoulder_press', equip: 'hammer', ru: 'Жим плеч в Хаммере', en: 'Hammer shoulder press', he: 'לחיצת כתפיים האמר' },
+                    { id: 'hammer_shoulder_press', equip: 'hammer', ru: 'Жим плеч в рычажном тренажёре', en: 'Leverage shoulder press', he: 'לחיצת כתפיים במכונה' },
                     { id: 'bb_front_raise', equip: 'barbell', ru: 'Подъём штанги перед собой', en: 'Barbell front raise', he: 'הרמת מוט קדמית' },
                     { id: 'db_front_raise', equip: 'dumbbell', ru: 'Подъём гантелей перед собой', en: 'Dumbbell front raise', he: 'הרמת משקולות קדמית' },
                     { id: 'plate_front_raise', equip: 'plate', ru: 'Подъём блина перед собой', en: 'Plate front raise', he: 'הרמת פלטה קדמית' },
@@ -16021,7 +16021,7 @@
                     { id: 'cross_cable_rear', equip: 'cable', ru: 'Махи на блоках в кросс', en: 'Cross-body cable rear delt', he: 'פתיחה צולבת בכבל לדלתא אחורית' },
                     { id: 'bent_over_cable_raise', equip: 'cable', ru: 'Махи в блоке в наклоне', en: 'Bent-over cable rear raise', he: 'הרחקה בכבל בכפיפה' },
                     { id: 'upright_row_narrow', equip: 'barbell', ru: 'Тяга штанги к подбородку узким хватом', en: 'Narrow-grip upright row', he: 'חתירה לסנטר אחיזה צרה' },
-                    { id: 'rear_delt_hammer', equip: 'hammer', ru: 'Задняя дельта в Хаммере', en: 'Hammer rear delt row', he: 'דלתא אחורית האמר' },
+                    { id: 'rear_delt_hammer', equip: 'hammer', ru: 'Задняя дельта в тренажёре', en: 'Machine rear delt row', he: 'דלתא אחורית במכונה' },
                     { id: 'trx_y_t_raise', equip: 'trx', ru: 'Y / T подъёмы в TRX', en: 'TRX Y/T raise', he: 'הרמות Y/T ב-TRX' },
                     { id: 'band_pull_apart', equip: 'band', ru: 'Растягивание резинки в стороны', en: 'Band pull-apart', he: 'משיכת גומיה לצדדים' },
                     { id: 'kb_rear_swing', equip: 'kettlebell', ru: 'Махи гирей назад одной рукой', en: 'Kettlebell rear swing', he: 'סוויינג קטלבל אחורי' },
@@ -20026,7 +20026,7 @@
         } catch(e){}
 
 
-        function openExerciseInfo(payloadJson) {
+        function openExerciseInfo(payloadJson, readonly) {
             const payload = typeof payloadJson === 'string'
                 ? JSON.parse(decodeURIComponent(payloadJson))
                 : payloadJson;
@@ -20078,14 +20078,14 @@
                     <div class="info-section-body"><ul>${techArr.map(li => `<li>${escapeHtml2(li)}</li>`).join('')}</ul></div>
                 </div>` : ''}
                 <div class="info-modal-actions">
-                    <button class="info-action-btn primary" onclick="addExerciseFromModal()">➕ ${escapeHtml2(t('infoAddToWorkout'))}</button>
+                    ${readonly ? '' : `<button class="info-action-btn primary" onclick="addExerciseFromModal()">➕ ${escapeHtml2(t('infoAddToWorkout'))}</button>
                     <button class="info-action-btn" style="background:rgba(59,130,246,0.12); color:#3B82F6;" onclick="editExerciseFromModal()">
                         ✏️ ${escapeHtml2(t('wkEdit') || 'Изменить')}
                     </button>
-                    ${isCustom ? `<button class="info-action-btn" style="background:rgba(239,68,68,0.12); color:#EF4444;" onclick="deleteCustomExercise('${ex.id}')">🗑 ${escapeHtml2(t('addExDelete') || 'Удалить')}</button>` : ''}
+                    ${isCustom ? `<button class="info-action-btn" style="background:rgba(239,68,68,0.12); color:#EF4444;" onclick="deleteCustomExercise('${ex.id}')">🗑 ${escapeHtml2(t('addExDelete') || 'Удалить')}</button>` : ''}`}
                     <button class="info-action-btn secondary" onclick="closeInfoModal()">${escapeHtml2(t('infoClose'))}</button>
                 </div>
-                <div class="info-hint">${escapeHtml2(t('infoHintExercise'))}</div>
+                ${readonly ? '' : `<div class="info-hint">${escapeHtml2(t('infoHintExercise'))}</div>`}
             `;
 
             showInfoModal({
@@ -20098,6 +20098,13 @@
         }
 
         function addExerciseFromModal() {
+            if (window.__infoAddOverride) {
+                const f = window.__infoAddOverride;
+                window.__infoAddOverride = null;
+                closeInfoModal();
+                f();
+                return;
+            }
             const payload = window.__lastInfoExercise;
             if (!payload) return;
             closeInfoModal();
@@ -20130,6 +20137,7 @@
             if (!modal) return;
             modal.classList.remove('open');
             document.body.style.overflow = '';
+            window.__infoAddOverride = null;
         }
         // ESC закрывает
         document.addEventListener('keydown', function(e) {
@@ -27066,6 +27074,18 @@ body.layout-desktop:not(.mode-workout) .product-card .product-nutrition { grid-t
 @keyframes exphFlip { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .exph-frame2 { animation: none; opacity: 0; } }
 
+
+/* ===== Полноэкранная карточка упражнения/продукта на телефоне и планшете ===== */
+body.layout-mobile .info-modal, body.layout-tablet .info-modal { padding: 0; }
+body.layout-mobile .info-modal-content, body.layout-tablet .info-modal-content {
+    max-width: 100%; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0;
+}
+@media (max-width: 920px) {
+    .info-modal { padding: 0; }
+    .info-modal-content { max-width: 100%; width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+}
+body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top: calc(14px + env(safe-area-inset-top, 0px)); }
+
 /* ===== CLOUD SYNC UI ===== */
 #cloudDock { position: fixed; top: 10px; right: 12px; z-index: 9000; display: flex; align-items: center; gap: 8px; }
 body[dir="rtl"] #cloudDock { right: auto; left: 12px; }
@@ -27626,10 +27646,11 @@ function mpWorkoutHTML(){
             var meta = (sets || '0') + '×' + (reps || '0');
             if (wt) meta += ' · ' + wt + ' ' + mt('kgS');
             if (rest) meta += ' · ⏱' + rest + mt('secS');
+            var exInfoPayload = tr.dataset.exId ? encodeURIComponent(JSON.stringify({ exId: tr.dataset.exId, groupId: tr.dataset.groupId || '', subId: tr.dataset.subId || '', equip: tr.dataset.equip || '' })) : '';
             rowsH += '<div class="mp-exrow" onclick="mpOpenExEditor(' + wi + ',' + ei + ')">' +
                 '<div class="mp-exbar" style="background:' + escA(color) + ';"></div>' +
                 '<div class="mp-exrow-main">' +
-                    '<div class="mp-exrow-name">' + esc(name || '—') + '</div>' +
+                    '<div class="mp-exrow-name"' + (exInfoPayload ? ' onclick="event.stopPropagation(); openExerciseInfo(\'' + exInfoPayload + '\')" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"' : '') + '>' + esc(name || '—') + '</div>' +
                     (sub ? '<div class="mp-exrow-sub">' + esc(sub) + '</div>' : '') +
                 '</div>' +
                 '<div class="mp-exrow-meta">' + esc(meta) + '</div>' +
@@ -27775,13 +27796,13 @@ window.mpFillExList = function(){
                     if (typeof getExerciseThumbHtml === 'function') exThumb = getExerciseThumbHtml(ex, g, color);
                     else if (typeof makeExerciseSceneSVG === 'function') exThumb = makeExerciseSceneSVG(ex, g, color);
                 } catch(e){}
-                items += '<div class="mp-pick-item" id="mpExItem' + i + '" onclick="mpExAdd(' + i + ')">' +
+                items += '<div class="mp-pick-item" id="mpExItem' + i + '" onclick="mpExInfo(' + i + ')">' +
                     (exThumb ? '<div class="mp-pick-thumb">' + exThumb + '</div>' : '<div class="mp-exbar" style="background:' + escA(color) + '; height:30px;"></div>') +
                     '<div class="mp-pick-main">' +
                         '<div class="mp-pick-name">' + esc(name) + '</div>' +
                         (equip ? '<div class="mp-pick-sub">' + esc(equip) + '</div>' : '') +
                     '</div>' +
-                    '<div class="mp-pick-plus" style="background:rgba(220,38,38,.1); color:#dc2626;">+</div>' +
+                    '<button class="mp-pick-plus" style="background:rgba(220,38,38,.12); color:#dc2626; border:none; cursor:pointer;" onclick="event.stopPropagation(); mpExAdd(' + i + ')">+</button>' +
                 '</div>';
             });
             if (items){
@@ -27792,6 +27813,12 @@ window.mpFillExList = function(){
     });
     __mpExArr = arr;
     list.innerHTML = h || '<div class="mp-empty">' + mt('nothing') + '</div>';
+};
+window.mpExInfo = function(i){
+    var d = __mpExArr[i]; if (!d) return;
+    if (typeof openExerciseInfo !== 'function') { mpExAdd(i); return; }
+    window.__infoAddOverride = function(){ mpExAdd(i); };
+    openExerciseInfo({ exId: d.exId, groupId: d.groupId, subId: d.subId, equip: d.equip });
 };
 window.mpExAdd = function(i){
     var d = __mpExArr[i]; if (!d) return;
@@ -28122,9 +28149,10 @@ window.renderClientWorkoutList = function(){
             var color = GROUP_COLORS_CS[ex.groupId] || '#3B82F6';
             var m = (ex.sets || '0') + '×' + (ex.reps || '0');
             if (ex.weight) m += ' · ' + ex.weight + ' ' + ct('kgShort');
+            var pl = ex.exId ? encodeURIComponent(JSON.stringify({ exId: ex.exId, groupId: ex.groupId || '', subId: ex.subId || '', equip: ex.equip || '' })) : '';
             lines += '<div class="cs-wcard-exline">' +
                 '<span class="bar" style="background:' + color + ';"></span>' +
-                '<span class="nm">' + cesc(ex.name || '—') + '</span>' +
+                '<span class="nm"' + (pl ? ' onclick="event.stopPropagation(); openExerciseInfo(\'' + pl + '\', true)" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"' : '') + '>' + cesc(ex.name || '—') + '</span>' +
                 '<span class="mt">' + cesc(m) + '</span>' +
             '</div>';
         });
@@ -28676,7 +28704,7 @@ function cwRenderInner(){
                 '<div class="cw-ex-head">'+
                     '<div class="cw-ex-no" style="background:'+color+'20; color:'+color+';">'+(allDone?'✓':(i+1))+'</div>'+
                     '<div class="cw-ex-titlewrap">'+
-                        '<div class="cw-ex-title">'+eh(ex.name||'—')+'</div>'+
+                        '<div class="cw-ex-title"'+(ex.exId?' onclick="openExerciseInfo(\''+encodeURIComponent(JSON.stringify({exId:ex.exId,groupId:ex.groupId||'',subId:ex.subId||'',equip:ex.equip||''}))+'\','+(ctx.live?'false':'true')+')" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"':'')+'>'+eh(ex.name||'—')+'</div>'+
                         '<div class="cw-ex-meta">'+(parseInt(ex.sets)||1)+' '+wt('setsOf')+' · '+eh(ex.reps||'')+' '+wt('repsOf')+' · ⏱ '+rest+'s</div>'+
                     '</div>'+
                     (ctx.live?'<button class="cw-ex-menu" onclick="cwOpenExMenu('+i+')">⋯</button>':'')+
@@ -29871,5 +29899,5 @@ if (document.readyState === 'loading'){
 
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0a3d9792adce8f3',t:'MTc4MTIxNDgxNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0a703608ea60dd4',t:'MTc4MTI0Nzk4OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
