@@ -7681,10 +7681,12 @@
                     <span id="currentUserLabel" style="font-size:0.85em; color:var(--text-secondary); font-weight:500;"></span>
                     <button class="action-btn print-btn mode-nutrition-only" onclick="printPlan()" data-i18n="btnPrint">🖨️ Печать</button>
                     <button class="action-btn print-btn mode-nutrition-only" onclick="shareProgramImage('nutrition')" style="background: linear-gradient(135deg, #25D366, #128C7E);" data-i18n="btnShareWA">📤 WhatsApp</button>
+                    <button class="action-btn print-btn mode-nutrition-only" onclick="openTplManager()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);" data-i18n="btnTpl">📦 Шаблоны</button>
                     <button class="action-btn save-btn mode-nutrition-only" onclick="savePlan()" data-i18n="btnSave">💾 Сохранить</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printWorkout()" data-i18n="btnPrint">🖨️ Печать</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printPrivateGym()" style="background: linear-gradient(135deg, #2563EB, #1e40af);" data-i18n="btnPrintPG">🖨️ Private Gym</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="shareProgramImage('workout')" style="background: linear-gradient(135deg, #25D366, #128C7E);" data-i18n="btnShareWA">📤 WhatsApp</button>
+                    <button class="action-btn print-btn mode-workout-only" onclick="openTplManager()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);" data-i18n="btnTpl">📦 Шаблоны</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="saveWorkoutPlan(); showToast(t('wkSaved'))" data-i18n="btnSave">💾 Сохранить</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="sendWorkoutToClient()" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8); color:white; border:none;" title="Отправить текущую тренировку клиенту">📤 <span data-i18n="btnSendClient">Клиенту</span></button>
                     <button class="icon-btn" onclick="openSettingsModal()" data-tooltip="Настройки" aria-label="Настройки">⚙️</button>
@@ -10839,6 +10841,8 @@
                 trPasswordPh: 'Введите пароль',
                 trBtnLogin: 'Войти',
                 trBtnBack: '← Назад',
+                btnTpl: '📦 Шаблоны',
+
                 btnShareWA: '📤 WhatsApp',
 
                 googleSignBtn: 'Войти / регистрация через Google',
@@ -11630,6 +11634,8 @@
                 trPasswordPh: 'Enter password',
                 trBtnLogin: 'Login',
                 trBtnBack: '← Back',
+                btnTpl: '📦 Templates',
+
                 btnShareWA: '📤 WhatsApp',
 
                 googleSignBtn: 'Sign in / register with Google',
@@ -12328,6 +12334,8 @@
                 trPasswordPh: 'הזן סיסמה',
                 trBtnLogin: 'כניסה',
                 trBtnBack: '← חזרה',
+                btnTpl: '📦 תבניות',
+
                 btnShareWA: '📤 WhatsApp',
 
                 googleSignBtn: 'כניסה / הרשמה עם Google',
@@ -17669,6 +17677,266 @@
             setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
             if (typeof showToast === 'function') showToast(sht('downloaded'));
         }
+
+
+        // ============================================================
+        // КОНСТРУКТОР ШАБЛОНОВ (tpl): программы тренировок и рационы
+        // многоразового использования.
+        // Хранение: localStorage['programTemplates'] = {
+        //   workouts: [{ id, name, note, data:[...serializeWorkout], createdAt }],
+        //   meals:    [{ id, name, note, data:{meals:[...]}, createdAt }]
+        // }
+        // Синхронизируется с облаком (ключ добавлен в SYNC_EXACT).
+        // ============================================================
+        var TPL_T = {
+            btn:        { ru:'📦 Шаблоны', en:'📦 Templates', he:'📦 תבניות' },
+            titleWk:    { ru:'📦 Шаблоны программ', en:'📦 Workout templates', he:'📦 תבניות אימון' },
+            titleNt:    { ru:'📦 Шаблоны рационов', en:'📦 Meal templates', he:'📦 תבניות תזונה' },
+            saveCur:    { ru:'💾 Сохранить текущую как шаблон', en:'💾 Save current as template', he:'💾 שמור נוכחית כתבנית' },
+            apply:      { ru:'Применить', en:'Apply', he:'החל' },
+            applyAdd:   { ru:'➕ Добавить к текущей', en:'➕ Add to current', he:'➕ הוסף לנוכחית' },
+            applyReplace:{ ru:'♻️ Заменить текущую', en:'♻️ Replace current', he:'♻️ החלף נוכחית' },
+            rename:     { ru:'✏️ Переименовать', en:'✏️ Rename', he:'✏️ שינוי שם' },
+            del:        { ru:'🗑 Удалить', en:'🗑 Delete', he:'🗑 מחיקה' },
+            confirmDel: { ru:'Удалить шаблон?', en:'Delete template?', he:'למחוק את התבנית?' },
+            confirmReplace:{ ru:'Текущая программа будет заменена шаблоном. Продолжить?', en:'Current program will be replaced by the template. Continue?', he:'התוכנית הנוכחית תוחלף בתבנית. להמשיך?' },
+            namePh:     { ru:'Название шаблона', en:'Template name', he:'שם התבנית' },
+            notePh:     { ru:'Заметка (необязательно)', en:'Note (optional)', he:'הערה (לא חובה)' },
+            saved:      { ru:'✅ Шаблон сохранён', en:'✅ Template saved', he:'✅ התבנית נשמרה' },
+            applied:    { ru:'✅ Шаблон применён', en:'✅ Template applied', he:'✅ התבנית הוחלה' },
+            empty:      { ru:'Пока нет шаблонов.<br>Составьте программу и сохраните её как шаблон — потом применяйте любому клиенту в один клик!', en:'No templates yet.<br>Build a program and save it as a template — then apply it to any client in one click!', he:'אין תבניות עדיין.<br>בנו תוכנית ושמרו כתבנית — ואז החילו על כל לקוח בלחיצה!' },
+            noData:     { ru:'Сначала составьте программу', en:'Create a program first', he:'קודם בנו תוכנית' },
+            nameReq:    { ru:'Введите название', en:'Enter a name', he:'הזינו שם' },
+            wkCount:    { ru:'трен.', en:'workouts', he:'אימונים' },
+            exCount:    { ru:'упр.', en:'ex.', he:'תרגילים' },
+            mealCount:  { ru:'приёмов', en:'meals', he:'ארוחות' },
+            prodCount:  { ru:'прод.', en:'items', he:'מוצרים' },
+            close:      { ru:'Закрыть', en:'Close', he:'סגירה' },
+            saveBtn:    { ru:'💾 Сохранить', en:'💾 Save', he:'💾 שמירה' }
+        };
+        function tplT(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (TPL_T[k] && (TPL_T[k][l] || TPL_T[k].ru)) || k; }
+        function tplEsc(s){ return (typeof escapeHtml === 'function') ? escapeHtml(String(s == null ? '' : s)) : String(s); }
+
+        function tplLoad(){
+            try {
+                var d = JSON.parse(localStorage.getItem('programTemplates') || 'null');
+                if (d && d.workouts && d.meals) return d;
+            } catch(e){}
+            return { workouts: [], meals: [] };
+        }
+        function tplSave(d){
+            try { localStorage.setItem('programTemplates', JSON.stringify(d)); } catch(e){
+                if (typeof showToast === 'function') showToast('⚠️ Storage full');
+            }
+        }
+        function tplMode(){
+            return document.body.classList.contains('mode-workout') ? 'workouts' : 'meals';
+        }
+
+        /* ---------- сериализация текущего питания (только структура) ---------- */
+        function tplCollectMeals(){
+            var meals = [];
+            document.querySelectorAll('#mealsContainer .meal').forEach(function(meal){
+                var m = {
+                    title: (meal.querySelector('.meal-title') || {}).value || '',
+                    notes: (meal.querySelector('.meal-notes') || {}).value || '',
+                    targetPercent: (meal.querySelector('.meal-target-input') || {}).value || '',
+                    products: []
+                };
+                meal.querySelectorAll('.meal-body tr').forEach(function(tr){
+                    var sel = tr.querySelector('.product-select');
+                    if (!sel || sel.value === '') return;
+                    var p = allProducts[parseInt(sel.value)];
+                    if (!p) return;
+                    m.products.push({
+                        productName: p.name,
+                        productHebrew: p.hebrew,
+                        weight: parseFloat((tr.querySelector('.weight-input') || {}).value) || 100,
+                        unit: (tr.querySelector('.unit-select') || {}).value || 'gram'
+                    });
+                });
+                if (m.products.length || m.title) meals.push(m);
+            });
+            return meals;
+        }
+
+        /* ---------- открытие менеджера ---------- */
+        window.openTplManager = function(){
+            var mode = tplMode();
+            var ov = document.getElementById('tplOverlay');
+            if (!ov){
+                ov = document.createElement('div');
+                ov.id = 'tplOverlay';
+                ov.innerHTML = '<div class="tpl-sheet">' +
+                    '<div class="tpl-head"><div class="tpl-title" id="tplTitle"></div>' +
+                    '<button class="tpl-x" onclick="closeTplManager()">✕</button></div>' +
+                    '<div class="tpl-scroll"><div id="tplBody"></div></div>' +
+                '</div>';
+                ov.addEventListener('click', function(e){ if (e.target === ov) closeTplManager(); });
+                document.body.appendChild(ov);
+            }
+            ov.style.display = 'flex';
+            tplRender();
+        };
+        window.closeTplManager = function(){
+            var ov = document.getElementById('tplOverlay');
+            if (ov) ov.style.display = 'none';
+        };
+
+        function tplRender(){
+            var mode = tplMode();
+            var titleEl = document.getElementById('tplTitle');
+            if (titleEl) titleEl.textContent = mode === 'workouts' ? tplT('titleWk') : tplT('titleNt');
+            var box = document.getElementById('tplBody');
+            if (!box) return;
+            var data = tplLoad();
+            var list = data[mode] || [];
+
+            var h = '<button class="tpl-save-btn" onclick="tplSaveCurrent()">' + tplT('saveCur') + '</button>';
+
+            if (!list.length){
+                h += '<div class="tpl-empty">📦<br>' + tplT('empty') + '</div>';
+                box.innerHTML = h;
+                return;
+            }
+
+            list.slice().sort(function(a,b){ return (b.createdAt||0) - (a.createdAt||0); }).forEach(function(tp){
+                var meta = '';
+                if (mode === 'workouts'){
+                    var wks = tp.data || [];
+                    var exN = 0;
+                    wks.forEach(function(w){ exN += (w.exercises || []).length; });
+                    meta = wks.length + ' ' + tplT('wkCount') + ' · ' + exN + ' ' + tplT('exCount');
+                } else {
+                    var ms = (tp.data && tp.data.meals) || [];
+                    var prodN = 0;
+                    ms.forEach(function(m){ prodN += (m.products || []).length; });
+                    meta = ms.length + ' ' + tplT('mealCount') + ' · ' + prodN + ' ' + tplT('prodCount');
+                }
+                h += '<div class="tpl-card">' +
+                    '<div class="tpl-card-main">' +
+                        '<div class="tpl-card-name">' + tplEsc(tp.name) + '</div>' +
+                        '<div class="tpl-card-meta">' + meta + (tp.note ? ' · 📝 ' + tplEsc(tp.note) : '') + '</div>' +
+                    '</div>' +
+                    '<div class="tpl-card-actions">' +
+                        '<button class="tpl-act apply" onclick="tplApply(\'' + tp.id + '\', false)">' + tplT('applyAdd') + '</button>' +
+                        '<button class="tpl-act replace" onclick="tplApply(\'' + tp.id + '\', true)">' + tplT('applyReplace') + '</button>' +
+                        '<button class="tpl-act" onclick="tplRename(\'' + tp.id + '\')">✏️</button>' +
+                        '<button class="tpl-act danger" onclick="tplDelete(\'' + tp.id + '\')">🗑</button>' +
+                    '</div>' +
+                '</div>';
+            });
+            box.innerHTML = h;
+        }
+
+        /* ---------- сохранить текущую программу/рацион как шаблон ---------- */
+        window.tplSaveCurrent = function(){
+            var mode = tplMode();
+            var payload;
+            if (mode === 'workouts'){
+                payload = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout)
+                    .filter(function(w){ return (w.exercises || []).length || w.title; });
+                if (!payload.length){ if (typeof showToast === 'function') showToast(tplT('noData')); return; }
+            } else {
+                var meals = tplCollectMeals();
+                if (!meals.length){ if (typeof showToast === 'function') showToast(tplT('noData')); return; }
+                payload = { meals: meals };
+            }
+            var name = prompt(tplT('namePh'), '');
+            if (name === null) return;
+            name = name.trim();
+            if (!name){ alert(tplT('nameReq')); return; }
+            var note = prompt(tplT('notePh'), '') || '';
+            var data = tplLoad();
+            data[mode].push({
+                id: 'tpl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                name: name, note: note.trim(),
+                data: payload, createdAt: Date.now()
+            });
+            tplSave(data);
+            tplRender();
+            if (typeof showToast === 'function') showToast(tplT('saved'));
+        };
+
+        /* ---------- применить шаблон ---------- */
+        window.tplApply = function(id, replace){
+            var mode = tplMode();
+            var data = tplLoad();
+            var tp = (data[mode] || []).find(function(x){ return x.id === id; });
+            if (!tp) return;
+
+            if (mode === 'workouts'){
+                if (replace){
+                    if (!confirm(tplT('confirmReplace'))) return;
+                    document.querySelectorAll('#workoutsContainer .workout').forEach(function(w){ w.remove(); });
+                }
+                (tp.data || []).forEach(function(w){
+                    var copy = JSON.parse(JSON.stringify(w));
+                    copy.date = new Date().toISOString().slice(0, 10);
+                    addWorkout(copy);
+                });
+                if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
+                if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
+            } else {
+                if (replace){
+                    if (!confirm(tplT('confirmReplace'))) return;
+                    document.querySelectorAll('#mealsContainer .meal').forEach(function(m){ m.remove(); });
+                }
+                ((tp.data && tp.data.meals) || []).forEach(function(mealData){
+                    addMeal();
+                    var meals = document.querySelectorAll('#mealsContainer .meal');
+                    var meal = meals[meals.length - 1];
+                    if (!meal) return;
+                    if (meal.querySelector('.meal-title')) meal.querySelector('.meal-title').value = mealData.title || '';
+                    if (meal.querySelector('.meal-notes')) meal.querySelector('.meal-notes').value = mealData.notes || '';
+                    if (meal.querySelector('.meal-target-input')) meal.querySelector('.meal-target-input').value = mealData.targetPercent || '';
+                    (mealData.products || []).forEach(function(pd){
+                        var product = allProducts.find(function(p){ return p.name === pd.productName && p.hebrew === pd.productHebrew; });
+                        if (!product) product = allProducts.find(function(p){ return p.name === pd.productName; });
+                        if (!product) return;
+                        addProductRow(product, meal);
+                        var rows = meal.querySelectorAll('.meal-body tr');
+                        var lastRow = rows[rows.length - 1];
+                        if (!lastRow) return;
+                        if (lastRow.querySelector('.weight-input')) lastRow.querySelector('.weight-input').value = pd.weight || 100;
+                        if (pd.unit && lastRow.querySelector('.unit-select')) lastRow.querySelector('.unit-select').value = pd.unit;
+                        if (typeof updateProductRow === 'function') updateProductRow(lastRow.querySelector('.product-select'));
+                    });
+                });
+                if (typeof refreshMealTargets === 'function') try { refreshMealTargets(); } catch(e){}
+                if (typeof updateTotalNutrition === 'function') updateTotalNutrition();
+                if (typeof updateProgressBars === 'function') updateProgressBars();
+                if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+            }
+            closeTplManager();
+            if (document.body.classList.contains('mp-active') && typeof mpRenderAll === 'function') mpRenderAll();
+            if (typeof showToast === 'function') showToast(tplT('applied'));
+        };
+
+        window.tplRename = function(id){
+            var mode = tplMode();
+            var data = tplLoad();
+            var tp = (data[mode] || []).find(function(x){ return x.id === id; });
+            if (!tp) return;
+            var name = prompt(tplT('namePh'), tp.name);
+            if (name === null) return;
+            name = name.trim();
+            if (!name){ alert(tplT('nameReq')); return; }
+            tp.name = name;
+            var note = prompt(tplT('notePh'), tp.note || '');
+            if (note !== null) tp.note = note.trim();
+            tplSave(data);
+            tplRender();
+        };
+
+        window.tplDelete = function(id){
+            if (!confirm(tplT('confirmDel'))) return;
+            var mode = tplMode();
+            var data = tplLoad();
+            data[mode] = (data[mode] || []).filter(function(x){ return x.id !== id; });
+            tplSave(data);
+            tplRender();
+        };
 
 
         function printWorkout() {
@@ -27515,6 +27783,62 @@ body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top
 
 
 
+
+
+/* ===== MINI-CHAT (cht) ===== */
+#chtOverlay { display: none; position: fixed; inset: 0; z-index: 135000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.cht-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 520px; height: 86vh; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #chtOverlay { padding: 0; } .cht-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.cht-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #10B981, #047857); color: #fff; flex-shrink: 0; }
+.cht-head-main { flex: 1; min-width: 0; }
+.cht-title { font-weight: 800; font-size: 1.02em; }
+.cht-sub { font-size: .76em; opacity: .9; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cht-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.cht-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px; }
+.cht-empty { text-align: center; padding: 60px 18px; color: var(--text-light); font-size: .95em; line-height: 1.6; }
+.cht-day { text-align: center; font-size: .68em; font-weight: 700; color: var(--text-light); margin: 12px 0 8px; }
+.cht-msg { display: flex; margin-bottom: 6px; }
+.cht-msg.mine { justify-content: flex-end; }
+.cht-msg.their { justify-content: flex-start; }
+.cht-bubble { max-width: 78%; padding: 9px 12px; border-radius: 16px; font-size: .92em; line-height: 1.4; word-break: break-word; position: relative; }
+.cht-msg.mine .cht-bubble { background: linear-gradient(135deg, #10B981, #059669); color: #fff; border-bottom-right-radius: 5px; }
+.cht-msg.their .cht-bubble { background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-primary); border-bottom-left-radius: 5px; }
+body[dir="rtl"] .cht-msg.mine .cht-bubble { border-bottom-right-radius: 16px; border-bottom-left-radius: 5px; }
+body[dir="rtl"] .cht-msg.their .cht-bubble { border-bottom-left-radius: 16px; border-bottom-right-radius: 5px; }
+.cht-time { display: inline-block; font-size: .68em; opacity: .65; margin-inline-start: 8px; vertical-align: bottom; }
+.cht-inputbar { display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface-color); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+#chtInput { flex: 1; resize: none; border: 1.5px solid var(--border-color); border-radius: 16px; padding: 10px 14px; font-size: 16px; font-family: inherit; background: var(--background-color); color: var(--text-primary); max-height: 110px; line-height: 1.35; }
+#chtInput:focus { outline: none; border-color: #10B981; }
+.cht-send { width: 44px; height: 44px; border: none; border-radius: 50%; background: linear-gradient(135deg, #10B981, #047857); color: #fff; font-size: 1.1em; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.cht-send:active { transform: scale(.92); }
+body[dir="rtl"] .cht-send { transform: scaleX(-1); }
+body[dir="rtl"] .cht-send:active { transform: scaleX(-1) scale(.92); }
+.cht-badge { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9px; background: #EF4444; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.cht-nav-badge { position: absolute; top: 4px; right: calc(50% - 18px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9px; background: #EF4444; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
+/* ===== TEMPLATES (tpl) ===== */
+#tplOverlay { display: none; position: fixed; inset: 0; z-index: 130000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.tpl-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #tplOverlay { padding: 0; } .tpl-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.tpl-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; flex-shrink: 0; }
+.tpl-title { font-weight: 800; font-size: 1.05em; }
+.tpl-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.tpl-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+.tpl-save-btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 14px; background: linear-gradient(135deg, #8B5CF6, #6D28D9); color: #fff; font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit; margin-bottom: 14px; box-shadow: 0 4px 14px rgba(139,92,246,.35); -webkit-tap-highlight-color: transparent; }
+.tpl-save-btn:active { transform: scale(.98); }
+.tpl-empty { text-align: center; padding: 40px 18px; color: var(--text-light); font-size: .95em; line-height: 1.6; }
+.tpl-card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; }
+.tpl-card-name { font-weight: 800; font-size: 1em; color: var(--text-primary); }
+.tpl-card-meta { font-size: .78em; color: var(--text-light); margin-top: 3px; }
+.tpl-card-actions { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+.tpl-act { padding: 9px 13px; border: 1px solid var(--border-color); border-radius: 11px; background: var(--background-color); color: var(--text-primary); font-weight: 700; font-size: .8em; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.tpl-act:active { transform: scale(.96); }
+.tpl-act.apply { background: rgba(16,185,129,.1); border-color: #10B981; color: #047857; flex: 1; }
+.tpl-act.replace { background: rgba(139,92,246,.1); border-color: #8B5CF6; color: #6D28D9; flex: 1; }
+.tpl-act.danger { color: #EF4444; }
+body.dark-theme .tpl-act.apply { color: #34D399; }
+body.dark-theme .tpl-act.replace { color: #A78BFA; }
+
 /* ===== BODY MEASURES (bm) ===== */
 #bmOverlay { display: none; position: fixed; inset: 0; z-index: 130000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
 .bm-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 560px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
@@ -28445,6 +28769,7 @@ window.mpOpenActions = function(){
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printWorkout();"><span class="ico">🖨️</span>' + mt('print') + '</button>';
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printPrivateGym();"><span class="ico">🖨️</span>' + mt('print') + ' Private Gym</button>';
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); shareProgramImage(\'workout\');"><span class="ico">📤</span>WhatsApp</button>';
+        items += '<button class="mp-action-item" onclick="mpCloseSheet(); openTplManager();"><span class="ico">📦</span>' + (typeof tplT === 'function' ? tplT('btn').replace('📦 ','') : 'Templates') + '</button>';
         if (typeof exportWorkouts === 'function')
             items += '<button class="mp-action-item" onclick="mpCloseSheet(); exportWorkouts();"><span class="ico">📤</span>' + mt('exportX') + '</button>';
         if (typeof sendWorkoutToClient === 'function')
@@ -28453,6 +28778,7 @@ window.mpOpenActions = function(){
     } else {
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); printPlan();"><span class="ico">🖨️</span>' + mt('print') + '</button>';
         items += '<button class="mp-action-item" onclick="mpCloseSheet(); shareProgramImage(\'nutrition\');"><span class="ico">📤</span>WhatsApp</button>';
+        items += '<button class="mp-action-item" onclick="mpCloseSheet(); openTplManager();"><span class="ico">📦</span>' + (typeof tplT === 'function' ? tplT('btn').replace('📦 ','') : 'Templates') + '</button>';
         if (typeof exportToExcel === 'function')
             items += '<button class="mp-action-item" onclick="mpCloseSheet(); exportToExcel();"><span class="ico">📤</span>' + mt('exportX') + ' Excel</button>';
         items += '<button class="mp-action-item danger" onclick="mpCloseSheet(); clearPlan(); mpRenderBody();"><span class="ico">🗑️</span>' + mt('clear') + '</button>';
@@ -30213,9 +30539,9 @@ function cl(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; retur
 
 /* какие ключи синхронизируем (данные, а не настройки конкретного устройства) */
 var SYNC_EXACT = ['nutritionUsers','trainersList','tasksList','calendarEvents','shopItems','shopSales','leadsList',
-    'customExercisesDatabase','customProductsDatabase','systemExOverrides','taskTemplates','customAppLogo',
+    'customExercisesDatabase','customProductsDatabase','systemExOverrides','taskTemplates','customAppLogo','programTemplates',
     'workoutPlan','nutritionPlan'];
-var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_','bodyMeasures_',
+var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_','bodyMeasures_','chatMessages_',
     'clientNutriDone_','trainerProfile_','trainerFiles_','clientLastSync_'];
 function isSyncKey(k){
     if (!k || k.charAt(0) === '_') return false;
@@ -30468,6 +30794,7 @@ function startLive(){
 
 /* обновить открытые экраны после применения удалённых данных */
 function refreshOpenViews(){
+    try { if (typeof chatOnRemoteUpdate === 'function') chatOnRemoteUpdate(); } catch(e){}
     try {
         if (typeof loadWorkoutPlan === 'function' && document.querySelector('#workoutsContainer')) loadWorkoutPlan();
         if (document.body.classList.contains('mp-active') && typeof mpRenderAll === 'function') mpRenderAll();
@@ -31058,6 +31385,316 @@ if (document.readyState === 'loading'){
 
 <script>
 /* ============================================================
+   MINI-CHAT (cht) — тренер ↔ клиент
+   Хранение: localStorage['chatMessages_<clientId>'] =
+     [{ id, from:'trainer'|'client', text, ts, read }]
+   Синхронизация через облако Google (ключ chatMessages_ в SYNC_PREFIX):
+   сообщение, отправленное на одном устройстве, прилетает на другое.
+   ============================================================ */
+(function(){
+'use strict';
+
+var CHT_T = {
+    title:     { ru:'💬 Чат', en:'💬 Chat', he:'💬 צ\'אט' },
+    chatTab:   { ru:'Чат', en:'Chat', he:'צ\'אט' },
+    withTrainer:{ ru:'с тренером', en:'with trainer', he:'עם המאמן' },
+    placeholder:{ ru:'Сообщение…', en:'Message…', he:'הודעה…' },
+    empty:     { ru:'Пока нет сообщений.<br>Напишите первое!', en:'No messages yet.<br>Write the first one!', he:'אין הודעות עדיין.<br>כתבו את הראשונה!' },
+    today:     { ru:'Сегодня', en:'Today', he:'היום' },
+    yesterday: { ru:'Вчера', en:'Yesterday', he:'אתמול' },
+    trainer:   { ru:'Тренер', en:'Trainer', he:'מאמן' },
+    noClient:  { ru:'Сначала выберите клиента', en:'Select a client first', he:'קודם בחרו לקוח' },
+    newMsg:    { ru:'💬 Новое сообщение', en:'💬 New message', he:'💬 הודעה חדשה' }
+};
+function cht(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (CHT_T[k] && (CHT_T[k][l] || CHT_T[k].ru)) || k; }
+function che(s){ return (typeof escapeHtml === 'function') ? escapeHtml(String(s == null ? '' : s)) : String(s); }
+
+function chatKey(uid){ return 'chatMessages_' + uid; }
+function chatLoad(uid){
+    try { var a = JSON.parse(localStorage.getItem(chatKey(uid)) || '[]'); return Array.isArray(a) ? a : []; } catch(e){ return []; }
+}
+function chatStore(uid, arr){
+    /* держим максимум 500 последних сообщений */
+    if (arr.length > 500) arr = arr.slice(-500);
+    try { localStorage.setItem(chatKey(uid), JSON.stringify(arr)); } catch(e){}
+}
+
+window.__chatCtx = { uid: null, role: null };
+var __chatLastCount = -1;
+
+window.chatUnread = function(uid, role){
+    var other = role === 'trainer' ? 'client' : 'trainer';
+    return chatLoad(uid).filter(function(m){ return m.from === other && !m.read; }).length;
+};
+
+/* ---------- открыть / закрыть ---------- */
+window.openChat = function(uid, role){
+    if (!uid){ if (typeof showToast === 'function') showToast(cht('noClient')); return; }
+    window.__chatCtx = { uid: uid, role: role };
+    chatBuildDom();
+    var ov = document.getElementById('chtOverlay');
+    ov.style.display = 'flex';
+    /* отметить входящие прочитанными */
+    chatMarkRead();
+    chatRender(true);
+    setTimeout(function(){
+        var inp = document.getElementById('chtInput');
+        if (inp && window.innerWidth > 920) inp.focus();
+    }, 150);
+};
+window.closeChat = function(){
+    var ov = document.getElementById('chtOverlay');
+    if (ov) ov.style.display = 'none';
+    window.__chatCtx = { uid: null, role: null };
+    chatUpdateBadges();
+};
+
+function chatMarkRead(){
+    var c = window.__chatCtx;
+    if (!c.uid) return;
+    var other = c.role === 'trainer' ? 'client' : 'trainer';
+    var arr = chatLoad(c.uid);
+    var changed = false;
+    arr.forEach(function(m){ if (m.from === other && !m.read){ m.read = true; changed = true; } });
+    if (changed) chatStore(c.uid, arr);
+}
+
+/* ---------- DOM ---------- */
+function chatBuildDom(){
+    if (document.getElementById('chtOverlay')) { chatUpdateHead(); return; }
+    var ov = document.createElement('div');
+    ov.id = 'chtOverlay';
+    ov.innerHTML =
+        '<div class="cht-sheet">' +
+            '<div class="cht-head">' +
+                '<div class="cht-head-main"><div class="cht-title" id="chtTitle"></div><div class="cht-sub" id="chtSub"></div></div>' +
+                '<button class="cht-x" onclick="closeChat()">✕</button>' +
+            '</div>' +
+            '<div class="cht-scroll" id="chtScroll"><div id="chtBody"></div></div>' +
+            '<div class="cht-inputbar">' +
+                '<textarea id="chtInput" rows="1" placeholder="" ' +
+                    'oninput="this.style.height=\'auto\'; this.style.height=Math.min(this.scrollHeight,110)+\'px\';" ' +
+                    'onkeydown="if(event.key===\'Enter\' && !event.shiftKey){ event.preventDefault(); chatSend(); }"></textarea>' +
+                '<button class="cht-send" onclick="chatSend()">➤</button>' +
+            '</div>' +
+        '</div>';
+    ov.addEventListener('click', function(e){ if (e.target === ov) closeChat(); });
+    document.body.appendChild(ov);
+    chatUpdateHead();
+}
+
+function chatUpdateHead(){
+    var c = window.__chatCtx;
+    var titleEl = document.getElementById('chtTitle');
+    var subEl = document.getElementById('chtSub');
+    var inp = document.getElementById('chtInput');
+    if (inp) inp.placeholder = cht('placeholder');
+    if (!titleEl) return;
+    if (c.role === 'trainer'){
+        var name = '';
+        try {
+            var u = getUsers().find(function(x){ return x.id === c.uid; });
+            if (u) name = (u.avatar || '👤') + ' ' + (u.name || '') + (u.lastName ? ' ' + u.lastName : '');
+        } catch(e){}
+        titleEl.textContent = cht('title');
+        if (subEl) subEl.textContent = name;
+    } else {
+        titleEl.textContent = cht('title');
+        if (subEl) subEl.textContent = cht('withTrainer');
+    }
+}
+
+/* ---------- рендер сообщений ---------- */
+function chatDayLabel(ts){
+    var d = new Date(ts);
+    var now = new Date();
+    var d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var n0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var diff = Math.round((n0 - d0) / 86400000);
+    if (diff === 0) return cht('today');
+    if (diff === 1) return cht('yesterday');
+    return d.toLocaleDateString();
+}
+
+window.chatRender = function(scrollToEnd){
+    var c = window.__chatCtx;
+    var box = document.getElementById('chtBody');
+    if (!box || !c.uid) return;
+    var arr = chatLoad(c.uid);
+    __chatLastCount = arr.length;
+    if (!arr.length){
+        box.innerHTML = '<div class="cht-empty">💬<br>' + cht('empty') + '</div>';
+        return;
+    }
+    var h = '';
+    var lastDay = '';
+    arr.forEach(function(m){
+        var day = chatDayLabel(m.ts);
+        if (day !== lastDay){
+            h += '<div class="cht-day">' + day + '</div>';
+            lastDay = day;
+        }
+        var mine = (m.from === c.role);
+        var time = new Date(m.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        h += '<div class="cht-msg ' + (mine ? 'mine' : 'their') + '">' +
+            '<div class="cht-bubble">' + che(m.text).replace(/\n/g, '<br>') +
+                '<span class="cht-time">' + time + (mine && m.read ? ' ✓✓' : (mine ? ' ✓' : '')) + '</span>' +
+            '</div>' +
+        '</div>';
+    });
+    box.innerHTML = h;
+    if (scrollToEnd !== false){
+        var sc = document.getElementById('chtScroll');
+        if (sc) sc.scrollTop = sc.scrollHeight;
+    }
+};
+
+/* ---------- отправка ---------- */
+window.chatSend = function(){
+    var c = window.__chatCtx;
+    var inp = document.getElementById('chtInput');
+    if (!c.uid || !inp) return;
+    var text = (inp.value || '').trim();
+    if (!text) return;
+    var arr = chatLoad(c.uid);
+    arr.push({
+        id: 'm' + Date.now() + Math.random().toString(36).slice(2, 5),
+        from: c.role,
+        text: text.slice(0, 2000),
+        ts: Date.now(),
+        read: false
+    });
+    chatStore(c.uid, arr);
+    inp.value = '';
+    inp.style.height = 'auto';
+    chatRender(true);
+};
+
+/* ---------- бейджи непрочитанных ---------- */
+function chatUpdateBadges(){
+    /* тренер: бейдж на кнопке 💬 в шапке */
+    try {
+        var btn = document.getElementById('chtTrainerBtn');
+        if (btn){
+            var uid = (typeof currentUserId !== 'undefined') ? currentUserId : null;
+            var n = uid ? chatUnread(uid, 'trainer') : 0;
+            var b = btn.querySelector('.cht-badge');
+            if (n > 0){
+                if (!b){ b = document.createElement('span'); b.className = 'cht-badge'; btn.appendChild(b); }
+                b.textContent = n > 9 ? '9+' : n;
+            } else if (b) b.remove();
+        }
+    } catch(e){}
+    /* клиент: бейдж в нижней навигации */
+    try {
+        var navB = document.querySelector('#csNav .cht-nav-badge');
+        var cs = document.getElementById('clientSpace');
+        if (cs && cs.style.display !== 'none' && typeof __clientUser !== 'undefined' && __clientUser){
+            var n2 = chatUnread(__clientUser.id, 'client');
+            var navBtn = document.getElementById('csChatNavBtn');
+            if (navBtn){
+                var b2 = navBtn.querySelector('.cht-nav-badge');
+                if (n2 > 0){
+                    if (!b2){ b2 = document.createElement('span'); b2.className = 'cht-nav-badge'; navBtn.appendChild(b2); }
+                    b2.textContent = n2 > 9 ? '9+' : n2;
+                } else if (b2) b2.remove();
+            }
+        }
+    } catch(e){}
+}
+window.chatUpdateBadges = chatUpdateBadges;
+
+/* ---------- интеграция: кнопка тренера ---------- */
+function chatInjectTrainerBtn(){
+    var anchorBtn = document.getElementById('bmTrainerBtn');
+    if (!anchorBtn || document.getElementById('chtTrainerBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'chtTrainerBtn';
+    b.className = 'icon-btn';
+    b.textContent = '💬';
+    b.title = cht('title');
+    b.style.cssText = 'background:rgba(16,185,129,.12); color:#10B981; margin-inline-start:6px; width:30px; height:30px; border-radius:8px; vertical-align:middle; position:relative;';
+    b.onclick = function(){
+        if (typeof currentUserId !== 'undefined' && currentUserId) openChat(currentUserId, 'trainer');
+        else if (typeof showToast === 'function') showToast(cht('noClient'));
+    };
+    anchorBtn.parentNode.insertBefore(b, anchorBtn.nextSibling);
+}
+
+/* ---------- интеграция: вкладка клиента ---------- */
+(function(){
+    var orig = window.csRenderNav;
+    if (typeof orig !== 'function') return;
+    window.csRenderNav = function(){
+        orig.apply(this, arguments);
+        try {
+            var el = document.getElementById('csNav');
+            if (!el || document.getElementById('csChatNavBtn')) { chatUpdateBadges(); return; }
+            var moreBtn = el.querySelector('button:last-child');
+            var btn = document.createElement('button');
+            btn.className = 'mp-nav-item';
+            btn.id = 'csChatNavBtn';
+            btn.style.position = 'relative';
+            btn.innerHTML = '<span class="mp-nav-ico">💬</span><span>' + cht('chatTab') + '</span>';
+            btn.onclick = function(){
+                if (typeof __clientUser !== 'undefined' && __clientUser) openChat(__clientUser.id, 'client');
+            };
+            el.insertBefore(btn, moreBtn);
+            chatUpdateBadges();
+        } catch(e){}
+    };
+})();
+
+/* ---------- live-обновление при синхронизации с облака ---------- */
+/* (вызывается из refreshOpenViews cloud-модуля; также страховка интервалом) */
+window.chatOnRemoteUpdate = function(){
+    try {
+        var ov = document.getElementById('chtOverlay');
+        var c = window.__chatCtx;
+        if (ov && ov.style.display === 'flex' && c.uid){
+            var n = chatLoad(c.uid).length;
+            if (n !== __chatLastCount){
+                chatMarkRead();
+                chatRender(true);
+            }
+        }
+        chatUpdateBadges();
+    } catch(e){}
+};
+setInterval(window.chatOnRemoteUpdate, 12000);
+
+/* ---------- init ---------- */
+function chatInit(){
+    chatInjectTrainerBtn();
+    chatUpdateBadges();
+    /* перевод при смене языка */
+    var origAL = window.applyLanguage;
+    if (typeof origAL === 'function' && !window.__chtLangHook){
+        window.__chtLangHook = true;
+        window.applyLanguage = function(){
+            var r = origAL.apply(this, arguments);
+            try {
+                chatUpdateHead();
+                var ov = document.getElementById('chtOverlay');
+                if (ov && ov.style.display === 'flex') chatRender(false);
+                var btn = document.getElementById('chtTrainerBtn');
+                if (btn) btn.title = cht('title');
+            } catch(e){}
+            return r;
+        };
+    }
+}
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(chatInit, 600); });
+} else {
+    setTimeout(chatInit, 600);
+}
+})();
+
+</script>
+
+<script>
+/* ============================================================
    PWA: service worker + установка + обновления + офлайн-баннер
    ============================================================ */
 (function(){
@@ -31237,6 +31874,5 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aae4820e622212',t:'MTc4MTI4ODY2OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aaffb21ee20dd4',t:'MTc4MTI4OTc4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
