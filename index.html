@@ -27785,6 +27785,123 @@ body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top
 
 
 
+
+
+
+/* ===== DASHBOARD (dsh) + ROLES ===== */
+.dsh-home-btn { display: block; margin: 14px auto 0; padding: 12px 26px; border: none; border-radius: 999px; background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit; box-shadow: 0 6px 18px rgba(99,102,241,.4); -webkit-tap-highlight-color: transparent; }
+.dsh-home-btn:hover { transform: translateY(-2px); }
+#dshOverlay { display: none; position: fixed; inset: 0; z-index: 133000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.dsh-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #dshOverlay { padding: 0; } .dsh-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.dsh-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; flex-shrink: 0; }
+.dsh-title { font-weight: 800; font-size: 1.02em; }
+.dsh-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.dsh-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+.dsh-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 14px; }
+.dsh-stat { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 6px; text-align: center; }
+.dsh-stat b { display: block; font-size: 1.6em; color: var(--text-primary); }
+.dsh-stat span { font-size: .64em; color: var(--text-light); font-weight: 600; }
+.dsh-sec { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px 13px; margin-bottom: 11px; }
+.dsh-sec-t { font-weight: 800; font-size: .88em; color: var(--text-primary); margin-bottom: 8px; }
+.dsh-sub-t { font-size: .72em; color: var(--text-light); font-weight: 700; margin: 8px 0 4px; }
+.dsh-none { font-size: .82em; color: var(--text-light); padding: 4px 2px; }
+.dsh-chip { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 11px; background: var(--background-color); margin-bottom: 5px; cursor: default; }
+.dsh-chip[onclick] { cursor: pointer; }
+.dsh-chip[onclick]:active { transform: scale(.99); }
+.dsh-ava { font-size: 1.1em; flex-shrink: 0; }
+.dsh-nm { flex: 1; min-width: 0; font-weight: 700; font-size: .86em; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsh-ext { font-size: .8em; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.dsh-red { color: #EF4444; }
+.dsh-amber { color: #D97706; }
+/* режим стажёра: прячем разрушающие кнопки */
+body.role-viewer .control-btn.remove, body.role-viewer .row-delete,
+body.role-viewer .ex-row-delete, body.role-viewer .clear-btn,
+body.role-viewer #addTrainerBtn { display: none !important; }
+
+/* ===== NOTIFICATIONS (ntf) ===== */
+#ntfBell { position: fixed; bottom: 10px; left: 56px; z-index: 9000; width: 38px; height: 38px; border: 1px solid var(--border-color); border-radius: 50%; background: var(--surface-color); font-size: 1.05em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.12); opacity: .92; -webkit-tap-highlight-color: transparent; }
+body[dir="rtl"] #ntfBell { left: auto; right: 56px; }
+#ntfBell:hover { opacity: 1; transform: translateY(-1px); }
+#ntfBell.has { animation: ntfRing 2.4s ease-in-out infinite; }
+@keyframes ntfRing { 0%,88%,100% { transform: rotate(0); } 90% { transform: rotate(12deg); } 93% { transform: rotate(-10deg); } 96% { transform: rotate(6deg); } }
+.ntf-badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #EF4444; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+body.mp-active #ntfBell, body.layout-mobile #ntfBell { bottom: 90px; left: 54px; }
+body[dir="rtl"].mp-active #ntfBell, body[dir="rtl"].layout-mobile #ntfBell { left: auto; right: 54px; }
+#ntfOverlay { display: none; position: fixed; inset: 0; z-index: 136000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.ntf-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 500px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #ntfOverlay { padding: 0; } .ntf-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.ntf-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; flex-shrink: 0; }
+.ntf-title { font-weight: 800; font-size: 1.02em; }
+.ntf-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ntf-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.ntf-settings { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+.ntf-set-title { font-weight: 800; font-size: .85em; color: var(--text-primary); margin-bottom: 8px; }
+.ntf-set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: .85em; color: var(--text-secondary); cursor: pointer; }
+.ntf-set-row input[type="checkbox"] { width: 19px; height: 19px; }
+.ntf-set-row select { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 9px; background: var(--background-color); color: var(--text-primary); font-family: inherit; font-weight: 700; }
+.ntf-sys { font-size: .76em; font-weight: 700; padding: 8px 10px; border-radius: 10px; margin-top: 6px; text-align: center; }
+.ntf-sys.ok { background: rgba(16,185,129,.1); color: #047857; }
+.ntf-sys.bad { background: rgba(239,68,68,.1); color: #B91C1C; }
+.ntf-sys-btn { display: block; width: 100%; margin-top: 8px; padding: 10px; border: none; border-radius: 11px; background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; font-weight: 800; font-size: .85em; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.ntf-empty { text-align: center; padding: 40px 16px; color: var(--text-light); font-size: .95em; line-height: 1.6; }
+.ntf-tools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.ntf-tools button { padding: 7px 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--surface-color); color: var(--text-secondary); font-size: .76em; font-weight: 700; cursor: pointer; font-family: inherit; }
+.ntf-item { display: flex; align-items: flex-start; gap: 10px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 13px; padding: 10px 12px; margin-bottom: 7px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ntf-item.unread { border-color: #6366F1; background: rgba(99,102,241,.05); }
+.ntf-ico { font-size: 1.2em; flex-shrink: 0; }
+.ntf-main { flex: 1; min-width: 0; }
+.ntf-main b { display: block; font-size: .86em; color: var(--text-primary); }
+.ntf-main small { display: block; font-size: .76em; color: var(--text-secondary); margin-top: 2px; }
+.ntf-time { font-size: .64em; color: var(--text-light); white-space: nowrap; flex-shrink: 0; }
+
+/* ===== SUBSCRIPTIONS (sub) ===== */
+#subOverlay { display: none; position: fixed; inset: 0; z-index: 134000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.sub-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 540px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #subOverlay { padding: 0; } .sub-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.sub-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #F59E0B, #B45309); color: #fff; flex-shrink: 0; }
+.sub-title { font-weight: 800; font-size: 1.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.sub-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+.sub-add-btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 14px; background: linear-gradient(135deg, #F59E0B, #B45309); color: #fff; font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit; margin-bottom: 14px; box-shadow: 0 4px 14px rgba(245,158,11,.35); -webkit-tap-highlight-color: transparent; }
+.sub-empty { text-align: center; padding: 40px 18px; color: var(--text-light); font-size: .95em; line-height: 1.6; }
+.sub-card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+.sub-card.st-finished, .sub-card.st-expired { opacity: .65; }
+.sub-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sub-card-name { font-weight: 800; font-size: 1em; color: var(--text-primary); }
+.sub-st { font-size: .7em; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.sub-st-active { background: rgba(16,185,129,.12); color: #047857; }
+.sub-st-soon { background: rgba(245,158,11,.16); color: #B45309; }
+.sub-st-finished, .sub-st-expired { background: rgba(239,68,68,.12); color: #B91C1C; }
+.sub-big { font-weight: 900; font-size: 1.7em; color: var(--text-primary); margin: 8px 0 4px; }
+.sub-big small { font-size: .5em; font-weight: 600; color: var(--text-light); }
+.sub-bar { height: 8px; border-radius: 5px; background: var(--border-color); overflow: hidden; margin: 6px 0 4px; }
+.sub-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, #F59E0B, #10B981); }
+.sub-meta { font-size: .76em; color: var(--text-secondary); margin-top: 7px; line-height: 1.5; }
+.sub-actions { display: flex; gap: 7px; margin-top: 11px; flex-wrap: wrap; }
+.sub-act { padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 11px; background: var(--background-color); color: var(--text-primary); font-weight: 700; font-size: .8em; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.sub-act:active { transform: scale(.96); }
+.sub-act.minus { background: rgba(239,68,68,.08); border-color: #EF4444; color: #B91C1C; flex: 1; }
+.sub-act.plus { background: rgba(16,185,129,.08); border-color: #10B981; color: #047857; }
+.sub-act.danger { color: #EF4444; }
+.sub-history { margin-top: 9px; border-top: 1px dashed var(--border-color); padding-top: 7px; }
+.sub-hist-row { font-size: .7em; color: var(--text-light); padding: 2px 0; }
+.sub-arch-title { font-weight: 800; font-size: .85em; color: var(--text-light); margin: 16px 2px 8px; }
+.sub-form label { display: block; font-size: .74em; font-weight: 700; color: var(--text-secondary); margin: 10px 0 4px; }
+.sub-form input { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border-color); border-radius: 11px; font-size: 1em; background: var(--surface-color); color: var(--text-primary); font-family: inherit; }
+.sub-type-row { display: flex; gap: 8px; margin-bottom: 4px; }
+.sub-type { flex: 1; padding: 11px; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--surface-color); color: var(--text-secondary); font-weight: 700; font-size: .85em; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.sub-type.active { border-color: #F59E0B; background: rgba(245,158,11,.1); color: #B45309; }
+.sub-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sub-form-actions { display: flex; gap: 9px; margin-top: 16px; }
+.sub-save-btn { flex: 1; padding: 13px; border: none; border-radius: 13px; background: linear-gradient(135deg, #10B981, #047857); color: #fff; font-weight: 800; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.sub-badge { display: inline-flex; align-items: center; font-size: .7em; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-inline-start: 6px; vertical-align: middle; }
+.sub-badge-ok { background: rgba(16,185,129,.12); color: #047857; }
+.sub-badge-warn { background: rgba(245,158,11,.18); color: #B45309; }
+.sub-badge-bad { background: rgba(239,68,68,.14); color: #B91C1C; }
+body.dark-theme .sub-st-active, body.dark-theme .sub-badge-ok { color: #34D399; }
+body.dark-theme .sub-st-soon, body.dark-theme .sub-badge-warn { color: #FBBF24; }
+
 /* ===== MINI-CHAT (cht) ===== */
 #chtOverlay { display: none; position: fixed; inset: 0; z-index: 135000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
 .cht-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 520px; height: 86vh; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
@@ -30541,7 +30658,7 @@ function cl(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; retur
 var SYNC_EXACT = ['nutritionUsers','trainersList','tasksList','calendarEvents','shopItems','shopSales','leadsList',
     'customExercisesDatabase','customProductsDatabase','systemExOverrides','taskTemplates','customAppLogo','programTemplates',
     'workoutPlan','nutritionPlan'];
-var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_','bodyMeasures_','chatMessages_',
+var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_','bodyMeasures_','chatMessages_','subscriptions_',
     'clientNutriDone_','trainerProfile_','trainerFiles_','clientLastSync_'];
 function isSyncKey(k){
     if (!k || k.charAt(0) === '_') return false;
@@ -31695,6 +31812,1187 @@ if (document.readyState === 'loading'){
 
 <script>
 /* ============================================================
+   SUBSCRIPTIONS (sub) — учёт оплат и абонементов
+   Хранение: localStorage['subscriptions_<clientId>'] = {
+     plans: [{ id, type:'count'|'period', name, total, used, price,
+               paidAt, validFrom, validTo, note, closed, history:[{ts,action,info}] }]
+   }
+   Списание тренировки: автоматически при сохранении результата
+   тренировки клиентом/тренером (cwSaveExit) — 1 занятие.
+   Синхронизация через облако (subscriptions_ в SYNC_PREFIX).
+   ============================================================ */
+(function(){
+'use strict';
+
+var SUB_T = {
+    title:      { ru:'💰 Абонемент', en:'💰 Subscription', he:'💰 מנוי' },
+    addPlan:    { ru:'➕ Новый абонемент', en:'➕ New subscription', he:'➕ מנוי חדש' },
+    typeCount:  { ru:'По занятиям', en:'By sessions', he:'לפי אימונים' },
+    typePeriod: { ru:'По сроку', en:'By period', he:'לפי תקופה' },
+    name:       { ru:'Название', en:'Name', he:'שם' },
+    namePh:     { ru:'Напр.: 12 тренировок', en:'E.g.: 12 sessions', he:'לדוג׳: 12 אימונים' },
+    sessions:   { ru:'Кол-во занятий', en:'Sessions', he:'מספר אימונים' },
+    price:      { ru:'Цена (₪)', en:'Price (₪)', he:'מחיר (₪)' },
+    from:       { ru:'Действует с', en:'Valid from', he:'בתוקף מ' },
+    to:         { ru:'Действует до', en:'Valid until', he:'בתוקף עד' },
+    note:       { ru:'Заметка', en:'Note', he:'הערה' },
+    save:       { ru:'💾 Сохранить', en:'💾 Save', he:'💾 שמירה' },
+    left:       { ru:'осталось', en:'left', he:'נותרו' },
+    of:         { ru:'из', en:'of', he:'מתוך' },
+    used1:      { ru:'−1 занятие', en:'−1 session', he:'−1 אימון' },
+    plus1:      { ru:'+1 занятие', en:'+1 session', he:'+1 אימון' },
+    daysLeft:   { ru:'дней осталось', en:'days left', he:'ימים נותרו' },
+    expired:    { ru:'⛔ Истёк', en:'⛔ Expired', he:'⛔ פג תוקף' },
+    finished:   { ru:'⛔ Закончился', en:'⛔ Used up', he:'⛔ נוצל' },
+    active:     { ru:'✅ Активен', en:'✅ Active', he:'✅ פעיל' },
+    endingSoon: { ru:'⚠️ Заканчивается', en:'⚠️ Ending soon', he:'⚠️ עומד להסתיים' },
+    noPlans:    { ru:'Нет абонементов.<br>Создайте первый — занятия будут списываться автоматически после каждой тренировки.', en:'No subscriptions.<br>Create one — sessions will be deducted automatically after each workout.', he:'אין מנויים.<br>צרו מנוי — אימונים ינוכו אוטומטית אחרי כל אימון.' },
+    history:    { ru:'История', en:'History', he:'היסטוריה' },
+    close:      { ru:'Закрыть', en:'Close', he:'סגירה' },
+    archive:    { ru:'📁 Архивировать', en:'📁 Archive', he:'📁 לארכיון' },
+    del:        { ru:'🗑 Удалить', en:'🗑 Delete', he:'🗑 מחיקה' },
+    confirmDel: { ru:'Удалить абонемент?', en:'Delete subscription?', he:'למחוק את המנוי?' },
+    paid:       { ru:'Оплачен', en:'Paid', he:'שולם' },
+    created:    { ru:'Создан', en:'Created', he:'נוצר' },
+    deducted:   { ru:'Списано занятие', en:'Session deducted', he:'נוכה אימון' },
+    refunded:   { ru:'Возврат занятия', en:'Session refunded', he:'אימון הוחזר' },
+    autoDeduct: { ru:'Автосписание после тренировки', en:'Auto-deducted after workout', he:'נוכה אוטומטית אחרי אימון' },
+    saved:      { ru:'✅ Сохранено', en:'✅ Saved', he:'✅ נשמר' },
+    deductToast:{ ru:'💰 Списано 1 занятие. Осталось: ', en:'💰 1 session deducted. Left: ', he:'💰 נוכה אימון. נותרו: ' },
+    expireToast:{ ru:'⚠️ Абонемент закончился!', en:'⚠️ Subscription is used up!', he:'⚠️ המנוי הסתיים!' },
+    archived:   { ru:'Архив', en:'Archive', he:'ארכיון' },
+    nameReq:    { ru:'Введите название', en:'Enter a name', he:'הזינו שם' },
+    myPlan:     { ru:'💰 Мой абонемент', en:'💰 My subscription', he:'💰 המנוי שלי' },
+    noMyPlan:   { ru:'Абонемент не оформлен — обратитесь к тренеру', en:'No subscription yet — ask your trainer', he:'אין מנוי — פנו למאמן' }
+};
+function st(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (SUB_T[k] && (SUB_T[k][l] || SUB_T[k].ru)) || k; }
+function se(s){ return (typeof escapeHtml === 'function') ? escapeHtml(String(s == null ? '' : s)) : String(s); }
+
+function subKey(uid){ return 'subscriptions_' + uid; }
+function subLoad(uid){
+    try { var d = JSON.parse(localStorage.getItem(subKey(uid)) || 'null'); if (d && d.plans) return d; } catch(e){}
+    return { plans: [] };
+}
+function subStore(uid, d){
+    try { localStorage.setItem(subKey(uid), JSON.stringify(d)); } catch(e){}
+}
+function todayISO(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+/* статус плана: active | soon | finished | expired */
+window.subPlanStatus = function(p){
+    if (p.closed) return 'finished';
+    if (p.type === 'count'){
+        var leftN = (parseInt(p.total) || 0) - (parseInt(p.used) || 0);
+        if (leftN <= 0) return 'finished';
+        if (p.validTo && todayISO() > p.validTo) return 'expired';
+        if (leftN <= 2) return 'soon';
+        return 'active';
+    } else {
+        if (!p.validTo) return 'active';
+        var now = todayISO();
+        if (now > p.validTo) return 'expired';
+        var dl = Math.ceil((new Date(p.validTo) - new Date(now)) / 86400000);
+        if (dl <= 5) return 'soon';
+        return 'active';
+    }
+};
+/* активный план клиента (первый не законченный) */
+window.subActivePlan = function(uid){
+    var d = subLoad(uid);
+    return (d.plans || []).find(function(p){
+        var s = subPlanStatus(p);
+        return s === 'active' || s === 'soon';
+    }) || null;
+};
+
+/* ---------- списание занятия (вызывается после тренировки) ---------- */
+window.subDeductSession = function(uid, info){
+    if (!uid) return;
+    var d = subLoad(uid);
+    var p = (d.plans || []).find(function(x){
+        if (x.closed || x.type !== 'count') return false;
+        var s = subPlanStatus(x);
+        return s === 'active' || s === 'soon';
+    });
+    if (!p) return;
+    p.used = (parseInt(p.used) || 0) + 1;
+    p.history = p.history || [];
+    p.history.push({ ts: Date.now(), action: 'deduct', info: info || st('autoDeduct') });
+    var leftN = (parseInt(p.total) || 0) - p.used;
+    subStore(uid, d);
+    if (typeof showToast === 'function'){
+        if (leftN <= 0) showToast(st('expireToast'));
+        else showToast(st('deductToast') + leftN);
+    }
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+};
+
+/* ---------- менеджер (тренер) / просмотр (клиент) ---------- */
+window.openSubscriptions = function(uid, readonly){
+    window.__subUid = uid;
+    window.__subReadonly = !!readonly;
+    subBuildDom();
+    document.getElementById('subOverlay').style.display = 'flex';
+    subRender();
+};
+window.closeSubscriptions = function(){
+    var ov = document.getElementById('subOverlay');
+    if (ov) ov.style.display = 'none';
+};
+
+function subBuildDom(){
+    if (document.getElementById('subOverlay')) return;
+    var ov = document.createElement('div');
+    ov.id = 'subOverlay';
+    ov.innerHTML = '<div class="sub-sheet">' +
+        '<div class="sub-head"><div class="sub-title" id="subTitle"></div>' +
+        '<button class="sub-x" onclick="closeSubscriptions()">✕</button></div>' +
+        '<div class="sub-scroll"><div id="subBody"></div></div>' +
+    '</div>';
+    ov.addEventListener('click', function(e){ if (e.target === ov) closeSubscriptions(); });
+    document.body.appendChild(ov);
+}
+
+function subPlanCard(p, idx, readonly){
+    var status = subPlanStatus(p);
+    var stMap = { active: st('active'), soon: st('endingSoon'), finished: st('finished'), expired: st('expired') };
+    var leftN = (parseInt(p.total) || 0) - (parseInt(p.used) || 0);
+    var pct = p.type === 'count' && p.total > 0 ? Math.max(0, Math.round(leftN / p.total * 100)) : null;
+    var daysL = '';
+    if (p.type === 'period' && p.validTo){
+        var dl = Math.ceil((new Date(p.validTo) - new Date(todayISO())) / 86400000);
+        daysL = dl >= 0 ? dl + ' ' + st('daysLeft') : '';
+        if (p.validTo && pct === null){
+            var totalD = p.validFrom ? Math.max(1, Math.ceil((new Date(p.validTo) - new Date(p.validFrom)) / 86400000)) : 30;
+            pct = Math.max(0, Math.min(100, Math.round(dl / totalD * 100)));
+        }
+    }
+    var h = '<div class="sub-card st-' + status + '">' +
+        '<div class="sub-card-top">' +
+            '<div class="sub-card-name">' + se(p.name) + '</div>' +
+            '<span class="sub-st sub-st-' + status + '">' + stMap[status] + '</span>' +
+        '</div>';
+    if (p.type === 'count'){
+        h += '<div class="sub-big">' + Math.max(0, leftN) + '<small> ' + st('of') + ' ' + (p.total || 0) + ' · ' + st('left') + '</small></div>';
+    } else {
+        h += '<div class="sub-big">' + (daysL || stMap[status]) + '</div>';
+    }
+    if (pct !== null){
+        h += '<div class="sub-bar"><div class="sub-bar-fill" style="width:' + pct + '%;"></div></div>';
+    }
+    var meta = [];
+    if (p.price) meta.push('💳 ' + p.price + ' ₪ · ' + st('paid') + ' ' + (p.paidAt || ''));
+    if (p.validFrom || p.validTo) meta.push('📅 ' + (p.validFrom || '…') + ' → ' + (p.validTo || '…'));
+    if (p.note) meta.push('📝 ' + se(p.note));
+    if (meta.length) h += '<div class="sub-meta">' + meta.join('<br>') + '</div>';
+
+    if (!readonly){
+        h += '<div class="sub-actions">';
+        if (p.type === 'count' && !p.closed){
+            h += '<button class="sub-act minus" onclick="subManualDeduct(' + idx + ')">' + st('used1') + '</button>';
+            h += '<button class="sub-act plus" onclick="subRefund(' + idx + ')">' + st('plus1') + '</button>';
+        }
+        h += '<button class="sub-act" onclick="subToggleHistory(' + idx + ')">📜</button>';
+        if (!p.closed) h += '<button class="sub-act" onclick="subArchive(' + idx + ')">📁</button>';
+        h += '<button class="sub-act danger" onclick="subDelete(' + idx + ')">🗑</button>';
+        h += '</div>';
+    }
+    h += '<div class="sub-history" id="subHist' + idx + '" style="display:none;">';
+    (p.history || []).slice(-15).reverse().forEach(function(ev){
+        var lbl = ev.action === 'deduct' ? st('deducted') : (ev.action === 'refund' ? st('refunded') : st('created'));
+        h += '<div class="sub-hist-row">' + new Date(ev.ts).toLocaleString() + ' — ' + lbl + (ev.info ? ' (' + se(ev.info) + ')' : '') + '</div>';
+    });
+    h += '</div></div>';
+    return h;
+}
+
+window.subRender = function(){
+    var uid = window.__subUid;
+    var box = document.getElementById('subBody');
+    var titleEl = document.getElementById('subTitle');
+    if (!box || !uid) return;
+    var readonly = window.__subReadonly;
+    var name = '';
+    try {
+        var u = getUsers().find(function(x){ return x.id === uid; });
+        if (u) name = (u.avatar || '') + ' ' + (u.name || '');
+    } catch(e){}
+    if (titleEl) titleEl.textContent = (readonly ? st('myPlan') : st('title')) + (name && !readonly ? ' · ' + name : '');
+
+    var d = subLoad(uid);
+    var plans = d.plans || [];
+    var h = '';
+    if (!readonly){
+        h += '<button class="sub-add-btn" onclick="subOpenForm()">' + st('addPlan') + '</button>';
+    }
+    var act = plans.filter(function(p){ return !p.closed; });
+    var arch = plans.filter(function(p){ return p.closed; });
+    if (!act.length && !arch.length){
+        h += '<div class="sub-empty">💰<br>' + (readonly ? st('noMyPlan') : st('noPlans')) + '</div>';
+        box.innerHTML = h;
+        return;
+    }
+    act.forEach(function(p){ h += subPlanCard(p, plans.indexOf(p), readonly); });
+    if (arch.length && !readonly){
+        h += '<div class="sub-arch-title">📁 ' + st('archived') + ' (' + arch.length + ')</div>';
+        arch.forEach(function(p){ h += subPlanCard(p, plans.indexOf(p), readonly); });
+    }
+    box.innerHTML = h;
+};
+
+/* ---------- форма нового абонемента ---------- */
+window.subOpenForm = function(){
+    var box = document.getElementById('subBody');
+    if (!box) return;
+    var from = todayISO();
+    var to = new Date(); to.setMonth(to.getMonth() + 1);
+    var toS = to.getFullYear() + '-' + String(to.getMonth()+1).padStart(2,'0') + '-' + String(to.getDate()).padStart(2,'0');
+    box.innerHTML = '<div class="sub-form">' +
+        '<div class="sub-type-row">' +
+            '<button class="sub-type active" id="subTypeCount" onclick="subSetType(\'count\')">🎟 ' + st('typeCount') + '</button>' +
+            '<button class="sub-type" id="subTypePeriod" onclick="subSetType(\'period\')">📅 ' + st('typePeriod') + '</button>' +
+        '</div>' +
+        '<label>' + st('name') + '</label>' +
+        '<input type="text" id="subFName" placeholder="' + st('namePh') + '">' +
+        '<div id="subCountRow"><label>' + st('sessions') + '</label>' +
+        '<input type="number" id="subFTotal" inputmode="numeric" min="1" value="12"></div>' +
+        '<label>' + st('price') + '</label>' +
+        '<input type="number" id="subFPrice" inputmode="numeric" min="0" placeholder="0">' +
+        '<div class="sub-2col">' +
+            '<div><label>' + st('from') + '</label><input type="date" id="subFFrom" value="' + from + '"></div>' +
+            '<div><label>' + st('to') + '</label><input type="date" id="subFTo" value="' + toS + '"></div>' +
+        '</div>' +
+        '<label>' + st('note') + '</label>' +
+        '<input type="text" id="subFNote">' +
+        '<div class="sub-form-actions">' +
+            '<button class="sub-act" onclick="subRender()">←</button>' +
+            '<button class="sub-save-btn" onclick="subSaveForm()">' + st('save') + '</button>' +
+        '</div>' +
+    '</div>';
+    window.__subFormType = 'count';
+};
+window.subSetType = function(tp){
+    window.__subFormType = tp;
+    var c = document.getElementById('subTypeCount');
+    var p = document.getElementById('subTypePeriod');
+    if (c) c.classList.toggle('active', tp === 'count');
+    if (p) p.classList.toggle('active', tp === 'period');
+    var row = document.getElementById('subCountRow');
+    if (row) row.style.display = tp === 'count' ? '' : 'none';
+};
+window.subSaveForm = function(){
+    var uid = window.__subUid;
+    if (!uid) return;
+    var name = (document.getElementById('subFName') || {}).value || '';
+    name = name.trim();
+    var tp = window.__subFormType || 'count';
+    var total = parseInt((document.getElementById('subFTotal') || {}).value) || 0;
+    if (!name){
+        if (tp === 'count' && total > 0) name = total + ' ×';
+        else { alert(st('nameReq')); return; }
+    }
+    var d = subLoad(uid);
+    d.plans.push({
+        id: 'sub_' + Date.now(),
+        type: tp,
+        name: name,
+        total: tp === 'count' ? total : 0,
+        used: 0,
+        price: parseFloat((document.getElementById('subFPrice') || {}).value) || 0,
+        paidAt: todayISO(),
+        validFrom: (document.getElementById('subFFrom') || {}).value || todayISO(),
+        validTo: (document.getElementById('subFTo') || {}).value || '',
+        note: (document.getElementById('subFNote') || {}).value || '',
+        closed: false,
+        history: [{ ts: Date.now(), action: 'create', info: '' }]
+    });
+    subStore(uid, d);
+    subRender();
+    if (typeof showToast === 'function') showToast(st('saved'));
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+};
+
+window.subManualDeduct = function(idx){
+    var d = subLoad(window.__subUid);
+    var p = d.plans[idx]; if (!p) return;
+    p.used = (parseInt(p.used) || 0) + 1;
+    p.history = p.history || [];
+    p.history.push({ ts: Date.now(), action: 'deduct', info: '' });
+    subStore(window.__subUid, d);
+    subRender();
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+};
+window.subRefund = function(idx){
+    var d = subLoad(window.__subUid);
+    var p = d.plans[idx]; if (!p) return;
+    p.used = Math.max(0, (parseInt(p.used) || 0) - 1);
+    p.history = p.history || [];
+    p.history.push({ ts: Date.now(), action: 'refund', info: '' });
+    subStore(window.__subUid, d);
+    subRender();
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+};
+window.subToggleHistory = function(idx){
+    var el = document.getElementById('subHist' + idx);
+    if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+};
+window.subArchive = function(idx){
+    var d = subLoad(window.__subUid);
+    var p = d.plans[idx]; if (!p) return;
+    p.closed = true;
+    subStore(window.__subUid, d);
+    subRender();
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+};
+window.subDelete = function(idx){
+    if (!confirm(st('confirmDel'))) return;
+    var d = subLoad(window.__subUid);
+    d.plans.splice(idx, 1);
+    subStore(window.__subUid, d);
+    subRender();
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+};
+
+/* ---------- мини-бейдж для карточек клиентов (главный экран) ---------- */
+window.subBadgeHtml = function(uid){
+    try {
+        var p = subActivePlan(uid);
+        if (!p){
+            var d = subLoad(uid);
+            if ((d.plans || []).some(function(x){ return !x.closed; })) return '<span class="sub-badge sub-badge-bad">💰 ⛔</span>';
+            return '';
+        }
+        var status = subPlanStatus(p);
+        if (p.type === 'count'){
+            var leftN = (parseInt(p.total) || 0) - (parseInt(p.used) || 0);
+            return '<span class="sub-badge ' + (status === 'soon' ? 'sub-badge-warn' : 'sub-badge-ok') + '">💰 ' + leftN + '</span>';
+        }
+        var dl = p.validTo ? Math.ceil((new Date(p.validTo) - new Date(todayISO())) / 86400000) : '∞';
+        return '<span class="sub-badge ' + (status === 'soon' ? 'sub-badge-warn' : 'sub-badge-ok') + '">💰 ' + dl + 'd</span>';
+    } catch(e){ return ''; }
+};
+
+/* ---------- автосписание после сохранённой тренировки ---------- */
+(function(){
+    var orig = window.cwSaveExit;
+    if (typeof orig !== 'function') return;
+    window.cwSaveExit = function(){
+        var uid = null;
+        try {
+            if (window.__cwLive && __cwLive.active) uid = __cwLive.uid;
+            else if (typeof __clientUser !== 'undefined' && __clientUser) uid = __clientUser.id;
+        } catch(e){}
+        var r = orig.apply(this, arguments);
+        try { if (uid && uid !== 'trainer_self') subDeductSession(uid); } catch(e){}
+        return r;
+    };
+})();
+
+/* ---------- интеграция кнопок ---------- */
+function subInjectTrainerBtn(){
+    var anchorBtn = document.getElementById('chtTrainerBtn') || document.getElementById('bmTrainerBtn');
+    if (!anchorBtn || document.getElementById('subTrainerBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'subTrainerBtn';
+    b.className = 'icon-btn';
+    b.textContent = '💰';
+    b.title = st('title');
+    b.style.cssText = 'background:rgba(245,158,11,.14); color:#D97706; margin-inline-start:6px; width:30px; height:30px; border-radius:8px; vertical-align:middle;';
+    b.onclick = function(){
+        if (typeof currentUserId !== 'undefined' && currentUserId) openSubscriptions(currentUserId, false);
+        else if (typeof showToast === 'function') showToast('⚠️');
+    };
+    anchorBtn.parentNode.insertBefore(b, anchorBtn.nextSibling);
+}
+/* клиент: пункт в меню «Ещё» */
+(function(){
+    var orig = window.csOpenMore;
+    if (typeof orig !== 'function') return;
+    window.csOpenMore = function(){
+        orig.apply(this, arguments);
+        try {
+            var sheet = document.getElementById('csSheet');
+            if (!sheet) return;
+            var body = sheet.querySelector('.mp-sheet-body');
+            if (!body || body.querySelector('.sub-menu-item')) return;
+            var btn = document.createElement('button');
+            btn.className = 'mp-action-item sub-menu-item';
+            btn.innerHTML = '<span class="ico">💰</span>' + st('myPlan').replace('💰 ', '');
+            btn.onclick = function(){
+                if (typeof csCloseSheet === 'function') csCloseSheet();
+                if (typeof __clientUser !== 'undefined' && __clientUser) openSubscriptions(__clientUser.id, true);
+            };
+            body.insertBefore(btn, body.firstChild);
+        } catch(e){}
+    };
+})();
+
+function subInit(){
+    subInjectTrainerBtn();
+    var origAL = window.applyLanguage;
+    if (typeof origAL === 'function' && !window.__subLangHook){
+        window.__subLangHook = true;
+        window.applyLanguage = function(){
+            var r = origAL.apply(this, arguments);
+            try {
+                var ov = document.getElementById('subOverlay');
+                if (ov && ov.style.display === 'flex') subRender();
+                var btn = document.getElementById('subTrainerBtn');
+                if (btn) btn.title = st('title');
+            } catch(e){}
+            return r;
+        };
+    }
+}
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(subInit, 700); });
+} else {
+    setTimeout(subInit, 700);
+}
+})();
+
+</script>
+
+<script>
+/* ============================================================
+   NOTIFICATIONS (ntf) — напоминания и уведомления
+   - Центр уведомлений (колокольчик 🔔 с счётчиком) для тренера и клиента
+   - Системные push (Notification API) при разрешении
+   - Автогенерация событий:
+     клиент: тренировка сегодня не сделана (в заданный час),
+             питание не отмечено, абонемент заканчивается/закончился,
+             новое сообщение от тренера
+     тренер: клиент выполнил тренировку, абонементы клиентов
+             заканчиваются/истекли, непрочитанные сообщения
+   Журнал: localStorage['ntfLog'] (локально на устройстве),
+   антидубли: localStorage['ntfSeen'].
+   ============================================================ */
+(function(){
+'use strict';
+
+var NT = {
+    title:      { ru:'🔔 Уведомления', en:'🔔 Notifications', he:'🔔 התראות' },
+    empty:      { ru:'Нет уведомлений', en:'No notifications', he:'אין התראות' },
+    markAll:    { ru:'Прочитать все', en:'Mark all read', he:'סמן הכל כנקרא' },
+    clearAll:   { ru:'Очистить', en:'Clear', he:'נקה' },
+    settings:   { ru:'Настройки напоминаний', en:'Reminder settings', he:'הגדרות תזכורות' },
+    daily:      { ru:'Ежедневное напоминание', en:'Daily reminder', he:'תזכורת יומית' },
+    hour:       { ru:'Час напоминания', en:'Reminder hour', he:'שעת תזכורת' },
+    sysBtn:     { ru:'🔔 Разрешить системные уведомления', en:'🔔 Allow system notifications', he:'🔔 אפשר התראות מערכת' },
+    sysOn:      { ru:'✅ Системные уведомления включены', en:'✅ System notifications on', he:'✅ התראות מערכת פעילות' },
+    sysDenied:  { ru:'🔕 Заблокированы в браузере', en:'🔕 Blocked by browser', he:'🔕 חסומות בדפדפן' },
+    today:      { ru:'Сегодня', en:'Today', he:'היום' },
+    /* события */
+    wkRemTitle: { ru:'🏋️ Время тренировки!', en:'🏋️ Workout time!', he:'🏋️ זמן להתאמן!' },
+    wkRemBody:  { ru:'Сегодня вы ещё не тренировались. Вперёд!', en:'You have not trained today yet. Let\'s go!', he:'עוד לא התאמנת היום. קדימה!' },
+    ntRemTitle: { ru:'🍽️ Отметьте питание', en:'🍽️ Mark your meals', he:'🍽️ סמנו את הארוחות' },
+    ntRemBody:  { ru:'Сегодня ещё нет отметок в плане питания', en:'No meals marked today', he:'אין סימונים בתוכנית התזונה היום' },
+    subSoonT:   { ru:'💰 Абонемент заканчивается', en:'💰 Subscription ending', he:'💰 המנוי עומד להסתיים' },
+    subEndT:    { ru:'💰 Абонемент закончился', en:'💰 Subscription ended', he:'💰 המנוי הסתיים' },
+    subSoonB:   { ru:'Пора продлить — обратитесь к тренеру', en:'Time to renew — contact your trainer', he:'הגיע הזמן לחדש — פנו למאמן' },
+    chatT:      { ru:'💬 Новое сообщение', en:'💬 New message', he:'💬 הודעה חדשה' },
+    chatFromTr: { ru:'от тренера', en:'from your trainer', he:'מהמאמן' },
+    chatFromCl: { ru:'от клиента', en:'from client', he:'מלקוח' },
+    tDoneT:     { ru:'✅ Тренировка выполнена', en:'✅ Workout completed', he:'✅ האימון הושלם' },
+    tSubSoonB:  { ru:'занятий почти не осталось', en:'almost no sessions left', he:'כמעט ולא נותרו אימונים' },
+    tSubEndB:   { ru:'нужно продление', en:'renewal needed', he:'נדרש חידוש' }
+};
+function nt(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (NT[k] && (NT[k][l] || NT[k].ru)) || k; }
+function ne(s){ return (typeof escapeHtml === 'function') ? escapeHtml(String(s == null ? '' : s)) : String(s); }
+function dayStamp(){ var d = new Date(); return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+
+function ntfLog(){
+    try { var a = JSON.parse(localStorage.getItem('ntfLog') || '[]'); return Array.isArray(a) ? a : []; } catch(e){ return []; }
+}
+function ntfStore(a){
+    if (a.length > 100) a = a.slice(-100);
+    try { localStorage.setItem('ntfLog', JSON.stringify(a)); } catch(e){}
+}
+function ntfSeen(){
+    try { return JSON.parse(localStorage.getItem('ntfSeen') || '{}'); } catch(e){ return {}; }
+}
+function ntfMarkSeen(key){
+    var s = ntfSeen();
+    s[key] = Date.now();
+    /* подчистка старых ключей (старше 14 дней) */
+    var cut = Date.now() - 14 * 86400000;
+    Object.keys(s).forEach(function(k){ if (s[k] < cut) delete s[k]; });
+    try { localStorage.setItem('ntfSeen', JSON.stringify(s)); } catch(e){}
+}
+
+/* ---------- добавление уведомления ---------- */
+window.ntfPush = function(key, icon, title, body, action){
+    if (ntfSeen()[key]) return false;
+    ntfMarkSeen(key);
+    var a = ntfLog();
+    a.push({ id: 'n' + Date.now() + Math.random().toString(36).slice(2,4), ts: Date.now(),
+             icon: icon, title: title, body: body || '', action: action || '', read: false });
+    ntfStore(a);
+    ntfUpdateBell();
+    /* системное уведомление */
+    try {
+        if ('Notification' in window && Notification.permission === 'granted'){
+            var n = new Notification(title, {
+                body: body || '',
+                icon: 'icon-192.png',
+                tag: key
+            });
+            n.onclick = function(){ try { window.focus(); openNtfCenter(); n.close(); } catch(e){} };
+        }
+    } catch(e){}
+    return true;
+};
+
+/* ---------- роль и проверки ---------- */
+function ntfRole(){
+    try {
+        var cs = document.getElementById('clientSpace');
+        if (cs && cs.style.display !== 'none' && typeof __clientUser !== 'undefined' && __clientUser) return 'client';
+    } catch(e){}
+    try { if (typeof currentTrainer !== 'undefined' && currentTrainer) return 'trainer'; } catch(e){}
+    return null;
+}
+function remEnabled(){ return (typeof safeGetItem === 'function' ? safeGetItem('notifReminder') : localStorage.getItem('notifReminder')) !== '0'; }
+function remHour(){ var h = parseInt(typeof safeGetItem === 'function' ? safeGetItem('notifReminderHour') : localStorage.getItem('notifReminderHour')); return isNaN(h) ? 18 : h; }
+
+window.ntfCheckAll = function(){
+    try {
+        var role = ntfRole();
+        var now = new Date();
+        var ds = dayStamp();
+
+        /* === КЛИЕНТ === */
+        if (role === 'client' && __clientUser){
+            var uid = __clientUser.id;
+            /* 1) напоминание о тренировке */
+            if (remEnabled() && now.getHours() >= remHour()){
+                var plans = [];
+                try { plans = JSON.parse(localStorage.getItem('workoutPlan_' + uid) || '[]'); } catch(e){}
+                if (plans.length){
+                    var logs = [];
+                    try { logs = JSON.parse(localStorage.getItem('clientWorkoutLog_' + uid) || '[]'); } catch(e){}
+                    var doneToday = logs.some(function(l){ return new Date(l.completedAt || l.date).toDateString() === now.toDateString(); });
+                    if (!doneToday) ntfPush('wk_' + uid + '_' + ds, '🏋️', nt('wkRemTitle'), nt('wkRemBody'), 'wk');
+                }
+            }
+            /* 2) питание не отмечено */
+            if (remEnabled() && now.getHours() >= Math.min(23, remHour() + 2)){
+                var np = null;
+                try { np = JSON.parse(localStorage.getItem('nutritionPlan_' + uid) || 'null'); } catch(e){}
+                if (np && np.meals && np.meals.length){
+                    var dKey = 'clientNutriDone_' + uid + '_' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+                    var done = [];
+                    try { done = JSON.parse(localStorage.getItem(dKey) || '[]'); } catch(e){}
+                    if (!done.length) ntfPush('nut_' + uid + '_' + ds, '🍽️', nt('ntRemTitle'), nt('ntRemBody'), 'nut');
+                }
+            }
+            /* 3) абонемент */
+            if (typeof subActivePlan === 'function' && typeof subPlanStatus === 'function'){
+                try {
+                    var d2 = JSON.parse(localStorage.getItem('subscriptions_' + uid) || 'null');
+                    if (d2 && d2.plans){
+                        d2.plans.filter(function(p){ return !p.closed; }).forEach(function(p){
+                            var stt = subPlanStatus(p);
+                            if (stt === 'soon') ntfPush('sub_soon_' + uid + '_' + p.id + '_' + ds, '💰', nt('subSoonT'), nt('subSoonB'), 'subro:' + uid);
+                            if (stt === 'finished' || stt === 'expired') ntfPush('sub_end_' + uid + '_' + p.id, '💰', nt('subEndT'), nt('subSoonB'), 'subro:' + uid);
+                        });
+                    }
+                } catch(e){}
+            }
+            /* 4) новое сообщение от тренера */
+            try {
+                var msgs = JSON.parse(localStorage.getItem('chatMessages_' + uid) || '[]');
+                var lastIn = null;
+                msgs.forEach(function(m){ if (m.from === 'trainer' && !m.read) lastIn = m; });
+                if (lastIn) ntfPush('chat_' + uid + '_' + lastIn.ts, '💬', nt('chatT'), nt('chatFromTr') + ': ' + String(lastIn.text).slice(0, 60), 'chat:' + uid);
+            } catch(e){}
+        }
+
+        /* === ТРЕНЕР === */
+        if (role === 'trainer' && typeof getUsers === 'function'){
+            getUsers().forEach(function(u){
+                /* непрочитанный чат от клиента */
+                try {
+                    var ms = JSON.parse(localStorage.getItem('chatMessages_' + u.id) || '[]');
+                    var li = null;
+                    ms.forEach(function(m){ if (m.from === 'client' && !m.read) li = m; });
+                    if (li) ntfPush('tchat_' + u.id + '_' + li.ts, '💬', nt('chatT') + ' — ' + (u.name || ''), nt('chatFromCl') + ': ' + String(li.text).slice(0, 60), 'chat:' + u.id);
+                } catch(e){}
+                /* клиент выполнил тренировку сегодня */
+                try {
+                    var lg = JSON.parse(localStorage.getItem('clientWorkoutLog_' + u.id) || '[]');
+                    var td = lg.filter(function(l){ return new Date(l.completedAt || l.date).toDateString() === now.toDateString(); });
+                    if (td.length) ntfPush('tdone_' + u.id + '_' + ds, '✅', nt('tDoneT'), (u.avatar || '') + ' ' + (u.name || ''), 'chat:' + u.id);
+                } catch(e){}
+                /* абонементы */
+                if (typeof subPlanStatus === 'function'){
+                    try {
+                        var sd = JSON.parse(localStorage.getItem('subscriptions_' + u.id) || 'null');
+                        if (sd && sd.plans){
+                            sd.plans.filter(function(p){ return !p.closed; }).forEach(function(p){
+                                var stt = subPlanStatus(p);
+                                if (stt === 'soon') ntfPush('tsub_soon_' + u.id + '_' + p.id + '_' + ds, '💰', nt('subSoonT') + ' — ' + (u.name || ''), nt('tSubSoonB'), 'sub:' + u.id);
+                                if (stt === 'finished' || stt === 'expired') ntfPush('tsub_end_' + u.id + '_' + p.id, '💰', nt('subEndT') + ' — ' + (u.name || ''), nt('tSubEndB'), 'sub:' + u.id);
+                            });
+                        }
+                    } catch(e){}
+                }
+            });
+        }
+    } catch(e){}
+    ntfUpdateBell();
+};
+
+/* ---------- колокольчик ---------- */
+function ntfUnreadCount(){ return ntfLog().filter(function(n){ return !n.read; }).length; }
+
+window.ntfUpdateBell = function(){
+    var bell = document.getElementById('ntfBell');
+    if (!bell) return;
+    var n = ntfUnreadCount();
+    var b = bell.querySelector('.ntf-badge');
+    if (n > 0){
+        if (!b){ b = document.createElement('span'); b.className = 'ntf-badge'; bell.appendChild(b); }
+        b.textContent = n > 9 ? '9+' : n;
+        bell.classList.add('has');
+    } else {
+        if (b) b.remove();
+        bell.classList.remove('has');
+    }
+};
+
+function ntfBuildBell(){
+    if (document.getElementById('ntfBell')) return;
+    var bell = document.createElement('button');
+    bell.id = 'ntfBell';
+    bell.innerHTML = '🔔';
+    bell.title = nt('title');
+    bell.onclick = function(){ openNtfCenter(); };
+    document.body.appendChild(bell);
+}
+
+/* ---------- центр уведомлений ---------- */
+window.openNtfCenter = function(){
+    ntfBuildDom();
+    document.getElementById('ntfOverlay').style.display = 'flex';
+    ntfRender();
+};
+window.closeNtfCenter = function(){
+    var ov = document.getElementById('ntfOverlay');
+    if (ov) ov.style.display = 'none';
+    /* при закрытии всё прочитано */
+    var a = ntfLog();
+    a.forEach(function(x){ x.read = true; });
+    ntfStore(a);
+    ntfUpdateBell();
+};
+function ntfBuildDom(){
+    if (document.getElementById('ntfOverlay')) return;
+    var ov = document.createElement('div');
+    ov.id = 'ntfOverlay';
+    ov.innerHTML = '<div class="ntf-sheet">' +
+        '<div class="ntf-head"><div class="ntf-title" id="ntfTitle"></div>' +
+        '<button class="ntf-x" onclick="closeNtfCenter()">✕</button></div>' +
+        '<div class="ntf-scroll"><div id="ntfBody"></div></div>' +
+    '</div>';
+    ov.addEventListener('click', function(e){ if (e.target === ov) closeNtfCenter(); });
+    document.body.appendChild(ov);
+}
+
+window.ntfRender = function(){
+    var box = document.getElementById('ntfBody');
+    var titleEl = document.getElementById('ntfTitle');
+    if (titleEl) titleEl.textContent = nt('title');
+    if (!box) return;
+    var a = ntfLog().slice().reverse();
+    var role = ntfRole();
+
+    var h = '';
+    /* настройки напоминаний */
+    var perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    var en = remEnabled();
+    var hr = remHour();
+    var hours = '';
+    for (var i = 6; i <= 22; i++) hours += '<option value="' + i + '"' + (i === hr ? ' selected' : '') + '>' + String(i).padStart(2,'0') + ':00</option>';
+    h += '<div class="ntf-settings">' +
+        '<div class="ntf-set-title">⚙️ ' + nt('settings') + '</div>' +
+        '<label class="ntf-set-row"><span>' + nt('daily') + '</span>' +
+            '<input type="checkbox" ' + (en ? 'checked' : '') + ' onchange="ntfSetEnabled(this.checked)"></label>' +
+        '<label class="ntf-set-row"><span>' + nt('hour') + '</span>' +
+            '<select onchange="ntfSetHour(this.value)">' + hours + '</select></label>' +
+        (perm === 'granted'
+            ? '<div class="ntf-sys ok">' + nt('sysOn') + '</div>'
+            : (perm === 'denied'
+                ? '<div class="ntf-sys bad">' + nt('sysDenied') + '</div>'
+                : (perm === 'unsupported' ? '' : '<button class="ntf-sys-btn" onclick="ntfAskPermission()">' + nt('sysBtn') + '</button>'))) +
+    '</div>';
+
+    if (!a.length){
+        h += '<div class="ntf-empty">🔕<br>' + nt('empty') + '</div>';
+        box.innerHTML = h;
+        return;
+    }
+    h += '<div class="ntf-tools">' +
+        '<button onclick="ntfClearAll()">🗑 ' + nt('clearAll') + '</button>' +
+    '</div>';
+    a.forEach(function(x){
+        var time = new Date(x.ts).toLocaleString([], { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+        h += '<div class="ntf-item' + (x.read ? '' : ' unread') + '"' + (x.action ? ' onclick="ntfAct(\'' + x.action + '\')"' : '') + '>' +
+            '<span class="ntf-ico">' + x.icon + '</span>' +
+            '<span class="ntf-main"><b>' + ne(x.title) + '</b>' + (x.body ? '<small>' + ne(x.body) + '</small>' : '') + '</span>' +
+            '<span class="ntf-time">' + time + '</span>' +
+        '</div>';
+    });
+    box.innerHTML = h;
+};
+
+window.ntfAct = function(action){
+    closeNtfCenter();
+    var role = ntfRole();
+    try {
+        if (action.indexOf('chat:') === 0){
+            var uid = action.slice(5);
+            if (typeof openChat === 'function') openChat(uid, role === 'client' ? 'client' : 'trainer');
+        } else if (action.indexOf('sub:') === 0){
+            if (typeof openSubscriptions === 'function') openSubscriptions(action.slice(4), false);
+        } else if (action.indexOf('subro:') === 0){
+            if (typeof openSubscriptions === 'function') openSubscriptions(action.slice(6), true);
+        }
+    } catch(e){}
+};
+window.ntfClearAll = function(){
+    ntfStore([]);
+    ntfRender();
+    ntfUpdateBell();
+};
+window.ntfSetEnabled = function(on){
+    if (typeof safeSetItem === 'function') safeSetItem('notifReminder', on ? '1' : '0');
+    else localStorage.setItem('notifReminder', on ? '1' : '0');
+};
+window.ntfSetHour = function(h){
+    if (typeof safeSetItem === 'function') safeSetItem('notifReminderHour', String(parseInt(h) || 18));
+    else localStorage.setItem('notifReminderHour', String(parseInt(h) || 18));
+};
+window.ntfAskPermission = function(){
+    if (!('Notification' in window)) return;
+    Notification.requestPermission().then(function(){ ntfRender(); });
+};
+
+/* ---------- init ---------- */
+function ntfInit(){
+    ntfBuildBell();
+    ntfUpdateBell();
+    ntfCheckAll();
+    setInterval(ntfCheckAll, 5 * 60000);
+    /* проверка после прихода данных с облака */
+    var origRem = window.chatOnRemoteUpdate;
+    if (typeof origRem === 'function' && !window.__ntfRemHook){
+        window.__ntfRemHook = true;
+        window.chatOnRemoteUpdate = function(){
+            var r = origRem.apply(this, arguments);
+            try { ntfCheckAll(); } catch(e){}
+            return r;
+        };
+    }
+    /* перевод */
+    var origAL = window.applyLanguage;
+    if (typeof origAL === 'function' && !window.__ntfLangHook){
+        window.__ntfLangHook = true;
+        window.applyLanguage = function(){
+            var r = origAL.apply(this, arguments);
+            try {
+                var bell = document.getElementById('ntfBell');
+                if (bell) bell.title = nt('title');
+                var ov = document.getElementById('ntfOverlay');
+                if (ov && ov.style.display === 'flex') ntfRender();
+            } catch(e){}
+            return r;
+        };
+    }
+}
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(ntfInit, 900); });
+} else {
+    setTimeout(ntfInit, 900);
+}
+})();
+
+</script>
+
+<script>
+/* ============================================================
+   DASHBOARD (dsh) — утренняя сводка тренера
+   + BACKUPS/ROLES (bkr) — авто-бэкап и роли тренеров
+   ============================================================ */
+(function(){
+'use strict';
+
+var DT = {
+    dashBtn:    { ru:'📊 Сводка дня', en:'📊 Daily summary', he:'📊 סיכום יומי' },
+    title:      { ru:'📊 Сводка дня', en:'📊 Daily summary', he:'📊 סיכום יומי' },
+    todayTrain: { ru:'🗓 Сегодня по календарю', en:'🗓 Today on the calendar', he:'🗓 היום ביומן' },
+    noEvents:   { ru:'Нет событий на сегодня', en:'No events today', he:'אין אירועים היום' },
+    doneToday:  { ru:'✅ Выполнили тренировку сегодня', en:'✅ Completed a workout today', he:'✅ השלימו אימון היום' },
+    doneYest:   { ru:'Вчера', en:'Yesterday', he:'אתמול' },
+    nobodyYet:  { ru:'Пока никто', en:'Nobody yet', he:'עדיין אף אחד' },
+    birthdays:  { ru:'🎂 Дни рождения', en:'🎂 Birthdays', he:'🎂 ימי הולדת' },
+    bdToday:    { ru:'сегодня!', en:'today!', he:'היום!' },
+    bdSoon:     { ru:'дней', en:'days', he:'ימים' },
+    subAlerts:  { ru:'💰 Абонементы — внимание', en:'💰 Subscriptions — attention', he:'💰 מנויים — שימו לב' },
+    subOk:      { ru:'Все абонементы в порядке', en:'All subscriptions are fine', he:'כל המנויים תקינים' },
+    unreadMsgs: { ru:'💬 Непрочитанные сообщения', en:'💬 Unread messages', he:'💬 הודעות שלא נקראו' },
+    noMsgs:     { ru:'Нет новых сообщений', en:'No new messages', he:'אין הודעות חדשות' },
+    weekStat:   { ru:'📈 Активность за 7 дней', en:'📈 Activity, last 7 days', he:'📈 פעילות 7 ימים' },
+    workouts7:  { ru:'тренировок', en:'workouts', he:'אימונים' },
+    activeCl:   { ru:'активных клиентов', en:'active clients', he:'לקוחות פעילים' },
+    silent:     { ru:'😴 Молчат 7+ дней', en:'😴 Silent for 7+ days', he:'😴 שקטים 7+ ימים' },
+    allActive:  { ru:'Все клиенты активны 💪', en:'All clients are active 💪', he:'כל הלקוחות פעילים 💪' },
+    open:       { ru:'Открыть', en:'Open', he:'פתח' },
+    sessLeft:   { ru:'осталось', en:'left', he:'נותרו' },
+    expired:    { ru:'истёк', en:'expired', he:'פג' }
+};
+function dt(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (DT[k] && (DT[k][l] || DT[k].ru)) || k; }
+function de(s){ return (typeof escapeHtml === 'function') ? escapeHtml(String(s == null ? '' : s)) : String(s); }
+
+/* ---------- сбор данных сводки ---------- */
+function dshCollect(){
+    var users = (typeof getUsers === 'function') ? getUsers() : [];
+    var now = new Date();
+    var todayStr = now.toDateString();
+    var yestStr = new Date(now - 86400000).toDateString();
+    var out = { events: [], doneToday: [], doneYest: [], bdays: [], subs: [], msgs: [], silent: [], wk7: 0, active7: 0 };
+
+    /* календарь на сегодня */
+    try {
+        var evs = JSON.parse(localStorage.getItem('calendarEvents') || '[]');
+        var iso = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+        out.events = evs.filter(function(e){ return e.date === iso; })
+            .sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); }).slice(0, 8);
+    } catch(e){}
+
+    var activeSet = {};
+    users.forEach(function(u){
+        var logs = [];
+        try { logs = JSON.parse(localStorage.getItem('clientWorkoutLog_' + u.id) || '[]'); } catch(e){}
+        var last = null;
+        logs.forEach(function(l){
+            var d = new Date(l.completedAt || l.date);
+            if (!last || d > last) last = d;
+            if (d.toDateString() === todayStr) { if (out.doneToday.indexOf(u) < 0) out.doneToday.push(u); }
+            else if (d.toDateString() === yestStr) { if (out.doneYest.indexOf(u) < 0) out.doneYest.push(u); }
+            if ((now - d) < 7 * 86400000){ out.wk7++; activeSet[u.id] = 1; }
+        });
+        /* молчуны: есть план, но нет тренировок 7+ дней */
+        var hasPlan = false;
+        try { hasPlan = (JSON.parse(localStorage.getItem('workoutPlan_' + u.id) || '[]')).length > 0; } catch(e){}
+        if (hasPlan && (!last || (now - last) >= 7 * 86400000)) out.silent.push(u);
+
+        /* дни рождения (поле birthday / dob: YYYY-MM-DD) */
+        var bd = u.birthday || u.dob || '';
+        if (bd && /\d{4}-\d{2}-\d{2}/.test(bd)){
+            var m = parseInt(bd.slice(5,7)) - 1, dday = parseInt(bd.slice(8,10));
+            var next = new Date(now.getFullYear(), m, dday);
+            if (next < new Date(now.getFullYear(), now.getMonth(), now.getDate())) next.setFullYear(now.getFullYear() + 1);
+            var diff = Math.round((next - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
+            if (diff <= 14) out.bdays.push({ u: u, days: diff });
+        }
+
+        /* абонементы */
+        if (typeof subPlanStatus === 'function'){
+            try {
+                var sd = JSON.parse(localStorage.getItem('subscriptions_' + u.id) || 'null');
+                if (sd && sd.plans){
+                    sd.plans.filter(function(p){ return !p.closed; }).forEach(function(p){
+                        var stt = subPlanStatus(p);
+                        if (stt === 'soon' || stt === 'finished' || stt === 'expired'){
+                            var info = '';
+                            if (p.type === 'count'){
+                                var leftN = (parseInt(p.total)||0) - (parseInt(p.used)||0);
+                                info = leftN > 0 ? (leftN + ' ' + dt('sessLeft')) : dt('expired');
+                            } else info = stt === 'soon' ? '⚠️' : dt('expired');
+                            out.subs.push({ u: u, info: info, bad: stt !== 'soon' });
+                        }
+                    });
+                }
+            } catch(e){}
+        }
+
+        /* непрочитанные сообщения */
+        try {
+            var ms = JSON.parse(localStorage.getItem('chatMessages_' + u.id) || '[]');
+            var n = ms.filter(function(x){ return x.from === 'client' && !x.read; }).length;
+            if (n > 0) out.msgs.push({ u: u, n: n });
+        } catch(e){}
+    });
+    out.active7 = Object.keys(activeSet).length;
+    out.bdays.sort(function(a,b){ return a.days - b.days; });
+    return out;
+}
+
+/* ---------- рендер ---------- */
+window.openDashboard = function(){
+    if (!document.getElementById('dshOverlay')){
+        var ov = document.createElement('div');
+        ov.id = 'dshOverlay';
+        ov.innerHTML = '<div class="dsh-sheet">' +
+            '<div class="dsh-head"><div class="dsh-title" id="dshTitle"></div>' +
+            '<button class="dsh-x" onclick="closeDashboard()">✕</button></div>' +
+            '<div class="dsh-scroll"><div id="dshBody"></div></div>' +
+        '</div>';
+        ov.addEventListener('click', function(e){ if (e.target === ov) closeDashboard(); });
+        document.body.appendChild(ov);
+    }
+    document.getElementById('dshOverlay').style.display = 'flex';
+    dshRender();
+};
+window.closeDashboard = function(){
+    var ov = document.getElementById('dshOverlay');
+    if (ov) ov.style.display = 'none';
+};
+
+function userChip(u, extra, onclickStr){
+    return '<div class="dsh-chip"' + (onclickStr ? ' onclick="' + onclickStr + '"' : '') + '>' +
+        '<span class="dsh-ava">' + (u.avatar || '👤') + '</span>' +
+        '<span class="dsh-nm">' + de(u.name || '') + '</span>' +
+        (extra ? '<span class="dsh-ext">' + extra + '</span>' : '') +
+    '</div>';
+}
+
+window.dshRender = function(){
+    var titleEl = document.getElementById('dshTitle');
+    var box = document.getElementById('dshBody');
+    if (!box) return;
+    var now = new Date();
+    var locale = (typeof currentLang !== 'undefined' && currentLang === 'he') ? 'he-IL' : (currentLang === 'en' ? 'en-US' : 'ru-RU');
+    if (titleEl) titleEl.textContent = dt('title') + ' · ' + now.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+
+    var d = dshCollect();
+    var h = '';
+
+    /* верхние цифры */
+    h += '<div class="dsh-stats">' +
+        '<div class="dsh-stat"><b>' + d.doneToday.length + '</b><span>' + dt('doneToday').replace('✅ ','') + '</span></div>' +
+        '<div class="dsh-stat"><b>' + d.wk7 + '</b><span>' + dt('workouts7') + ' / 7d</span></div>' +
+        '<div class="dsh-stat"><b>' + d.active7 + '</b><span>' + dt('activeCl') + '</span></div>' +
+    '</div>';
+
+    /* календарь */
+    h += '<div class="dsh-sec"><div class="dsh-sec-t">' + dt('todayTrain') + '</div>';
+    if (!d.events.length) h += '<div class="dsh-none">' + dt('noEvents') + '</div>';
+    else d.events.forEach(function(e){
+        h += '<div class="dsh-chip"><span class="dsh-ava">🕐</span><span class="dsh-nm">' + de((e.time || '') + ' ' + (e.title || '')) + '</span></div>';
+    });
+    h += '</div>';
+
+    /* выполнили сегодня */
+    h += '<div class="dsh-sec"><div class="dsh-sec-t">' + dt('doneToday') + '</div>';
+    if (!d.doneToday.length) h += '<div class="dsh-none">' + dt('nobodyYet') + '</div>';
+    else d.doneToday.forEach(function(u){ h += userChip(u, '💪'); });
+    if (d.doneYest.length){
+        h += '<div class="dsh-sub-t">' + dt('doneYest') + ':</div>';
+        d.doneYest.forEach(function(u){ h += userChip(u, ''); });
+    }
+    h += '</div>';
+
+    /* сообщения */
+    h += '<div class="dsh-sec"><div class="dsh-sec-t">' + dt('unreadMsgs') + '</div>';
+    if (!d.msgs.length) h += '<div class="dsh-none">' + dt('noMsgs') + '</div>';
+    else d.msgs.forEach(function(m){
+        h += userChip(m.u, '<b class="dsh-red">' + m.n + '</b>', "closeDashboard(); openChat('" + m.u.id + "','trainer')");
+    });
+    h += '</div>';
+
+    /* абонементы */
+    h += '<div class="dsh-sec"><div class="dsh-sec-t">' + dt('subAlerts') + '</div>';
+    if (!d.subs.length) h += '<div class="dsh-none">' + dt('subOk') + '</div>';
+    else d.subs.forEach(function(s){
+        h += userChip(s.u, '<span class="' + (s.bad ? 'dsh-red' : 'dsh-amber') + '">' + de(s.info) + '</span>',
+            "closeDashboard(); openSubscriptions('" + s.u.id + "', false)");
+    });
+    h += '</div>';
+
+    /* дни рождения */
+    if (d.bdays.length){
+        h += '<div class="dsh-sec"><div class="dsh-sec-t">' + dt('birthdays') + '</div>';
+        d.bdays.forEach(function(b){
+            h += userChip(b.u, b.days === 0 ? '<b class="dsh-amber">🎉 ' + dt('bdToday') + '</b>' : (b.days + ' ' + dt('bdSoon')));
+        });
+        h += '</div>';
+    }
+
+    /* молчуны */
+    h += '<div class="dsh-sec"><div class="dsh-sec-t">' + dt('silent') + '</div>';
+    if (!d.silent.length) h += '<div class="dsh-none">' + dt('allActive') + '</div>';
+    else d.silent.slice(0, 10).forEach(function(u){
+        h += userChip(u, '💬', "closeDashboard(); openChat('" + u.id + "','trainer')");
+    });
+    h += '</div>';
+
+    box.innerHTML = h;
+};
+
+/* кнопка на главном экране (в hero-блок) */
+function dshInjectBtn(){
+    var stats = document.getElementById('homeQuickStats');
+    if (!stats || document.getElementById('dshHomeBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'dshHomeBtn';
+    b.className = 'dsh-home-btn';
+    b.textContent = dt('dashBtn');
+    b.onclick = function(){ openDashboard(); };
+    stats.parentNode.insertBefore(b, stats.nextSibling);
+}
+
+/* ============================================================
+   BACKUPS & ROLES (bkr)
+   ============================================================ */
+var BT = {
+    autoBk:     { ru:'🛡 Автокопия', en:'🛡 Auto-backup', he:'🛡 גיבוי אוטומטי' },
+    bkDone:     { ru:'🛡 Еженедельная резервная копия сохранена', en:'🛡 Weekly backup saved', he:'🛡 גיבוי שבועי נשמר' },
+    roleTitle:  { ru:'Роль тренера', en:'Trainer role', he:'תפקיד מאמן' },
+    roleOwner:  { ru:'👑 Владелец', en:'👑 Owner', he:'👑 בעלים' },
+    roleTrainer:{ ru:'🏋️ Тренер', en:'🏋️ Trainer', he:'🏋️ מאמן' },
+    roleViewer: { ru:'👁 Стажёр (просмотр)', en:'👁 Intern (view only)', he:'👁 מתמחה (צפייה)' },
+    viewerBlock:{ ru:'🔒 Режим просмотра: изменения недоступны', en:'🔒 View-only mode: changes are disabled', he:'🔒 מצב צפייה: אין אפשרות לשנות' }
+};
+function bt2(k){ var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru'; return (BT[k] && (BT[k][l] || BT[k].ru)) || k; }
+
+/* ---------- авто-бэкап раз в 7 дней (в localStorage, последние 3 копии) ---------- */
+function bkrAutoBackup(){
+    try {
+        var last = parseInt(localStorage.getItem('autoBackupLast') || '0');
+        if (Date.now() - last < 7 * 86400000) return;
+        var keys = ['nutritionUsers','trainersList','calendarEvents','tasksList','leadsList','shopItems','shopSales',
+                    'customProductsDatabase','customExercisesDatabase','systemExOverrides','programTemplates'];
+        var snap = { _t: Date.now() };
+        keys.forEach(function(k){ var v = localStorage.getItem(k); if (v) snap[k] = v; });
+        for (var i = 0; i < localStorage.length; i++){
+            var k2 = localStorage.key(i);
+            if (/^(workoutPlan_|nutritionPlan_|subscriptions_|bodyMeasures_)/.test(k2)){
+                snap[k2] = localStorage.getItem(k2);
+            }
+        }
+        var hist = [];
+        try { hist = JSON.parse(localStorage.getItem('autoBackups') || '[]'); } catch(e){}
+        hist.push(snap);
+        if (hist.length > 3) hist = hist.slice(-3);
+        localStorage.setItem('autoBackups', JSON.stringify(hist));
+        localStorage.setItem('autoBackupLast', String(Date.now()));
+        if (typeof showToast === 'function') showToast(bt2('bkDone'));
+    } catch(e){ /* квота — молча пропускаем */ }
+}
+
+/* восстановление из автокопии (вызов из консоли или кнопкой в настройках) */
+window.bkrRestoreAuto = function(idx){
+    try {
+        var hist = JSON.parse(localStorage.getItem('autoBackups') || '[]');
+        var snap = hist[idx != null ? idx : hist.length - 1];
+        if (!snap){ alert('No auto-backup'); return; }
+        if (!confirm(new Date(snap._t).toLocaleString() + ' — restore?')) return;
+        Object.keys(snap).forEach(function(k){ if (k !== '_t') localStorage.setItem(k, snap[k]); });
+        location.reload();
+    } catch(e){ alert('Restore error'); }
+};
+
+/* ---------- роли тренеров ---------- */
+/* поле role у тренера: 'owner' | 'trainer' | 'viewer' (по умолчанию trainer; первый тренер = owner) */
+window.bkrTrainerRole = function(){
+    try {
+        if (typeof currentTrainer === 'undefined' || !currentTrainer) return 'trainer';
+        if (currentTrainer.role) return currentTrainer.role;
+        var trainers = (typeof getTrainers === 'function') ? getTrainers() : [];
+        if (trainers.length && trainers[0].id === currentTrainer.id) return 'owner';
+        return 'trainer';
+    } catch(e){ return 'trainer'; }
+};
+window.bkrIsViewer = function(){ return bkrTrainerRole() === 'viewer'; };
+
+/* блокировка изменений для стажёра */
+function bkrApplyViewerMode(){
+    var viewer = bkrIsViewer();
+    document.body.classList.toggle('role-viewer', viewer);
+}
+/* перехват сохранений в режиме просмотра */
+(function(){
+    var guard = function(name){
+        var orig = window[name];
+        if (typeof orig !== 'function') return;
+        window[name] = function(){
+            if (bkrIsViewer()){
+                if (typeof showToast === 'function') showToast(bt2('viewerBlock'));
+                return;
+            }
+            return orig.apply(this, arguments);
+        };
+    };
+    setTimeout(function(){
+        ['saveWorkoutPlan','savePlan','saveUser','deleteUser','saveNewExercise','tplSaveCurrent','subSaveForm','subManualDeduct','subDelete'].forEach(guard);
+    }, 1200);
+})();
+
+/* селектор роли в профиле тренера — добавляется при открытии профиля владельцем */
+window.bkrRoleSelectorHtml = function(trainer){
+    var cur = trainer.role || 'trainer';
+    function opt(v, lbl){ return '<option value="' + v + '"' + (cur === v ? ' selected' : '') + '>' + lbl + '</option>'; }
+    return '<div style="margin:10px 0;"><label style="font-size:.8em; font-weight:700; color:var(--text-secondary);">' + bt2('roleTitle') + '</label>' +
+        '<select onchange="bkrSetRole(\'' + trainer.id + '\', this.value)" style="width:100%; padding:9px; border:1px solid var(--border-color); border-radius:10px; background:var(--surface-color); color:var(--text-primary); font-family:inherit; margin-top:4px;">' +
+        opt('owner', bt2('roleOwner')) + opt('trainer', bt2('roleTrainer')) + opt('viewer', bt2('roleViewer')) +
+        '</select></div>';
+};
+window.bkrSetRole = function(trainerId, role){
+    try {
+        var trainers = getTrainers();
+        var tr = trainers.find(function(x){ return x.id === trainerId; });
+        if (tr){ tr.role = role; localStorage.setItem('trainersList', JSON.stringify(trainers)); }
+        if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id === trainerId) currentTrainer.role = role;
+        bkrApplyViewerMode();
+    } catch(e){}
+};
+
+/* ---------- init ---------- */
+function dashInit(){
+    dshInjectBtn();
+    bkrAutoBackup();
+    bkrApplyViewerMode();
+    var origAL = window.applyLanguage;
+    if (typeof origAL === 'function' && !window.__dshLangHook){
+        window.__dshLangHook = true;
+        window.applyLanguage = function(){
+            var r = origAL.apply(this, arguments);
+            try {
+                var b = document.getElementById('dshHomeBtn');
+                if (b) b.textContent = dt('dashBtn');
+                var ov = document.getElementById('dshOverlay');
+                if (ov && ov.style.display === 'flex') dshRender();
+            } catch(e){}
+            return r;
+        };
+    }
+    /* кнопка появляется и после перерисовки главного экрана */
+    var origRU = window.renderUsers;
+    if (typeof origRU === 'function' && !window.__dshRuHook){
+        window.__dshRuHook = true;
+        window.renderUsers = function(){
+            var r = origRU.apply(this, arguments);
+            try { dshInjectBtn(); } catch(e){}
+            return r;
+        };
+    }
+}
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(dashInit, 1000); });
+} else {
+    setTimeout(dashInit, 1000);
+}
+})();
+
+</script>
+
+<script>
+/* ============================================================
    PWA: service worker + установка + обновления + офлайн-баннер
    ============================================================ */
 (function(){
@@ -31874,5 +33172,5 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aaffb21ee20dd4',t:'MTc4MTI4OTc4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0ab2b586cc3659f',t:'MTc4MTI5MTU2OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
