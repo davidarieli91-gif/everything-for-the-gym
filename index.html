@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Планировщик Питания - Израиль (Custom)</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Private Gym">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <noscript>
         <style>body { display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background:#F8FAFC; }</style>
@@ -27189,6 +27197,34 @@ body.layout-mobile .info-modal-content, body.layout-tablet .info-modal-content {
 }
 body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top: calc(14px + env(safe-area-inset-top, 0px)); }
 
+
+/* ===== PWA UI ===== */
+#pwaInstallBtn {
+    position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+    z-index: 9500; padding: 13px 22px; border: none; border-radius: 999px;
+    background: linear-gradient(135deg, #3B82F6, #1e40af); color: #fff;
+    font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit;
+    box-shadow: 0 8px 24px rgba(59,130,246,.45); -webkit-tap-highlight-color: transparent;
+    animation: pwaPulse 2.4s ease-in-out infinite;
+}
+#pwaInstallBtn:active { transform: translateX(-50%) scale(.96); }
+#pwaInstallBtn.pwa-min { opacity: .65; animation: none; }
+@keyframes pwaPulse { 0%,100% { box-shadow: 0 8px 24px rgba(59,130,246,.45); } 50% { box-shadow: 0 8px 34px rgba(59,130,246,.75); } }
+body.mp-active #pwaInstallBtn, body.layout-mobile #pwaInstallBtn { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+#pwaUpdateBar {
+    position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+    z-index: 210000; display: flex; align-items: center; gap: 10px;
+    background: #0F172A; color: #fff; padding: 9px 10px 9px 16px; border-radius: 999px;
+    font-size: .88em; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    max-width: 92vw;
+}
+#pwaUpdateBar button {
+    padding: 7px 16px; border: none; border-radius: 999px; background: #10B981; color: #fff;
+    font-weight: 800; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent;
+}
+#pwaUpdateBar button.x { background: transparent; color: rgba(255,255,255,.6); padding: 7px 8px; font-weight: 600; }
+body.pwa-offline #cloudDock { opacity: .85; }
+
 /* ===== CLOUD SYNC UI ===== */
 #cloudDock { position: fixed; top: 10px; right: 12px; z-index: 9000; display: flex; align-items: center; gap: 8px; }
 body[dir="rtl"] #cloudDock { right: auto; left: 12px; }
@@ -30171,5 +30207,141 @@ if (document.readyState === 'loading'){
 
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aa3d574ff30dd4',t:'MTc4MTI4MTgyMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<script>
+/* ============================================================
+   PWA: service worker + установка + обновления + офлайн-баннер
+   ============================================================ */
+(function(){
+'use strict';
+
+var PWA_T = {
+    install:   { ru:'📲 Установить приложение', en:'📲 Install app', he:'📲 התקנת האפליקציה' },
+    installed: { ru:'✅ Приложение установлено!', en:'✅ App installed!', he:'✅ האפליקציה הותקנה!' },
+    updateReady:{ ru:'🔄 Доступно обновление', en:'🔄 Update available', he:'🔄 עדכון זמין' },
+    updateBtn: { ru:'Обновить', en:'Update', he:'עדכן' },
+    offline:   { ru:'📴 Нет сети — работаем офлайн', en:'📴 Offline mode', he:'📴 אין רשת — מצב לא מקוון' },
+    online:    { ru:'✅ Сеть восстановлена', en:'✅ Back online', he:'✅ החיבור חזר' },
+    iosHint:   { ru:'На iPhone: Поделиться → «На экран Домой»', en:'On iPhone: Share → "Add to Home Screen"', he:'באייפון: שיתוף ← "הוסף למסך הבית"' }
+};
+function pt(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; return (PWA_T[k]&&(PWA_T[k][l]||PWA_T[k].ru))||k; }
+
+var deferredPrompt = null;
+var swRegistration = null;
+
+/* ---------- регистрация service worker ---------- */
+if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+    window.addEventListener('load', function(){
+        navigator.serviceWorker.register('sw.js').then(function(reg){
+            swRegistration = reg;
+            reg.addEventListener('updatefound', function(){
+                var nw = reg.installing;
+                if (!nw) return;
+                nw.addEventListener('statechange', function(){
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller){
+                        pwaShowUpdateBar();
+                    }
+                });
+            });
+        }).catch(function(e){ console.warn('[PWA] SW register failed', e); });
+
+        var refreshed = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+            if (refreshed) return;
+            refreshed = true;
+            location.reload();
+        });
+    });
+}
+
+/* ---------- баннер «Установить приложение» ---------- */
+window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    pwaShowInstallBtn();
+});
+
+function pwaShowInstallBtn(){
+    if (document.getElementById('pwaInstallBtn')) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    var b = document.createElement('button');
+    b.id = 'pwaInstallBtn';
+    b.textContent = pt('install');
+    b.onclick = function(){
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(res){
+            if (res && res.outcome === 'accepted'){
+                if (typeof showToast === 'function') showToast(pt('installed'));
+            }
+            deferredPrompt = null;
+            b.remove();
+        });
+    };
+    document.body.appendChild(b);
+    setTimeout(function(){ try{ b.classList.add('pwa-min'); }catch(e){} }, 30000);
+}
+
+window.addEventListener('appinstalled', function(){
+    if (typeof showToast === 'function') showToast(pt('installed'));
+    var b = document.getElementById('pwaInstallBtn');
+    if (b) b.remove();
+});
+
+/* iOS: подсказка (там нет beforeinstallprompt) */
+(function(){
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isIOS && !inApp && !localStorage.getItem('pwaIosHintShown')){
+        setTimeout(function(){
+            if (typeof showToast === 'function') showToast(pt('iosHint'));
+            try{ localStorage.setItem('pwaIosHintShown','1'); }catch(e){}
+        }, 6000);
+    }
+})();
+
+/* ---------- бар «Доступно обновление» ---------- */
+function pwaShowUpdateBar(){
+    if (document.getElementById('pwaUpdateBar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'pwaUpdateBar';
+    bar.innerHTML = '<span>' + pt('updateReady') + '</span>' +
+        '<button onclick="pwaApplyUpdate()">' + pt('updateBtn') + '</button>' +
+        '<button class="x" onclick="this.parentNode.remove()">✕</button>';
+    document.body.appendChild(bar);
+}
+window.pwaApplyUpdate = function(){
+    if (swRegistration && swRegistration.waiting){
+        swRegistration.waiting.postMessage({ type:'SKIP_WAITING' });
+    }
+};
+
+/* ---------- офлайн/онлайн ---------- */
+window.addEventListener('offline', function(){
+    if (typeof showToast === 'function') showToast(pt('offline'));
+    document.body.classList.add('pwa-offline');
+});
+window.addEventListener('online', function(){
+    if (typeof showToast === 'function') showToast(pt('online'));
+    document.body.classList.remove('pwa-offline');
+});
+if (!navigator.onLine) document.body.classList.add('pwa-offline');
+
+/* ---------- ярлыки из манифеста (?shortcut=...) ---------- */
+window.addEventListener('load', function(){
+    setTimeout(function(){
+        try {
+            var sc = new URLSearchParams(location.search).get('shortcut');
+            if (!sc) return;
+            if (typeof switchAppMode === 'function'){
+                if (sc === 'workout') switchAppMode('workout');
+                else if (sc === 'nutrition') switchAppMode('nutrition');
+            }
+        } catch(e){}
+    }, 800);
+});
+})();
+</script>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0aa5f07bc482212',t:'MTc4MTI4MzIwMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
