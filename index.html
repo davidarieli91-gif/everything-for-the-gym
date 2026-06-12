@@ -10841,6 +10841,8 @@
                 trPasswordPh: 'Введите пароль',
                 trBtnLogin: 'Войти',
                 trBtnBack: '← Назад',
+                wkTimePerSet: 'Время на подход (сек)',
+
                 btnTpl: '📦 Шаблоны',
 
                 btnShareWA: '📤 WhatsApp',
@@ -11634,6 +11636,8 @@
                 trPasswordPh: 'Enter password',
                 trBtnLogin: 'Login',
                 trBtnBack: '← Back',
+                wkTimePerSet: 'Time per set (sec)',
+
                 btnTpl: '📦 Templates',
 
                 btnShareWA: '📤 WhatsApp',
@@ -12334,6 +12338,8 @@
                 trPasswordPh: 'הזן סיסמה',
                 trBtnLogin: 'כניסה',
                 trBtnBack: '← חזרה',
+                wkTimePerSet: 'זמן לסט (שנ׳)',
+
                 btnTpl: '📦 תבניות',
 
                 btnShareWA: '📤 WhatsApp',
@@ -14128,132 +14134,131 @@
         }
 
         // Отображение продуктов
-        function displayProducts() {
-            const searchTerm = document.getElementById('productSearch').value.toLowerCase();
-            const list = document.getElementById('productsList');
-            list.innerHTML = '';
-            
-            let productsToShow = [];
-            
-            if (currentCategory === 'all') {
-                productsToShow = allProducts;
+        // Свернутость категорий продуктов (по умолчанию всё свернуто — как база упражнений)
+        let prodGroupsCollapsed = {};
+        try { prodGroupsCollapsed = JSON.parse(localStorage.getItem('prodGroupsCollapsed') || '{}') || {}; } catch(e) {}
+        function isProdGroupCollapsed(cat) {
+            return prodGroupsCollapsed[cat] !== false; // default: collapsed
+        }
+        function toggleProdGroup(cat) {
+            prodGroupsCollapsed[cat] = isProdGroupCollapsed(cat) ? false : true;
+            try { localStorage.setItem('prodGroupsCollapsed', JSON.stringify(prodGroupsCollapsed)); } catch(e) {}
+            displayProducts();
+        }
+
+        function buildProductRowCard(product) {
+            const card = document.createElement('div');
+            card.className = 'pr-card';
+            card.draggable = true;
+            card.dataset.product = JSON.stringify(product);
+            card.title = t('wkInfoHint') || '';
+
+            card.addEventListener('dragstart', function(e) {
+                draggedProduct = product;
+                try { e.dataTransfer.setData('text/plain', JSON.stringify(product)); } catch(err) {}
+                e.dataTransfer.effectAllowed = 'copy';
+                this.classList.add('dragging');
+            });
+            card.addEventListener('dragend', function() { this.classList.remove('dragging'); });
+
+            card.onclick = function(e) {
+                if (e.target.closest('.pr-card-edit, .pr-card-add')) return;
+                openProductInfo(product);
+            };
+            card.ondblclick = function(e) {
+                if (e.target.closest('.pr-card-edit, .pr-card-add')) return;
+                e.preventDefault();
+                closeInfoModal();
+                quickAddProductToMeal(product);
+            };
+
+            const brandLbl = (typeof getProductBrand === 'function') ? getProductBrand(product, productPrimaryLang) : '';
+            const nutriMini = (product.nutriScore && typeof NUTRI_COLORS !== 'undefined' && NUTRI_COLORS[product.nutriScore])
+                ? `<span class="pr-nutri" style="background:${NUTRI_COLORS[product.nutriScore]};">${product.nutriScore}</span>` : '';
+            const thumb = (typeof getProductThumbHtml === 'function')
+                ? getProductThumbHtml(product)
+                : '';
+
+            card.innerHTML = `
+                <div class="pr-card-thumb">${thumb}</div>
+                <div class="pr-card-name">
+                    ${getProductDualNameHtml(product)}
+                    ${brandLbl ? `<small class="pr-brand">${escapeHtml(brandLbl)}${nutriMini}</small>` : (nutriMini ? `<small class="pr-brand">${nutriMini}</small>` : '')}
+                </div>
+                <div class="pr-card-kcal">${product.calories}<small>${t('kcal')}</small></div>
+                <button class="pr-card-add pr-card-edit" title="${t('editProductTitle') || '✏️'}" onclick="event.stopPropagation(); openEditProduct(${JSON.stringify(product.name).replace(/\"/g, '&quot;')}, ${JSON.stringify(product.hebrew).replace(/\"/g, '&quot;')})">✏️</button>
+                <button class="pr-card-add" title="+" onclick="event.stopPropagation(); closeInfoModal(); quickAddProductToMeal(JSON.parse(this.closest('.pr-card').dataset.product))">+</button>
+            `;
+            return card;
+        }
+
+        function quickAddProductToMeal(product) {
+            const meals = document.querySelectorAll('.meal');
+            if (meals.length === 0) {
+                addMeal();
+                setTimeout(() => {
+                    addProductToMeal(product, document.querySelector('.meal'));
+                    showToast('✅ ' + getProductName(product, productPrimaryLang));
+                }, 100);
             } else {
-                productsToShow = productsDatabase[currentCategory] || [];
+                addProductToMeal(product, meals[0]);
+                showToast('✅ ' + getProductName(product, productPrimaryLang));
             }
-            
-            productsToShow = productsToShow.filter(product => 
-                product.name.toLowerCase().includes(searchTerm) ||
-                product.hebrew.toLowerCase().includes(searchTerm) ||
-                (product.nameEn && product.nameEn.toLowerCase().includes(searchTerm))
-            );
-            
-            if (currentCookingFilter !== 'all') {
-                productsToShow = productsToShow.filter(product => 
-                    product.cookingMethods && product.cookingMethods.includes(currentCookingFilter)
-                );
-            }
-            
-            productsToShow.sort((a, b) => {
-                const nameA = getProductName(a, productPrimaryLang);
-                const nameB = getProductName(b, productPrimaryLang);
-                return nameA.localeCompare(nameB, productPrimaryLang === 'he' ? 'he' : (productPrimaryLang === 'en' ? 'en' : 'ru'));
-            });
-            
-            productsToShow.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'product-card';
-                card.draggable = true;
-                card.dataset.product = JSON.stringify(product);
-                card.title = t('wkInfoHint') || '';
-                
-                card.addEventListener('dragstart', function(e) {
-                    draggedProduct = product;
-                    e.dataTransfer.setData('text/plain', JSON.stringify(product));
-                    e.dataTransfer.effectAllowed = 'copy';
-                    this.classList.add('dragging');
-                });
-                
-                card.addEventListener('dragend', function() {
-                    this.classList.remove('dragging');
-                });
-                
-                // Одиночный клик — открыть карточку с подробной информацией
-                card.onclick = function(e) {
-                    // не открываем при клике на иконки edit/delete
-                    if (e.target.closest('.product-edit-btn, .product-delete-btn')) return;
-                    openProductInfo(product);
-                };
-                // Двойной клик — добавить в первый прием пищи
-                card.ondblclick = function(e) {
-                    if (e.target.closest('.product-edit-btn, .product-delete-btn')) return;
-                    e.preventDefault();
-                    closeInfoModal();
-                    const meals = document.querySelectorAll('.meal');
-                    if (meals.length === 0) {
-                        addMeal();
-                        setTimeout(() => {
-                            addProductToMeal(product, document.querySelector('.meal'));
-                            showToast('✅ ' + getProductName(product, productPrimaryLang));
-                        }, 100);
-                    } else {
-                        addProductToMeal(product, meals[0]);
-                        showToast('✅ ' + getProductName(product, productPrimaryLang));
-                    }
-                };
-                
-                let badgesHtml = '';
-                if (product.cookingMethods) {
-                    const cookingMethodNames = {
-                        raw: t('badgeRaw'),
-                        boiled: t('badgeBoiled'),
-                        fried: t('badgeFried'),
-                        baked: t('badgeBaked'),
-                        grilled: t('badgeGrilled'),
-                        dried: t('badgeDried')
-                    };
-                    product.cookingMethods.forEach(method => {
-                        badgesHtml += `<span class="cooking-badge ${method}">${cookingMethodNames[method] || method}</span>`;
-                    });
+        }
+        window.quickAddProductToMeal = quickAddProductToMeal;
+        window.toggleProdGroup = toggleProdGroup;
+
+        function displayProducts() {
+            const searchEl = document.getElementById('productSearch');
+            const searchTerm = (searchEl ? searchEl.value : '').toLowerCase().trim();
+            const list = document.getElementById('productsList');
+            if (!list) return;
+            list.classList.add('pr-grouped');
+            list.innerHTML = '';
+
+            let shown = 0;
+            for (const cat in productsDatabase) {
+                let items = (productsDatabase[cat] || []).slice();
+
+                if (searchTerm) {
+                    items = items.filter(p =>
+                        (p.name || '').toLowerCase().includes(searchTerm) ||
+                        (p.hebrew || '').toLowerCase().includes(searchTerm) ||
+                        (p.nameEn && p.nameEn.toLowerCase().includes(searchTerm))
+                    );
                 }
-                
-                const productIdx = allProducts.indexOf(product);
-                const prodThumb = getProductThumbHtml(product);
-                const brandLbl = getProductBrand(product, productPrimaryLang);
-                const nutriMini = product.nutriScore ? `<span style="display:inline-block; background:${NUTRI_COLORS[product.nutriScore] || '#64748B'}; color:#fff; font-weight:800; font-size:0.82em; padding:0 5px; border-radius:5px; margin-left:4px;">${product.nutriScore}</span>` : '';
-                card.innerHTML = `
-                    <button class="product-edit-btn" onclick="event.stopPropagation(); openEditProduct(${JSON.stringify(product.name).replace(/"/g, '&quot;')}, ${JSON.stringify(product.hebrew).replace(/"/g, '&quot;')})" title="${t('editProductTitle') || 'Редактировать'}">✏️</button>
-                    <div class="product-card-top">
-                        <div class="product-card-thumb">${prodThumb}</div>
-                        <div class="product-names">
-                            ${getProductDualNameHtml(product)}
-                            ${brandLbl ? `<span class="product-brand-line" style="display:block; font-size:0.86em; color:var(--text-light); font-weight:600;">${escapeHtml(brandLbl)}${nutriMini}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="product-nutrition">
-                        <div class="nutrition-item">
-                            <div class="nutrition-value">${product.calories}</div>
-                            <div class="nutrition-label">${t('kcal')}</div>
-                        </div>
-                        <div class="nutrition-item">
-                            <div class="nutrition-value">${product.protein.toFixed(1)}</div>
-                            <div class="nutrition-label">${t('prot')}</div>
-                        </div>
-                        <div class="nutrition-item">
-                            <div class="nutrition-value">${product.fat.toFixed(1)}</div>
-                            <div class="nutrition-label">${t('fats')}</div>
-                        </div>
-                        <div class="nutrition-item">
-                            <div class="nutrition-value">${product.carbs.toFixed(1)}</div>
-                            <div class="nutrition-label">${t('carb')}</div>
-                        </div>
-                    </div>
-                    ${badgesHtml ? `<div class="cooking-badges">${badgesHtml}</div>` : ''}
-                `;
-                
-                list.appendChild(card);
-            });
-            
-            if (productsToShow.length === 0) {
+                if (currentCookingFilter !== 'all') {
+                    items = items.filter(p => p.cookingMethods && p.cookingMethods.includes(currentCookingFilter));
+                }
+                if (!items.length) continue;
+
+                items.sort((a, b) => {
+                    const na = getProductName(a, productPrimaryLang);
+                    const nb = getProductName(b, productPrimaryLang);
+                    return String(na).localeCompare(String(nb), productPrimaryLang === 'he' ? 'he' : (productPrimaryLang === 'en' ? 'en' : 'ru'));
+                });
+
+                const color = (typeof PRODUCT_CATEGORY_COLORS !== 'undefined' && PRODUCT_CATEGORY_COLORS[cat]) || '#10B981';
+                const label = (typeof PRODUCT_CATEGORY_LABEL !== 'undefined' && PRODUCT_CATEGORY_LABEL[cat])
+                    ? lcGet(PRODUCT_CATEGORY_LABEL, cat) : cat;
+                const collapsed = searchTerm ? false : isProdGroupCollapsed(cat);
+
+                const group = document.createElement('div');
+                group.className = 'pr-group' + (collapsed ? ' collapsed' : '');
+                group.innerHTML = `
+                    <div class="pr-group-header" style="border-left:4px solid ${color};" onclick="toggleProdGroup('${cat}')">
+                        <span>${escapeHtml(label)} <span class="pr-group-count">(${items.length})</span></span>
+                        <span class="pr-group-arrow">▼</span>
+                    </div>`;
+                const body = document.createElement('div');
+                body.className = 'pr-group-body';
+                items.forEach(p => body.appendChild(buildProductRowCard(p)));
+                group.appendChild(body);
+                list.appendChild(group);
+                shown += items.length;
+            }
+
+            if (!shown) {
                 list.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 20px;">${t('noProductsFound')}</p>`;
             }
         }
@@ -16941,9 +16946,10 @@
             tr.dataset.subId = subId;
             tr.dataset.equip = equip;
             tr.dataset.color = groupColor;
+            const infoPayloadEye = ex.exId ? encodeURIComponent(JSON.stringify({ exId: ex.exId, groupId: groupId, subId: subId, equip: equip })) : '';
             tr.innerHTML = `
                 <td class="ex-name-cell" style="border-left:3px solid ${groupColor}; padding-left:8px;">
-                    <input type="text" class="ex-name" value="${escapeAttr(exName)}" placeholder="${escapeAttr(t('wkExNamePh'))}" oninput="saveWorkoutPlan()" style="font-weight:500; border:none; background:transparent; padding:2px 0;">
+                    ${infoPayloadEye ? `<button class="ex-info-eye" title="ℹ️" onclick="event.stopPropagation(); openExerciseInfo('${infoPayloadEye}')">👁</button>` : ''}<input type="text" class="ex-name" value="${escapeAttr(exName)}" placeholder="${escapeAttr(t('wkExNamePh'))}" oninput="saveWorkoutPlan()" style="font-weight:500; border:none; background:transparent; padding:2px 0; width:${infoPayloadEye ? 'calc(100% - 26px)' : '100%'};">
                     <small>${escapeAttr([
                         groupName ? groupName.replace(/^[^\s]+\s/, '') : '',
                         subName,
@@ -16953,7 +16959,7 @@
                 <td><input type="number" class="ex-sets" min="0" max="50" value="${ex.sets != null && ex.sets !== '' ? ex.sets : 3}" oninput="updateWorkoutTotals(); saveWorkoutPlan();"></td>
                 <td><input type="text" class="ex-reps" value="${escapeAttr(ex.reps != null && ex.reps !== '' ? ex.reps : 10)}" placeholder="${escapeAttr(t('wkRepsPh'))}" oninput="updateWorkoutTotals(); saveWorkoutPlan();"></td>
                 <td><input type="number" class="ex-weight" min="0" max="1000" step="0.5" value="${ex.weight != null ? ex.weight : ''}" placeholder="0" oninput="updateWorkoutTotals(); saveWorkoutPlan();"></td>
-                <td><input type="number" class="ex-rest" min="0" max="600" step="5" value="${ex.rest != null && ex.rest !== '' ? ex.rest : 60}" oninput="saveWorkoutPlan()"></td>
+                <td><input type="number" class="ex-rest" min="0" max="600" step="5" value="${ex.rest != null && ex.rest !== '' ? ex.rest : 60}" oninput="saveWorkoutPlan()"><input type="number" class="ex-time" min="0" max="600" step="5" value="${ex.time != null ? ex.time : ''}" placeholder="⏳" title="${escapeAttr(t('wkTimePerSet') || 'Время на подход (сек)')}" oninput="saveWorkoutPlan()"></td>
                 <td><input type="text" class="ex-note" value="${escapeAttr(ex.note || '')}" placeholder="—" oninput="saveWorkoutPlan()"></td>
                 <td>
                     <div class="ex-row-actions">
@@ -17026,6 +17032,7 @@
                     reps: tr.querySelector('.ex-reps').value,
                     weight: tr.querySelector('.ex-weight').value,
                     rest: tr.querySelector('.ex-rest').value,
+                    time: tr.querySelector('.ex-time') ? tr.querySelector('.ex-time').value : '',
                     note: tr.querySelector('.ex-note').value,
                     exId: tr.dataset.exId || '',
                     groupId: tr.dataset.groupId || '',
@@ -27788,6 +27795,105 @@ body.layout-mobile .info-modal-close, body.layout-tablet .info-modal-close { top
 
 
 
+
+
+/* ===== ПК / ПИТАНИЕ: база продуктов в стиле базы упражнений (pr-) ===== */
+/* категории-чипы больше не нужны: категории стали группами в списке */
+.category-tabs { display: none !important; }
+
+.products-list.pr-grouped { display: block !important; padding: 8px !important; }
+.pr-group { margin-bottom: 8px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: var(--surface-color); }
+.pr-group-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; cursor: pointer; background: linear-gradient(90deg, rgba(16,185,129,0.06), transparent); font-weight: 600; color: var(--text-primary); font-size: 0.92em; user-select: none; }
+.pr-group-header:hover { background: rgba(16,185,129,0.1); }
+.pr-group-arrow { font-size: 0.75em; transition: var(--transition); }
+.pr-group.collapsed .pr-group-arrow { transform: rotate(-90deg); }
+.pr-group.collapsed .pr-group-body { display: none; }
+.pr-group-body { padding: 6px 8px 10px; }
+.pr-group-count { font-weight: 400; font-size: 0.85em; color: var(--text-light); }
+.pr-card { display: flex; align-items: center; padding: 7px 10px; margin: 3px 0; background: rgba(0,0,0,0.02); border: 1px solid transparent; border-radius: 8px; cursor: grab; font-size: 0.85em; transition: var(--transition); gap: 8px; }
+body.dark-theme .pr-card { background: rgba(255,255,255,0.03); }
+.pr-card:hover { border-color: var(--primary-color); background: rgba(16,185,129,0.08); transform: translateX(2px); }
+body[dir="rtl"] .pr-card:hover { transform: translateX(-2px); }
+.pr-card.dragging { opacity: .5; }
+.pr-card-thumb { width: 42px; height: 42px; flex-shrink: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); background: var(--surface-color); }
+.pr-card-thumb svg, .pr-card-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.pr-card-name { flex: 1; color: var(--text-primary); font-weight: 500; line-height: 1.3; min-width: 0; }
+.pr-card-name .product-name-secondary { display: block; font-size: .85em; color: var(--text-light); font-weight: 400; }
+.pr-brand { display: block; font-size: .8em; color: var(--text-light); font-weight: 400; }
+.pr-nutri { display: inline-block; color: #fff; font-weight: 800; font-size: .8em; padding: 0 5px; border-radius: 4px; margin-inline-start: 5px; }
+.pr-card-kcal { flex-shrink: 0; text-align: center; font-weight: 700; color: var(--primary-color); font-size: .95em; line-height: 1.05; min-width: 38px; }
+.pr-card-kcal small { display: block; font-weight: 400; font-size: .68em; color: var(--text-light); }
+.pr-card-add { border: none; background: rgba(16,185,129,0.15); color: var(--primary-color); border-radius: 6px; width: 24px; height: 24px; font-size: 1em; font-weight: 700; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.pr-card-add:hover { background: var(--primary-color); color: #fff; }
+.pr-card-edit { background: rgba(59,130,246,0.12); color: #3B82F6; font-size: .8em; }
+.pr-card-edit:hover { background: #3B82F6; color: #fff; }
+
+/* ===== ПК / ПИТАНИЕ: приём пищи в стиле карточки тренировки ===== */
+body.layout-desktop:not(.mode-workout) .meal { border-radius: 14px; padding: 16px 18px; }
+body.layout-desktop:not(.mode-workout) .meal:hover { box-shadow: var(--shadow-lg); }
+body.layout-desktop:not(.mode-workout) .meal.drag-over { border: 2px dashed var(--primary-color); background: rgba(16,185,129,0.04); }
+body.layout-desktop:not(.mode-workout) .meal-title { font-weight: 600; font-size: 1.1em; color: var(--primary-color); border: none; background: transparent; border-bottom: 2px solid transparent; }
+body.layout-desktop:not(.mode-workout) .meal-title:focus { outline: none; border-bottom-color: var(--primary-color); }
+body.layout-desktop:not(.mode-workout) .meal-controls .control-btn { background: rgba(16,185,129,0.1); border-color: var(--primary-color); color: var(--primary-color); }
+body.layout-desktop:not(.mode-workout) .meal-controls .control-btn:hover { background: var(--primary-color); color: #fff; }
+body.layout-desktop:not(.mode-workout) .meal-controls .control-btn.remove:hover { background: var(--danger-color); border-color: var(--danger-color); }
+body.layout-desktop:not(.mode-workout) .meal-products th { background: rgba(16,185,129,0.06); font-weight: 600; color: var(--text-secondary); font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* ===== ENCYCLOPEDIA (enc) ===== */
+.enc-btnrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.enc-btnrow .dsh-home-btn { margin: 0; }
+.enc-home-btn { background: linear-gradient(135deg, #0EA5E9, #0369A1) !important; box-shadow: 0 6px 18px rgba(14,165,233,.4) !important; }
+#encOverlay { display: none; position: fixed; inset: 0; z-index: 137000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+.enc-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 640px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
+@media (max-width: 920px) { #encOverlay { padding: 0; } .enc-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
+.enc-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #0EA5E9, #0369A1); color: #fff; flex-shrink: 0; }
+.enc-title { font-weight: 800; font-size: 1.05em; }
+.enc-x { width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 1.05em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.enc-search { padding: 10px 14px 4px; flex-shrink: 0; }
+.enc-search input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border-color); border-radius: 12px; font-size: 16px; background: var(--surface-color); color: var(--text-primary); font-family: inherit; }
+.enc-search input:focus { outline: none; border-color: #0EA5E9; }
+.enc-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 14px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.enc-sec-head { display: flex; align-items: center; gap: 10px; padding: 13px 14px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 14px; margin-bottom: 8px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.enc-sec-head .ico { font-size: 1.2em; }
+.enc-sec-head .ttl { flex: 1; font-weight: 800; font-size: .98em; color: var(--text-primary); }
+.enc-sec-head .cnt { font-size: .72em; color: var(--text-light); font-weight: 700; }
+.enc-sec-head .arr { font-size: .7em; color: var(--text-light); }
+.enc-topic-head { display: flex; align-items: center; gap: 9px; padding: 10px 12px; margin: 0 0 6px 14px; background: var(--background-color); border: 1px solid var(--border-color); border-radius: 11px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+body[dir="rtl"] .enc-topic-head { margin-left: 0; margin-right: 14px; }
+.enc-topic-head .ttl { flex: 1; font-weight: 700; font-size: .88em; color: var(--text-primary); }
+.enc-topic-head .arr { font-weight: 800; color: var(--text-light); }
+.enc-topic-head.open { border-color: #0EA5E9; }
+.enc-topic-body { margin: 0 0 12px 14px; padding: 12px 14px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 13px; font-size: .88em; line-height: 1.55; color: var(--text-secondary); }
+body[dir="rtl"] .enc-topic-body { margin-left: 0; margin-right: 14px; }
+.enc-topic-body p { margin: 0 0 8px; }
+.enc-fig { background: var(--background-color); border: 1px dashed var(--border-color); border-radius: 12px; padding: 12px; margin: 10px 0; text-align: center; }
+.enc-k { display: inline-block; padding: 2px 10px; border-radius: 8px; background: rgba(14,165,233,.12); color: #0369A1; font-weight: 700; font-size: .92em; border: 1px solid rgba(14,165,233,.3); white-space: nowrap; }
+body.dark-theme .enc-k { color: #7DD3FC; }
+.enc-step { display: flex; gap: 10px; align-items: flex-start; margin: 7px 0; }
+.enc-step b { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #0EA5E9; color: #fff; font-size: .78em; display: flex; align-items: center; justify-content: center; }
+.enc-tip { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.25); border-radius: 10px; padding: 8px 11px; margin: 9px 0; font-size: .92em; }
+.enc-warn { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); border-radius: 10px; padding: 8px 11px; margin: 9px 0; font-size: .92em; }
+.enc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; font-size: .85em; font-weight: 700; color: var(--text-primary); }
+.enc-grid > div { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 9px; padding: 8px 4px; }
+.enc-tabs { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.enc-tabs span { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border-color); font-size: .82em; font-weight: 700; color: var(--text-secondary); }
+.enc-tabs span.on { background: rgba(14,165,233,.12); border-color: #0EA5E9; color: #0369A1; }
+body.dark-theme .enc-tabs span.on { color: #7DD3FC; }
+.enc-row { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; font-size: .88em; }
+.enc-card-demo { display: flex; align-items: center; gap: 10px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 13px; padding: 10px 13px; text-align: start; }
+.enc-card-demo .ava { font-size: 1.6em; }
+.enc-card-demo .badge { margin-inline-start: auto; background: rgba(16,185,129,.12); color: #047857; font-weight: 800; font-size: .78em; padding: 3px 9px; border-radius: 999px; }
+.enc-acc .g, .enc-acc .sg, .enc-acc .it { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 5px; background: var(--surface-color); font-weight: 700; font-size: .85em; color: var(--text-primary); text-align: start; }
+.enc-acc .sg { margin-inline-start: 16px; background: var(--background-color); }
+.enc-acc .it { margin-inline-start: 32px; font-weight: 600; }
+.enc-acc i { margin-inline-start: auto; font-style: normal; color: var(--text-light); font-size: .85em; }
+.enc-acc b { margin-inline-start: auto; color: #dc2626; }
+.enc-menu { max-width: 240px; margin: 0 auto; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; background: var(--surface-color); }
+.enc-menu > div { padding: 9px 14px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: .85em; color: var(--text-primary); text-align: start; }
+.enc-menu > div:last-child { border-bottom: none; }
+.enc-menu .red { color: #EF4444; }
+.enc-none { text-align: center; padding: 40px; color: var(--text-light); }
+
 /* ===== DASHBOARD (dsh) + ROLES ===== */
 .dsh-home-btn { display: block; margin: 14px auto 0; padding: 12px 26px; border: none; border-radius: 999px; background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit; box-shadow: 0 6px 18px rgba(99,102,241,.4); -webkit-tap-highlight-color: transparent; }
 .dsh-home-btn:hover { transform: translateY(-2px); }
@@ -28049,6 +28155,25 @@ body.mp-active #pwaInstallBtn, body.layout-mobile #pwaInstallBtn { bottom: calc(
 #pwaUpdateBar button.x { background: transparent; color: rgba(255,255,255,.6); padding: 7px 8px; font-weight: 600; }
 body.pwa-offline #cloudDock { opacity: .85; }
 
+.mp-exrow-menu { width: 32px; height: 32px; flex-shrink: 0; border: 1px solid var(--border-color); border-radius: 9px; background: var(--surface-color); color: var(--text-secondary); font-size: 1em; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mp-exrow-menu:active { transform: scale(.92); }
+/* мобильные плавающие кнопки больше не нужны (всё в mp-интерфейсе) */
+#sidebarToggle, #fabAddMeal, #fabAddWorkout { display: none !important; }
+/* кнопка-глаз у выбранного упражнения (десктоп) */
+.ex-info-eye { border: none; background: none; cursor: pointer; font-size: .95em; opacity: .55; padding: 0 2px; vertical-align: middle; }
+.ex-info-eye:hover { opacity: 1; transform: scale(1.15); }
+/* поле времени на подход в таблице */
+.ex-time { display: block; width: 100%; margin-top: 2px; opacity: .85; }
+/* аккордеон мобильного пикера упражнений */
+.mp-exg-head { display: flex; align-items: center; gap: 9px; padding: 12px; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 13px; margin-bottom: 7px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.mp-exg-head:active { transform: scale(.99); }
+.mp-exg-bar { width: 5px; height: 22px; border-radius: 4px; flex-shrink: 0; }
+.mp-exg-name { flex: 1; min-width: 0; font-size: .92em; font-weight: 700; color: var(--text-primary); }
+.mp-exg-cnt { font-size: .72em; color: var(--text-light); font-weight: 700; }
+.mp-exg-arr { font-size: .7em; color: var(--text-light); }
+.mp-exsg-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin: 0 0 6px 16px; background: var(--background-color); border: 1px solid var(--border-color); border-inline-start: 3px solid var(--border-color); border-radius: 11px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+body[dir="rtl"] .mp-exsg-head { margin-left: 0; margin-right: 16px; }
+
 /* ===== CLOUD SYNC UI ===== */
 #cloudDock { position: fixed; bottom: 10px; left: 10px; z-index: 9000; display: flex; align-items: center; gap: 6px; }
 body[dir="rtl"] #cloudDock { left: auto; right: 10px; }
@@ -28129,6 +28254,7 @@ var MP_T = {
     unit:       { ru:'Ед. измерения', en:'Unit',    he:'יחידת מידה' },
     done:       { ru:'Готово',      en:'Done',      he:'סיום' },
     del:        { ru:'Удалить',     en:'Delete',    he:'מחיקה' },
+    edit:       { ru:'Изменить',    en:'Edit',      he:'עריכה' },
     goal:       { ru:'Цель',        en:'Goal',      he:'יעד' },
     eaten:      { ru:'Съедено',     en:'Eaten',     he:'נאכל' },
     left:       { ru:'осталось',    en:'left',      he:'נותרו' },
@@ -28172,7 +28298,11 @@ var MP_T = {
     minS:       { ru:'мин',         en:'min',       he:'דק׳' },
     actions:    { ru:'Действия',    en:'Actions',   he:'פעולות' },
     sendClient: { ru:'Отправить клиенту', en:'Send to client', he:'שלח ללקוח' },
-    startLive:  { ru:'▶ Начать тренировку', en:'▶ Start workout', he:'▶ התחל אימון' }
+    startLive:  { ru:'▶ Начать тренировку', en:'▶ Start workout', he:'▶ התחל אימון' },
+    moveUp:     { ru:'⬆ Выше', en:'⬆ Move up', he:'⬆ למעלה' },
+    dupMeal:    { ru:'⎘ Дублировать приём', en:'⎘ Duplicate meal', he:'⎘ שכפל ארוחה' },
+    moveDown:   { ru:'⬇ Ниже', en:'⬇ Move down', he:'⬇ למטה' },
+    dupEx:      { ru:'⎘ Дублировать', en:'⎘ Duplicate', he:'⎘ שכפול' }
 };
 function mt(k){
     var l = (typeof currentLang !== 'undefined') ? currentLang : 'ru';
@@ -28342,12 +28472,19 @@ function mpNutritionHTML(){
             var unitKey = tr.querySelector('.unit-select') ? tr.querySelector('.unit-select').value : 'gram';
             var unitLbl = (typeof getUnitShortLabel === 'function') ? getUnitShortLabel(unitKey) : unitKey;
             var kc = tr.querySelector('.product-calories') ? (parseFloat(tr.querySelector('.product-calories').textContent) || 0) : 0;
+            var prodInfoPayload = '';
+            try {
+                if (p && typeof allProducts !== 'undefined'){
+                    prodInfoPayload = String(parseInt(sel.value));
+                }
+            } catch(e){}
             rowsH += '<div class="mp-prow" onclick="mpOpenRowEditor(' + mi + ',' + ri + ')">' +
                 '<div class="mp-prow-main">' +
-                    '<div class="mp-prow-name">' + esc(name) + '</div>' +
+                    '<div class="mp-prow-name"' + (prodInfoPayload !== '' ? ' onclick="event.stopPropagation(); openProductInfo(allProducts[' + prodInfoPayload + '])" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"' : '') + '>' + esc(name) + '</div>' +
                     '<div class="mp-prow-qty">' + esc(amt) + ' ' + esc(unitLbl) + '</div>' +
                 '</div>' +
                 '<div class="mp-prow-kcal">' + Math.round(kc) + ' <small>' + mt('kcal') + '</small></div>' +
+                '<button class="mp-exrow-menu" onclick="event.stopPropagation(); mpOpenProdRowMenu(' + mi + ',' + ri + ')">⋯</button>' +
             '</div>';
         });
         h += '<div class="mp-card">' +
@@ -28391,11 +28528,50 @@ window.mpOpenMealEditor = function(mi){
             '<label class="mp-label">📝 ' + mt('notes') + '</label>' +
             '<textarea class="mp-input" id="mpMealNotes" rows="3">' + esc(notes) + '</textarea>' +
         '</div>' +
+        '<div class="mp-sheet-body" style="padding-top:0;">' +
+            '<button class="mp-btn mp-btn-ghost" style="width:100%; margin-top:10px;" onclick="mpDupMeal(' + mi + ')">' + mt('dupMeal') + '</button>' +
+        '</div>' +
         '<div class="mp-sheet-foot">' +
             '<button class="mp-btn mp-btn-danger" onclick="mpDeleteMeal(' + mi + ')">🗑</button>' +
             '<button class="mp-btn mp-btn-primary" onclick="mpCommitMealEditor(' + mi + ')">' + mt('done') + '</button>' +
         '</div>'
     );
+};
+window.mpDupMeal = function(mi){
+    var meal = mpMeal(mi); if (!meal) return mpCloseSheet();
+    var title = meal.querySelector('.meal-title') ? meal.querySelector('.meal-title').value : '';
+    var rows = [];
+    meal.querySelectorAll('.meal-body tr').forEach(function(tr){
+        var sel = tr.querySelector('.product-select');
+        if (!sel || sel.value === '') return;
+        rows.push({
+            idx: parseInt(sel.value),
+            amt: tr.querySelector('.weight-input') ? tr.querySelector('.weight-input').value : '100',
+            unit: tr.querySelector('.unit-select') ? tr.querySelector('.unit-select').value : 'gram'
+        });
+    });
+    if (typeof addMeal === 'function') addMeal();
+    var meals = mpMeals();
+    var nm = meals[meals.length - 1];
+    if (!nm) return mpCloseSheet();
+    if (nm.querySelector('.meal-title')) nm.querySelector('.meal-title').value = title + ' ⎘';
+    rows.forEach(function(r){
+        var p = allProducts[r.idx];
+        if (!p) return;
+        if (typeof addProductRow === 'function') addProductRow(p, nm);
+        var trs2 = nm.querySelectorAll('.meal-body tr');
+        var last = trs2[trs2.length - 1];
+        if (last){
+            if (last.querySelector('.weight-input')) last.querySelector('.weight-input').value = r.amt;
+            if (last.querySelector('.unit-select')) last.querySelector('.unit-select').value = r.unit;
+            var ls = last.querySelector('.product-select');
+            if (ls && typeof updateProductRow === 'function') updateProductRow(ls);
+        }
+    });
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    mpCloseSheet();
+    mpRenderBody();
+    if (typeof showToast === 'function') showToast(mt('added'));
 };
 window.mpCommitMealEditor = function(mi){
     var meal = mpMeal(mi); if (!meal) return mpCloseSheet();
@@ -28429,75 +28605,100 @@ window.mpDeleteMeal = function(mi){
 /* --- пикер продуктов --- */
 window.mpOpenProductPicker = function(mi){
     mpPick = { mi: mi, cat: 'all', q: '' };
-    var chips = MP_CATS.map(function(c){
-        return '<button class="mp-cat-chip' + (c === mpPick.cat ? ' active' : '') + '" data-cat="' + c + '" onclick="mpSetPickCat(\'' + c + '\')">' + esc(mpCatLabel(c)) + '</button>';
-    }).join('');
+    window.__mpPickOpenCat = {};
     mpOpenSheet(
         mpSheetHead('🍎 ' + mt('addProduct')) +
         '<div class="mp-search-wrap"><input class="mp-input" id="mpPickSearch" type="search" placeholder="' + escA(mt('search')) + '" oninput="mpPick.q=this.value; mpFillPickList();"></div>' +
-        '<div class="mp-chips" id="mpPickChips">' + chips + '</div>' +
         '<div class="mp-pick-list" id="mpPickList"></div>',
         true
     );
     mpFillPickList();
 };
-window.mpSetPickCat = function(c){
-    mpPick.cat = c;
-    var chips = document.getElementById('mpPickChips');
-    if (chips) Array.prototype.forEach.call(chips.children, function(b){ b.classList.toggle('active', b.dataset.cat === c); });
+window.mpTogglePickCat = function(c){
+    window.__mpPickOpenCat = window.__mpPickOpenCat || {};
+    window.__mpPickOpenCat[c] = !window.__mpPickOpenCat[c];
     mpFillPickList();
 };
+function mpProductCardHtml(p, i){
+    var name = (typeof getProductDualNameText === 'function') ? getProductDualNameText(p) : p.name;
+    var thumb = '';
+    try { thumb = (typeof getProductThumbHtml === 'function') ? getProductThumbHtml(p) : ''; } catch(e){}
+    var brandTxt = '';
+    try {
+        if (typeof getProductBrand === 'function'){
+            var bl = getProductBrand(p, (typeof productPrimaryLang !== 'undefined') ? productPrimaryLang : 'ru');
+            if (bl) brandTxt = ' · ' + bl;
+        }
+    } catch(e){}
+    var nutriTag = '';
+    try {
+        if (p.nutriScore && typeof NUTRI_COLORS !== 'undefined' && NUTRI_COLORS[p.nutriScore])
+            nutriTag = '<span style="display:inline-block; background:' + NUTRI_COLORS[p.nutriScore] + '; color:#fff; font-weight:800; font-size:.72em; padding:1px 6px; border-radius:5px; margin-inline-start:5px;">' + p.nutriScore + '</span>';
+    } catch(e){}
+    return '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpPickAdd(' + i + ')">' +
+        (thumb ? '<div class="mp-pick-thumb">' + thumb + '</div>' : '') +
+        '<div class="mp-pick-main">' +
+            '<div class="mp-pick-name">' + esc(name) + nutriTag + '</div>' +
+            '<div class="mp-pick-sub">' + mt('pS') + ' ' + r1(p.protein) + ' · ' + mt('fS') + ' ' + r1(p.fat) + ' · ' + mt('cS') + ' ' + r1(p.carbs) + ' · ' + mt('perHundred') + esc(brandTxt) + '</div>' +
+        '</div>' +
+        '<div class="mp-pick-kcal">' + Math.round(p.calories || 0) + ' ' + mt('kcal') + '</div>' +
+        '<div class="mp-pick-plus">+</div>' +
+    '</div>';
+}
+var MP_CAT_COLORS_FALLBACK = '#10B981';
 window.mpFillPickList = function(){
     var list = document.getElementById('mpPickList');
     if (!list || typeof allProducts === 'undefined') return;
-    var src = mpPick.cat === 'all' ? allProducts : ((typeof productsDatabase !== 'undefined' && productsDatabase[mpPick.cat]) || []);
     var q = (mpPick.q || '').toLowerCase();
-    var arr = src.filter(function(p){
-        if (!q) return true;
-        return (p.name || '').toLowerCase().indexOf(q) >= 0 ||
-               (p.hebrew || '').toLowerCase().indexOf(q) >= 0 ||
-               (p.nameEn || '').toLowerCase().indexOf(q) >= 0;
-    });
-    try {
-        arr = arr.slice().sort(function(a, b){
-            var pl = (typeof productPrimaryLang !== 'undefined') ? productPrimaryLang : 'ru';
-            var na = (typeof getProductName === 'function') ? getProductName(a, pl) : a.name;
-            var nb = (typeof getProductName === 'function') ? getProductName(b, pl) : b.name;
-            return String(na).localeCompare(String(nb));
-        });
-    } catch(e){}
-    __mpPickArr = arr;
-    if (!arr.length){ list.innerHTML = '<div class="mp-empty">' + mt('nothing') + '</div>'; return; }
     var h = '';
-    arr.forEach(function(p, i){
-        var name = (typeof getProductDualNameText === 'function') ? getProductDualNameText(p) : p.name;
-        var thumb = '';
-        try {
-            thumb = (typeof getProductThumbHtml === 'function') ? getProductThumbHtml(p) : '';
-        } catch(e){}
-        var brandTxt = '';
-        try {
-            if (typeof getProductBrand === 'function'){
-                var bl = getProductBrand(p, (typeof productPrimaryLang !== 'undefined') ? productPrimaryLang : 'ru');
-                if (bl) brandTxt = ' · ' + bl;
-            }
-        } catch(e){}
-        var nutriTag = '';
-        try {
-            if (p.nutriScore && typeof NUTRI_COLORS !== 'undefined' && NUTRI_COLORS[p.nutriScore])
-                nutriTag = '<span style="display:inline-block; background:' + NUTRI_COLORS[p.nutriScore] + '; color:#fff; font-weight:800; font-size:.72em; padding:1px 6px; border-radius:5px; margin-inline-start:5px;">' + p.nutriScore + '</span>';
-        } catch(e){}
-        h += '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpPickAdd(' + i + ')">' +
-            (thumb ? '<div class="mp-pick-thumb">' + thumb + '</div>' : '') +
-            '<div class="mp-pick-main">' +
-                '<div class="mp-pick-name">' + esc(name) + nutriTag + '</div>' +
-                '<div class="mp-pick-sub">' + mt('pS') + ' ' + r1(p.protein) + ' · ' + mt('fS') + ' ' + r1(p.fat) + ' · ' + mt('cS') + ' ' + r1(p.carbs) + ' · ' + mt('perHundred') + esc(brandTxt) + '</div>' +
-            '</div>' +
-            '<div class="mp-pick-kcal">' + Math.round(p.calories || 0) + ' ' + mt('kcal') + '</div>' +
-            '<div class="mp-pick-plus">+</div>' +
+    var arr = [];
+    var sortByName = function(a, b){
+        var pl = (typeof productPrimaryLang !== 'undefined') ? productPrimaryLang : 'ru';
+        var na = (typeof getProductName === 'function') ? getProductName(a, pl) : a.name;
+        var nb = (typeof getProductName === 'function') ? getProductName(b, pl) : b.name;
+        return String(na).localeCompare(String(nb));
+    };
+
+    if (q){
+        /* поиск: плоский отсортированный список */
+        var found = allProducts.filter(function(p){
+            return (p.name || '').toLowerCase().indexOf(q) >= 0 ||
+                   (p.hebrew || '').toLowerCase().indexOf(q) >= 0 ||
+                   (p.nameEn || '').toLowerCase().indexOf(q) >= 0;
+        });
+        try { found = found.slice().sort(sortByName); } catch(e){}
+        __mpPickArr = found;
+        if (!found.length){ list.innerHTML = '<div class="mp-empty">' + mt('nothing') + '</div>'; return; }
+        found.forEach(function(p, i){ h += mpProductCardHtml(p, i); });
+        list.innerHTML = h;
+        return;
+    }
+
+    /* аккордеон: свернутые категории → карточки */
+    var openCat = window.__mpPickOpenCat || {};
+    MP_CATS.forEach(function(c){
+        if (c === 'all') return;
+        var src2 = (typeof productsDatabase !== 'undefined' && productsDatabase[c]) || [];
+        if (!src2.length) return;
+        var color = (typeof PRODUCT_CATEGORY_COLORS !== 'undefined' && PRODUCT_CATEGORY_COLORS[c]) || MP_CAT_COLORS_FALLBACK;
+        var isOpen = !!openCat[c];
+        h += '<div class="mp-exg-head" onclick="mpTogglePickCat(\'' + c + '\')">' +
+            '<span class="mp-exg-bar" style="background:' + color + ';"></span>' +
+            '<span class="mp-exg-name">' + esc(mpCatLabel(c)) + '</span>' +
+            '<span class="mp-exg-cnt">' + src2.length + '</span>' +
+            '<span class="mp-exg-arr">' + (isOpen ? '▲' : '▼') + '</span>' +
         '</div>';
+        if (!isOpen) return;
+        var sorted = src2.slice();
+        try { sorted.sort(sortByName); } catch(e){}
+        sorted.forEach(function(p){
+            var i = arr.length;
+            arr.push(p);
+            h += mpProductCardHtml(p, i);
+        });
     });
-    list.innerHTML = h;
+    __mpPickArr = arr;
+    list.innerHTML = h || '<div class="mp-empty">' + mt('nothing') + '</div>';
 };
 window.mpPickAdd = function(i){
     var p = __mpPickArr[i]; if (!p) return;
@@ -28567,6 +28768,59 @@ window.mpCommitRow = function(mi, ri){
     mpCloseSheet();
     mpRenderBody();
 };
+window.mpOpenProdRowMenu = function(mi, ri){
+    var meal = mpMeal(mi); if (!meal) return;
+    var trs = meal.querySelectorAll('.meal-body tr');
+    var tr = trs[ri]; if (!tr) return;
+    var sel = tr.querySelector('.product-select');
+    var p = (sel && sel.value !== '' && typeof allProducts !== 'undefined') ? allProducts[parseInt(sel.value)] : null;
+    var nm = p ? ((typeof getProductName === 'function') ? (getProductName(p, currentLang) || p.name) : p.name) : '—';
+    var items = '';
+    if (ri > 0) items += '<button class="mp-action-item" onclick="mpMoveProdRow(' + mi + ',' + ri + ',-1)"><span class="ico">⬆</span>' + mt('moveUp').replace('⬆ ','') + '</button>';
+    if (ri < trs.length - 1) items += '<button class="mp-action-item" onclick="mpMoveProdRow(' + mi + ',' + ri + ',1)"><span class="ico">⬇</span>' + mt('moveDown').replace('⬇ ','') + '</button>';
+    items += '<button class="mp-action-item" onclick="mpDupProdRow(' + mi + ',' + ri + ')"><span class="ico">⎘</span>' + mt('dupEx').replace('⎘ ','') + '</button>';
+    items += '<button class="mp-action-item" onclick="mpCloseSheet(); mpOpenRowEditor(' + mi + ',' + ri + ')"><span class="ico">✏️</span>' + mt('edit') + '</button>';
+    items += '<button class="mp-action-item danger" onclick="mpDeleteRow(' + mi + ',' + ri + ')"><span class="ico">🗑</span>' + mt('del') + '</button>';
+    mpOpenSheet(
+        mpSheetHead(esc(nm)) +
+        '<div class="mp-sheet-body" style="padding:0;">' + items + '</div>'
+    );
+};
+window.mpMoveProdRow = function(mi, ri, dir){
+    var meal = mpMeal(mi); if (!meal) return mpCloseSheet();
+    var tbody = meal.querySelector('.meal-body');
+    var trs = tbody.querySelectorAll('tr');
+    var tr = trs[ri]; if (!tr) return mpCloseSheet();
+    if (dir < 0 && tr.previousElementSibling) tbody.insertBefore(tr, tr.previousElementSibling);
+    else if (dir > 0 && tr.nextElementSibling) tbody.insertBefore(tr.nextElementSibling, tr);
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    mpCloseSheet();
+    mpRenderBody();
+};
+window.mpDupProdRow = function(mi, ri){
+    var meal = mpMeal(mi); if (!meal) return mpCloseSheet();
+    var tr = meal.querySelectorAll('.meal-body tr')[ri]; if (!tr) return mpCloseSheet();
+    var sel = tr.querySelector('.product-select');
+    var p = (sel && sel.value !== '' && typeof allProducts !== 'undefined') ? allProducts[parseInt(sel.value)] : null;
+    if (!p) return mpCloseSheet();
+    var amt = tr.querySelector('.weight-input') ? tr.querySelector('.weight-input').value : '100';
+    var unit = tr.querySelector('.unit-select') ? tr.querySelector('.unit-select').value : 'gram';
+    if (typeof addProductRow === 'function') addProductRow(p, meal);
+    var tbody = meal.querySelector('.meal-body');
+    var rows = tbody.querySelectorAll('tr');
+    var newRow = rows[rows.length - 1];
+    if (newRow){
+        if (newRow.querySelector('.weight-input')) newRow.querySelector('.weight-input').value = amt;
+        if (newRow.querySelector('.unit-select')) newRow.querySelector('.unit-select').value = unit;
+        var ns = newRow.querySelector('.product-select');
+        if (ns && typeof updateProductRow === 'function') updateProductRow(ns);
+        if (tr.nextElementSibling !== newRow) tbody.insertBefore(newRow, tr.nextElementSibling);
+    }
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    mpCloseSheet();
+    mpRenderBody();
+    if (typeof showToast === 'function') showToast(mt('added'));
+};
 window.mpDeleteRow = function(mi, ri){
     var meal = mpMeal(mi); if (!meal) return mpCloseSheet();
     var tr = meal.querySelectorAll('.meal-body tr')[ri]; if (!tr) return mpCloseSheet();
@@ -28617,6 +28871,8 @@ function mpWorkoutHTML(){
             var rest = tr.querySelector('.ex-rest') ? tr.querySelector('.ex-rest').value : '';
             var meta = (sets || '0') + '×' + (reps || '0');
             if (wt) meta += ' · ' + wt + ' ' + mt('kgS');
+            var tpsEl = tr.querySelector('.ex-time');
+            if (tpsEl && tpsEl.value) meta += ' · ⏳' + tpsEl.value + mt('secS');
             if (rest) meta += ' · ⏱' + rest + mt('secS');
             var exInfoPayload = tr.dataset.exId ? encodeURIComponent(JSON.stringify({ exId: tr.dataset.exId, groupId: tr.dataset.groupId || '', subId: tr.dataset.subId || '', equip: tr.dataset.equip || '' })) : '';
             rowsH += '<div class="mp-exrow" onclick="mpOpenExEditor(' + wi + ',' + ei + ')">' +
@@ -28626,6 +28882,7 @@ function mpWorkoutHTML(){
                     (sub ? '<div class="mp-exrow-sub">' + esc(sub) + '</div>' : '') +
                 '</div>' +
                 '<div class="mp-exrow-meta">' + esc(meta) + '</div>' +
+                '<button class="mp-exrow-menu" onclick="event.stopPropagation(); mpOpenExRowMenu(' + wi + ',' + ei + ')">⋯</button>' +
             '</div>';
         });
         var metaLine = [];
@@ -28720,69 +28977,108 @@ window.mpDeleteWorkout = function(wi){
 /* --- пикер упражнений --- */
 window.mpOpenExPicker = function(wi){
     mpExPick = { wi: wi, group: 'all', q: '' };
-    var chips = '<button class="mp-cat-chip active" data-g="all" onclick="mpSetExGroup(\'all\')">' + esc(mt('all')) + '</button>';
-    if (typeof EXERCISE_DB !== 'undefined'){
-        EXERCISE_DB.forEach(function(g){
-            var lbl = (typeof lcGet === 'function') ? lcGet(GROUP_I18N, g.id) : g.id;
-            chips += '<button class="mp-cat-chip" data-g="' + g.id + '" onclick="mpSetExGroup(\'' + g.id + '\')">' + esc(lbl) + '</button>';
-        });
-    }
+    window.__mpExOpenG = {};   /* раскрытые группы */
+    window.__mpExOpenSG = {};  /* раскрытые подгруппы */
     mpOpenSheet(
         mpSheetHead('🏋️ ' + mt('addExercise')) +
         '<div class="mp-search-wrap"><input class="mp-input" id="mpExSearch" type="search" placeholder="' + escA(mt('search')) + '" oninput="mpExPick.q=this.value; mpFillExList();"></div>' +
-        '<div class="mp-chips" id="mpExChips">' + chips + '</div>' +
         '<div class="mp-pick-list" id="mpExList"></div>',
         true
     );
     mpFillExList();
 };
-window.mpSetExGroup = function(g){
-    mpExPick.group = g;
-    var chips = document.getElementById('mpExChips');
-    if (chips) Array.prototype.forEach.call(chips.children, function(b){ b.classList.toggle('active', b.dataset.g === g); });
+window.mpToggleExG = function(gid){
+    window.__mpExOpenG[gid] = !window.__mpExOpenG[gid];
     mpFillExList();
 };
+window.mpToggleExSG = function(key){
+    window.__mpExOpenSG[key] = !window.__mpExOpenSG[key];
+    mpFillExList();
+};
+function mpExCardHtml(ex, g, color, i, equip, name){
+    var exThumb = '';
+    try {
+        if (typeof getExerciseThumbHtml === 'function') exThumb = getExerciseThumbHtml(ex, g, color);
+        else if (typeof makeExerciseSceneSVG === 'function') exThumb = makeExerciseSceneSVG(ex, g, color);
+    } catch(e){}
+    return '<div class="mp-pick-item" id="mpExItem' + i + '" onclick="mpExInfo(' + i + ')">' +
+        (exThumb ? '<div class="mp-pick-thumb">' + exThumb + '</div>' : '<div class="mp-exbar" style="background:' + escA(color) + '; height:30px;"></div>') +
+        '<div class="mp-pick-main">' +
+            '<div class="mp-pick-name">' + esc(name) + '</div>' +
+            (equip ? '<div class="mp-pick-sub">' + esc(equip) + '</div>' : '') +
+        '</div>' +
+        '<button class="mp-pick-plus" style="background:rgba(220,38,38,.12); color:#dc2626; border:none; cursor:pointer;" onclick="event.stopPropagation(); mpExAdd(' + i + ')">+</button>' +
+    '</div>';
+}
 window.mpFillExList = function(){
     var list = document.getElementById('mpExList');
     if (!list || typeof EXERCISE_DB === 'undefined') return;
     var q = (mpExPick.q || '').toLowerCase();
     var arr = [];
     var h = '';
-    EXERCISE_DB.forEach(function(g){
-        if (mpExPick.group !== 'all' && g.id !== mpExPick.group) return;
-        var color = (typeof GROUP_COLORS !== 'undefined' && GROUP_COLORS[g.id]) || '#ef4444';
-        g.subgroups.forEach(function(sg){
-            var subLbl = (typeof lcGet === 'function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
-            var items = '';
-            (sg.exercises || []).forEach(function(ex){
-                var name = (typeof getExName === 'function') ? getExName(ex) : (ex.ru || ex.id);
-                if (q){
+    var openG = window.__mpExOpenG || {};
+    var openSG = window.__mpExOpenSG || {};
+
+    if (q){
+        /* поиск: плоский список, как раньше */
+        EXERCISE_DB.forEach(function(g){
+            var color = (typeof GROUP_COLORS !== 'undefined' && GROUP_COLORS[g.id]) || '#ef4444';
+            g.subgroups.forEach(function(sg){
+                var subLbl = (typeof lcGet === 'function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
+                var items = '';
+                (sg.exercises || []).forEach(function(ex){
+                    var name = (typeof getExName === 'function') ? getExName(ex) : (ex.ru || ex.id);
                     var hay = ((ex.ru || '') + ' ' + (ex.en || '') + ' ' + (ex.he || '')).toLowerCase();
                     if (hay.indexOf(q) < 0) return;
+                    var equip = ex.equip && typeof getEquipName === 'function' ? getEquipName(ex.equip) : '';
+                    var i = arr.length;
+                    arr.push({ exId: ex.id, groupId: g.id, subId: sg.id, equip: ex.equip || '' });
+                    items += mpExCardHtml(ex, g, color, i, equip, name);
+                });
+                if (items){
+                    var gLbl = (typeof lcGet === 'function') ? lcGet(GROUP_I18N, g.id) : g.id;
+                    h += '<div class="mp-subhead">' + esc(gLbl + ' · ' + subLbl) + '</div>' + items;
                 }
-                var equip = ex.equip && typeof getEquipName === 'function' ? getEquipName(ex.equip) : '';
-                var i = arr.length;
-                arr.push({ exId: ex.id, groupId: g.id, subId: sg.id, equip: ex.equip || '' });
-                var exThumb = '';
-                try {
-                    if (typeof getExerciseThumbHtml === 'function') exThumb = getExerciseThumbHtml(ex, g, color);
-                    else if (typeof makeExerciseSceneSVG === 'function') exThumb = makeExerciseSceneSVG(ex, g, color);
-                } catch(e){}
-                items += '<div class="mp-pick-item" id="mpExItem' + i + '" onclick="mpExInfo(' + i + ')">' +
-                    (exThumb ? '<div class="mp-pick-thumb">' + exThumb + '</div>' : '<div class="mp-exbar" style="background:' + escA(color) + '; height:30px;"></div>') +
-                    '<div class="mp-pick-main">' +
-                        '<div class="mp-pick-name">' + esc(name) + '</div>' +
-                        (equip ? '<div class="mp-pick-sub">' + esc(equip) + '</div>' : '') +
-                    '</div>' +
-                    '<button class="mp-pick-plus" style="background:rgba(220,38,38,.12); color:#dc2626; border:none; cursor:pointer;" onclick="event.stopPropagation(); mpExAdd(' + i + ')">+</button>' +
-                '</div>';
             });
-            if (items){
-                var gLbl = (typeof lcGet === 'function') ? lcGet(GROUP_I18N, g.id) : g.id;
-                h += '<div class="mp-subhead">' + esc(mpExPick.group === 'all' ? (gLbl + ' · ' + subLbl) : subLbl) + '</div>' + items;
-            }
         });
-    });
+    } else {
+        /* аккордеон: группы свернуты → подгруппы свернуты → карточки */
+        EXERCISE_DB.forEach(function(g){
+            var color = (typeof GROUP_COLORS !== 'undefined' && GROUP_COLORS[g.id]) || '#ef4444';
+            var gLbl = (typeof lcGet === 'function') ? lcGet(GROUP_I18N, g.id) : g.id;
+            var totalEx = 0;
+            g.subgroups.forEach(function(sg){ totalEx += (sg.exercises || []).length; });
+            if (!totalEx) return;
+            var gOpen = !!openG[g.id];
+            h += '<div class="mp-exg-head" onclick="mpToggleExG(\'' + g.id + '\')">' +
+                '<span class="mp-exg-bar" style="background:' + escA(color) + ';"></span>' +
+                '<span class="mp-exg-name">' + esc(gLbl) + '</span>' +
+                '<span class="mp-exg-cnt">' + totalEx + '</span>' +
+                '<span class="mp-exg-arr">' + (gOpen ? '▲' : '▼') + '</span>' +
+            '</div>';
+            if (!gOpen) return;
+            g.subgroups.forEach(function(sg){
+                var exs = sg.exercises || [];
+                if (!exs.length) return;
+                var subLbl = (typeof lcGet === 'function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
+                var key = g.id + '__' + sg.id;
+                var sgOpen = !!openSG[key];
+                h += '<div class="mp-exsg-head" style="border-inline-start-color:' + escA(color) + ';" onclick="mpToggleExSG(\'' + key + '\')">' +
+                    '<span class="mp-exg-name" style="font-size:.86em;">' + esc(subLbl) + '</span>' +
+                    '<span class="mp-exg-cnt">' + exs.length + '</span>' +
+                    '<span class="mp-exg-arr">' + (sgOpen ? '▲' : '▼') + '</span>' +
+                '</div>';
+                if (!sgOpen) return;
+                exs.forEach(function(ex){
+                    var name = (typeof getExName === 'function') ? getExName(ex) : (ex.ru || ex.id);
+                    var equip = ex.equip && typeof getEquipName === 'function' ? getEquipName(ex.equip) : '';
+                    var i = arr.length;
+                    arr.push({ exId: ex.id, groupId: g.id, subId: sg.id, equip: ex.equip || '' });
+                    h += mpExCardHtml(ex, g, color, i, equip, name);
+                });
+            });
+        });
+    }
     __mpExArr = arr;
     list.innerHTML = h || '<div class="mp-empty">' + mt('nothing') + '</div>';
 };
@@ -28817,6 +29113,7 @@ window.mpOpenExEditor = function(wi, ei){
     var reps = tr.querySelector('.ex-reps') ? tr.querySelector('.ex-reps').value : '10';
     var wt = tr.querySelector('.ex-weight') ? tr.querySelector('.ex-weight').value : '';
     var rest = tr.querySelector('.ex-rest') ? tr.querySelector('.ex-rest').value : '60';
+    var timeV = tr.querySelector('.ex-time') ? tr.querySelector('.ex-time').value : '';
     var note = tr.querySelector('.ex-note') ? tr.querySelector('.ex-note').value : '';
     mpOpenSheet(
         mpSheetHead(esc(name || mt('wkSheet'))) +
@@ -28824,8 +29121,8 @@ window.mpOpenExEditor = function(wi, ei){
             '<div class="mp-2col">' +
                 '<div><label class="mp-label">' + mt('sets') + '</label>' +
                 '<div class="mp-stepper"><button onclick="mpStepNum(\'mpExSets\',-1,0)">−</button><input id="mpExSets" type="number" inputmode="numeric" min="0" value="' + escA(sets) + '"><button onclick="mpStepNum(\'mpExSets\',1,0)">+</button></div></div>' +
-                '<div><label class="mp-label">' + mt('reps') + '</label>' +
-                '<input class="mp-input" id="mpExReps" type="text" inputmode="numeric" value="' + escA(reps) + '" placeholder="10 / 8-12" style="text-align:center; font-weight:700; font-size:19px; padding:12px 4px;"></div>' +
+                '<div><label class="mp-label">' + mt('reps') + ' (1–100)</label>' +
+                '<div class="mp-stepper"><button onclick="mpStepNum(\'mpExReps\',-1,1,100)">−</button><input id="mpExReps" type="number" inputmode="numeric" min="1" max="100" value="' + escA(parseInt(reps) || 10) + '"><button onclick="mpStepNum(\'mpExReps\',1,1,100)">+</button></div></div>' +
             '</div>' +
             '<div class="mp-2col" style="margin-top:2px;">' +
                 '<div><label class="mp-label">' + mt('weight') + '</label>' +
@@ -28833,6 +29130,8 @@ window.mpOpenExEditor = function(wi, ei){
                 '<div><label class="mp-label">⏱ ' + mt('rest') + '</label>' +
                 '<div class="mp-stepper"><button onclick="mpStepNum(\'mpExRest\',-15,0)">−</button><input id="mpExRest" type="number" inputmode="numeric" min="0" step="5" value="' + escA(rest) + '"><button onclick="mpStepNum(\'mpExRest\',15,0)">+</button></div></div>' +
             '</div>' +
+            '<label class="mp-label">⏳ ' + (typeof t === 'function' && t('wkTimePerSet') || 'Время на подход (сек)') + '</label>' +
+            '<div class="mp-stepper"><button onclick="mpStepNum(\'mpExTime\',-5,0)">−</button><input id="mpExTime" type="number" inputmode="numeric" min="0" step="5" value="' + escA(timeV) + '" placeholder="—"><button onclick="mpStepNum(\'mpExTime\',5,0)">+</button></div>' +
             '<label class="mp-label">📝 ' + mt('note') + '</label>' +
             '<input class="mp-input" id="mpExNote" type="text" value="' + escA(note) + '" placeholder="—">' +
         '</div>' +
@@ -28842,11 +29141,12 @@ window.mpOpenExEditor = function(wi, ei){
         '</div>'
     );
 };
-window.mpStepNum = function(id, d, min){
+window.mpStepNum = function(id, d, min, max){
     var inp = document.getElementById(id); if (!inp) return;
     var v = parseFloat(inp.value) || 0;
     v = Math.round((v + d) * 100) / 100;
     if (min != null && v < min) v = min;
+    if (max != null && v > max) v = max;
     inp.value = v;
 };
 window.mpCommitExEditor = function(wi, ei){
@@ -28857,6 +29157,7 @@ window.mpCommitExEditor = function(wi, ei){
     if (m('mpExReps') && tr.querySelector('.ex-reps')) tr.querySelector('.ex-reps').value = m('mpExReps').value;
     if (m('mpExWt') && tr.querySelector('.ex-weight')) tr.querySelector('.ex-weight').value = m('mpExWt').value;
     if (m('mpExRest') && tr.querySelector('.ex-rest')) tr.querySelector('.ex-rest').value = m('mpExRest').value;
+    if (m('mpExTime') && tr.querySelector('.ex-time')) tr.querySelector('.ex-time').value = m('mpExTime').value;
     if (m('mpExNote') && tr.querySelector('.ex-note')) tr.querySelector('.ex-note').value = m('mpExNote').value;
     try {
         if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
@@ -28864,6 +29165,61 @@ window.mpCommitExEditor = function(wi, ei){
     } catch(e){}
     mpCloseSheet();
     mpRenderBody();
+};
+window.mpOpenExRowMenu = function(wi, ei){
+    var w = mpWorkoutEl(wi); if (!w) return;
+    var trs = w.querySelectorAll('.workout-body tr');
+    var tr = trs[ei]; if (!tr) return;
+    var nameInp = tr.querySelector('.ex-name');
+    var nm = nameInp ? nameInp.value : '';
+    var items = '';
+    if (ei > 0) items += '<button class="mp-action-item" onclick="mpMoveExRow(' + wi + ',' + ei + ',-1)"><span class="ico">⬆</span>' + mt('moveUp').replace('⬆ ','') + '</button>';
+    if (ei < trs.length - 1) items += '<button class="mp-action-item" onclick="mpMoveExRow(' + wi + ',' + ei + ',1)"><span class="ico">⬇</span>' + mt('moveDown').replace('⬇ ','') + '</button>';
+    items += '<button class="mp-action-item" onclick="mpDupExRow(' + wi + ',' + ei + ')"><span class="ico">⎘</span>' + mt('dupEx').replace('⎘ ','') + '</button>';
+    items += '<button class="mp-action-item" onclick="mpCloseSheet(); mpOpenExEditor(' + wi + ',' + ei + ')"><span class="ico">✏️</span>' + mt('edit') + '</button>';
+    items += '<button class="mp-action-item danger" onclick="mpDeleteExRow(' + wi + ',' + ei + ')"><span class="ico">🗑</span>' + mt('del') + '</button>';
+    mpOpenSheet(
+        mpSheetHead(esc(nm || '—')) +
+        '<div class="mp-sheet-body" style="padding:0;">' + items + '</div>'
+    );
+};
+window.mpMoveExRow = function(wi, ei, dir){
+    var w = mpWorkoutEl(wi); if (!w) return mpCloseSheet();
+    var tbody = w.querySelector('.workout-body');
+    var trs = tbody.querySelectorAll('tr');
+    var tr = trs[ei]; if (!tr) return mpCloseSheet();
+    if (dir < 0 && tr.previousElementSibling) tbody.insertBefore(tr, tr.previousElementSibling);
+    else if (dir > 0 && tr.nextElementSibling) tbody.insertBefore(tr.nextElementSibling, tr);
+    if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
+    if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
+    mpCloseSheet();
+    mpRenderBody();
+};
+window.mpDupExRow = function(wi, ei){
+    var w = mpWorkoutEl(wi); if (!w) return mpCloseSheet();
+    var tr = w.querySelectorAll('.workout-body tr')[ei]; if (!tr) return mpCloseSheet();
+    var ex = {
+        name: tr.querySelector('.ex-name') ? tr.querySelector('.ex-name').value : '',
+        sets: tr.querySelector('.ex-sets') ? tr.querySelector('.ex-sets').value : '3',
+        reps: tr.querySelector('.ex-reps') ? tr.querySelector('.ex-reps').value : '10',
+        weight: tr.querySelector('.ex-weight') ? tr.querySelector('.ex-weight').value : '',
+        rest: tr.querySelector('.ex-rest') ? tr.querySelector('.ex-rest').value : '60',
+        time: tr.querySelector('.ex-time') ? tr.querySelector('.ex-time').value : '',
+        note: tr.querySelector('.ex-note') ? tr.querySelector('.ex-note').value : '',
+        exId: tr.dataset.exId || '', groupId: tr.dataset.groupId || '',
+        subId: tr.dataset.subId || '', equip: tr.dataset.equip || ''
+    };
+    if (typeof addExerciseRow === 'function') addExerciseRow(w, ex);
+    /* поставить копию сразу после оригинала */
+    var tbody = w.querySelector('.workout-body');
+    var rows = tbody.querySelectorAll('tr');
+    var newRow = rows[rows.length - 1];
+    if (newRow && tr.nextElementSibling !== newRow) tbody.insertBefore(newRow, tr.nextElementSibling);
+    if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
+    if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
+    mpCloseSheet();
+    mpRenderBody();
+    if (typeof showToast === 'function') showToast(mt('added'));
 };
 window.mpDeleteExRow = function(wi, ei){
     var w = mpWorkoutEl(wi); if (!w) return mpCloseSheet();
@@ -29769,7 +30125,7 @@ function cwRenderInner(){
                     '<div class="cw-ex-no" style="background:'+color+'20; color:'+color+';">'+(allDone?'✓':(i+1))+'</div>'+
                     '<div class="cw-ex-titlewrap">'+
                         '<div class="cw-ex-title"'+(ex.exId?' onclick="openExerciseInfo(\''+encodeURIComponent(JSON.stringify({exId:ex.exId,groupId:ex.groupId||'',subId:ex.subId||'',equip:ex.equip||''}))+'\','+(ctx.live?'false':'true')+')" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"':'')+'>'+eh((typeof localizedExName==='function'?localizedExName(ex):ex.name)||'—')+'</div>'+
-                        '<div class="cw-ex-meta">'+(parseInt(ex.sets)||1)+' '+wt('setsOf')+' · '+eh(ex.reps||'')+' '+wt('repsOf')+' · ⏱ '+rest+'s</div>'+
+                        '<div class="cw-ex-meta">'+(parseInt(ex.sets)||1)+' '+wt('setsOf')+' · '+eh(ex.reps||'')+' '+wt('repsOf')+(ex.time?' · ⏳'+ex.time+'s':'')+' · ⏱ '+rest+'s</div>'+
                     '</div>'+
                     (ctx.live?'<button class="cw-ex-menu" onclick="cwOpenExMenu('+i+')">⋯</button>':'')+
                 '</div>'+
@@ -30131,12 +30487,14 @@ window.cwEditEx = function(i){
             '<input class="mp-input" id="cwEName" type="text" value="'+ea(ex.name||'')+'">'+
             '<div class="mp-2col">'+
                 '<div><label class="mp-label">'+wt('sets')+'</label><input class="mp-input" id="cwESets" type="number" inputmode="numeric" min="1" value="'+ea(ex.sets||3)+'"></div>'+
-                '<div><label class="mp-label">'+wt('repsL')+'</label><input class="mp-input" id="cwEReps" type="text" inputmode="numeric" value="'+ea(ex.reps||10)+'"></div>'+
+                '<div><label class="mp-label">'+wt('repsL')+' (1–100)</label><input class="mp-input" id="cwEReps" type="number" inputmode="numeric" min="1" max="100" value="'+ea(parseInt(ex.reps)||10)+'"></div>'+
             '</div>'+
             '<div class="mp-2col">'+
                 '<div><label class="mp-label">'+wt('weightL')+'</label><input class="mp-input" id="cwEWeight" type="number" inputmode="decimal" min="0" step="any" value="'+ea(ex.weight||'')+'"></div>'+
                 '<div><label class="mp-label">'+wt('restL')+'</label><input class="mp-input" id="cwERest" type="number" inputmode="numeric" min="0" step="5" value="'+ea(ex.rest||60)+'"></div>'+
             '</div>'+
+            '<label class="mp-label">⏳ '+((typeof t==='function'&&t('wkTimePerSet'))||'Время на подход (сек)')+'</label>'+
+            '<input class="mp-input" id="cwETime" type="number" inputmode="numeric" min="0" step="5" value="'+ea(ex.time||'')+'" placeholder="—">'+
         '</div>'+
         '<div class="mp-sheet-foot">'+
             '<button class="mp-btn mp-btn-primary" style="flex:1;" onclick="cwEditCommit('+i+')">'+wt('done')+'</button>'+
@@ -30152,6 +30510,7 @@ window.cwEditCommit = function(i){
         ex.reps = g('cwEReps')||'10';
         ex.weight = g('cwEWeight');
         ex.rest = g('cwERest')||'60';
+        ex.time = g('cwETime')||'';
     });
     if (typeof csCloseSheet==='function') csCloseSheet();
     cwRenderInner();
@@ -30171,6 +30530,8 @@ window.__cwPickCtx = { mode:'add', i:-1, q:'' };
 window.cwOpenPicker = function(mode, i){
     if (typeof csOpenSheet!=='function') return;
     window.__cwPickCtx = { mode:mode, i:i, q:'' };
+    window.__cwPickOpenG = {};
+    window.__cwPickOpenSG = {};
     csOpenSheet(
         '<div class="mp-sheet-head"><div class="mp-grab"></div><div class="mp-sheet-title">🏋️ '+wt('chooseEx')+'</div><button class="mp-sheet-x" onclick="csCloseSheet()">✕</button></div>'+
         '<div class="mp-search-wrap"><input class="mp-input" id="cwPickSearch" type="search" placeholder="'+ea(wt('search'))+'" oninput="__cwPickCtx.q=this.value; cwPickerFill();"></div>'+
@@ -30180,33 +30541,95 @@ window.cwOpenPicker = function(mode, i){
     if (s) s.style.height = '88vh';
     cwPickerFill();
 };
+window.cwToggleG = function(gid){
+    window.__cwPickOpenG = window.__cwPickOpenG || {};
+    window.__cwPickOpenG[gid] = !window.__cwPickOpenG[gid];
+    cwPickerFill();
+};
+window.cwToggleSG = function(key){
+    window.__cwPickOpenSG = window.__cwPickOpenSG || {};
+    window.__cwPickOpenSG[key] = !window.__cwPickOpenSG[key];
+    cwPickerFill();
+};
+function cwPickCardHtml(e, g, color, j, name){
+    var thumb = '';
+    try {
+        if (typeof getExerciseThumbHtml === 'function') thumb = getExerciseThumbHtml(e, g, color);
+        else if (typeof makeExerciseSceneSVG === 'function') thumb = makeExerciseSceneSVG(e, g, color);
+    } catch(err){}
+    var equip = e.equip && typeof getEquipName === 'function' ? getEquipName(e.equip) : '';
+    return '<div class="mp-pick-item" onclick="cwPickerChoose('+j+')">'+
+        (thumb ? '<div class="mp-pick-thumb">'+thumb+'</div>' : '<div class="cw-pick-bar" style="background:'+color+';"></div>')+
+        '<div class="mp-pick-main"><div class="mp-pick-name">'+eh(name)+'</div>'+
+        (equip ? '<div class="mp-pick-sub">'+eh(equip)+'</div>' : '')+'</div>'+
+        '<div class="mp-pick-plus" style="background:rgba(220,38,38,.1); color:#dc2626;">+</div>'+
+    '</div>';
+}
 window.cwPickerFill = function(){
     var list = document.getElementById('cwPickList');
     if (!list || typeof EXERCISE_DB==='undefined') return;
     var q = (__cwPickCtx.q||'').toLowerCase();
     __cwPickArr = [];
     var h = '';
-    EXERCISE_DB.forEach(function(g){
-        var color = GC[g.id]||'#ef4444';
-        var gName = (typeof lcGet==='function') ? lcGet(GROUP_I18N, g.id) : g.id;
-        g.subgroups.forEach(function(sg){
-            (sg.exercises||[]).forEach(function(e){
-                var name = (typeof getExName==='function') ? getExName(e) : (e.ru||e.id);
-                if (q){
+    var openG = window.__cwPickOpenG || {};
+    var openSG = window.__cwPickOpenSG || {};
+
+    if (q){
+        /* поиск: плоский список */
+        EXERCISE_DB.forEach(function(g){
+            var color = GC[g.id]||'#ef4444';
+            var gName = (typeof lcGet==='function') ? lcGet(GROUP_I18N, g.id) : g.id;
+            g.subgroups.forEach(function(sg){
+                var subLbl = (typeof lcGet==='function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
+                var items = '';
+                (sg.exercises||[]).forEach(function(e){
+                    var name = (typeof getExName==='function') ? getExName(e) : (e.ru||e.id);
                     var hay = ((e.ru||'')+' '+(e.en||'')+' '+(e.he||'')).toLowerCase();
                     if (hay.indexOf(q)<0) return;
-                }
-                var j = __cwPickArr.length;
-                __cwPickArr.push({ name:name, exId:e.id, groupId:g.id, subId:sg.id, equip:e.equip||'' });
-                h += '<div class="mp-pick-item" onclick="cwPickerChoose('+j+')">'+
-                    '<div class="cw-pick-bar" style="background:'+color+';"></div>'+
-                    '<div class="mp-pick-main"><div class="mp-pick-name">'+eh(name)+'</div>'+
-                    '<div class="mp-pick-sub">'+eh(gName)+'</div></div>'+
-                    '<div class="mp-pick-plus" style="background:rgba(220,38,38,.1); color:#dc2626;">+</div>'+
-                '</div>';
+                    var j = __cwPickArr.length;
+                    __cwPickArr.push({ name:name, exId:e.id, groupId:g.id, subId:sg.id, equip:e.equip||'' });
+                    items += cwPickCardHtml(e, g, color, j, name);
+                });
+                if (items) h += '<div class="mp-subhead">'+eh(gName+' · '+subLbl)+'</div>'+items;
             });
         });
-    });
+    } else {
+        /* аккордеон: свернутые группы → подгруппы → карточки */
+        EXERCISE_DB.forEach(function(g){
+            var color = GC[g.id]||'#ef4444';
+            var gName = (typeof lcGet==='function') ? lcGet(GROUP_I18N, g.id) : g.id;
+            var totalEx = 0;
+            g.subgroups.forEach(function(sg){ totalEx += (sg.exercises||[]).length; });
+            if (!totalEx) return;
+            var gOpen = !!openG[g.id];
+            h += '<div class="mp-exg-head" onclick="cwToggleG(\''+g.id+'\')">'+
+                '<span class="mp-exg-bar" style="background:'+color+';"></span>'+
+                '<span class="mp-exg-name">'+eh(gName)+'</span>'+
+                '<span class="mp-exg-cnt">'+totalEx+'</span>'+
+                '<span class="mp-exg-arr">'+(gOpen ? '▲' : '▼')+'</span>'+
+            '</div>';
+            if (!gOpen) return;
+            g.subgroups.forEach(function(sg){
+                var exs = sg.exercises||[];
+                if (!exs.length) return;
+                var subLbl = (typeof lcGet==='function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
+                var key = g.id+'__'+sg.id;
+                var sgOpen = !!openSG[key];
+                h += '<div class="mp-exsg-head" style="border-inline-start-color:'+color+';" onclick="cwToggleSG(\''+key+'\')">'+
+                    '<span class="mp-exg-name" style="font-size:.86em;">'+eh(subLbl)+'</span>'+
+                    '<span class="mp-exg-cnt">'+exs.length+'</span>'+
+                    '<span class="mp-exg-arr">'+(sgOpen ? '▲' : '▼')+'</span>'+
+                '</div>';
+                if (!sgOpen) return;
+                exs.forEach(function(e){
+                    var name = (typeof getExName==='function') ? getExName(e) : (e.ru||e.id);
+                    var j = __cwPickArr.length;
+                    __cwPickArr.push({ name:name, exId:e.id, groupId:g.id, subId:sg.id, equip:e.equip||'' });
+                    h += cwPickCardHtml(e, g, color, j, name);
+                });
+            });
+        });
+    }
     list.innerHTML = h || '<div class="mp-empty">'+wt('nothing')+'</div>';
 };
 window.cwPickerChoose = function(j){
@@ -32993,6 +33416,316 @@ if (document.readyState === 'loading'){
 
 <script>
 /* ============================================================
+   ENCYCLOPEDIA (enc) — встроенная энциклопедия по программе.
+   ┌──────────────────────────────────────────────────────────┐
+   │  КАК РЕДАКТИРОВАТЬ:                                      │
+   │  Вся энциклопедия — это массив ENC_SECTIONS ниже.        │
+   │  Раздел:  { id, icon, title, topics: [...] }             │
+   │  Тема:    { id, icon, title, html }                      │
+   │  В html можно использовать готовые блоки-иллюстрации:    │
+   │   <div class="enc-fig">...</div>      — рамка-иллюстрация│
+   │   <span class="enc-k">кнопка</span>   — «как кнопка»     │
+   │   <div class="enc-step"><b>1</b> текст</div> — шаг       │
+   │   <div class="enc-tip">💡 совет</div>  — подсказка        │
+   │   <div class="enc-warn">⚠️ важно</div> — предупреждение   │
+   │  Добавили раздел/тему — больше ничего менять не нужно.   │
+   └──────────────────────────────────────────────────────────┘
+   ============================================================ */
+(function(){
+'use strict';
+
+function fig(inner){ return '<div class="enc-fig">' + inner + '</div>'; }
+function k(label){ return '<span class="enc-k">' + label + '</span>'; }
+function step(n, text){ return '<div class="enc-step"><b>' + n + '</b><span>' + text + '</span></div>'; }
+function tip(text){ return '<div class="enc-tip">💡 ' + text + '</div>'; }
+function warn(text){ return '<div class="enc-warn">⚠️ ' + text + '</div>'; }
+
+window.ENC_SECTIONS = [
+
+/* ================= НАЧАЛО РАБОТЫ ================= */
+{ id:'start', icon:'🚀', title:'Начало работы', topics:[
+  { id:'overview', icon:'🗺', title:'Что умеет программа', html:
+    '<p>Это полный кабинет тренера: клиенты, программы тренировок, планы питания, замеры, абонементы, чат и облачная синхронизация.</p>' +
+    fig('<div class="enc-grid">' +
+      '<div>🏋️ Тренировки</div><div>🍽️ Питание</div><div>📏 Замеры</div>' +
+      '<div>💰 Абонементы</div><div>💬 Чат</div><div>☁️ Облако</div>' +
+      '<div>📊 Сводка</div><div>🖨️ Печать</div><div>📤 WhatsApp</div>' +
+    '</div>') +
+    '<p>Программа работает на компьютере, планшете и смартфоне — интерфейс автоматически подстраивается. Все данные сохраняются мгновенно.</p>' },
+  { id:'login', icon:'🔐', title:'Вход тренера и клиента', html:
+    '<p>При запуске появляется окно входа с двумя вкладками:</p>' +
+    fig('<div class="enc-tabs"><span class="on">👨‍🏫 Тренер</span><span>👤 Клиент</span></div>') +
+    step(1, 'Самый простой путь — ' + k('Войти / регистрация через Google') + ': профиль создаётся автоматически, и сразу включается облако.') +
+    step(2, 'Классический путь: выбрать профиль из списка и ввести пароль.') +
+    step(3, 'Клиент входит по имени/телефону и паролю, который задаёт тренер в профиле клиента, либо через Google.') +
+    tip('Пароль клиенту задаётся в его профиле: поле «Пароль клиента». Без пароля кабинет клиента недоступен.') },
+  { id:'layouts', icon:'📱', title:'Компьютер / планшет / смартфон', html:
+    '<p>Раскладка выбирается в ' + k('⚙️ Настройки') + ' → «Режим отображения», а на телефоне включается автоматически.</p>' +
+    step(1, '<b>Компьютер</b> — две панели: база (продукты/упражнения) слева и редактор справа. Ширину панелей можно тянуть за ручку ↔, базу можно перенести на другую сторону кнопкой ⇄.') +
+    step(2, '<b>Смартфон/планшет</b> — мобильный интерфейс: карточки, нижняя навигация, шторки снизу.') +
+    tip('Если на телефоне видна «компьютерная» версия — откройте Настройки и выберите раскладку «Смартфон».') },
+  { id:'install', icon:'📲', title:'Установка как приложение (PWA)', html:
+    step(1, 'Откройте сайт на телефоне — внизу появится кнопка ' + k('📲 Установить приложение') + '.') +
+    step(2, 'В Chrome подтвердите установку. В Яндекс Браузере/Safari кнопка покажет инструкцию для вашего браузера.') +
+    step(3, 'Появится иконка на рабочем столе: запуск без браузера, работа офлайн в зале.') +
+    warn('Если сайт открыт из WhatsApp — сначала нажмите «Открыть в браузере».') +
+    tip('Когда выходит обновление, сверху появляется плашка «🔄 Доступно обновление» — одно нажатие, и версия свежая.') }
+]},
+
+/* ================= КЛИЕНТЫ ================= */
+{ id:'clients', icon:'👥', title:'Клиенты', topics:[
+  { id:'addclient', icon:'➕', title:'Добавить и открыть клиента', html:
+    step(1, 'На главном экране нажмите ' + k('➕ Добавить клиента') + '.') +
+    step(2, 'Заполните имя, возраст, вес, рост, пол, активность и цель — по ним считаются нормы калорий.') +
+    step(3, 'Нажмите на карточку клиента, чтобы открыть его планировщик.') +
+    fig('<div class="enc-card-demo"><span class="ava">👤</span><div><b>Дани Коэн</b><br><small>80 кг · цель: масса</small></div><span class="badge">💰 7</span></div>') +
+    tip('Зелёный бейдж 💰 на карточке — остаток занятий абонемента.') },
+  { id:'clienttools', icon:'🧰', title:'Кнопки клиента в шапке', html:
+    '<p>Когда клиент открыт, рядом с его именем три кнопки:</p>' +
+    fig('<div class="enc-row">' + k('📏') + ' замеры тела ' + k('💬') + ' чат ' + k('💰') + ' абонемент</div>') +
+    '<p>Каждая открывает свой раздел именно для этого клиента.</p>' },
+  { id:'clientcab', icon:'🙋', title:'Кабинет клиента', html:
+    '<p>Клиент видит свой кабинет с вкладками внизу:</p>' +
+    fig('<div class="enc-tabs"><span class="on">🏋️ Тренировки</span><span>🍽️ Питание</span><span>💬 Чат</span><span>☰ Ещё</span></div>') +
+    step(1, '<b>Тренировки</b> — назначенные программы; кнопка «▶ Начать тренировку» открывает выполнение по подходам.') +
+    step(2, '<b>Питание</b> — план от тренера; клиент отмечает съеденное галочками, видит остаток калорий на день.') +
+    step(3, '<b>Ещё</b> — замеры, абонемент, настройки (язык, темы, масштаб), отчёты, выход.') +
+    tip('Клиент видит карточки техники упражнений, но не может их менять — это право тренера.') }
+]},
+
+/* ================= ТРЕНИРОВКИ ================= */
+{ id:'workout', icon:'🏋️', title:'Тренировки', topics:[
+  { id:'build', icon:'🧱', title:'Составление программы', html:
+    step(1, 'Откройте клиента и переключитесь в режим ' + k('🏋️ Тренировки') + ' (переключатель в шапке или вкладка внизу на телефоне).') +
+    step(2, 'Нажмите ' + k('＋ Добавить тренировку') + ' — появится карточка дня (название, дата, длительность).') +
+    step(3, 'Добавьте упражнения: на компьютере — перетащите из базы слева или двойной клик; на телефоне — кнопка «＋ Добавить упражнение».') +
+    step(4, 'Укажите подходы, повторы (1–100), вес, отдых и при необходимости ⏳ время на подход.') +
+    tip('⏳ «Время на подход» — для упражнений на время: например, 5 повторений за 50 секунд.') },
+  { id:'expicker', icon:'📂', title:'База упражнений (выбор)', html:
+    '<p>На телефоне база открывается аккордеоном:</p>' +
+    fig('<div class="enc-acc"><div class="g">💪 Грудь <i>45 ▼</i></div><div class="sg">Средняя часть <i>14 ▼</i></div><div class="it">🖼 Жим штанги лёжа <b>+</b></div></div>') +
+    step(1, 'Нажмите группу мышц → раскроются подгруппы.') +
+    step(2, 'Нажмите подгруппу → карточки упражнений с фото.') +
+    step(3, k('+') + ' — добавить сразу; нажатие по карточке — открыть технику, оттуда тоже можно добавить.') +
+    tip('Поиск сверху ищет сразу по всей базе и показывает плоский список.') },
+  { id:'exrow', icon:'⋯', title:'Управление упражнением в списке', html:
+    '<p>На телефоне у каждого упражнения справа кнопка ' + k('⋯') + ':</p>' +
+    fig('<div class="enc-menu"><div>⬆ Выше</div><div>⬇ Ниже</div><div>⎘ Дублировать</div><div>✏️ Изменить</div><div class="red">🗑 Удалить</div></div>') +
+    '<p>Нажатие по строке открывает редактор подходов, по подчёркнутому названию — карточку техники.</p>' +
+    '<p>На компьютере те же действия — кнопки ▲▼ и ✕ в строке таблицы, 👁 у названия — карточка техники.</p>' },
+  { id:'technique', icon:'📖', title:'Карточка техники упражнения', html:
+    '<p>У каждого упражнения своя карточка: фото (2 кадра), группа мышц, инвентарь, рекомендации и пошаговая техника с типичной ошибкой.</p>' +
+    step(1, 'Тренер: ➕ добавить в тренировку, ✏️ изменить (название, техника, своя картинка/GIF).') +
+    step(2, 'Клиент видит ту же карточку, но только для чтения.') +
+    tip('Свой GIF: ✏️ редактор упражнения → «🖼 Своя картинка/GIF» — заменит стандартное фото везде.') },
+  { id:'live', icon:'▶', title:'Live-тренировка с тренером', html:
+    step(1, 'На карточке тренировки нажмите ' + k('▶ Начать тренировку') + ' (есть и на компьютере, и на телефоне).') +
+    step(2, 'Отмечайте каждый подход галочкой ✓ — после неё автоматически идёт таймер отдыха.') +
+    step(3, 'Шкала 1–5 под подходом — нагрузка (RPE). Мини-графики показывают объём против плана и прошлого раза.') +
+    step(4, 'Меню ⋯ у упражнения: изменить параметры, заменить упражнение, удалить — прямо во время тренировки.') +
+    step(5, k('🏁 Завершить тренировку') + ' — можно в любой момент: откроется отчёт с графиками, результат сохранится (даже частичный).') +
+    tip('Занятие абонемента списывается автоматически при сохранении результата.') }
+]},
+
+/* ================= ПИТАНИЕ ================= */
+{ id:'nutrition', icon:'🍽️', title:'Питание', topics:[
+  { id:'plan', icon:'🧾', title:'Составление плана питания', html:
+    step(1, 'Режим ' + k('🍽️ Питание') + ' → ' + k('＋ Добавить приём пищи') + ' (завтрак, обед...).') +
+    step(2, 'Добавьте продукты: на компьютере — из базы слева, на телефоне — «＋ Добавить продукт».') +
+    step(3, 'Укажите количество и единицу (граммы, штуки, ложки, стакан, упаковка).') +
+    step(4, 'Сверху видны прогресс-бары: калории и БЖУ против нормы клиента.') +
+    tip('🎯 у приёма — целевая доля калорий в %: помогает распределить день (завтрак 30%, обед 40%...).') },
+  { id:'prodpicker', icon:'🛒', title:'База продуктов (выбор)', html:
+    '<p>На телефоне категории открываются аккордеоном — как упражнения:</p>' +
+    fig('<div class="enc-acc"><div class="g">🥛 Молочка <i>40 ▼</i></div><div class="it">🖼 Коттедж Тнува 5% · B <b>+</b></div></div>') +
+    '<p>В базе есть брендовые израильские продукты (Тнува, Тара, Штраус, Осем...) с упаковками и Nutri-Score.</p>' +
+    tip('Карточка продукта показывает кольцо калорий, % дневной нормы и позволяет выбрать порцию перед добавлением.') },
+  { id:'prodrow', icon:'⋯', title:'Управление продуктом в приёме', html:
+    '<p>Кнопка ' + k('⋯') + ' у продукта: ⬆⬇ порядок, ⎘ дублировать (с тем же количеством), ✏️ изменить, 🗑 удалить.</p>' +
+    '<p>Карандаш ✎ у приёма: название, доля %, заметка, ⎘ дублировать весь приём, удалить.</p>' +
+    '<p>Нажатие по названию продукта — его полная карточка.</p>' },
+  { id:'clienteat', icon:'✅', title:'Как клиент отмечает питание', html:
+    step(1, 'Клиент открывает вкладку «🍽️ Питание» в своём кабинете.') +
+    step(2, 'Нажимает кружок ✓ у съеденного продукта — калории и БЖУ зачисляются в дневной прогресс.') +
+    step(3, 'Сверху — «осталось ккал на сегодня». Отметки обнуляются каждый день.') }
+]},
+
+/* ================= ИНСТРУМЕНТЫ ТРЕНЕРА ================= */
+{ id:'tools', icon:'🧰', title:'Инструменты тренера', topics:[
+  { id:'dash', icon:'📊', title:'Сводка дня', html:
+    '<p>Кнопка ' + k('📊 Сводка дня') + ' на главном экране — утренний обзор:</p>' +
+    fig('<div class="enc-grid"><div>🗓 события сегодня</div><div>✅ кто тренировался</div><div>💬 непрочитанные</div><div>💰 абонементы-алерты</div><div>🎂 дни рождения</div><div>😴 молчат 7+ дней</div></div>') +
+    tip('Нажатие на строку сразу открывает чат или абонемент этого клиента.') },
+  { id:'tpl', icon:'📦', title:'Шаблоны программ и рационов', html:
+    step(1, 'Составьте программу → ' + k('📦 Шаблоны') + ' → «💾 Сохранить текущую как шаблон».') +
+    step(2, 'У другого клиента: ' + k('📦 Шаблоны') + ' → «➕ Добавить к текущей» или «♻️ Заменить текущую».') +
+    tip('Шаблоны общие для всех клиентов и синхронизируются с облаком. В режиме питания — те же шаблоны для рационов.') },
+  { id:'measures', icon:'📏', title:'Замеры тела и фото-прогресс', html:
+    step(1, 'Кнопка ' + k('📏') + ' у клиента → «➕ Добавить замер»: вес, талия, грудь, бицепс и др.') +
+    step(2, 'Появляются карточки с динамикой за 30 дней и графики по каждому параметру.') +
+    step(3, 'Вкладка «📸 Фото-прогресс»: снимки раз в 2–4 недели, сравнение «Было → Стало».') +
+    tip('Вес из замера автоматически обновляет вес в профиле и нормы калорий.') },
+  { id:'subs', icon:'💰', title:'Абонементы и оплаты', html:
+    step(1, 'Кнопка ' + k('💰') + ' у клиента → «➕ Новый абонемент»: по занятиям (например, 12) или по сроку (месяц).') +
+    step(2, 'Занятие списывается автоматически после каждой сохранённой тренировки; вручную — кнопки «−1» / «+1».') +
+    step(3, 'Статусы: ✅ активен → ⚠️ заканчивается → ⛔ закончился. История всех операций — 📜.') +
+    tip('Клиент видит свой абонемент в «Ещё → 💰 Мой абонемент» (только просмотр).') },
+  { id:'chat', icon:'💬', title:'Чат с клиентом', html:
+    '<p>Кнопка ' + k('💬') + ' у тренера, вкладка «Чат» у клиента. Красный счётчик — непрочитанные.</p>' +
+    '<p>✓ — отправлено, ✓✓ — прочитано. Сообщения доходят между устройствами через облако.</p>' },
+  { id:'notif', icon:'🔔', title:'Уведомления', html:
+    '<p>Колокольчик ' + k('🔔') + ' в углу — центр уведомлений: напоминания о тренировке и питании, алерты абонементов, новые сообщения, «клиент выполнил тренировку».</p>' +
+    step(1, 'В настройках центра: час ежедневного напоминания и кнопка «Разрешить системные уведомления».') +
+    tip('Нажатие на уведомление сразу открывает нужный раздел.') }
+]},
+
+/* ================= ПЕЧАТЬ И ЭКСПОРТ ================= */
+{ id:'export', icon:'🖨️', title:'Печать и отправка', topics:[
+  { id:'printpg', icon:'🖨️', title:'Печать на бланк Private Gym', html:
+    step(1, 'Составьте тренировку → кнопка ' + k('🖨️ Private Gym') + '.') +
+    step(2, 'Откроется окно: вставьте фирменный бланк в принтер — печатается только текст по клеткам карточки.') +
+    step(3, 'Первый раз: включите «сетка», напечатайте на чистом листе, сверьте с бланком на просвет и подгоните X/Y.') +
+    step(4, 'Галочка «настройка строк» — точная подстройка каждой секции (верх, шаг, число строк). Всё запоминается.') +
+    warn('Упражнения сами раскладываются по строкам бланка: грудь→חזה, предплечья→יד קידמית, поясница/шея→זוקפי גב, низ→רגליים, разминка и кардио→нижняя таблица.') },
+  { id:'whatsapp', icon:'📤', title:'Отправка программы в WhatsApp', html:
+    step(1, 'Кнопка ' + k('📤 WhatsApp') + ' в режиме тренировок или питания.') +
+    step(2, 'Создаётся красивая карточка-картинка с программой и брендом зала.') +
+    step(3, 'На телефоне откроется «Поделиться» → WhatsApp; на компьютере картинка скачается — перетащите её в WhatsApp Web.') },
+  { id:'print2', icon:'📄', title:'Обычная печать и Excel', html:
+    '<p>' + k('🖨️ Печать') + ' — аккуратный документ с программой/планом. ' + k('📤 Экспорт') + ' — таблица CSV/Excel для своих расчётов.</p>' }
+]},
+
+/* ================= НАСТРОЙКИ И ОБЛАКО ================= */
+{ id:'system', icon:'⚙️', title:'Настройки, облако, данные', topics:[
+  { id:'themes', icon:'🕐', title:'Темы и внешний вид', html:
+    step(1, k('⚙️ Настройки') + ' → «Темы по времени суток»: 25 тем для утра, дня, вечера и ночи с фонами.') +
+    step(2, 'Там же: масштаб интерфейса, язык (русский/иврит/английский), шрифты, свои цвета.') +
+    tip('У клиента свои настройки: «Ещё → ⚙️ Настройки» — язык, масштаб, темы.') },
+  { id:'cloud', icon:'☁️', title:'Облако Google: одна учётка на всех устройствах', html:
+    step(1, 'Нажмите ' + k('Войти через Google') + ' (кнопка в углу или на экране входа).') +
+    step(2, 'Все данные синхронизируются: начали тренировку на телефоне — продолжили на планшете.') +
+    step(3, 'Маленький аватар в углу показывает статус: 🟢 синхронизировано, 🔵 идёт синхронизация, 🟠 офлайн.') +
+    warn('Без входа в Google данные хранятся только на этом устройстве.') },
+  { id:'backup', icon:'🛡', title:'Резервные копии и роли', html:
+    step(1, 'Ручная копия: на главном экране «💾 Резервная копия» — файл со всеми данными; «Восстановить» — загрузка файла.') +
+    step(2, 'Автокопия создаётся раз в неделю сама (хранятся 3 последних).') +
+    step(3, 'Роли тренеров: 👑 владелец, 🏋️ тренер, 👁 стажёр (только просмотр, изменения заблокированы).') },
+  { id:'back', icon:'🔙', title:'Кнопка «Назад» и выход', html:
+    '<p>Кнопка «Назад» на телефоне закрывает открытые окна по очереди и не выбрасывает из приложения.</p>' +
+    '<p>При попытке выйти появится вопрос «Выйти из приложения?» с кнопками «✅ Остаться» / «🚪 Выйти».</p>' }
+]}
+];
+
+/* ---------- рендер ---------- */
+var encState = { open: {}, q: '' };
+
+window.openEncyclopedia = function(topicPath){
+    if (!document.getElementById('encOverlay')){
+        var ov = document.createElement('div');
+        ov.id = 'encOverlay';
+        ov.innerHTML = '<div class="enc-sheet">' +
+            '<div class="enc-head"><div class="enc-title">📚 Энциклопедия</div>' +
+            '<button class="enc-x" onclick="closeEncyclopedia()">✕</button></div>' +
+            '<div class="enc-search"><input type="search" id="encSearch" placeholder="🔍 Поиск по энциклопедии..." oninput="encSetQ(this.value)"></div>' +
+            '<div class="enc-scroll"><div id="encBody"></div></div>' +
+        '</div>';
+        ov.addEventListener('click', function(e){ if (e.target === ov) closeEncyclopedia(); });
+        document.body.appendChild(ov);
+    }
+    document.getElementById('encOverlay').style.display = 'flex';
+    if (topicPath){
+        var parts = String(topicPath).split('/');
+        encState.open[parts[0]] = true;
+        if (parts[1]) encState.open[parts[0] + '/' + parts[1]] = true;
+    }
+    encRender();
+};
+window.closeEncyclopedia = function(){
+    var ov = document.getElementById('encOverlay');
+    if (ov) ov.style.display = 'none';
+};
+window.encSetQ = function(q){
+    encState.q = String(q || '').toLowerCase();
+    encRender();
+};
+window.encToggle = function(key){
+    encState.open[key] = !encState.open[key];
+    encRender();
+};
+
+function encRender(){
+    var box = document.getElementById('encBody');
+    if (!box) return;
+    var q = encState.q;
+    var h = '';
+    ENC_SECTIONS.forEach(function(sec){
+        var topics = sec.topics;
+        if (q){
+            topics = topics.filter(function(tp){
+                return (tp.title + ' ' + tp.html).toLowerCase().indexOf(q) >= 0;
+            });
+            if (!topics.length) return;
+        }
+        var secOpen = q ? true : !!encState.open[sec.id];
+        h += '<div class="enc-sec-head" onclick="encToggle(\'' + sec.id + '\')">' +
+            '<span class="ico">' + sec.icon + '</span><span class="ttl">' + sec.title + '</span>' +
+            '<span class="cnt">' + topics.length + '</span><span class="arr">' + (secOpen ? '▲' : '▼') + '</span></div>';
+        if (!secOpen) return;
+        topics.forEach(function(tp){
+            var key = sec.id + '/' + tp.id;
+            var tOpen = q ? true : !!encState.open[key];
+            h += '<div class="enc-topic-head' + (tOpen ? ' open' : '') + '" onclick="encToggle(\'' + key + '\')">' +
+                '<span class="ico">' + tp.icon + '</span><span class="ttl">' + tp.title + '</span>' +
+                '<span class="arr">' + (tOpen ? '−' : '+') + '</span></div>';
+            if (tOpen) h += '<div class="enc-topic-body">' + tp.html + '</div>';
+        });
+    });
+    box.innerHTML = h || '<div class="enc-none">Ничего не найдено</div>';
+}
+
+/* ---------- кнопка возле «Сводка дня» ---------- */
+function encInjectBtn(){
+    var dashBtn = document.getElementById('dshHomeBtn');
+    if (!dashBtn || document.getElementById('encHomeBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'encHomeBtn';
+    b.className = 'dsh-home-btn enc-home-btn';
+    b.textContent = '📚 Энциклопедия';
+    b.onclick = function(){ openEncyclopedia(); };
+    dashBtn.parentNode.insertBefore(b, dashBtn.nextSibling);
+    /* обернуть обе кнопки в ряд */
+    if (!dashBtn.parentNode.classList.contains('enc-btnrow-done')){
+        var wrap = document.createElement('div');
+        wrap.className = 'enc-btnrow enc-btnrow-done';
+        dashBtn.parentNode.insertBefore(wrap, dashBtn);
+        wrap.appendChild(dashBtn);
+        wrap.appendChild(b);
+    }
+}
+
+function encInit(){
+    encInjectBtn();
+    var origRU = window.renderUsers;
+    if (typeof origRU === 'function' && !window.__encRuHook){
+        window.__encRuHook = true;
+        window.renderUsers = function(){
+            var r = origRU.apply(this, arguments);
+            try { encInjectBtn(); } catch(e){}
+            return r;
+        };
+    }
+}
+if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(encInit, 1100); });
+} else {
+    setTimeout(encInit, 1100);
+}
+})();
+
+</script>
+
+<script>
+/* ============================================================
    PWA: service worker + установка + обновления + офлайн-баннер
    ============================================================ */
 (function(){
@@ -33172,5 +33905,5 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0ab2b586cc3659f',t:'MTc4MTI5MTU2OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0abee885b292212',t:'MTc4MTI5OTU2NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
