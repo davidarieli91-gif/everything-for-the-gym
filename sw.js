@@ -9,7 +9,7 @@
      с докачкой (растущий кэш)
    - Firebase/Google API: всегда сеть (не кэшируем)
    ============================================================ */
-const APP_CACHE = 'pg-app-v3';
+const APP_CACHE = 'pg-app-v6';
 const MEDIA_CACHE = 'pg-media-v1';
 
 const PRECACHE = [

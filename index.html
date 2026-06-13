@@ -1746,9 +1746,9 @@
             gap: 12px;
         }
         .custom-logo-display {
-            width: 140px;
-            height: 140px;
-            border-radius: 24px;
+            width: 280px;
+            height: 280px;
+            border-radius: 52px;
             background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.1));
             border: 2px dashed var(--border-color);
             display: flex;
@@ -1768,10 +1768,10 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            border-radius: 22px;
+            border-radius: 38px;
         }
         .custom-logo-placeholder {
-            font-size: 3.5em;
+            font-size: 6em;
             opacity: 0.3;
         }
         .custom-logo-actions {
@@ -1803,17 +1803,17 @@
             border-color: var(--danger-color);
         }
         .home-logo {
-            width: 96px; height: 96px;
-            border-radius: 28px;
+            width: 192px; height: 192px;
+            border-radius: 56px;
             background: linear-gradient(135deg, #10B981 0%, #3B82F6 60%, #F59E0B 100%);
-            box-shadow: 0 20px 40px rgba(16,185,129,0.30),
-                        inset 0 1px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 24px 50px rgba(16,185,129,0.35),
+                        inset 0 2px 0 rgba(255,255,255,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3.2em;
+            font-size: 6.4em;
             line-height: 1;
-            margin-bottom: 18px;
+            margin-bottom: 24px;
             position: relative;
             transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
@@ -1821,9 +1821,9 @@
         .home-logo::after {
             content: '';
             position: absolute;
-            inset: -8px;
-            border-radius: 36px;
-            border: 2px solid rgba(255,255,255,0.18);
+            inset: -16px;
+            border-radius: 72px;
+            border: 3px solid rgba(255,255,255,0.18);
             pointer-events: none;
         }
 
@@ -6755,6 +6755,7 @@
             --fs-meals: 1;
             --fs-header: 1;
             --fs-modals: 1;
+            --fs-tools: 1;
             --card-product-min: 130px;
             --card-product-thumb: 36px;
             --card-exercise-thumb: 42px;
@@ -8312,6 +8313,13 @@
                             </div>
                             <input type="range" id="fsModals" min="70" max="150" step="5" value="100" oninput="setPanelFontSize('modals', this.value)" style="width:100%;">
                         </div>
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-secondary); margin-bottom:4px;">
+                                <span data-i18n="fontSizeTools">⬜ Кнопки на главном экране</span>
+                                <span id="fsToolsVal" style="font-weight:700; color:var(--primary-color);">100%</span>
+                            </div>
+                            <input type="range" id="fsTools" min="70" max="180" step="5" value="100" oninput="setPanelFontSize('tools', this.value)" style="width:100%;">
                         <button onclick="resetAllPanelFontSizes()" style="margin-top:6px; padding:8px 14px; background:rgba(0,0,0,0.05); border:1px solid var(--border-color); border-radius:8px; cursor:pointer; font-size:13px; color:var(--text-primary);" data-i18n="fontSizeReset">↺ Сбросить размеры шрифта</button>
                     </div>
                 </div>
@@ -10827,6 +10835,7 @@
                 fontSizeMeals: '🍽 Приёмы пищи / тренировки',
                 fontSizeHeader: '🔝 Шапка приложения',
                 fontSizeModals: '🪟 Модальные окна',
+                fontSizeTools: '⬜ Кнопки на главном экране',
                 fontSizeReset: '↺ Сбросить размеры шрифта',
                 wkEdit: 'Изменить',
                 exEditTitle: 'Редактировать упражнение',
@@ -12325,6 +12334,7 @@
                 fontSizeMeals: '🍽 ארוחות / אימונים',
                 fontSizeHeader: '🔝 כותרת האפליקציה',
                 fontSizeModals: '🪟 חלונות מודאליים',
+                fontSizeTools: '⬜ לחצנים במסך הבית',
                 fontSizeReset: '↺ אפס גדלי גופן',
                 wkEdit: 'ערוך',
                 exEditTitle: 'עריכת תרגיל',
@@ -21355,9 +21365,10 @@
         /* =========================================================
            РАЗМЕР ШРИФТА ПО ПАНЕЛЯМ
            ========================================================= */
-        const PANEL_FS_KEYS = ['left', 'meals', 'header', 'modals'];
+        const PANEL_FS_KEYS = ['left', 'meals', 'header', 'modals', 'tools'];
         function setPanelFontSize(key, percent) {
-            const v = Math.max(70, Math.min(150, parseInt(percent) || 100));
+            const maxV = key === 'tools' ? 180 : 150;
+            const v = Math.max(70, Math.min(maxV, parseInt(percent) || 100));
             const ratio = (v / 100).toFixed(2);
             document.documentElement.style.setProperty('--fs-' + key, ratio);
             const valEl = document.getElementById('fs' + key.charAt(0).toUpperCase() + key.slice(1) + 'Val');
@@ -21372,7 +21383,8 @@
         function initPanelFontSizes() {
             PANEL_FS_KEYS.forEach(k => {
                 const saved = parseInt(localStorage.getItem('panelFs_' + k));
-                if (!isNaN(saved) && saved >= 70 && saved <= 150) setPanelFontSize(k, saved);
+                const maxV = k === 'tools' ? 180 : 150;
+                if (!isNaN(saved) && saved >= 70 && saved <= maxV) setPanelFontSize(k, saved);
             });
         }
 
@@ -23522,21 +23534,23 @@
             const saved = localStorage.getItem('customAppLogo');
             if (saved) {
                 container.innerHTML = `
-                    <div class="custom-logo-display" onclick="document.getElementById('logoUploadInput').click()" title="Нажмите чтобы изменить">
+                    <div class="custom-logo-display" onclick="document.getElementById('logoUploadInput').click()" title="Нажмите чтобы загрузить фото">
                         <img src="${saved}" alt="Лого">
                     </div>
                     <div class="custom-logo-actions">
-                        <button class="custom-logo-btn" onclick="document.getElementById('logoUploadInput').click()">✏️ Изменить</button>
-                        <button class="custom-logo-btn danger" onclick="deleteCustomLogo()">🗑 Удалить</button>
+                        <button class="custom-logo-btn" onclick="openLogoEditor()">🎨 Редактор лого</button>
+                        <button class="custom-logo-btn" onclick="document.getElementById('logoUploadInput').click()">📁 Фото</button>
+                        <button class="custom-logo-btn danger" onclick="deleteCustomLogo()">🗑</button>
                     </div>
                 `;
             } else {
                 container.innerHTML = `
-                    <div class="custom-logo-display" onclick="document.getElementById('logoUploadInput').click()" title="Создать лого">
+                    <div class="custom-logo-display" onclick="openLogoEditor()" title="Создать лого">
                         <div class="custom-logo-placeholder">🖼️</div>
                     </div>
                     <div class="custom-logo-actions">
-                        <button class="custom-logo-btn" onclick="document.getElementById('logoUploadInput').click()">➕ Создать лого</button>
+                        <button class="custom-logo-btn" onclick="openLogoEditor()">🎨 Редактор лого</button>
+                        <button class="custom-logo-btn" onclick="document.getElementById('logoUploadInput').click()">📁 Фото</button>
                     </div>
                 `;
             }
@@ -23579,6 +23593,194 @@
             localStorage.removeItem('customAppLogo');
             loadCustomLogo();
             showToast('🗑 Лого удалено');
+        }
+
+        /* =========================================================
+           РЕДАКТОР ЛОГО (создание своего лого: форма, цвет, эмодзи)
+           ========================================================= */
+        var logoEditorState = {
+            shape: 'rounded',   /* square | rounded | circle | squircle */
+            bgFrom: '#10B981',
+            bgTo: '#3B82F6',
+            emoji: '🏋️',
+            text: ''
+        };
+        var LOGO_SHAPES = [
+            { id:'square',  ru:'Квадрат',  preview:'0px' },
+            { id:'rounded', ru:'Скругл.',  preview:'18px' },
+            { id:'circle',  ru:'Круг',     preview:'50%' },
+            { id:'squircle',ru:'Скуэрл',   preview:'38%' }
+        ];
+        var LOGO_EMOJIS = ['🏋️','💪','🏃','🥗','🍎','🧘','🚴','🏊','⚖️','🔥','⚡','⭐','🎯','🏆','❤️','💎','🌟','🦾','🦿','🏋️‍♀️','🤸','⛹️','🤼','🏃‍♀️','🥦','🥑','🍗','🥚','🥛','💧','💯','👑'];
+
+        function openLogoEditor(){
+            /* читаем сохранённые настройки */
+            try {
+                var saved = JSON.parse(localStorage.getItem('logoEditorState'));
+                if (saved) Object.assign(logoEditorState, saved);
+            } catch(e){}
+            var ov = document.getElementById('logoEditorOverlay');
+            if (!ov){
+                ov = document.createElement('div');
+                ov.id = 'logoEditorOverlay';
+                ov.className = 'logo-editor-overlay';
+                ov.innerHTML = '' +
+                    '<div class="logo-editor-box">' +
+                        '<div class="logo-editor-title">🎨 Редактор лого</div>' +
+                        '<div class="logo-editor-preview-wrap">' +
+                            '<div id="logoEditorPreview" onclick="logoEditorDownload()"></div>' +
+                        '</div>' +
+                        '<div class="logo-editor-section">' +
+                            '<label>🖼 Иконка</label>' +
+                            '<div class="logo-emoji-grid" id="logoEmojiGrid"></div>' +
+                        '</div>' +
+                        '<div class="logo-editor-section">' +
+                            '<label>✏️ Текст (необязательно)</label>' +
+                            '<input type="text" id="logoEditorText" maxlength="4" placeholder="PG" style="width:100%;padding:10px;border:1px solid var(--border-color);border-radius:10px;font-size:1.1em;font-weight:800;text-align:center;background:var(--surface-color);color:var(--text-primary);">' +
+                        '</div>' +
+                        '<div class="logo-editor-section">' +
+                            '<label>📐 Форма</label>' +
+                            '<div class="logo-shape-row" id="logoShapeRow"></div>' +
+                        '</div>' +
+                        '<div class="logo-editor-section">' +
+                            '<label>🎨 Цвет 1 (верх)</label>' +
+                            '<div class="logo-color-row"><input type="color" id="logoBgFrom" value="#10B981" oninput="logoEditorUpdate()"></div>' +
+                        '</div>' +
+                        '<div class="logo-editor-section">' +
+                            '<label>🎨 Цвет 2 (низ)</label>' +
+                            '<div class="logo-color-row"><input type="color" id="logoBgTo" value="#3B82F6" oninput="logoEditorUpdate()"></div>' +
+                        '</div>' +
+                        '<div class="logo-editor-actions">' +
+                            '<button class="logo-editor-cancel" onclick="closeLogoEditor()">Отмена</button>' +
+                            '<button class="logo-editor-save" onclick="logoEditorSave()">💾 Сохранить</button>' +
+                        '</div>' +
+                    '</div>';
+                ov.addEventListener('click', function(e){ if (e.target === ov) closeLogoEditor(); });
+                document.body.appendChild(ov);
+            }
+            /* заполняем контролы */
+            logoEditorRenderEmojis();
+            logoEditorRenderShapes();
+            var ti = document.getElementById('logoEditorText');
+            if (ti){ ti.value = logoEditorState.text || ''; ti.oninput = function(){ logoEditorState.text = ti.value; logoEditorUpdate(); }; }
+            var bf = document.getElementById('logoBgFrom'); if (bf) bf.value = logoEditorState.bgFrom;
+            var bt = document.getElementById('logoBgTo');   if (bt) bt.value = logoEditorState.bgTo;
+            logoEditorUpdate();
+            ov.classList.add('open');
+        }
+
+        function logoEditorRenderEmojis(){
+            var grid = document.getElementById('logoEmojiGrid');
+            if (!grid) return;
+            grid.innerHTML = LOGO_EMOJIS.map(function(e){
+                return '<div class="logo-emoji-cell'+(e===logoEditorState.emoji?' active':'')+'" onclick="logoEditorSetEmoji(\''+e+'\')">'+e+'</div>';
+            }).join('');
+        }
+        function logoEditorSetEmoji(e){
+            logoEditorState.emoji = e;
+            logoEditorState.text = '';
+            var ti = document.getElementById('logoEditorText'); if (ti) ti.value = '';
+            logoEditorRenderEmojis();
+            logoEditorUpdate();
+        }
+        function logoEditorRenderShapes(){
+            var row = document.getElementById('logoShapeRow');
+            if (!row) return;
+            row.innerHTML = LOGO_SHAPES.map(function(s){
+                return '<div class="logo-shape-btn'+(s.id===logoEditorState.shape?' active':'')+'" onclick="logoEditorSetShape(\''+s.id+'\')">'+
+                    '<div class="logo-shape-preview" style="border-radius:'+s.preview+'"></div>'+
+                    s.ru+'</div>';
+            }).join('');
+        }
+        function logoEditorSetShape(id){
+            logoEditorState.shape = id;
+            logoEditorRenderShapes();
+            logoEditorUpdate();
+        }
+
+        function logoEditorRadius(){
+            var s = logoEditorState.shape;
+            if (s === 'square')  return '12px';
+            if (s === 'rounded') return '28px';
+            if (s === 'circle')  return '50%';
+            if (s === 'squircle') return '38%';
+            return '28px';
+        }
+
+        function logoEditorUpdate(){
+            var bf = document.getElementById('logoBgFrom'); if (bf) logoEditorState.bgFrom = bf.value;
+            var bt = document.getElementById('logoBgTo');   if (bt) logoEditorState.bgTo = bt.value;
+            var pv = document.getElementById('logoEditorPreview');
+            if (!pv) return;
+            pv.style.borderRadius = logoEditorRadius();
+            pv.style.background = 'linear-gradient(135deg, '+logoEditorState.bgFrom+', '+logoEditorState.bgTo+')';
+            pv.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
+            var content = logoEditorState.text ? logoEditorState.text : logoEditorState.emoji;
+            pv.textContent = content;
+        }
+
+        /* рендер лого в canvas → dataURL (512×512) */
+        function logoEditorToDataURL(){
+            var S = 512;
+            var canvas = document.createElement('canvas');
+            canvas.width = S; canvas.height = S;
+            var ctx = canvas.getContext('2d');
+            /* градиент */
+            var grad = ctx.createLinearGradient(0, 0, S, S);
+            grad.addColorStop(0, logoEditorState.bgFrom);
+            grad.addColorStop(1, logoEditorState.bgTo);
+            /* форма (clipping) */
+            var r = logoEditorState.shape === 'square' ? 34 :
+                    logoEditorState.shape === 'circle' ? S/2 :
+                    logoEditorState.shape === 'squircle' ? 190 : 90;
+            ctx.beginPath();
+            if (ctx.roundRect){
+                ctx.roundRect(0, 0, S, S, r);
+            } else {
+                /* fallback для старых браузеров */
+                ctx.moveTo(r, 0);
+                ctx.arcTo(S, 0, S, S, r);
+                ctx.arcTo(S, S, 0, S, r);
+                ctx.arcTo(0, S, 0, 0, r);
+                ctx.arcTo(0, 0, S, 0, r);
+                ctx.closePath();
+            }
+            ctx.fillStyle = grad;
+            ctx.fill();
+            /* лёгкий блик сверху */
+            var gloss = ctx.createLinearGradient(0, 0, 0, S*0.5);
+            gloss.addColorStop(0, 'rgba(255,255,255,0.18)');
+            gloss.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = gloss;
+            ctx.fill();
+            /* текст/эмодзи */
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            if (logoEditorState.text){
+                ctx.fillStyle = '#fff';
+                ctx.font = '800 ' + Math.floor(S*0.42) + 'px Inter, sans-serif';
+                ctx.fillText(logoEditorState.text, S/2, S/2 + S*0.02);
+            } else {
+                ctx.font = Math.floor(S*0.5) + 'px sans-serif';
+                ctx.fillText(logoEditorState.emoji, S/2, S/2 + S*0.04);
+            }
+            return canvas.toDataURL('image/png');
+        }
+
+        function logoEditorSave(){
+            var dataUrl = logoEditorToDataURL();
+            try {
+                localStorage.setItem('customAppLogo', dataUrl);
+                localStorage.setItem('logoEditorState', JSON.stringify(logoEditorState));
+            } catch(e){ alert('Ошибка сохранения: '+e.message); return; }
+            closeLogoEditor();
+            loadCustomLogo();
+            if (typeof showToast === 'function') showToast('✅ Лого сохранено');
+        }
+
+        function closeLogoEditor(){
+            var ov = document.getElementById('logoEditorOverlay');
+            if (ov) ov.classList.remove('open');
         }
 
         /* =========================================================
@@ -27835,42 +28037,81 @@ body.layout-desktop:not(.mode-workout) .meal-controls .control-btn.remove:hover 
 body.layout-desktop:not(.mode-workout) .meal-products th { background: rgba(16,185,129,0.06); font-weight: 600; color: var(--text-secondary); font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.03em; }
 
 /* ===== ENCYCLOPEDIA (enc) ===== */
-.enc-btnrow { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
-.enc-btnrow .dsh-home-btn { margin: 0; }
+>.enc-btnrow { display: none !important; }
 
-/* ===== ПАНЕЛЬ ИНСТРУМЕНТОВ НА ГЛАВНОМ ЭКРАНЕ ===== */
-.home-tools-bar { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
-.home-tool-btn { position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 6px; min-width: 58px; border: none; border-radius: 12px; background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); color: var(--text-primary); font-size: .62em; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 2px 10px rgba(0,0,0,0.05); -webkit-tap-highlight-color: transparent; transition: var(--transition); }
-body.dark-theme .home-tool-btn { background: rgba(30,41,59,0.5); border-color: rgba(255,255,255,0.06); }
-.home-tool-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-.home-tool-btn-ico { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; background: var(--tt-c, linear-gradient(135deg,#10B981,#047857)); color: #fff; }
-.home-tool-btn-lbl { font-size: 0.95em; line-height: 1.1; text-align: center; color: var(--text-secondary); }
-.home-tool-badge { position: absolute; top: 2px; right: 2px; background: var(--danger-color); color: #fff; font-size: .9em; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+/* ===== ЕДИНАЯ ПАНЕЛЬ КНОПОК НА ГЛАВНОМ — стеклянная, как клиенты/тренеры ===== */
+.home-tools-panel {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.05);
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto 22px;
+    position: relative;
+    z-index: 1;
+}
+body.dark-theme .home-tools-panel { background: rgba(30,41,59,0.45); border-color: rgba(255,255,255,0.06); }
+.home-tools-panel-title {
+    font-size: 0.82em; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.06em; margin: 0 2px 12px;
+}
+/* Сетка: крупные ячейки → перенос на 2 ряда при большом числе кнопок */
+.home-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 12px;
+    /* масштаб кнопок через слайдер в Настройках (--fs-tools) */
+    --s: var(--fs-tools, 1);
+}
+.home-tool-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(7px * var(--s));
+    padding: calc(18px * var(--s)) calc(8px * var(--s)) calc(14px * var(--s));
+    border: none;
+    border-radius: calc(16px * var(--s));
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    -webkit-tap-highlight-color: transparent;
+    transition: var(--transition);
+}
+body.dark-theme .home-tool-card { background: rgba(255,255,255,0.05); }
+.home-tool-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.12); border-color: var(--primary-color); }
+.home-tool-card-ico {
+    width: calc(58px * var(--s)); height: calc(58px * var(--s));
+    border-radius: calc(15px * var(--s));
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(1.7em * var(--s));
+    background: var(--tt-c, linear-gradient(135deg,#10B981,#047857));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.14);
+}
+.home-tool-card-lbl { font-size: calc(0.78em * var(--s)); line-height: 1.15; text-align: center; color: var(--text-secondary); font-weight: 600; }
+.home-tool-badge { position: absolute; top: calc(5px * var(--s)); right: calc(5px * var(--s)); background: var(--danger-color); color: #fff; font-size: calc(0.82em * var(--s)); font-weight: 700; min-width: calc(20px * var(--s)); height: calc(20px * var(--s)); border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+@media (max-width: 600px) {
+    .home-tools-grid { grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 9px; }
+    .home-tool-card { padding: calc(14px * var(--s)) calc(5px * var(--s)) calc(11px * var(--s)); }
+}
 
-/* ===== КОМПАКТНЫЕ ПАНЕЛЬКИ + КНОПКИ (×0.5, удобно для смартфона) ===== */
-/* 4 статистические панельки — компактные чипы */
+/* ===== КОМПАКТНЫЕ ПАНЕЛЬКИ статистики ===== */
 .home-quick-stats { gap: 4px; margin-top: 8px; }
 .home-quick-stat { padding: 4px 8px; border-radius: 8px; gap: 4px; }
 .home-quick-stat-icon { width: 18px; height: 18px; border-radius: 5px; font-size: 0.6em; }
 .home-quick-stat-val { font-size: 0.6em; }
 .home-quick-stat-lbl { font-size: 0.36em; margin-top: 1px; }
-/* Кнопки «Сводка дня» / «Энциклопедия» — маленькие пилюли */
-.enc-btnrow { gap: 5px; margin-top: 8px; }
-.enc-btnrow .dsh-home-btn { padding: 3px 10px; font-size: 0.46em; }
-.enc-home-btn { padding: 3px 10px !important; font-size: 0.46em !important; }
-/* Панель инструментов — иконки-кнопки уменьшены вдвое */
-.home-tools-bar { gap: 5px; margin-top: 8px; }
-.home-tool-btn { padding: 5px 4px; min-width: 48px; border-radius: 10px; gap: 1px; }
-.home-tool-btn-ico { width: 18px; height: 18px; border-radius: 6px; font-size: 1em; }
-.home-tool-btn-lbl { font-size: 0.52em; line-height: 1.1; }
-.home-tool-badge { min-width: 13px; height: 13px; font-size: 0.8em; top: 1px; right: 1px; }
-/* На смартфоне: иконку чуть крупнее для удобного тапа, ряд переносится */
-@media (max-width: 600px) {
-    .home-tools-bar { gap: 4px; }
-    .home-tool-btn { min-width: 44px; padding: 5px 3px; }
-    .home-tool-btn-ico { width: 20px; height: 20px; font-size: 1.05em; }
-    .home-quick-stat { padding: 3px 6px; }
-}
+/* Кнопки «Сводка дня» / «Энциклопедия» — теперь в общей панели инструментов */
 
         /* ===== FAB СКАНЕР ШТРИХ-КОДА (мобильная версия) ===== */
         .fab-barcode { display: none; position: fixed; z-index: 8200; bottom: 78px; right: 16px; width: 52px; height: 52px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1d4ed8); color: #fff; font-size: 1.5em; cursor: pointer; box-shadow: 0 6px 20px rgba(59,130,246,0.5); align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
@@ -27884,6 +28125,46 @@ body.dark-theme .home-tool-btn { background: rgba(30,41,59,0.5); border-color: r
 
 /* ===== СКРЫТЬ БОКОВУЮ ПАНЕЛЬ «ИНСТРУМЕНТЫ» ===== */
 .side-panel, .side-panel-backdrop { display: none !important; }
+
+        /* ===== РЕДАКТОР ЛОГО ===== */
+        .logo-editor-overlay {
+            display: none; position: fixed; inset: 0; z-index: 12000;
+            background: rgba(15,23,42,0.6); backdrop-filter: blur(6px);
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .logo-editor-overlay.open { display: flex; }
+        .logo-editor-box {
+            background: var(--surface-color); border-radius: 20px;
+            width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
+            padding: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        .logo-editor-title { font-size: 1.3em; font-weight: 700; margin-bottom: 16px; text-align: center; color: var(--primary-color); }
+        .logo-editor-preview-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
+        #logoEditorPreview {
+            width: 140px; height: 140px; display: flex; align-items: center; justify-content: center;
+            font-size: 3.5em; cursor: pointer; transition: all 0.2s;
+        }
+        .logo-editor-section { margin-bottom: 16px; }
+        .logo-editor-section label { display: block; font-size: 0.82em; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .logo-shape-row { display: flex; gap: 8px; }
+        .logo-shape-btn {
+            flex: 1; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px;
+            background: var(--surface-color); cursor: pointer; font-size: 0.82em; font-weight: 600;
+            text-align: center; transition: var(--transition); color: var(--text-primary);
+        }
+        .logo-shape-btn.active { border-color: var(--primary-color); background: rgba(16,185,129,0.08); }
+        .logo-shape-preview { width: 28px; height: 28px; background: var(--primary-color); margin: 0 auto 4px; }
+        .logo-color-row { display: flex; gap: 10px; align-items: center; }
+        .logo-color-row input[type="color"] { width: 50px; height: 40px; border: none; border-radius: 8px; cursor: pointer; }
+        .logo-emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: 6px; }
+        .logo-emoji-cell { font-size: 1.4em; padding: 4px; border-radius: 8px; cursor: pointer; text-align: center; transition: background 0.1s; border: 2px solid transparent; }
+        .logo-emoji-cell:hover { background: rgba(16,185,129,0.1); }
+        .logo-emoji-cell.active { border-color: var(--primary-color); background: rgba(16,185,129,0.12); }
+        .logo-editor-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .logo-editor-actions button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.95em; transition: var(--transition); }
+        .logo-editor-save { background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #fff; }
+        .logo-editor-cancel { background: rgba(0,0,0,0.05); color: var(--text-primary); border: 1px solid var(--border-color); }
+
 .enc-home-btn { background: linear-gradient(135deg, #0EA5E9, #0369A1) !important; box-shadow: 0 6px 18px rgba(14,165,233,.4) !important; }
 #encOverlay { display: none; position: fixed; inset: 0; z-index: 137000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
 .enc-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 640px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
@@ -33303,23 +33584,17 @@ window.dshRender = function(){
     box.innerHTML = h;
 };
 
-/* кнопка на главном экране (в hero-блок) */
-function dshInjectBtn(){
-    var stats = document.getElementById('homeQuickStats');
-    if (!stats || document.getElementById('dshHomeBtn')) return;
-    var b = document.createElement('button');
-    b.id = 'dshHomeBtn';
-    b.className = 'dsh-home-btn';
-    b.textContent = dt('dashBtn');
-    b.onclick = function(){ openDashboard(); };
-    stats.parentNode.insertBefore(b, stats.nextSibling);
-}
+/* кнопка сводки теперь в общей панели инструментов — отдельная не нужна */
+function dshInjectBtn(){ /* no-op: кнопка в injectHomeTools */ }
 
 /* ============================================================
    ПАНЕЛЬ ИНСТРУМЕНТОВ НА ГЛАВНОМ ЭКРАНЕ
    (перенос кнопок из боковой панели «Инструменты»)
    ============================================================ */
 var TOOL_T = {
+    toolsTitle:{ru:'Быстрый доступ',en:'Quick access',he:'גישה מהירה'},
+    dashboard:{ru:'Сводка',en:'Summary',he:'סיכום'},
+    encyclopedia:{ru:'Энциклопедия',en:'Encyclopedia',he:'אנציקלופדיה'},
     calendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
     leads:{ru:'Лиды',en:'Leads',he:'לידים'},
     tasks:{ru:'Задачи',en:'Tasks',he:'משימות'},
@@ -33335,40 +33610,52 @@ function tt2(k){var l=(typeof currentLang!=='undefined')?currentLang:'ru';return
 function injectHomeTools(){
     var hero = document.getElementById('homeHeroCustom');
     if (!hero) return;
-    var existing = document.getElementById('homeToolsBar');
+    var existing = document.getElementById('homeToolsPanel');
     if (existing){
-        existing.querySelectorAll('.home-tool-btn-lbl').forEach(function(el){
+        /* при смене языка обновляем подписи */
+        existing.querySelectorAll('.home-tool-card-lbl').forEach(function(el){
             var key = el.getAttribute('data-k'); if (key) el.textContent = tt2(key);
         });
         return;
     }
+    /* ЕДИНЫЙ список всех кнопок */
     var tools = [
-        {id:'cal',  ico:'📅', k:'calendar', act:'openCalendarModal()', c:'#F59E0B'},
-        {id:'leads',ico:'🌟', k:'leads',    act:'openLeadsModal()',    c:'#EC4899', badge:true},
-        {id:'tasks',ico:'✅', k:'tasks',    act:'openTasksModal()',    c:'#8B5CF6', badge:true},
-        {id:'shop', ico:'🛒', k:'shop',     act:'openShopModal()',     c:'#06B6D4', badge:true},
-        {id:'scan', ico:'📷', k:'scanner',  act:'openBarcodeScanner()', c:'#3B82F6'},
-        {id:'set',  ico:'⚙️', k:'settings', act:'openSettingsModal()', c:'#64748B'},
-        {id:'bk',   ico:'💾', k:'backup',   act:'backupAllData()',     c:'#10B981'},
-        {id:'rs',   ico:'📥', k:'restore',  act:'triggerRestore()',    c:'#3B82F6'},
-        {id:'tr',   ico:'👨‍🏫', k:'trainer',  act:'if(currentTrainer) openTrainerProfile(currentTrainer.id)', c:'#8B5CF6'}
+        {id:'dash',  ico:'📊', k:'dashboard', act:'openDashboard()',       c:'#10B981'},
+        {id:'enc',   ico:'📚', k:'encyclopedia', act:'openEncyclopedia()', c:'#0EA5E9'},
+        {id:'cal',   ico:'📅', k:'calendar',  act:'openCalendarModal()',   c:'#F59E0B'},
+        {id:'leads', ico:'🌟', k:'leads',     act:'openLeadsModal()',      c:'#EC4899', badge:true},
+        {id:'tasks', ico:'✅', k:'tasks',     act:'openTasksModal()',      c:'#8B5CF6', badge:true},
+        {id:'shop',  ico:'🛒', k:'shop',      act:'openShopModal()',       c:'#06B6D4', badge:true},
+        {id:'scan',  ico:'📷', k:'scanner',   act:'openBarcodeScanner()',  c:'#3B82F6'},
+        {id:'set',   ico:'⚙️', k:'settings',  act:'openSettingsModal()',   c:'#64748B'},
+        {id:'bk',    ico:'💾', k:'backup',    act:'backupAllData()',       c:'#10B981'},
+        {id:'rs',    ico:'📥', k:'restore',   act:'triggerRestore()',      c:'#3B82F6'},
+        {id:'tr',    ico:'👨\u200d🏫', k:'trainer', act:'if(currentTrainer) openTrainerProfile(currentTrainer.id)', c:'#8B5CF6'}
     ];
-    var bar = document.createElement('div');
-    bar.className = 'home-tools-bar';
-    bar.id = 'homeToolsBar';
+    var panel = document.createElement('div');
+    panel.className = 'home-tools-panel';
+    panel.id = 'homeToolsPanel';
+    var title = document.createElement('div');
+    title.className = 'home-tools-panel-title';
+    title.textContent = tt2('toolsTitle');
+    panel.appendChild(title);
+    var grid = document.createElement('div');
+    grid.className = 'home-tools-grid';
     tools.forEach(function(t){
         var btn = document.createElement('button');
-        btn.className = 'home-tool-btn';
+        btn.className = 'home-tool-card';
         btn.style.setProperty('--tt-c', 'linear-gradient(135deg,'+t.c+','+t.c+'99)');
         btn.setAttribute('onclick', t.act);
         var badge = t.badge ? '<span class="home-tool-badge" id="homeBadge_'+t.k+'" style="display:none;">0</span>' : '';
-        btn.innerHTML = '<span class="home-tool-btn-ico">'+t.ico+'</span>'+
-            '<span class="home-tool-btn-lbl" data-k="'+t.k+'">'+tt2(t.k)+'</span>'+badge;
-        bar.appendChild(btn);
+        btn.innerHTML = '<span class="home-tool-card-ico">'+t.ico+'</span>'+
+            '<span class="home-tool-card-lbl" data-k="'+t.k+'">'+tt2(t.k)+'</span>'+badge;
+        grid.appendChild(btn);
     });
-    var anchor = document.querySelector('.enc-btnrow') || document.getElementById('dshHomeBtn') || document.getElementById('homeQuickStats');
-    if (anchor && anchor.parentNode){ anchor.parentNode.insertBefore(bar, anchor.nextSibling); }
-    else { hero.appendChild(bar); }
+    panel.appendChild(grid);
+    /* вставляем после статистики, перед основной сеткой */
+    var anchor = document.getElementById('homeQuickStats') || document.getElementById('homeNav');
+    if (anchor && anchor.parentNode){ anchor.parentNode.insertBefore(panel, anchor.nextSibling); }
+    else { hero.parentNode.insertBefore(panel, hero.nextSibling); }
 }
 
 /* ============================================================
@@ -34134,25 +34421,7 @@ function encRender(){
 }
 
 /* ====================== КНОПКА ====================== */
-function encInjectBtn(){
-    var dashBtn = document.getElementById('dshHomeBtn');
-    var existing = document.getElementById('encHomeBtn');
-    if (existing){ existing.textContent = etL(ENC_UI.btnLabel); return; } /* обновляем текст при смене языка */
-    if (!dashBtn) return;
-    var b = document.createElement('button');
-    b.id = 'encHomeBtn';
-    b.className = 'dsh-home-btn enc-home-btn';
-    b.textContent = etL(ENC_UI.btnLabel);
-    b.onclick = function(){ openEncyclopedia(); };
-    dashBtn.parentNode.insertBefore(b, dashBtn.nextSibling);
-    if (!dashBtn.parentNode.classList.contains('enc-btnrow-done')){
-        var wrap = document.createElement('div');
-        wrap.className = 'enc-btnrow enc-btnrow-done';
-        dashBtn.parentNode.insertBefore(wrap, dashBtn);
-        wrap.appendChild(dashBtn);
-        wrap.appendChild(b);
-    }
-}
+function encInjectBtn(){ /* no-op: кнопка в injectHomeTools */ }
 
 /* ====================== INIT (с поддержкой смены языка) ====================== */
 function encInit(){
@@ -34377,9 +34646,528 @@ window.addEventListener('load', function(){
 })();
 </script>
 
+<script>
+/* ============================================================
+   HOME EDITOR (hEdit) — редактор главного экрана под себя
+   ────────────────────────────────────────────────────────────
+   Возможности:
+   • Включение/выключение режима редактирования (карандаш ✏️)
+   • Скрытие/показ кнопок панели быстрого доступа
+   • Скрытие/показ самих панелей (тренеры, избранное, клиенты)
+   • 10 функциональных виджетов (часы, погода, калькулятор и др.)
+   • Изменение размера панелей и виджетов (как окна Windows)
+   • Всё убранное можно вернуть
+   Состояние: localStorage['homeEditState']
+   ============================================================ */
+(function(){
+'use strict';
+
+/* ====================== ТЕКСТЫ ====================== */
+var HE_T = {
+    editBtn:   {ru:'✏️ Экран', en:'✏️ Layout', he:'✏️ עריכה'},
+    editing:   {ru:'🎨 Режим редактирования', en:'🎨 Edit mode', he:'🎨 מצב עריכה'},
+    addWidget: {ru:'➕ Добавить виджет', en:'➕ Add widget', he:'➕ הוסף ווידג׳ט'},
+    restoreAll:{ru:'↺ Вернуть всё', en:'↺ Restore all', he:'↺ שחזר הכל'},
+    done:      {ru:'✅ Готово', en:'✅ Done', he:'✅ סיום'},
+    hidden:    {ru:'Скрыто', en:'Hidden', he:'מוסתר'},
+    widgets:   {ru:'Виджеты', en:'Widgets', he:'ווידג׳טים'},
+    panels:    {ru:'Панели', en:'Panels', he:'פאנלים'},
+    size:      {ru:'Размер', en:'Size', he:'גודל'},
+    reset:     {ru:'Сбросить', en:'Reset', he:'אפס'}
+};
+function ht(k){var l=(typeof currentLang!=='undefined')?currentLang:'ru';return(HE_T[k]&&(HE_T[k][l]||HE_T[k].ru))||k;}
+
+/* ====================== ВИДЖЕТЫ (10 шт.) ====================== */
+var WIDGETS = {
+    clock: {
+        title:{ru:'Часы',en:'Clock',he:'שעון'}, ico:'🕐', color:'#3B82F6',
+        render:function(){return '<div class="hw-clock"><div class="hw-clock-time" id="hwClockTime">--:--</div><div class="hw-clock-date" id="hwClockDate"></div></div>';},
+        init:function(){
+            function upd(){
+                var n=new Date();
+                var t=document.getElementById('hwClockTime');if(t)t.textContent=n.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+                var d=document.getElementById('hwClockDate');if(d)d.textContent=n.toLocaleDateString();
+            }
+            upd();
+            if(!window._hwClockInt)window._hwClockInt=setInterval(upd,1000);
+        }
+    },
+    weather: {
+        title:{ru:'Погода',en:'Weather',he:'מזג אוויר'}, ico:'🌤', color:'#06B6D4',
+        render:function(){return '<div class="hw-weather"><div class="hw-weather-ico">☀️</div><div class="hw-weather-temp" id="hwWeatherTemp">--°</div><div class="hw-weather-desc" id="hwWeatherDesc">—</div></div>';},
+        init:function(){
+            function fetchW(){
+                if(!navigator.geolocation)return;
+                navigator.geolocation.getCurrentPosition(function(p){
+                    var la=p.coords.latitude,lo=p.coords.longitude;
+                    fetch('https://wttr.in/'+la+','+lo+'?format=j1').then(function(r){return r.json();}).then(function(d){
+                        var cur=d.current_condition&&d.current_condition[0];
+                        if(cur){
+                            var t=document.getElementById('hwWeatherTemp');if(t)t.textContent=cur.temp_C+'°';
+                            var dd=document.getElementById('hwWeatherDesc');if(dd)dd.textContent=cur.lang_ru&&cur.lang_ru[0]&&cur.lang_ru[0].value||cur.weatherDesc&&cur.weatherDesc[0].value||'';
+                        }
+                    }).catch(function(){});
+                },function(){},{timeout:5000});
+            }
+            fetchW();
+            if(!window._hwWeatherInt)window._hwWeatherInt=setInterval(fetchW,600000);
+        }
+    },
+    calculator: {
+        title:{ru:'Калькулятор',en:'Calculator',he:'מחשבון'}, ico:'🔢', color:'#F59E0B',
+        render:function(){return '<div class="hw-calc"><input type="text" id="hwCalcDisp" class="hw-calc-disp" readonly value="0"><div class="hw-calc-grid">'+
+            '<button onclick="hwCalc(\'C\')">C</button><button onclick="hwCalc(\'(\')">(</button><button onclick="hwCalc(\')\')">)</button><button onclick="hwCalc(\'/\')">÷</button>'+
+            '<button onclick="hwCalc(\'7\')">7</button><button onclick="hwCalc(\'8\')">8</button><button onclick="hwCalc(\'9\')">9</button><button onclick="hwCalc(\'*\')">×</button>'+
+            '<button onclick="hwCalc(\'4\')">4</button><button onclick="hwCalc(\'5\')">5</button><button onclick="hwCalc(\'6\')">6</button><button onclick="hwCalc(\'-\')">−</button>'+
+            '<button onclick="hwCalc(\'1\')">1</button><button onclick="hwCalc(\'2\')">2</button><button onclick="hwCalc(\'3\')">3</button><button onclick="hwCalc(\'+\')">+</button>'+
+            '<button onclick="hwCalc(\'0\')" style="grid-column:span 2;">0</button><button onclick="hwCalc(\'.\')">.</button><button onclick="hwCalc(\'=\')">=</button>'+
+            '</div></div>';},
+        init:function(){
+            window.hwCalc=function(k){
+                var d=document.getElementById('hwCalcDisp');if(!d)return;
+                if(k==='C'){d.value='0';return;}
+                if(k==='='){try{d.value=String(eval(d.value.replace(/[^-()\d/*+.]/g,''))||0);}catch(e){d.value='Error';}return;}
+                if(d.value==='0'&&/[\d.]/.test(k))d.value=k;else d.value+=k;
+            };
+        }
+    },
+    notes: {
+        title:{ru:'Заметки',en:'Notes',he:'פתקים'}, ico:'📝', color:'#EAB308',
+        render:function(){return '<textarea class="hw-notes" id="hwNotesArea" placeholder="Быстрые заметки..." oninput="hwNotesSave()"></textarea>';},
+        init:function(){
+            var a=document.getElementById('hwNotesArea');if(!a)return;
+            a.value=localStorage.getItem('hwNotes')||'';
+            window.hwNotesSave=function(){localStorage.setItem('hwNotes',document.getElementById('hwNotesArea').value);};
+        }
+    },
+    timer: {
+        title:{ru:'Таймер',en:'Timer',he:'טיימר'}, ico:'⏲', color:'#EF4444',
+        render:function(){return '<div class="hw-timer"><div class="hw-timer-disp" id="hwTimerDisp">00:00</div><div class="hw-timer-ctrls">'+
+            '<input type="number" id="hwTimerMin" value="5" min="0" max="99" style="width:50px">:00'+
+            '<button onclick="hwTimerStart()">▶</button><button onclick="hwTimerStop()">⏹</button></div></div>';},
+        init:function(){
+            window.hwTimerStart=function(){
+                var m=parseInt(document.getElementById('hwTimerMin').value)||0;
+                window._hwTimerLeft=m*60;
+                function tick(){
+                    if(window._hwTimerLeft<=0){clearInterval(window._hwTimerInt);var d=document.getElementById('hwTimerDisp');if(d)d.textContent='⏰ Готово!';return;}
+                    window._hwTimerLeft--;
+                    var mm=Math.floor(window._hwTimerLeft/60),ss=window._hwTimerLeft%60;
+                    var d=document.getElementById('hwTimerDisp');if(d)d.textContent=String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+                }
+                if(window._hwTimerInt)clearInterval(window._hwTimerInt);
+                tick();window._hwTimerInt=setInterval(tick,1000);
+            };
+            window.hwTimerStop=function(){if(window._hwTimerInt){clearInterval(window._hwTimerInt);window._hwTimerInt=null;}var d=document.getElementById('hwTimerDisp');if(d)d.textContent='00:00';window._hwTimerLeft=0;};
+        }
+    },
+    water: {
+        title:{ru:'Вода',en:'Water',he:'מים'}, ico:'💧', color:'#0EA5E9',
+        render:function(){return '<div class="hw-water"><div class="hw-water-ico" id="hwWaterIco">💧💧💧💧💧💧💧💧</div><div class="hw-water-info"><b id="hwWaterCount">0</b>/8 стаканов</div><div class="hw-water-ctrls"><button onclick="hwWaterAdd()">+1 стакан</button><button onclick="hwWaterReset()">↺</button></div></div>';},
+        init:function(){
+            function upd(){var c=parseInt(localStorage.getItem('hwWater_'+new Date().toDateString())||'0');var el=document.getElementById('hwWaterCount');if(el)el.textContent=c;}
+            window.hwWaterAdd=function(){var k='hwWater_'+new Date().toDateString();var c=parseInt(localStorage.getItem(k)||'0')+1;localStorage.setItem(k,c);upd();if(typeof showToast==='function')showToast('💧 +1 ('+c+'/8)');};
+            window.hwWaterReset=function(){localStorage.removeItem('hwWater_'+new Date().toDateString());upd();};
+            upd();
+        }
+    },
+    bmi: {
+        title:{ru:'ИМТ',en:'BMI',he:'BMI'}, ico:'⚖️', color:'#8B5CF6',
+        render:function(){return '<div class="hw-bmi"><input type="number" id="hwBmiW" placeholder="Вес кг" style="width:80px"><input type="number" id="hwBmiH" placeholder="Рост см" style="width:80px"><button onclick="hwBmiCalc()">=</button><div class="hw-bmi-res" id="hwBmiRes">—</div></div>';},
+        init:function(){
+            window.hwBmiCalc=function(){
+                var w=parseFloat(document.getElementById('hwBmiW').value),h=parseFloat(document.getElementById('hwBmiH').value);
+                if(!w||!h)return;var b=(w/((h/100)*(h/100))).toFixed(1);
+                var cat=b<18.5?'Недовес':b<25?'Норма':b<30?'Избыток':'Ожирение';
+                var r=document.getElementById('hwBmiRes');if(r)r.innerHTML='<b>'+b+'</b> — '+cat;
+            };
+        }
+    },
+    stopwatch: {
+        title:{ru:'Секундомер',en:'Stopwatch',he:'שעון עצר'}, ico:'⏱', color:'#EC4899',
+        render:function(){return '<div class="hw-stop"><div class="hw-stop-disp" id="hwStopDisp">00:00.0</div><div class="hw-stop-ctrls"><button onclick="hwStopToggle()" id="hwStopBtn">▶</button><button onclick="hwStopReset()">↺</button></div></div>';},
+        init:function(){
+            window._hwStopT=0;window._hwStopRunning=false;
+            window.hwStopToggle=function(){
+                var b=document.getElementById('hwStopBtn');
+                if(window._hwStopRunning){clearInterval(window._hwStopInt);window._hwStopRunning=false;if(b)b.textContent='▶';}
+                else{window._hwStopRunning=true;if(b)b.textContent='⏸';window._hwStopInt=setInterval(function(){window._hwStopT+=100;var ms=window._hwStopT;var s=Math.floor(ms/1000),mm=Math.floor(s/60),ss=s%60,cs=Math.floor((ms%1000)/100);var d=document.getElementById('hwStopDisp');if(d)d.textContent=String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')+'.'+cs;},100);}
+            };
+            window.hwStopReset=function(){if(window._hwStopInt)clearInterval(window._hwStopInt);window._hwStopT=0;window._hwStopRunning=false;var d=document.getElementById('hwStopDisp');if(d)d.textContent='00:00.0';var b=document.getElementById('hwStopBtn');if(b)b.textContent='▶';};
+        }
+    },
+    randomExercise: {
+        title:{ru:'Идея',en:'Idea',he:'רעיון'}, ico:'🎲', color:'#10B981',
+        render:function(){return '<div class="hw-idea"><div class="hw-idea-text" id="hwIdeaText">Нажми 🎲</div><button onclick="hwIdeaRoll()" class="hw-idea-btn">🎲 Случайное упражнение</button></div>';},
+        init:function(){
+            var EX=['Жим лёжа','Приседания','Становая','Подтягивания','Отжимания','Тяга блока','Жим гантелей','Выпады','Планка','Скручивания','Румынская тяга','Жим ногами','Бицепс штанга','Трицепс блок','Махи гантелями','Гиперэкстензия'];
+            window.hwIdeaRoll=function(){var t=document.getElementById('hwIdeaText');if(t)t.textContent=EX[Math.floor(Math.random()*EX.length)];};
+        }
+    },
+    quote: {
+        title:{ru:'Цитата',en:'Quote',he:'ציטוט'}, ico:'💬', color:'#A855F7',
+        render:function(){return '<div class="hw-quote"><div class="hw-quote-text" id="hwQuoteText">—</div><button onclick="hwQuoteRoll()" class="hw-quote-btn">💬 Новая</button></div>';},
+        init:function(){
+            var Q=['«Дисциплина — мост между целями и достижениями» — Д. Рон','«Сила не приходит от победы. Ваши усилия развивают силу» — А. Шварцнеггер','«Тело достигает того, во что верит разум» — Наполеон Хилл','«Единственная плохая тренировка — та, которой не было»','«Не считай дни, заставь дни считаться» — М. Али','«Успех — это сумма небольших усилий, повторяемых день за днём»'];
+            window.hwQuoteRoll=function(){var t=document.getElementById('hwQuoteText');if(t)t.textContent=Q[Math.floor(Math.random()*Q.length)];};
+        }
+    }
+};
+
+/* ====================== СОСТОЯНИЕ ====================== */
+var DEFAULT_STATE = {
+    editing: false,
+    hiddenTools: [],      /* id кнопок, которые скрыты */
+    hiddenPanels: [],     /* id панелей, которые скрыты */
+    panelSizes: {},       /* {panelId: '33%'} */
+    activeWidgets: [],    /* [{id:'clock', size:'50%'}] */
+    order: []             /* порядок кнопок (если задан) */
+};
+
+function loadState(){
+    try{ var s=JSON.parse(localStorage.getItem('homeEditState')); if(s) return Object.assign({},DEFAULT_STATE,s);}catch(e){}
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+function saveState(s){ try{ localStorage.setItem('homeEditState',JSON.stringify(s)); }catch(e){} }
+
+/* ====================== CSS ====================== */
+function injectCSS(){
+    if(document.getElementById('hEditCSS'))return;
+    var st=document.createElement('style');st.id='hEditCSS';
+    st.textContent =
+    /* Режим редактирования */
+    'body.hedit-mode .home-tools-panel, body.hedit-mode .home-trainers, body.hedit-mode .home-favorites, body.hedit-mode .home-clients { outline: 2px dashed var(--primary-color); outline-offset: 2px; position:relative; }'+
+    'body.hedit-mode .home-tool-card { outline: 2px dashed transparent; }'+
+    'body.hedit-mode .home-tool-card.hedit-hidden { opacity:0.3; filter:grayscale(1); }'+
+    'body.hedit-mode .home-tool-card::after { content:""; position:absolute; top:-6px; right:-6px; width:22px; height:22px; background:#EF4444; color:#fff; border-radius:50%; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; z-index:10; }'+
+    'body.hedit-mode .home-tool-card:not(.hedit-hidden)::after { content:"✕"; }'+
+    'body.hedit-mode .home-tool-card.hedit-hidden::after { content:"👁"; background:#10B981; }'+
+    /* Ручки для скрытия панелей */
+    '.hedit-panel-toggle { display:none; position:absolute; top:8px; left:8px; z-index:20; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:700; cursor:pointer; }'+
+    'body.hedit-mode .hedit-panel-toggle { display:flex; align-items:center; gap:4px; }'+
+    /* Ручка изменения размера */
+    '.hedit-resize { display:none; position:absolute; bottom:0; right:0; width:20px; height:20px; cursor:nwse-resize; z-index:20; background:linear-gradient(135deg,transparent 50%,var(--primary-color) 50%); border-radius:0 0 0 0; opacity:0.6; }'+
+    'body.hedit-mode .hedit-resize { display:block; }'+
+    /* Тулбар редактора */
+    '#hEditBar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:9500; background:rgba(15,23,42,0.97); backdrop-filter:blur(10px); padding:12px 16px; padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)); box-shadow:0 -4px 20px rgba(0,0,0,0.2); align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }'+
+    'body.hedit-mode #hEditBar { display:flex; }'+
+    '.hedit-btn { border:none; border-radius:10px; padding:9px 14px; font-weight:700; font-size:0.85em; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.15s; font-family:inherit; color:#fff; }'+
+    '.hedit-btn-add { background:linear-gradient(135deg,#10B981,#047857); }'+
+    '.hedit-btn-restore { background:linear-gradient(135deg,#3B82F6,#1d4ed8); }'+
+    '.hedit-btn-done { background:linear-gradient(135deg,#8B5CF6,#6d28d9); }'+
+    '.hedit-btn:hover { transform:translateY(-1px); filter:brightness(1.1); }'+
+    '.hedit-info { color:#94a3b8; font-size:0.8em; }'+
+    /* Виджеты */
+    '.home-widget { background:var(--surface-color); border:1px solid var(--border-color); border-radius:16px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.05); position:relative; overflow:hidden; }'+
+    'body.dark-theme .home-widget { background:rgba(255,255,255,0.05); }'+
+    '.home-widget-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }'+
+    '.home-widget-title { font-size:0.78em; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; }'+
+    /* Панель виджетов */
+    '.home-widgets-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; width:100%; max-width:1100px; margin:0 auto 20px; position:relative; z-index:1; }'+
+    /* Модалка выбора виджетов */
+    '#hEditWidgetModal { display:none; position:fixed; inset:0; z-index:9600; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); align-items:center; justify-content:center; padding:16px; }'+
+    '#hEditWidgetModal.open { display:flex; }'+
+    '.hedit-widget-box { background:var(--surface-color); border-radius:20px; padding:20px; max-width:520px; width:100%; max-height:80vh; overflow-y:auto; }'+
+    '.hedit-widget-list { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }'+
+    '.hedit-widget-opt { border:2px solid var(--border-color); border-radius:12px; padding:14px; cursor:pointer; text-align:center; transition:0.15s; background:var(--surface-color); color:var(--text-primary); }'+
+    '.hedit-widget-opt:hover { border-color:var(--primary-color); transform:translateY(-2px); }'+
+    '.hedit-widget-opt.added { opacity:0.4; }'+
+    /* Виджет-контент */
+    '.hw-clock { text-align:center; } .hw-clock-time { font-size:2.4em; font-weight:800; color:var(--primary-color); } .hw-clock-date { font-size:0.8em; color:var(--text-secondary); }'+
+    '.hw-weather { text-align:center; } .hw-weather-ico { font-size:2.4em; } .hw-weather-temp { font-size:1.6em; font-weight:700; } .hw-weather-desc { font-size:0.8em; color:var(--text-secondary); }'+
+    '.hw-calc-disp { width:100%; padding:8px; border:1px solid var(--border-color); border-radius:8px; font-size:1.1em; text-align:right; margin-bottom:6px; background:var(--surface-color); color:var(--text-primary); }'+
+    '.hw-calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }'+
+    '.hw-calc-grid button { padding:8px; border:1px solid var(--border-color); border-radius:6px; background:var(--surface-color); color:var(--text-primary); font-size:0.9em; font-weight:600; cursor:pointer; }'+
+    '.hw-calc-grid button:hover { background:var(--primary-color); color:#fff; }'+
+    '.hw-notes { width:100%; min-height:80px; resize:vertical; padding:8px; border:1px solid var(--border-color); border-radius:8px; font-family:inherit; font-size:0.9em; background:var(--surface-color); color:var(--text-primary); }'+
+    '.hw-timer, .hw-stop { text-align:center; } .hw-timer-disp, .hw-stop-disp { font-size:1.8em; font-weight:800; color:var(--primary-color); margin-bottom:6px; }'+
+    '.hw-timer-ctrls, .hw-stop-ctrls, .hw-water-ctrls { display:flex; gap:4px; justify-content:center; align-items:center; } .hw-timer-ctrls button, .hw-stop-ctrls button, .hw-water-ctrls button { padding:4px 10px; border:1px solid var(--border-color); border-radius:6px; background:var(--surface-color); color:var(--text-primary); cursor:pointer; font-weight:600; font-size:0.85em; }'+
+    '.hw-water { text-align:center; } .hw-water-ico { font-size:1.6em; margin-bottom:4px; } .hw-water-info { font-size:0.9em; margin-bottom:6px; }'+
+    '.hw-bmi { display:flex; gap:4px; align-items:center; flex-wrap:wrap; } .hw-bmi input { padding:6px; border:1px solid var(--border-color); border-radius:6px; font-size:0.9em; background:var(--surface-color); color:var(--text-primary); } .hw-bmi button { padding:6px 12px; border:none; border-radius:6px; background:var(--primary-color); color:#fff; cursor:pointer; font-weight:700; } .hw-bmi-res { width:100%; text-align:center; font-size:1.1em; margin-top:4px; }'+
+    '.hw-idea, .hw-quote { text-align:center; } .hw-idea-text, .hw-quote-text { font-size:1.1em; font-weight:700; margin-bottom:8px; color:var(--primary-color); min-height:1.5em; } .hw-idea-btn, .hw-quote-btn { padding:6px 12px; border:1px solid var(--border-color); border-radius:8px; background:var(--surface-color); color:var(--text-primary); cursor:pointer; font-weight:600; }'+
+    '.hw-idea-btn:hover, .hw-quote-btn:hover { background:var(--primary-color); color:#fff; }'+
+    /* Скрытые панели */
+    '.home-trainers.hedit-hidden, .home-favorites.hedit-hidden, .home-clients.hedit-hidden { display:none !important; }'+
+    /* Виджет в режиме редактирования */
+    'body.hedit-mode .home-widget { outline:2px dashed var(--primary-color); outline-offset:2px; }'+
+    '.home-widget .hedit-widget-close { display:none; position:absolute; top:4px; right:4px; width:22px; height:22px; background:#EF4444; color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:11px; z-index:5; }'+
+    'body.hedit-mode .home-widget .hedit-widget-close { display:flex; align-items:center; justify-content:center; }'+
+    '';
+    document.head.appendChild(st);
+}
+
+/* ====================== ЭЛЕМЕНТЫ ДЛЯ РЕДАКТИРОВАНИЯ ====================== */
+function getEditablePanels(){
+    return [
+        {el:document.getElementById('homeToolsPanel'), id:'toolsPanel'},
+        {el:document.querySelector('.home-trainers'), id:'trainers'},
+        {el:document.querySelector('.home-favorites'), id:'favorites'},
+        {el:document.querySelector('.home-clients'), id:'clients'}
+    ].filter(function(p){return p.el;});
+}
+
+/* ====================== РЕНДЕР ====================== */
+function applyState(){
+    var s=loadState();
+    /* 1. Скрытие/показ кнопок */
+    var grid=document.querySelector('.home-tools-grid');
+    if(grid){
+        grid.querySelectorAll('.home-tool-card').forEach(function(btn){
+            var id=btn.getAttribute('data-tool-id');
+            if(!id)return;
+            if(s.hiddenTools.indexOf(id)>=0){btn.classList.add('hedit-hidden');}
+            else{btn.classList.remove('hedit-hidden');}
+        });
+    }
+    /* 2. Скрытие/показ панелей */
+    getEditablePanels().forEach(function(p){
+        if(s.hiddenPanels.indexOf(p.id)>=0){p.el.classList.add('hedit-hidden');}
+        else{p.el.classList.remove('hedit-hidden');}
+        /* Размер */
+        if(s.panelSizes[p.id]){p.el.style.flexBasis=s.panelSizes[p.id];p.el.style.maxWidth=s.panelSizes[p.id];}
+    });
+    /* 3. Виджеты */
+    renderWidgets();
+    /* 4. Режим редактирования */
+    if(s.editing){enterEditMode(false);}
+}
+
+function renderWidgets(){
+    var s=loadState();
+    var container=document.getElementById('homeWidgetsGrid');
+    if(!container){
+        container=document.createElement('div');
+        container.className='home-widgets-grid';
+        container.id='homeWidgetsGrid';
+        /* вставляем после панели инструментов */
+        var tp=document.getElementById('homeToolsPanel');
+        if(tp&&tp.parentNode){tp.parentNode.insertBefore(container,tp.nextSibling);}
+        else{var hs=document.getElementById('homeScreen');if(hs)hs.appendChild(container);}
+    }
+    if(!s.activeWidgets.length){container.style.display='none';container.innerHTML='';return;}
+    container.style.display='grid';
+    var html='';
+    s.activeWidgets.forEach(function(w,idx){
+        var def=WIDGETS[w.id];if(!def)return;
+        var wTitle=(typeof def.title==='object')?(def.title[currentLang]||def.title.ru):def.title;
+        html+='<div class="home-widget" data-widget-idx="'+idx+'" style="flex-basis:'+(w.size||'auto')+';max-width:'+(w.size||'none')+';">'+
+            '<button class="hedit-widget-close" onclick="hEditRemoveWidget('+idx+')">✕</button>'+
+            '<div class="home-widget-head"><span class="home-widget-title">'+def.ico+' '+wTitle+'</span></div>'+
+            def.render()+
+        '</div>';
+    });
+    container.innerHTML=html;
+    /* Инициализация виджетов */
+    s.activeWidgets.forEach(function(w,idx){
+        var def=WIDGETS[w.id];if(!def)return;
+        try{def.init();}catch(e){console.warn('[hEdit] widget init error',w.id,e);}
+    });
+}
+
+/* ====================== РЕЖИМ РЕДАКТИРОВАНИЯ ====================== */
+function enterEditMode(toggleBody){
+    var s=loadState();s.editing=true;saveState(s);
+    if(toggleBody!==false)document.body.classList.add('hedit-mode');
+    buildEditBar();
+    addEditControls();
+}
+function exitEditMode(){
+    var s=loadState();s.editing=false;saveState(s);
+    document.body.classList.remove('hedit-mode');
+    removeEditControls();
+    var bar=document.getElementById('hEditBar');if(bar)bar.remove();
+}
+
+function buildEditBar(){
+    if(document.getElementById('hEditBar'))return;
+    var bar=document.createElement('div');bar.id='hEditBar';
+    bar.innerHTML=
+        '<span class="hedit-info">'+ht('editing')+'</span>'+
+        '<button class="hedit-btn hedit-btn-add" onclick="hEditShowWidgetModal()">'+ht('addWidget')+'</button>'+
+        '<button class="hedit-btn hedit-btn-restore" onclick="hEditRestoreAll()">'+ht('restoreAll')+'</button>'+
+        '<button class="hedit-btn hedit-btn-done" onclick="hEditToggle()">'+ht('done')+'</button>';
+    document.body.appendChild(bar);
+}
+
+function addEditControls(){
+    /* Кнопки: клик = скрыть/показать */
+    var grid=document.querySelector('.home-tools-grid');
+    if(grid){
+        grid.querySelectorAll('.home-tool-card').forEach(function(btn){
+            /* Пропускаем саму кнопку редактора */
+            btn.onclick=function(e){
+                if(document.body.classList.contains('hedit-mode')&&btn.getAttribute('data-tool-id')!=='hedit'){
+                    e.preventDefault();e.stopPropagation();
+                    var id=btn.getAttribute('data-tool-id');
+                    var s=loadState();
+                    var i=s.hiddenTools.indexOf(id);
+                    if(i>=0)s.hiddenTools.splice(i,1);else s.hiddenTools.push(id);
+                    saveState(s);applyState();
+                    return false;
+                }
+                /* нормальный клик */
+                var act=btn.getAttribute('data-act');if(act){try{eval(act);}catch(e){}}
+            };
+        });
+    }
+    /* Панели: кнопка скрытия + ручка размера */
+    getEditablePanels().forEach(function(p){
+        if(p.el.querySelector('.hedit-panel-toggle'))return;
+        /* не позволяем скрыть саму панель инструментов */
+        var canHide=p.id!=='toolsPanel';
+        var toggle=document.createElement('button');
+        toggle.className='hedit-panel-toggle';
+        toggle.textContent=canHide?('✕ '+ht('hidden')):'🔒';
+        toggle.onclick=function(e){e.stopPropagation();
+            var s=loadState();var i=s.hiddenPanels.indexOf(p.id);
+            if(i>=0){s.hiddenPanels.splice(i,1);toggle.textContent=canHide?('✕ '+ht('hidden')):'🔒';}
+            else if(canHide){s.hiddenPanels.push(p.id);}
+            saveState(s);applyState();
+        };
+        p.el.style.position='relative';
+        p.el.appendChild(toggle);
+        /* ручка размера */
+        var resize=document.createElement('div');resize.className='hedit-resize';
+        var startW=0,startX=0,panelId=p.id;
+        resize.addEventListener('mousedown',function(e){e.preventDefault();e.stopPropagation();startX=e.clientX;startW=p.el.offsetWidth;document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);});
+        resize.addEventListener('touchstart',function(e){var t=e.touches[0];startX=t.clientX;startW=p.el.offsetWidth;document.addEventListener('touchmove',onMoveT);document.addEventListener('touchend',onUp);},{passive:true});
+        function onMove(e){var dx=e.clientX-startX;var pct=Math.round(((startW+dx)/window.innerWidth)*100);pct=Math.max(20,Math.min(80,pct));var s=loadState();s.panelSizes[panelId]=pct+'%';saveState(s);p.el.style.flexBasis=pct+'%';p.el.style.maxWidth=pct+'%';}
+        function onMoveT(e){var t=e.touches[0];var dx=t.clientX-startX;var pct=Math.round(((startW+dx)/window.innerWidth)*100);pct=Math.max(20,Math.min(80,pct));var s=loadState();s.panelSizes[panelId]=pct+'%';saveState(s);p.el.style.flexBasis=pct+'%';p.el.style.maxWidth=pct+'%';}
+        function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);document.removeEventListener('touchmove',onMoveT);document.removeEventListener('touchend',onUp);}
+        p.el.appendChild(resize);
+    });
+}
+function removeEditControls(){
+    document.querySelectorAll('.hedit-panel-toggle, .hedit-resize').forEach(function(el){el.remove();});
+}
+
+/* ====================== ВЫБОР ВИДЖЕТОВ ====================== */
+window.hEditShowWidgetModal=function(){
+    var s=loadState();
+    var modal=document.getElementById('hEditWidgetModal');
+    if(!modal){
+        modal=document.createElement('div');modal.id='hEditWidgetModal';
+        document.body.appendChild(modal);
+        modal.addEventListener('click',function(e){if(e.target===modal)modal.classList.remove('open');});
+    }
+    var html='<div class="hedit-widget-box"><h3 style="margin:0 0 14px;text-align:center;color:var(--primary-color);">'+ht('addWidget')+'</h3><div class="hedit-widget-list">';
+    Object.keys(WIDGETS).forEach(function(key){
+        var w=WIDGETS[key];
+        var wTitle=(typeof w.title==='object')?(w.title[currentLang]||w.title.ru):w.title;
+        var isAdded=s.activeWidgets.some(function(aw){return aw.id===key;});
+        html+='<div class="hedit-widget-opt'+(isAdded?' added':'')+'" onclick="hEditAddWidget(\''+key+'\')" '+(isAdded?'':'')+'>'+
+            '<div style="font-size:2em;margin-bottom:6px;">'+w.ico+'</div>'+
+            '<div style="font-weight:700;">'+wTitle+'</div>'+
+            (isAdded?'<div style="font-size:0.7em;color:var(--text-light);margin-top:4px;">✓ '+ht('widgets')+'</div>':'')+
+        '</div>';
+    });
+    html+='</div><button onclick="document.getElementById(\'hEditWidgetModal\').classList.remove(\'open\')" style="width:100%;margin-top:14px;padding:10px;border:none;border-radius:10px;background:rgba(0,0,0,0.05);color:var(--text-primary);font-weight:600;cursor:pointer;">'+ht('done')+'</button></div>';
+    modal.innerHTML=html;
+    modal.classList.add('open');
+};
+
+window.hEditAddWidget=function(key){
+    var s=loadState();
+    if(s.activeWidgets.some(function(w){return w.id===key;}))return;
+    s.activeWidgets.push({id:key,size:'auto'});
+    saveState(s);
+    document.getElementById('hEditWidgetModal').classList.remove('open');
+    renderWidgets();
+};
+window.hEditRemoveWidget=function(idx){
+    var s=loadState();
+    s.activeWidgets.splice(idx,1);
+    saveState(s);
+    renderWidgets();
+};
+
+/* ====================== ВОССТАНОВИТЬ ВСЁ ====================== */
+window.hEditRestoreAll=function(){
+    localStorage.removeItem('homeEditState');
+    applyState();
+    if(typeof showToast==='function')showToast('✅ '+ht('restoreAll'));
+};
+
+/* ====================== ПЕРЕКЛЮЧЕНИЕ ====================== */
+window.hEditToggle=function(){
+    if(document.body.classList.contains('hedit-mode')){exitEditMode();}
+    else{enterEditMode();}
+};
+
+/* ====================== ДОБАВИТЬ КНОПКУ В ПАНЕЛЬ ====================== */
+function injectEditButton(){
+    var grid=document.querySelector('.home-tools-grid');
+    if(!grid||document.getElementById('hEditToolBtn'))return;
+    var btn=document.createElement('button');
+    btn.className='home-tool-card';
+    btn.id='hEditToolBtn';
+    btn.setAttribute('data-tool-id','hedit');
+    btn.style.setProperty('--tt-c','linear-gradient(135deg,#F59E0B,#d97706)');
+    btn.setAttribute('onclick','hEditToggle()');
+    btn.innerHTML='<span class="home-tool-card-ico">✏️</span><span class="home-tool-card-lbl">'+ht('editBtn')+'</span>';
+    grid.appendChild(btn);
+}
+
+/* ====================== ПРИВЯЗАТЬ data-tool-id к кнопкам ====================== */
+function tagToolButtons(){
+    var grid=document.querySelector('.home-tools-grid');
+    if(!grid)return;
+    var tools=['dash','enc','cal','leads','tasks','shop','scan','set','bk','rs','tr'];
+    grid.querySelectorAll('.home-tool-card').forEach(function(btn,i){
+        if(!btn.id||btn.id==='hEditToolBtn')return;
+        if(!btn.getAttribute('data-tool-id')){
+            btn.setAttribute('data-tool-id',tools[i]||('tool'+i));
+        }
+        /* сохраняем оригинальный onclick */
+        if(!btn.getAttribute('data-act')){
+            var oc=btn.getAttribute('onclick');
+            if(oc)btn.setAttribute('data-act',oc);
+        }
+    });
+}
+
+/* ====================== INIT ====================== */
+function hEditInit(){
+    injectCSS();
+    /* задержка, чтобы injectHomeTools создал панель */
+    setTimeout(function(){
+        tagToolButtons();
+        injectEditButton();
+        applyState();
+    },1200);
+    /* язык */
+    var origAL=window.applyLanguage;
+    if(typeof origAL==='function'&&!window.__hEditLangHook){
+        window.__hEditLangHook=true;
+        window.applyLanguage=function(){
+            var r=origAL.apply(this,arguments);
+            try{
+                var btn=document.getElementById('hEditToolBtn');
+                if(btn){var lbl=btn.querySelector('.home-tool-card-lbl');if(lbl)lbl.textContent=ht('editBtn');}
+                var bar=document.getElementById('hEditBar');
+                if(bar){
+                    bar.querySelector('.hedit-info').textContent=ht('editing');
+                    bar.querySelector('.hedit-btn-add').textContent=ht('addWidget');
+                    bar.querySelector('.hedit-btn-restore').textContent=ht('restoreAll');
+                    bar.querySelector('.hedit-btn-done').textContent=ht('done');
+                }
+                /* перерисовать виджеты для перевода */
+                if(loadState().activeWidgets.length)renderWidgets();
+            }catch(e){}
+            return r;
+        };
+    }
+}
+if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){setTimeout(hEditInit,1300);});
+}else{setTimeout(hEditInit,1300);}
+
+})();
+</script>
+
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b297521e4ee8b9',t:'MTc4MTM2OTM5Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b311e779d9e8f3',t:'MTc4MTM3NDQxMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
