@@ -9,15 +9,17 @@
      с докачкой (растущий кэш)
    - Firebase/Google API: всегда сеть (не кэшируем)
    ============================================================ */
-const APP_CACHE = 'pg-app-v1';
+const APP_CACHE = 'pg-app-v3';
 const MEDIA_CACHE = 'pg-media-v1';
 
 const PRECACHE = [
   './',
   './index.html',
+  './15.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './video-call.js'
 ];
 
 self.addEventListener('install', (e) => {

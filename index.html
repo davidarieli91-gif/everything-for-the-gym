@@ -42,7 +42,7 @@
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --side-panel-width: 320px;
+            --side-panel-width: 0px;
         }
 
         * {
@@ -1855,46 +1855,47 @@
         /* === БЫСТРАЯ СТАТИСТИКА В HERO === */
         .home-quick-stats {
             display: flex;
-            gap: 18px;
-            margin-top: 24px;
+            gap: 4px;
+            margin-top: 10px;
             flex-wrap: wrap;
             justify-content: center;
         }
         .home-quick-stat {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
+            gap: 4px;
+            padding: 3px 6px;
             background: rgba(255,255,255,0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.6);
-            border-radius: 14px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         body.dark-theme .home-quick-stat {
             background: rgba(30,41,59,0.5);
             border-color: rgba(255,255,255,0.06);
         }
         .home-quick-stat-icon {
-            width: 36px; height: 36px;
-            border-radius: 10px;
+            width: 14px; height: 14px;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2em;
+            font-size: 0.5em;
             background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(16,185,129,0.05));
+            flex-shrink: 0;
         }
         .home-quick-stat-icon.b { background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(59,130,246,0.05)); }
         .home-quick-stat-icon.o { background: linear-gradient(135deg, rgba(245,158,11,0.20), rgba(245,158,11,0.05)); }
         .home-quick-stat-val {
             font-weight: 700;
-            font-size: 1.15em;
+            font-size: 0.5em;
             color: var(--text-primary);
             line-height: 1;
         }
         .home-quick-stat-lbl {
-            font-size: 0.72em;
+            font-size: 0.36em;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.04em;
@@ -7851,6 +7852,7 @@
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">📚</button>
     <button class="fab-add-meal mode-nutrition-only" id="fabAddMeal" onclick="addMeal()">+</button>
     <button class="fab-add-meal mode-workout-only" id="fabAddWorkout" onclick="addWorkout()" style="background:#EF4444;">+</button>
+    <button class="fab-barcode mode-nutrition-only" id="fabBarcode" onclick="openBarcodeScanner()" title="📷 Сканер штрих-кода">📷</button>
 
     <!-- Нижняя навигация для смартфона -->
     <div class="mobile-nav" id="mobileNav" style="display:none;">
@@ -22611,15 +22613,8 @@
             if (open) closeSidePanel(); else openSidePanel();
         }
         function toggleSidePanelCollapse() {
-            const panel = document.getElementById('sidePanel');
-            panel.classList.toggle('collapsed');
-            const isCollapsed = panel.classList.contains('collapsed');
-            safeSetItem('sidePanelCollapsed', isCollapsed ? '1' : '0');
-            // Обновляем CSS переменную для гармоничного сдвига интерфейса
-            const width = isCollapsed ? '68px' : '320px';
-            document.documentElement.style.setProperty('--side-panel-width', width);
-            // Скрыть backdrop
-            document.getElementById('sidePanelBackdrop').classList.remove('open');
+            // Боковая панель удалена — гарантия нулевой ширины
+            document.documentElement.style.setProperty('--side-panel-width', '0px');
         }
         function refreshSidePanelBadges() {
             const leads = getLeads();
@@ -22633,6 +22628,11 @@
             if (lb) { lb.style.display = activeLeads ? 'inline-block' : 'none'; lb.textContent = activeLeads; }
             if (tb) { tb.style.display = activeTasks ? 'inline-block' : 'none'; tb.textContent = activeTasks; tb.style.background = '#8B5CF6'; }
             if (sb) { sb.style.display = shop.length ? 'inline-block' : 'none'; sb.textContent = shop.length; sb.style.background = '#06B6D4'; }
+            /* обновляем бейджи на главном экране */
+            var hb;
+            hb = document.getElementById('homeBadge_leads'); if (hb){ hb.style.display = activeLeads ? 'flex':'none'; hb.textContent = activeLeads; }
+            hb = document.getElementById('homeBadge_tasks'); if (hb){ hb.style.display = activeTasks ? 'flex':'none'; hb.textContent = activeTasks; }
+            hb = document.getElementById('homeBadge_shop');  if (hb){ hb.style.display = shop.length ? 'flex':'none'; hb.textContent = shop.length; }
         }
 
         /* ============ LEADS (заинтересованные клиенты) ============ */
@@ -23948,16 +23948,9 @@
             try { refreshSidePanelBadges(); } catch(e) {}
             try { loadCustomLogo(); } catch(e) {}
             try { 
-                // Панель инструментов всегда открыта
-                openSidePanel();
-                // Восстановить свернутое состояние
-                const isCollapsed = safeGetItem('sidePanelCollapsed') === '1';
-                if (isCollapsed) {
-                    document.getElementById('sidePanel').classList.add('collapsed');
-                }
-                // Установить CSS переменную для ширины панели
-                const width = isCollapsed ? '68px' : '320px';
-                document.documentElement.style.setProperty('--side-panel-width', width);
+                // Боковая панель «Инструменты» удалена — инструменты перенесены на главный экран.
+                // Гарантируем нулевую ширину, чтобы не было пустого места справа.
+                document.documentElement.style.setProperty('--side-panel-width', '0px');
             } catch(e) {}
             try { migrateTrainerPasswords().then(() => { loadTrainers(); }); } catch(e) { try { loadTrainers(); } catch(e2) {} }
             try { if (!localStorage.getItem('taskTemplates')) { localStorage.setItem('taskTemplates', JSON.stringify(getDefaultTaskTemplates())); } } catch(e) {}
@@ -27390,6 +27383,8 @@ body.dark-theme .mp-btn-ghost { background: rgba(255,255,255,.08); }
 
 /* ===== пикеры (продукты/упражнения) ===== */
 .mp-search-wrap { padding: 10px 16px 6px; flex-shrink: 0; }
+.mp-scan-btn { flex-shrink:0; width:42px; height:42px; border:none; border-radius:11px; background:linear-gradient(135deg,#3B82F6,#1d4ed8); color:#fff; font-size:1.25em; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(59,130,246,.4); transition:.15s; -webkit-tap-highlight-color:transparent; }
+.mp-scan-btn:active { transform:scale(.9); }
 .mp-chips {
     display: flex; gap: 7px; overflow-x: auto; padding: 8px 16px;
     flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -27840,8 +27835,55 @@ body.layout-desktop:not(.mode-workout) .meal-controls .control-btn.remove:hover 
 body.layout-desktop:not(.mode-workout) .meal-products th { background: rgba(16,185,129,0.06); font-weight: 600; color: var(--text-secondary); font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.03em; }
 
 /* ===== ENCYCLOPEDIA (enc) ===== */
-.enc-btnrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+.enc-btnrow { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
 .enc-btnrow .dsh-home-btn { margin: 0; }
+
+/* ===== ПАНЕЛЬ ИНСТРУМЕНТОВ НА ГЛАВНОМ ЭКРАНЕ ===== */
+.home-tools-bar { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
+.home-tool-btn { position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 6px; min-width: 58px; border: none; border-radius: 12px; background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); color: var(--text-primary); font-size: .62em; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 2px 10px rgba(0,0,0,0.05); -webkit-tap-highlight-color: transparent; transition: var(--transition); }
+body.dark-theme .home-tool-btn { background: rgba(30,41,59,0.5); border-color: rgba(255,255,255,0.06); }
+.home-tool-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+.home-tool-btn-ico { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; background: var(--tt-c, linear-gradient(135deg,#10B981,#047857)); color: #fff; }
+.home-tool-btn-lbl { font-size: 0.95em; line-height: 1.1; text-align: center; color: var(--text-secondary); }
+.home-tool-badge { position: absolute; top: 2px; right: 2px; background: var(--danger-color); color: #fff; font-size: .9em; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+
+/* ===== КОМПАКТНЫЕ ПАНЕЛЬКИ + КНОПКИ (×0.5, удобно для смартфона) ===== */
+/* 4 статистические панельки — компактные чипы */
+.home-quick-stats { gap: 4px; margin-top: 8px; }
+.home-quick-stat { padding: 4px 8px; border-radius: 8px; gap: 4px; }
+.home-quick-stat-icon { width: 18px; height: 18px; border-radius: 5px; font-size: 0.6em; }
+.home-quick-stat-val { font-size: 0.6em; }
+.home-quick-stat-lbl { font-size: 0.36em; margin-top: 1px; }
+/* Кнопки «Сводка дня» / «Энциклопедия» — маленькие пилюли */
+.enc-btnrow { gap: 5px; margin-top: 8px; }
+.enc-btnrow .dsh-home-btn { padding: 3px 10px; font-size: 0.46em; }
+.enc-home-btn { padding: 3px 10px !important; font-size: 0.46em !important; }
+/* Панель инструментов — иконки-кнопки уменьшены вдвое */
+.home-tools-bar { gap: 5px; margin-top: 8px; }
+.home-tool-btn { padding: 5px 4px; min-width: 48px; border-radius: 10px; gap: 1px; }
+.home-tool-btn-ico { width: 18px; height: 18px; border-radius: 6px; font-size: 1em; }
+.home-tool-btn-lbl { font-size: 0.52em; line-height: 1.1; }
+.home-tool-badge { min-width: 13px; height: 13px; font-size: 0.8em; top: 1px; right: 1px; }
+/* На смартфоне: иконку чуть крупнее для удобного тапа, ряд переносится */
+@media (max-width: 600px) {
+    .home-tools-bar { gap: 4px; }
+    .home-tool-btn { min-width: 44px; padding: 5px 3px; }
+    .home-tool-btn-ico { width: 20px; height: 20px; font-size: 1.05em; }
+    .home-quick-stat { padding: 3px 6px; }
+}
+
+        /* ===== FAB СКАНЕР ШТРИХ-КОДА (мобильная версия) ===== */
+        .fab-barcode { display: none; position: fixed; z-index: 8200; bottom: 78px; right: 16px; width: 52px; height: 52px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1d4ed8); color: #fff; font-size: 1.5em; cursor: pointer; box-shadow: 0 6px 20px rgba(59,130,246,0.5); align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+        .fab-barcode:active { transform: scale(0.92); }
+        /* показываем FAB на мобильных в режиме питания (mode-workout отсутствует) И когда открыт планировщик */
+        body.layout-mobile:not(.mode-workout) .app-container:not(.hidden) ~ .fab-barcode:not(.app-hidden),
+        body.layout-tablet:not(.mode-workout) .app-container:not(.hidden) ~ .fab-barcode:not(.app-hidden) { display: flex; }
+        body.layout-mobile:not(.mode-workout) .fab-barcode:not(.app-hidden),
+        body.layout-tablet:not(.mode-workout) .fab-barcode:not(.app-hidden) { display: flex; }
+        body[dir="rtl"] .fab-barcode { right: auto; left: 16px; }
+
+/* ===== СКРЫТЬ БОКОВУЮ ПАНЕЛЬ «ИНСТРУМЕНТЫ» ===== */
+.side-panel, .side-panel-backdrop { display: none !important; }
 .enc-home-btn { background: linear-gradient(135deg, #0EA5E9, #0369A1) !important; box-shadow: 0 6px 18px rgba(14,165,233,.4) !important; }
 #encOverlay { display: none; position: fixed; inset: 0; z-index: 137000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
 .enc-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 640px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
@@ -27895,8 +27937,8 @@ body.dark-theme .enc-tabs span.on { color: #7DD3FC; }
 .enc-none { text-align: center; padding: 40px; color: var(--text-light); }
 
 /* ===== DASHBOARD (dsh) + ROLES ===== */
-.dsh-home-btn { display: block; margin: 14px auto 0; padding: 12px 26px; border: none; border-radius: 999px; background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; font-weight: 800; font-size: .95em; cursor: pointer; font-family: inherit; box-shadow: 0 6px 18px rgba(99,102,241,.4); -webkit-tap-highlight-color: transparent; }
-.dsh-home-btn:hover { transform: translateY(-2px); }
+.dsh-home-btn { display: block; margin: 6px auto 0; padding: 4px 10px; border: none; border-radius: 999px; background: linear-gradient(135deg, #6366F1, #4338CA); color: #fff; font-weight: 700; font-size: .5em; cursor: pointer; font-family: inherit; box-shadow: 0 2px 8px rgba(99,102,241,.35); -webkit-tap-highlight-color: transparent; }
+.dsh-home-btn:hover { transform: translateY(-1px); }
 #dshOverlay { display: none; position: fixed; inset: 0; z-index: 133000; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
 .dsh-sheet { background: var(--background-color); border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.4); }
 @media (max-width: 920px) { #dshOverlay { padding: 0; } .dsh-sheet { max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
@@ -28247,6 +28289,7 @@ var MP_T = {
     more:       { ru:'Ещё',         en:'More',      he:'עוד' },
     addMeal:    { ru:'Добавить приём пищи', en:'Add meal',     he:'הוסף ארוחה' },
     addProduct: { ru:'Добавить продукт',    en:'Add product',  he:'הוסף מוצר' },
+    scanBarcode:{ ru:'Штрих-код',           en:'Barcode',       he:'ברקוד' },
     addWorkout: { ru:'Добавить тренировку', en:'Add workout',  he:'הוסף אימון' },
     addExercise:{ ru:'Добавить упражнение', en:'Add exercise', he:'הוסף תרגיל' },
     search:     { ru:'🔍 Поиск...', en:'🔍 Search...', he:'🔍 חיפוש...' },
@@ -28606,9 +28649,12 @@ window.mpDeleteMeal = function(mi){
 window.mpOpenProductPicker = function(mi){
     mpPick = { mi: mi, cat: 'all', q: '' };
     window.__mpPickOpenCat = {};
-    mpOpenSheet(
+        mpOpenSheet(
         mpSheetHead('🍎 ' + mt('addProduct')) +
-        '<div class="mp-search-wrap"><input class="mp-input" id="mpPickSearch" type="search" placeholder="' + escA(mt('search')) + '" oninput="mpPick.q=this.value; mpFillPickList();"></div>' +
+        '<div class="mp-search-wrap"><div style="display:flex;gap:8px;align-items:center;">' +
+            '<input class="mp-input" id="mpPickSearch" type="search" style="flex:1;" placeholder="' + escA(mt('search')) + '" oninput="mpPick.q=this.value; mpFillPickList();">' +
+            '<button class="mp-scan-btn" onclick="if(typeof openBarcodeScanner===\'function\'){mpCloseSheet();openBarcodeScanner();}" title="📷 ' + (mt('scanBarcode')==='scanBarcode'? 'Штрих-код' : mt('scanBarcode')) + '">📷</button>' +
+        '</div></div>' +
         '<div class="mp-pick-list" id="mpPickList"></div>',
         true
     );
@@ -33270,6 +33316,62 @@ function dshInjectBtn(){
 }
 
 /* ============================================================
+   ПАНЕЛЬ ИНСТРУМЕНТОВ НА ГЛАВНОМ ЭКРАНЕ
+   (перенос кнопок из боковой панели «Инструменты»)
+   ============================================================ */
+var TOOL_T = {
+    calendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
+    leads:{ru:'Лиды',en:'Leads',he:'לידים'},
+    tasks:{ru:'Задачи',en:'Tasks',he:'משימות'},
+    shop:{ru:'Магазин',en:'Shop',he:'חנות'},
+    scanner:{ru:'Сканер',en:'Scan',he:'סריקה'},
+    settings:{ru:'Настройки',en:'Settings',he:'הגדרות'},
+    backup:{ru:'Копия',en:'Backup',he:'גיבוי'},
+    restore:{ru:'Восстан.',en:'Restore',he:'שחזור'},
+    trainer:{ru:'Профиль',en:'Profile',he:'פרופיל'}
+};
+function tt2(k){var l=(typeof currentLang!=='undefined')?currentLang:'ru';return (TOOL_T[k]&&(TOOL_T[k][l]||TOOL_T[k].ru))||k;}
+
+function injectHomeTools(){
+    var hero = document.getElementById('homeHeroCustom');
+    if (!hero) return;
+    var existing = document.getElementById('homeToolsBar');
+    if (existing){
+        existing.querySelectorAll('.home-tool-btn-lbl').forEach(function(el){
+            var key = el.getAttribute('data-k'); if (key) el.textContent = tt2(key);
+        });
+        return;
+    }
+    var tools = [
+        {id:'cal',  ico:'📅', k:'calendar', act:'openCalendarModal()', c:'#F59E0B'},
+        {id:'leads',ico:'🌟', k:'leads',    act:'openLeadsModal()',    c:'#EC4899', badge:true},
+        {id:'tasks',ico:'✅', k:'tasks',    act:'openTasksModal()',    c:'#8B5CF6', badge:true},
+        {id:'shop', ico:'🛒', k:'shop',     act:'openShopModal()',     c:'#06B6D4', badge:true},
+        {id:'scan', ico:'📷', k:'scanner',  act:'openBarcodeScanner()', c:'#3B82F6'},
+        {id:'set',  ico:'⚙️', k:'settings', act:'openSettingsModal()', c:'#64748B'},
+        {id:'bk',   ico:'💾', k:'backup',   act:'backupAllData()',     c:'#10B981'},
+        {id:'rs',   ico:'📥', k:'restore',  act:'triggerRestore()',    c:'#3B82F6'},
+        {id:'tr',   ico:'👨‍🏫', k:'trainer',  act:'if(currentTrainer) openTrainerProfile(currentTrainer.id)', c:'#8B5CF6'}
+    ];
+    var bar = document.createElement('div');
+    bar.className = 'home-tools-bar';
+    bar.id = 'homeToolsBar';
+    tools.forEach(function(t){
+        var btn = document.createElement('button');
+        btn.className = 'home-tool-btn';
+        btn.style.setProperty('--tt-c', 'linear-gradient(135deg,'+t.c+','+t.c+'99)');
+        btn.setAttribute('onclick', t.act);
+        var badge = t.badge ? '<span class="home-tool-badge" id="homeBadge_'+t.k+'" style="display:none;">0</span>' : '';
+        btn.innerHTML = '<span class="home-tool-btn-ico">'+t.ico+'</span>'+
+            '<span class="home-tool-btn-lbl" data-k="'+t.k+'">'+tt2(t.k)+'</span>'+badge;
+        bar.appendChild(btn);
+    });
+    var anchor = document.querySelector('.enc-btnrow') || document.getElementById('dshHomeBtn') || document.getElementById('homeQuickStats');
+    if (anchor && anchor.parentNode){ anchor.parentNode.insertBefore(bar, anchor.nextSibling); }
+    else { hero.appendChild(bar); }
+}
+
+/* ============================================================
    BACKUPS & ROLES (bkr)
    ============================================================ */
 var BT = {
@@ -33378,6 +33480,7 @@ window.bkrSetRole = function(trainerId, role){
 /* ---------- init ---------- */
 function dashInit(){
     dshInjectBtn();
+    injectHomeTools();
     bkrAutoBackup();
     bkrApplyViewerMode();
     var origAL = window.applyLanguage;
@@ -33391,6 +33494,7 @@ function dashInit(){
                 var ov = document.getElementById('dshOverlay');
                 if (ov && ov.style.display === 'flex') dshRender();
             } catch(e){}
+            try { injectHomeTools(); } catch(e){}
             return r;
         };
     }
@@ -33401,6 +33505,7 @@ function dashInit(){
         window.renderUsers = function(){
             var r = origRU.apply(this, arguments);
             try { dshInjectBtn(); } catch(e){}
+            try { injectHomeTools(); } catch(e){}
             return r;
         };
     }
@@ -33418,219 +33523,560 @@ if (document.readyState === 'loading'){
 /* ============================================================
    ENCYCLOPEDIA (enc) — встроенная энциклопедия по программе.
    ┌──────────────────────────────────────────────────────────┐
-   │  КАК РЕДАКТИРОВАТЬ:                                      │
-   │  Вся энциклопедия — это массив ENC_SECTIONS ниже.        │
-   │  Раздел:  { id, icon, title, topics: [...] }             │
-   │  Тема:    { id, icon, title, html }                      │
-   │  В html можно использовать готовые блоки-иллюстрации:    │
-   │   <div class="enc-fig">...</div>      — рамка-иллюстрация│
-   │   <span class="enc-k">кнопка</span>   — «как кнопка»     │
-   │   <div class="enc-step"><b>1</b> текст</div> — шаг       │
-   │   <div class="enc-tip">💡 совет</div>  — подсказка        │
-   │   <div class="enc-warn">⚠️ важно</div> — предупреждение   │
-   │  Добавили раздел/тему — больше ничего менять не нужно.   │
+   │  ТРЁХЯЗЫЧНАЯ (ru / en / he).                             │
+   │  title  → { ru, en, he }                                 │
+   │  html   → { ru, en, he }                                 │
+   │  Язык выбирается автоматически по текущему языку системы │
+   │  (currentLang). При смене языка энциклопедия             │
+   │  перерисовывается.                                       │
    └──────────────────────────────────────────────────────────┘
    ============================================================ */
 (function(){
 'use strict';
 
+/* ====================== ЯЗЫКОВЫЕ ХЕЛПЕРЫ ====================== */
+function encLang(){ return (typeof currentLang !== 'undefined') ? currentLang : 'ru'; }
+/* выбирает строку из {ru,en,he}; если передана обычная строка — возвращает её */
+function etL(obj){
+    if (!obj) return '';
+    if (typeof obj === 'string') return obj;
+    var l = encLang();
+    return obj[l] || obj.ru || '';
+}
+
+/* ====================== HTML-ХЕЛПЕРЫ ====================== */
 function fig(inner){ return '<div class="enc-fig">' + inner + '</div>'; }
 function k(label){ return '<span class="enc-k">' + label + '</span>'; }
 function step(n, text){ return '<div class="enc-step"><b>' + n + '</b><span>' + text + '</span></div>'; }
 function tip(text){ return '<div class="enc-tip">💡 ' + text + '</div>'; }
 function warn(text){ return '<div class="enc-warn">⚠️ ' + text + '</div>'; }
 
+/* ====================== ИНТЕРФЕЙСНЫЕ СТРОКИ ====================== */
+var ENC_UI = {
+    title:    { ru:'📚 Энциклопедия', en:'📚 Encyclopedia', he:'📚 אנציקלופדיה' },
+    search:   { ru:'🔍 Поиск по энциклопедии...', en:'🔍 Search encyclopedia...', he:'🔍 חיפוש באנציקלופדיה...' },
+    notFound: { ru:'Ничего не найдено', en:'Nothing found', he:'לא נמצא כלום' },
+    btnLabel: { ru:'📚 Энциклопедия', en:'📚 Encyclopedia', he:'📚 אנציקלופדיה' }
+};
+
+/* ====================== ДАННЫЕ ЭНЦИКЛОПЕДИИ ====================== */
 window.ENC_SECTIONS = [
 
 /* ================= НАЧАЛО РАБОТЫ ================= */
-{ id:'start', icon:'🚀', title:'Начало работы', topics:[
-  { id:'overview', icon:'🗺', title:'Что умеет программа', html:
-    '<p>Это полный кабинет тренера: клиенты, программы тренировок, планы питания, замеры, абонементы, чат и облачная синхронизация.</p>' +
-    fig('<div class="enc-grid">' +
-      '<div>🏋️ Тренировки</div><div>🍽️ Питание</div><div>📏 Замеры</div>' +
-      '<div>💰 Абонементы</div><div>💬 Чат</div><div>☁️ Облако</div>' +
-      '<div>📊 Сводка</div><div>🖨️ Печать</div><div>📤 WhatsApp</div>' +
-    '</div>') +
-    '<p>Программа работает на компьютере, планшете и смартфоне — интерфейс автоматически подстраивается. Все данные сохраняются мгновенно.</p>' },
-  { id:'login', icon:'🔐', title:'Вход тренера и клиента', html:
-    '<p>При запуске появляется окно входа с двумя вкладками:</p>' +
-    fig('<div class="enc-tabs"><span class="on">👨‍🏫 Тренер</span><span>👤 Клиент</span></div>') +
-    step(1, 'Самый простой путь — ' + k('Войти / регистрация через Google') + ': профиль создаётся автоматически, и сразу включается облако.') +
-    step(2, 'Классический путь: выбрать профиль из списка и ввести пароль.') +
-    step(3, 'Клиент входит по имени/телефону и паролю, который задаёт тренер в профиле клиента, либо через Google.') +
-    tip('Пароль клиенту задаётся в его профиле: поле «Пароль клиента». Без пароля кабинет клиента недоступен.') },
-  { id:'layouts', icon:'📱', title:'Компьютер / планшет / смартфон', html:
-    '<p>Раскладка выбирается в ' + k('⚙️ Настройки') + ' → «Режим отображения», а на телефоне включается автоматически.</p>' +
-    step(1, '<b>Компьютер</b> — две панели: база (продукты/упражнения) слева и редактор справа. Ширину панелей можно тянуть за ручку ↔, базу можно перенести на другую сторону кнопкой ⇄.') +
-    step(2, '<b>Смартфон/планшет</b> — мобильный интерфейс: карточки, нижняя навигация, шторки снизу.') +
-    tip('Если на телефоне видна «компьютерная» версия — откройте Настройки и выберите раскладку «Смартфон».') },
-  { id:'install', icon:'📲', title:'Установка как приложение (PWA)', html:
-    step(1, 'Откройте сайт на телефоне — внизу появится кнопка ' + k('📲 Установить приложение') + '.') +
-    step(2, 'В Chrome подтвердите установку. В Яндекс Браузере/Safari кнопка покажет инструкцию для вашего браузера.') +
-    step(3, 'Появится иконка на рабочем столе: запуск без браузера, работа офлайн в зале.') +
-    warn('Если сайт открыт из WhatsApp — сначала нажмите «Открыть в браузере».') +
-    tip('Когда выходит обновление, сверху появляется плашка «🔄 Доступно обновление» — одно нажатие, и версия свежая.') }
+{ id:'start', icon:'🚀',
+  title:{ ru:'Начало работы', en:'Getting Started', he:'תחילת עבודה' },
+  topics:[
+  { id:'overview', icon:'🗺',
+    title:{ ru:'Что умеет программа', en:'What the app can do', he:'יכולות האפליקציה' },
+    html:{
+      ru:'<p>Это полный кабинет тренера: клиенты, программы тренировок, планы питания, замеры, абонементы, чат и облачная синхронизация.</p>' +
+         fig('<div class="enc-grid"><div>🏋️ Тренировки</div><div>🍽️ Питание</div><div>📏 Замеры</div><div>💰 Абонементы</div><div>💬 Чат</div><div>☁️ Облако</div><div>📊 Сводка</div><div>🖨️ Печать</div><div>📤 WhatsApp</div></div>') +
+         '<p>Программа работает на компьютере, планшете и смартфоне — интерфейс автоматически подстраивается. Все данные сохраняются мгновенно.</p>',
+      en:'<p>This is a complete trainer dashboard: clients, workout programs, nutrition plans, measurements, subscriptions, chat, and cloud sync.</p>' +
+         fig('<div class="enc-grid"><div>🏋️ Workouts</div><div>🍽️ Nutrition</div><div>📏 Measures</div><div>💰 Subscriptions</div><div>💬 Chat</div><div>☁️ Cloud</div><div>📊 Dashboard</div><div>🖨️ Print</div><div>📤 WhatsApp</div></div>') +
+         '<p>The app works on desktop, tablet, and smartphone — the interface adapts automatically. All data is saved instantly.</p>',
+      he:'<p>זהו משרד מאמן מלא: לקוחות, תוכניות אימון, תפריטי תזונה, מדידות, מנויים, צ׳אט וסנכרון ענן.</p>' +
+         fig('<div class="enc-grid"><div>🏋️ אימונים</div><div>🍽️ תזונה</div><div>📏 מדידות</div><div>💰 מנויים</div><div>💬 צ׳אט</div><div>☁️ ענן</div><div>📊 סיכום</div><div>🖨️ הדפסה</div><div>📤 WhatsApp</div></div>') +
+         '<p>האפליקציה עובדת במחשב, טאבלט וסמארטפון — הממשק מתאים את עצמו אוטומטית. כל הנתונים נשמרים מיד.</p>'
+    }},
+  { id:'login', icon:'🔐',
+    title:{ ru:'Вход тренера и клиента', en:'Trainer and Client Login', he:'כניסת מאמן ולקוח' },
+    html:{
+      ru:'<p>При запуске появляется окно входа с двумя вкладками:</p>' +
+         fig('<div class="enc-tabs"><span class="on">👨‍🏫 Тренер</span><span>👤 Клиент</span></div>') +
+         step(1,'Самый простой путь — ' + k('Войти / регистрация через Google') + ': профиль создаётся автоматически, и сразу включается облако.') +
+         step(2,'Классический путь: выбрать профиль из списка и ввести пароль.') +
+         step(3,'Клиент входит по имени/телефону и паролю, который задаёт тренер в профиле клиента, либо через Google.') +
+         tip('Пароль клиенту задаётся в его профиле: поле «Пароль клиента». Без пароля кабинет клиента недоступен.'),
+      en:'<p>On startup, a login window appears with two tabs:</p>' +
+         fig('<div class="enc-tabs"><span class="on">👨‍🏫 Trainer</span><span>👤 Client</span></div>') +
+         step(1,'The easiest way — ' + k('Sign in / register with Google') + ': the profile is created automatically and cloud sync turns on immediately.') +
+         step(2,'Classic way: select a profile from the list and enter a password.') +
+         step(3,'The client logs in by name/phone and the password set by the trainer, or via Google.') +
+         tip('The client password is set in their profile: the "Client Password" field. Without a password the client cabinet is inaccessible.'),
+      he:'<p>בהפעלה מופיע חלון כניסה עם שתי לשוניות:</p>' +
+         fig('<div class="enc-tabs"><span class="on">👨‍🏫 מאמן</span><span>👤 לקוח</span></div>') +
+         step(1,'הדרך הקלה ביותר — ' + k('כניסה / הרשמה דרך Google') + ': הפרופיל נוצר אוטומטית והענן מופעל מיד.') +
+         step(2,'דרך רגילה: בחרו פרופיל מהרשימה והזינו סיסמה.') +
+         step(3,'הלקוח נכנס לפי שם/טלפון והסיסמה שנקבעה ע״י המאמן, או דרך Google.') +
+         tip('סיסמת הלקוח נקבעת בפרופיל שלו: שדה "סיסמת לקוח". בלי סיסמה אזור הלקוח לא נגיש.')
+    }},
+  { id:'layouts', icon:'📱',
+    title:{ ru:'Компьютер / планшет / смартфон', en:'Desktop / Tablet / Smartphone', he:'מחשב / טאבלט / סמארטפון' },
+    html:{
+      ru:'<p>Раскладка выбирается в ' + k('⚙️ Настройки') + ' → «Режим отображения», а на телефоне включается автоматически.</p>' +
+         step(1,'<b>Компьютер</b> — две панели: база (продукты/упражнения) слева и редактор справа. Ширину панелей можно тянуть за ручку ↔, базу можно перенести на другую сторону кнопкой ⇄.') +
+         step(2,'<b>Смартфон/планшет</b> — мобильный интерфейс: карточки, нижняя навигация, шторки снизу.') +
+         tip('Если на телефоне видна «компьютерная» версия — откройте Настройки и выберите раскладку «Смартфон».'),
+      en:'<p>The layout is set in ' + k('⚙️ Settings') + ' → "Display mode"; it switches automatically on phones.</p>' +
+         step(1,'<b>Desktop</b> — two panels: the database (foods/exercises) on the left and the editor on the right. Panel widths are draggable ↔; the database can move to the other side with the ⇄ button.') +
+         step(2,'<b>Phone/Tablet</b> — mobile interface: cards, bottom navigation, bottom sheets.') +
+         tip('If you see the "desktop" version on a phone — open Settings and choose the "Smartphone" layout.'),
+      he:'<p>הפריסה נבחרת ב' + k('⚙️ הגדרות') + ' → "מצב תצוגה", ובטלפון מופעלת אוטומטית.</p>' +
+         step(1,'<b>מחשב</b> — שני חלונות: מאגר (מוצרים/תרגילים) משמאל ועורך מימין. את רוחב החלונות אפשר למתוח ↔, ולהעביר את המאגר לצד השני בכפתור ⇄.') +
+         step(2,'<b>סמארטפון/טאבלט</b> — ממשק נייד: כרטיסיות, ניווט תחתון, חלוניות מלמטה.') +
+         tip('אם רואים את הגרסת "המחשב" בטלפון — פתחו הגדרות ובחרו פריסת "סמארטפון".')
+    }},
+  { id:'install', icon:'📲',
+    title:{ ru:'Установка как приложение (PWA)', en:'Install as App (PWA)', he:'התקנה כאפליקציה (PWA)' },
+    html:{
+      ru:step(1,'Откройте сайт на телефоне — внизу появится кнопка ' + k('📲 Установить приложение') + '.') +
+         step(2,'В Chrome подтвердите установку. В Яндекс Браузере/Safari кнопка покажет инструкцию для вашего браузера.') +
+         step(3,'Появится иконка на рабочем столе: запуск без браузера, работа офлайн в зале.') +
+         warn('Если сайт открыт из WhatsApp — сначала нажмите «Открыть в браузере».') +
+         tip('Когда выходит обновление, сверху появляется плашка «🔄 Доступно обновление» — одно нажатие, и версия свежая.'),
+      en:step(1,'Open the site on your phone — a ' + k('📲 Install App') + ' button appears at the bottom.') +
+         step(2,'In Chrome confirm the install. In Yandex Browser/Safari the button shows instructions for your browser.') +
+         step(3,'An icon appears on the home screen: launch without a browser, work offline at the gym.') +
+         warn('If the site was opened from WhatsApp — tap "Open in browser" first.') +
+         tip('When an update is available, a "🔄 Update available" banner appears at the top — one tap and you are up to date.'),
+      he:step(1,'פתחו את האתר בטלפון — למטה מופיע כפתור ' + k('📲 התקן אפליקציה') + '.') +
+         step(2,'ב-Chrome אשרו את ההתקנה. בדפדפן Yandex/Safari הכפתור יציג הוראות לדפדפן שלכם.') +
+         step(3,'אייקון יופיע במסך הבית: הפעלה ללא דפדפן, עבודה ללא רשת בחדר הכושר.') +
+         warn('אם פתחתם מ-WhatsApp — קודם לחצו "פתח בדפדפן".') +
+         tip('כשיש עדכון, למעלה מופיע באנר "🔄 עדכון זמין" — לחיצה אחת והגרסה מעודכנת.')
+    }}
 ]},
 
 /* ================= КЛИЕНТЫ ================= */
-{ id:'clients', icon:'👥', title:'Клиенты', topics:[
-  { id:'addclient', icon:'➕', title:'Добавить и открыть клиента', html:
-    step(1, 'На главном экране нажмите ' + k('➕ Добавить клиента') + '.') +
-    step(2, 'Заполните имя, возраст, вес, рост, пол, активность и цель — по ним считаются нормы калорий.') +
-    step(3, 'Нажмите на карточку клиента, чтобы открыть его планировщик.') +
-    fig('<div class="enc-card-demo"><span class="ava">👤</span><div><b>Дани Коэн</b><br><small>80 кг · цель: масса</small></div><span class="badge">💰 7</span></div>') +
-    tip('Зелёный бейдж 💰 на карточке — остаток занятий абонемента.') },
-  { id:'clienttools', icon:'🧰', title:'Кнопки клиента в шапке', html:
-    '<p>Когда клиент открыт, рядом с его именем три кнопки:</p>' +
-    fig('<div class="enc-row">' + k('📏') + ' замеры тела ' + k('💬') + ' чат ' + k('💰') + ' абонемент</div>') +
-    '<p>Каждая открывает свой раздел именно для этого клиента.</p>' },
-  { id:'clientcab', icon:'🙋', title:'Кабинет клиента', html:
-    '<p>Клиент видит свой кабинет с вкладками внизу:</p>' +
-    fig('<div class="enc-tabs"><span class="on">🏋️ Тренировки</span><span>🍽️ Питание</span><span>💬 Чат</span><span>☰ Ещё</span></div>') +
-    step(1, '<b>Тренировки</b> — назначенные программы; кнопка «▶ Начать тренировку» открывает выполнение по подходам.') +
-    step(2, '<b>Питание</b> — план от тренера; клиент отмечает съеденное галочками, видит остаток калорий на день.') +
-    step(3, '<b>Ещё</b> — замеры, абонемент, настройки (язык, темы, масштаб), отчёты, выход.') +
-    tip('Клиент видит карточки техники упражнений, но не может их менять — это право тренера.') }
+{ id:'clients', icon:'👥',
+  title:{ ru:'Клиенты', en:'Clients', he:'לקוחות' },
+  topics:[
+  { id:'addclient', icon:'➕',
+    title:{ ru:'Добавить и открыть клиента', en:'Add and Open a Client', he:'הוספה ופתיחת לקוח' },
+    html:{
+      ru:step(1,'На главном экране нажмите ' + k('➕ Добавить клиента') + '.') +
+         step(2,'Заполните имя, возраст, вес, рост, пол, активность и цель — по ним считаются нормы калорий.') +
+         step(3,'Нажмите на карточку клиента, чтобы открыть его планировщик.') +
+         fig('<div class="enc-card-demo"><span class="ava">👤</span><div><b>Дани Коэн</b><br><small>80 кг · цель: масса</small></div><span class="badge">💰 7</span></div>') +
+         tip('Зелёный бейдж 💰 на карточке — остаток занятий абонемента.'),
+      en:step(1,'On the home screen tap ' + k('➕ Add Client') + '.') +
+         step(2,'Fill in name, age, weight, height, gender, activity level, and goal — calorie targets are calculated from these.') +
+         step(3,'Tap the client card to open their planner.') +
+         fig('<div class="enc-card-demo"><span class="ava">👤</span><div><b>Dani Cohen</b><br><small>80 kg · goal: bulk</small></div><span class="badge">💰 7</span></div>') +
+         tip('The green 💰 badge on the card shows remaining subscription sessions.'),
+      he:step(1,'במסך הבית לחצו ' + k('➕ הוסף לקוח') + '.') +
+         step(2,'מלאו שם, גיל, משקל, גובה, מגדר, רמת פעילות ויעד — לפיהם מחושבות מכסות הקלוריות.') +
+         step(3,'לחצו על כרטיס הלקוח כדי לפתוח את המתכנן שלו.') +
+         fig('<div class="enc-card-demo"><span class="ava">👤</span><div><b>דני כהן</b><br><small>80 ק"ג · יעד: עלייה במסה</small></div><span class="badge">💰 7</span></div>') +
+         tip('התג הירוק 💰 בכרטיס מציג את שארית אימוני המנוי.')
+    }},
+  { id:'clienttools', icon:'🧰',
+    title:{ ru:'Кнопки клиента в шапке', en:'Client Buttons in the Header', he:'כפתורי לקוח בכותרת' },
+    html:{
+      ru:'<p>Когда клиент открыт, рядом с его именем три кнопки:</p>' +
+         fig('<div class="enc-row">' + k('📏') + ' замеры тела ' + k('💬') + ' чат ' + k('💰') + ' абонемент</div>') +
+         '<p>Каждая открывает свой раздел именно для этого клиента.</p>',
+      en:'<p>When a client is open, three buttons appear next to their name:</p>' +
+         fig('<div class="enc-row">' + k('📏') + ' measures ' + k('💬') + ' chat ' + k('💰') + ' subscription</div>') +
+         '<p>Each opens its own section for that specific client.</p>',
+      he:'<p>כשלקוח פתוח, שלושה כפתורים מופיעים ליד השם שלו:</p>' +
+         fig('<div class="enc-row">' + k('📏') + ' מדידות ' + k('💬') + ' צ׳אט ' + k('💰') + ' מנוי</div>') +
+         '<p>כל אחד פותח את המדור שלו עבור הלקוח הזה.</p>'
+    }},
+  { id:'clientcab', icon:'🙋',
+    title:{ ru:'Кабинет клиента', en:'Client Cabinet', he:'אזור הלקוח' },
+    html:{
+      ru:'<p>Клиент видит свой кабинет с вкладками внизу:</p>' +
+         fig('<div class="enc-tabs"><span class="on">🏋️ Тренировки</span><span>🍽️ Питание</span><span>💬 Чат</span><span>☰ Ещё</span></div>') +
+         step(1,'<b>Тренировки</b> — назначенные программы; кнопка «▶ Начать тренировку» открывает выполнение по подходам.') +
+         step(2,'<b>Питание</b> — план от тренера; клиент отмечает съеденное галочками, видит остаток калорий на день.') +
+         step(3,'<b>Ещё</b> — замеры, абонемент, настройки (язык, темы, масштаб), отчёты, выход.') +
+         tip('Клиент видит карточки техники упражнений, но не может их менять — это право тренера.'),
+      en:'<p>The client sees their cabinet with tabs at the bottom:</p>' +
+         fig('<div class="enc-tabs"><span class="on">🏋️ Workouts</span><span>🍽️ Nutrition</span><span>💬 Chat</span><span>☰ More</span></div>') +
+         step(1,'<b>Workouts</b> — assigned programs; the "▶ Start Workout" button opens set-by-set execution.') +
+         step(2,'<b>Nutrition</b> — the plan from the trainer; the client checks off what they ate, sees remaining calories for the day.') +
+         step(3,'<b>More</b> — measurements, subscription, settings (language, themes, scale), reports, logout.') +
+         tip('The client can view exercise technique cards but cannot edit them — that is the trainer’s privilege.'),
+      he:'<p>הלקוח רואה את האזור שלו עם לשוניות למטה:</p>' +
+         fig('<div class="enc-tabs"><span class="on">🏋️ אימונים</span><span>🍽️ תזונה</span><span>💬 צ׳אט</span><span>☰ עוד</span></div>') +
+         step(1,'<b>אימונים</b> — תוכניות מוקצות; כפתור "▶ התחל אימון" פותח ביצוע לפי סטים.') +
+         step(2,'<b>תזונה</b> — התפריט מהמאמן; הלקוח מסמן מה אכל ב-V, רואה קלוריות שנותרו להיום.') +
+         step(3,'<b>עוד</b> — מדידות, מנוי, הגדרות (שפה, ערכות נושא, מרחק), דוחות, יציאה.') +
+         tip('הלקוח רואה כרטיסי טכניקת תרגילים, אך לא יכול לשנות אותם — זוהי זכות המאמן.')
+    }}
 ]},
 
 /* ================= ТРЕНИРОВКИ ================= */
-{ id:'workout', icon:'🏋️', title:'Тренировки', topics:[
-  { id:'build', icon:'🧱', title:'Составление программы', html:
-    step(1, 'Откройте клиента и переключитесь в режим ' + k('🏋️ Тренировки') + ' (переключатель в шапке или вкладка внизу на телефоне).') +
-    step(2, 'Нажмите ' + k('＋ Добавить тренировку') + ' — появится карточка дня (название, дата, длительность).') +
-    step(3, 'Добавьте упражнения: на компьютере — перетащите из базы слева или двойной клик; на телефоне — кнопка «＋ Добавить упражнение».') +
-    step(4, 'Укажите подходы, повторы (1–100), вес, отдых и при необходимости ⏳ время на подход.') +
-    tip('⏳ «Время на подход» — для упражнений на время: например, 5 повторений за 50 секунд.') },
-  { id:'expicker', icon:'📂', title:'База упражнений (выбор)', html:
-    '<p>На телефоне база открывается аккордеоном:</p>' +
-    fig('<div class="enc-acc"><div class="g">💪 Грудь <i>45 ▼</i></div><div class="sg">Средняя часть <i>14 ▼</i></div><div class="it">🖼 Жим штанги лёжа <b>+</b></div></div>') +
-    step(1, 'Нажмите группу мышц → раскроются подгруппы.') +
-    step(2, 'Нажмите подгруппу → карточки упражнений с фото.') +
-    step(3, k('+') + ' — добавить сразу; нажатие по карточке — открыть технику, оттуда тоже можно добавить.') +
-    tip('Поиск сверху ищет сразу по всей базе и показывает плоский список.') },
-  { id:'exrow', icon:'⋯', title:'Управление упражнением в списке', html:
-    '<p>На телефоне у каждого упражнения справа кнопка ' + k('⋯') + ':</p>' +
-    fig('<div class="enc-menu"><div>⬆ Выше</div><div>⬇ Ниже</div><div>⎘ Дублировать</div><div>✏️ Изменить</div><div class="red">🗑 Удалить</div></div>') +
-    '<p>Нажатие по строке открывает редактор подходов, по подчёркнутому названию — карточку техники.</p>' +
-    '<p>На компьютере те же действия — кнопки ▲▼ и ✕ в строке таблицы, 👁 у названия — карточка техники.</p>' },
-  { id:'technique', icon:'📖', title:'Карточка техники упражнения', html:
-    '<p>У каждого упражнения своя карточка: фото (2 кадра), группа мышц, инвентарь, рекомендации и пошаговая техника с типичной ошибкой.</p>' +
-    step(1, 'Тренер: ➕ добавить в тренировку, ✏️ изменить (название, техника, своя картинка/GIF).') +
-    step(2, 'Клиент видит ту же карточку, но только для чтения.') +
-    tip('Свой GIF: ✏️ редактор упражнения → «🖼 Своя картинка/GIF» — заменит стандартное фото везде.') },
-  { id:'live', icon:'▶', title:'Live-тренировка с тренером', html:
-    step(1, 'На карточке тренировки нажмите ' + k('▶ Начать тренировку') + ' (есть и на компьютере, и на телефоне).') +
-    step(2, 'Отмечайте каждый подход галочкой ✓ — после неё автоматически идёт таймер отдыха.') +
-    step(3, 'Шкала 1–5 под подходом — нагрузка (RPE). Мини-графики показывают объём против плана и прошлого раза.') +
-    step(4, 'Меню ⋯ у упражнения: изменить параметры, заменить упражнение, удалить — прямо во время тренировки.') +
-    step(5, k('🏁 Завершить тренировку') + ' — можно в любой момент: откроется отчёт с графиками, результат сохранится (даже частичный).') +
-    tip('Занятие абонемента списывается автоматически при сохранении результата.') }
+{ id:'workout', icon:'🏋️',
+  title:{ ru:'Тренировки', en:'Workouts', he:'אימונים' },
+  topics:[
+  { id:'build', icon:'🧱',
+    title:{ ru:'Составление программы', en:'Building a Program', he:'בניית תוכנית' },
+    html:{
+      ru:step(1,'Откройте клиента и переключитесь в режим ' + k('🏋️ Тренировки') + ' (переключатель в шапке или вкладка внизу на телефоне).') +
+         step(2,'Нажмите ' + k('＋ Добавить тренировку') + ' — появится карточка дня (название, дата, длительность).') +
+         step(3,'Добавьте упражнения: на компьютере — перетащите из базы слева или двойной клик; на телефоне — кнопка «＋ Добавить упражнение».') +
+         step(4,'Укажите подходы, повторы (1–100), вес, отдых и при необходимости ⏳ время на подход.') +
+         tip('⏳ «Время на подход» — для упражнений на время: например, 5 повторений за 50 секунд.'),
+      en:step(1,'Open a client and switch to ' + k('🏋️ Workouts') + ' mode (the toggle in the header or the bottom tab on phone).') +
+         step(2,'Tap ' + k('＋ Add Workout') + ' — a day card appears (name, date, duration).') +
+         step(3,'Add exercises: on desktop — drag from the database on the left or double-click; on phone — the "＋ Add Exercise" button.') +
+         step(4,'Set sets, reps (1–100), weight, rest, and optionally ⏳ time per set.') +
+         tip('⏳ "Time per set" — for timed exercises: e.g. 5 reps in 50 seconds.'),
+      he:step(1,'פתחו לקוח ועברו למצב ' + k('🏋️ אימונים') + ' (המתג בכותרת או הלשונית למטה בטלפון).') +
+         step(2,'לחצו ' + k('＋ הוסף אימון') + ' — מופיע כרטיס יום (שם, תאריך, משך).') +
+         step(3,'הוסיפו תרגילים: במחשב — גררו מהמאגר משמאל או לחיצה כפולה; בטלפון — כפתור "＋ הוסף תרגיל".') +
+         step(4,'הגדירו סטים, חזרות (1–100), משקל, מנוחה ולפי הצורך ⏳ זמן לסט.') +
+         tip('⏳ "זמן לסט" — לתרגילים בזמן: למשל 5 חזרות ב-50 שניות.')
+    }},
+  { id:'expicker', icon:'📂',
+    title:{ ru:'База упражнений (выбор)', en:'Exercise Database (Selection)', he:'מאגר תרגילים (בחירה)' },
+    html:{
+      ru:'<p>На телефоне база открывается аккордеоном:</p>' +
+         fig('<div class="enc-acc"><div class="g">💪 Грудь <i>45 ▼</i></div><div class="sg">Средняя часть <i>14 ▼</i></div><div class="it">🖼 Жим штанги лёжа <b>+</b></div></div>') +
+         step(1,'Нажмите группу мышц → раскроются подгруппы.') +
+         step(2,'Нажмите подгруппу → карточки упражнений с фото.') +
+         step(3,k('+') + ' — добавить сразу; нажатие по карточке — открыть технику, оттуда тоже можно добавить.') +
+         tip('Поиск сверху ищет сразу по всей базе и показывает плоский список.'),
+      en:'<p>On phone the database opens as an accordion:</p>' +
+         fig('<div class="enc-acc"><div class="g">💪 Chest <i>45 ▼</i></div><div class="sg">Mid section <i>14 ▼</i></div><div class="it">🖼 Barbell Bench Press <b>+</b></div></div>') +
+         step(1,'Tap a muscle group → subgroups expand.') +
+         step(2,'Tap a subgroup → exercise cards with photos.') +
+         step(3,k('+') + ' — add immediately; tapping a card — open technique, you can add from there too.') +
+         tip('The top search box searches the entire database and shows a flat list.'),
+      he:'<p>בטלפון המאגר נפתח כאקורדיון:</p>' +
+         fig('<div class="enc-acc"><div class="g">💪 חזה <i>45 ▼</i></div><div class="sg">חלק אמצעי <i>14 ▼</i></div><div class="it">🖼 פרס מוט שוכב <b>+</b></div></div>') +
+         step(1,'לחצו על קבוצת שרירים → תת-קבוצות ייפתחו.') +
+         step(2,'לחצו על תת-קבוצה → כרטיסי תרגילים עם תמונות.') +
+         step(3,k('+') + ' — הוספה מידית; לחיצה על כרטיס — פתיחת טכניקה, גם משם אפשר להוסיף.') +
+         tip('תיבת החיפוש למעלה מחפשת בכל המאגר ומציגה רשימה שטוחה.')
+    }},
+  { id:'exrow', icon:'⋯',
+    title:{ ru:'Управление упражнением в списке', en:'Managing an Exercise in the List', he:'ניהול תרגיל ברשימה' },
+    html:{
+      ru:'<p>На телефоне у каждого упражнения справа кнопка ' + k('⋯') + ':</p>' +
+         fig('<div class="enc-menu"><div>⬆ Выше</div><div>⬇ Ниже</div><div>⎘ Дублировать</div><div>✏️ Изменить</div><div class="red">🗑 Удалить</div></div>') +
+         '<p>Нажатие по строке открывает редактор подходов, по подчёркнутому названию — карточку техники.</p>' +
+         '<p>На компьютере те же действия — кнопки ▲▼ и ✕ в строке таблицы, 👁 у названия — карточка техники.</p>',
+      en:'<p>On phone each exercise has a ' + k('⋯') + ' button on the right:</p>' +
+         fig('<div class="enc-menu"><div>⬆ Up</div><div>⬇ Down</div><div>⎘ Duplicate</div><div>✏️ Edit</div><div class="red">🗑 Delete</div></div>') +
+         '<p>Tapping a row opens the set editor; tapping the underlined title opens the technique card.</p>' +
+         '<p>On desktop the same actions are ▲▼ and ✕ buttons in the table row; 👁 by the title — technique card.</p>',
+      he:'<p>בטלפון לכל תרגיל יש כפתור ' + k('⋯') + ' מימין:</p>' +
+         fig('<div class="enc-menu"><div>⬆ למעלה</div><div>⬇ למטה</div><div>⎘ שכפל</div><div>✏️ ערוך</div><div class="red">🗑 מחק</div></div>') +
+         '<p>לחיצה על שורה פותחת את עורך הסטים; לחיצה על הכותרת המקווקוות פותחת את כרטיס הטכניקה.</p>' +
+         '<p>במחשב אותן פעולות — כפתורי ▲▼ ו-✕ בשורת הטבלה; 👁 ליד הכותרת — כרטיס טכניקה.</p>'
+    }},
+  { id:'technique', icon:'📖',
+    title:{ ru:'Карточка техники упражнения', en:'Exercise Technique Card', he:'כרטיס טכניקת תרגיל' },
+    html:{
+      ru:'<p>У каждого упражнения своя карточка: фото (2 кадра), группа мышц, инвентарь, рекомендации и пошаговая техника с типичной ошибкой.</p>' +
+         step(1,'Тренер: ➕ добавить в тренировку, ✏️ изменить (название, техника, своя картинка/GIF).') +
+         step(2,'Клиент видит ту же карточку, но только для чтения.') +
+         tip('Свой GIF: ✏️ редактор упражнения → «🖼 Своя картинка/GIF» — заменит стандартное фото везде.'),
+      en:'<p>Each exercise has its own card: photos (2 frames), muscle group, equipment, tips, step-by-step technique and a common mistake.</p>' +
+         step(1,'Trainer: ➕ add to workout, ✏️ edit (name, technique, custom image/GIF).') +
+         step(2,'The client sees the same card but read-only.') +
+         tip('Custom GIF: ✏️ exercise editor → "🖼 Custom image/GIF" — replaces the default photo everywhere.'),
+      he:'<p>לכל תרגיל יש כרטיס משלו: תמונות (2 מסגרות), קבוצת שרירים, ציוד, טיפים, טכניקה שלב-אחר-שלב וטעות נפוצה.</p>' +
+         step(1,'מאמן: ➕ הוסף לאימון, ✏️ ערוך (שם, טכניקה, תמונה/GIF משלך).') +
+         step(2,'הלקוח רואה את אותו הכרטיס אך לקריאה בלבד.') +
+         tip('GIF משלך: ✏️ עורך תרגיל → "🖼 תמונה/GIF משלך" — יחליף את התמונה ברירת המחדל בכל מקום.')
+    }},
+  { id:'live', icon:'▶',
+    title:{ ru:'Live-тренировка с тренером', en:'Live Workout with Trainer', he:'אימון חי עם מאמן' },
+    html:{
+      ru:step(1,'На карточке тренировки нажмите ' + k('▶ Начать тренировку') + ' (есть и на компьютере, и на телефоне).') +
+         step(2,'Отмечайте каждый подход галочкой ✓ — после неё автоматически идёт таймер отдыха.') +
+         step(3,'Шкала 1–5 под подходом — нагрузка (RPE). Мини-графики показывают объём против плана и прошлого раза.') +
+         step(4,'Меню ⋯ у упражнения: изменить параметры, заменить упражнение, удалить — прямо во время тренировки.') +
+         step(5,k('🏁 Завершить тренировку') + ' — можно в любой момент: откроется отчёт с графиками, результат сохранится (даже частичный).') +
+         tip('Занятие абонемента списывается автоматически при сохранении результата.'),
+      en:step(1,'On the workout card tap ' + k('▶ Start Workout') + ' (available on both desktop and phone).') +
+         step(2,'Check off each set with ✓ — after it the rest timer starts automatically.') +
+         step(3,'The 1–5 scale under a set is the effort level (RPE). Mini-charts show volume vs. plan and the last time.') +
+         step(4,'The ⋯ menu on an exercise: edit parameters, swap exercise, delete — right during the workout.') +
+         step(5,k('🏁 Finish Workout') + ' — at any time: a report with charts opens, the result is saved (even partial).') +
+         tip('A subscription session is deducted automatically when a result is saved.'),
+      he:step(1,'בכרטיס האימון לחצו ' + k('▶ התחל אימון') + ' (זמין גם במחשב וגם בטלפון).') +
+         step(2,'סמנו כל סט ב-V — אחריו מופעל טיימר מנוחה אוטומטי.') +
+         step(3,'סקלת 1–5 מתחת לסט היא דרגת מאמץ (RPE). מיני-גרפים מציגים נפח מול התוכנית והפעם הקודמת.') +
+         step(4,'תפריט ⋯ בתרגיל: עריכת פרמטרים, החלפת תרגיל, מחיקה — ישירות במהלך האימון.') +
+         step(5,k('🏁 סיים אימון') + ' — בכל רגע: נפתח דוח עם גרפים, התוצאה נשמרת (גם חלקית).') +
+         tip('אימון מנוי מנוכה אוטומטית בשמירת התוצאה.')
+    }}
 ]},
 
 /* ================= ПИТАНИЕ ================= */
-{ id:'nutrition', icon:'🍽️', title:'Питание', topics:[
-  { id:'plan', icon:'🧾', title:'Составление плана питания', html:
-    step(1, 'Режим ' + k('🍽️ Питание') + ' → ' + k('＋ Добавить приём пищи') + ' (завтрак, обед...).') +
-    step(2, 'Добавьте продукты: на компьютере — из базы слева, на телефоне — «＋ Добавить продукт».') +
-    step(3, 'Укажите количество и единицу (граммы, штуки, ложки, стакан, упаковка).') +
-    step(4, 'Сверху видны прогресс-бары: калории и БЖУ против нормы клиента.') +
-    tip('🎯 у приёма — целевая доля калорий в %: помогает распределить день (завтрак 30%, обед 40%...).') },
-  { id:'prodpicker', icon:'🛒', title:'База продуктов (выбор)', html:
-    '<p>На телефоне категории открываются аккордеоном — как упражнения:</p>' +
-    fig('<div class="enc-acc"><div class="g">🥛 Молочка <i>40 ▼</i></div><div class="it">🖼 Коттедж Тнува 5% · B <b>+</b></div></div>') +
-    '<p>В базе есть брендовые израильские продукты (Тнува, Тара, Штраус, Осем...) с упаковками и Nutri-Score.</p>' +
-    tip('Карточка продукта показывает кольцо калорий, % дневной нормы и позволяет выбрать порцию перед добавлением.') },
-  { id:'prodrow', icon:'⋯', title:'Управление продуктом в приёме', html:
-    '<p>Кнопка ' + k('⋯') + ' у продукта: ⬆⬇ порядок, ⎘ дублировать (с тем же количеством), ✏️ изменить, 🗑 удалить.</p>' +
-    '<p>Карандаш ✎ у приёма: название, доля %, заметка, ⎘ дублировать весь приём, удалить.</p>' +
-    '<p>Нажатие по названию продукта — его полная карточка.</p>' },
-  { id:'clienteat', icon:'✅', title:'Как клиент отмечает питание', html:
-    step(1, 'Клиент открывает вкладку «🍽️ Питание» в своём кабинете.') +
-    step(2, 'Нажимает кружок ✓ у съеденного продукта — калории и БЖУ зачисляются в дневной прогресс.') +
-    step(3, 'Сверху — «осталось ккал на сегодня». Отметки обнуляются каждый день.') }
+{ id:'nutrition', icon:'🍽️',
+  title:{ ru:'Питание', en:'Nutrition', he:'תזונה' },
+  topics:[
+  { id:'plan', icon:'🧾',
+    title:{ ru:'Составление плана питания', en:'Building a Nutrition Plan', he:'בניית תפריט תזונה' },
+    html:{
+      ru:step(1,'Режим ' + k('🍽️ Питание') + ' → ' + k('＋ Добавить приём пищи') + ' (завтрак, обед...).') +
+         step(2,'Добавьте продукты: на компьютере — из базы слева, на телефоне — «＋ Добавить продукт».') +
+         step(3,'Укажите количество и единицу (граммы, штуки, ложки, стакан, упаковка).') +
+         step(4,'Сверху видны прогресс-бары: калории и БЖУ против нормы клиента.') +
+         tip('🎯 у приёма — целевая доля калорий в %: помогает распределить день (завтрак 30%, обед 40%...).'),
+      en:step(1,'Switch to ' + k('🍽️ Nutrition') + ' mode → ' + k('＋ Add Meal') + ' (breakfast, lunch...).') +
+         step(2,'Add foods: on desktop — from the database on the left; on phone — "＋ Add Food".') +
+         step(3,'Set quantity and unit (grams, pieces, spoons, cup, package).') +
+         step(4,'Progress bars at the top: calories and macros vs. the client’s targets.') +
+         tip('🎯 on a meal — the target calorie share in %: helps distribute the day (breakfast 30%, lunch 40%...).'),
+      he:step(1,'עברו למצב ' + k('🍽️ תזונה') + ' → ' + k('＋ הוסף ארוחה') + ' (בוקר, צהריים...).') +
+         step(2,'הוסיפו מוצרים: במחשב — מהמאגר משמאל; בטלפון — "＋ הוסף מוצר".') +
+         step(3,'הגדירו כמות ויחידה (גרם, יחידות, כפיות, כוס, חבילה).') +
+         step(4,'למעלה פסי התקדמות: קלוריות ומאקרו מול המכסה של הלקוח.') +
+         tip('🎯 בארוחה — אחוז יעד הקלוריות: עוזר לחלק את היום (בוקר 30%, צהריים 40%...).')
+    }},
+  { id:'prodpicker', icon:'🛒',
+    title:{ ru:'База продуктов (выбор)', en:'Food Database (Selection)', he:'מאגר מוצרים (בחירה)' },
+    html:{
+      ru:'<p>На телефоне категории открываются аккордеоном — как упражнения:</p>' +
+         fig('<div class="enc-acc"><div class="g">🥛 Молочка <i>40 ▼</i></div><div class="it">🖼 Коттедж Тнува 5% · B <b>+</b></div></div>') +
+         '<p>В базе есть брендовые израильские продукты (Тнува, Тара, Штраус, Осем...) с упаковками и Nutri-Score.</p>' +
+         tip('Карточка продукта показывает кольцо калорий, % дневной нормы и позволяет выбрать порцию перед добавлением.'),
+      en:'<p>On phone categories open as an accordion — just like exercises:</p>' +
+         fig('<div class="enc-acc"><div class="g">🥛 Dairy <i>40 ▼</i></div><div class="it">🖼 Tnuva Cottage 5% · B <b>+</b></div></div>') +
+         '<p>The database includes branded Israeli products (Tnuva, Tara, Strauss, Osem...) with packages and Nutri-Score.</p>' +
+         tip('The food card shows a calorie ring, % of daily value, and lets you pick a portion before adding.'),
+      he:'<p>בטלפון קטגוריות נפתחות כאקורדיון — כמו תרגילים:</p>' +
+         fig('<div class="enc-acc"><div class="g">🥛 חלביים <i>40 ▼</i></div><div class="it">🖼 קוטג׳ תנובה 5% · B <b>+</b></div></div>') +
+         '<p>במאגר יש מוצרים ישראליים ממותגים (תנובה, טרה, שטראוס, אסם...) עם אריזות ו-Nutri-Score.</p>' +
+         tip('כרטיס המוצר מציג טבעת קלוריות, % מהערך היומי ומאפשר לבחור מנה לפני הוספה.')
+    }},
+  { id:'prodrow', icon:'⋯',
+    title:{ ru:'Управление продуктом в приёме', en:'Managing a Food in a Meal', he:'ניהול מוצר בארוחה' },
+    html:{
+      ru:'<p>Кнопка ' + k('⋯') + ' у продукта: ⬆⬇ порядок, ⎘ дублировать (с тем же количеством), ✏️ изменить, 🗑 удалить.</p>' +
+         '<p>Карандаш ✎ у приёма: название, доля %, заметка, ⎘ дублировать весь приём, удалить.</p>' +
+         '<p>Нажатие по названию продукта — его полная карточка.</p>',
+      en:'<p>The ' + k('⋯') + ' button on a food: ⬆⬇ order, ⎘ duplicate (same quantity), ✏️ edit, 🗑 delete.</p>' +
+         '<p>The ✎ pencil on a meal: name, share %, note, ⎘ duplicate the entire meal, delete.</p>' +
+         '<p>Tapping a food title — its full card.</p>',
+      he:'<p>כפתור ' + k('⋯') + ' במוצר: ⬆⬇ סדר, ⎘ שכפל (באותה כמות), ✏️ ערוך, 🗑 מחק.</p>' +
+         '<p>עיפרון ✎ בארוחה: שם, אחוז, הערה, ⎘ שכפל את כל הארוחה, מחק.</p>' +
+         '<p>לחיצה על שם המוצר — הכרטיס המלא שלו.</p>'
+    }},
+  { id:'clienteat', icon:'✅',
+    title:{ ru:'Как клиент отмечает питание', en:'How the Client Marks Nutrition', he:'איך הלקוח מסמן תזונה' },
+    html:{
+      ru:step(1,'Клиент открывает вкладку «🍽️ Питание» в своём кабинете.') +
+         step(2,'Нажимает кружок ✓ у съеденного продукта — калории и БЖУ зачисляются в дневной прогресс.') +
+         step(3,'Сверху — «осталось ккал на сегодня». Отметки обнуляются каждый день.'),
+      en:step(1,'The client opens the "🍽️ Nutrition" tab in their cabinet.') +
+         step(2,'Taps the ✓ circle next to a food they ate — calories and macros are added to the daily progress.') +
+         step(3,'At the top — "kcal remaining today". Marks reset every day.'),
+      he:step(1,'הלקוח פותח את לשונית "🍽️ תזונה" באזור שלו.') +
+         step(2,'מקיש על העיגול ✓ ליד מוצר שאכל — קלוריות ומאקרו נוספים להתקדמות היומית.') +
+         step(3,'למעלה — "קלוריות שנותרו להיום". הסימון מתאפס כל יום.')
+    }}
 ]},
 
 /* ================= ИНСТРУМЕНТЫ ТРЕНЕРА ================= */
-{ id:'tools', icon:'🧰', title:'Инструменты тренера', topics:[
-  { id:'dash', icon:'📊', title:'Сводка дня', html:
-    '<p>Кнопка ' + k('📊 Сводка дня') + ' на главном экране — утренний обзор:</p>' +
-    fig('<div class="enc-grid"><div>🗓 события сегодня</div><div>✅ кто тренировался</div><div>💬 непрочитанные</div><div>💰 абонементы-алерты</div><div>🎂 дни рождения</div><div>😴 молчат 7+ дней</div></div>') +
-    tip('Нажатие на строку сразу открывает чат или абонемент этого клиента.') },
-  { id:'tpl', icon:'📦', title:'Шаблоны программ и рационов', html:
-    step(1, 'Составьте программу → ' + k('📦 Шаблоны') + ' → «💾 Сохранить текущую как шаблон».') +
-    step(2, 'У другого клиента: ' + k('📦 Шаблоны') + ' → «➕ Добавить к текущей» или «♻️ Заменить текущую».') +
-    tip('Шаблоны общие для всех клиентов и синхронизируются с облаком. В режиме питания — те же шаблоны для рационов.') },
-  { id:'measures', icon:'📏', title:'Замеры тела и фото-прогресс', html:
-    step(1, 'Кнопка ' + k('📏') + ' у клиента → «➕ Добавить замер»: вес, талия, грудь, бицепс и др.') +
-    step(2, 'Появляются карточки с динамикой за 30 дней и графики по каждому параметру.') +
-    step(3, 'Вкладка «📸 Фото-прогресс»: снимки раз в 2–4 недели, сравнение «Было → Стало».') +
-    tip('Вес из замера автоматически обновляет вес в профиле и нормы калорий.') },
-  { id:'subs', icon:'💰', title:'Абонементы и оплаты', html:
-    step(1, 'Кнопка ' + k('💰') + ' у клиента → «➕ Новый абонемент»: по занятиям (например, 12) или по сроку (месяц).') +
-    step(2, 'Занятие списывается автоматически после каждой сохранённой тренировки; вручную — кнопки «−1» / «+1».') +
-    step(3, 'Статусы: ✅ активен → ⚠️ заканчивается → ⛔ закончился. История всех операций — 📜.') +
-    tip('Клиент видит свой абонемент в «Ещё → 💰 Мой абонемент» (только просмотр).') },
-  { id:'chat', icon:'💬', title:'Чат с клиентом', html:
-    '<p>Кнопка ' + k('💬') + ' у тренера, вкладка «Чат» у клиента. Красный счётчик — непрочитанные.</p>' +
-    '<p>✓ — отправлено, ✓✓ — прочитано. Сообщения доходят между устройствами через облако.</p>' },
-  { id:'notif', icon:'🔔', title:'Уведомления', html:
-    '<p>Колокольчик ' + k('🔔') + ' в углу — центр уведомлений: напоминания о тренировке и питании, алерты абонементов, новые сообщения, «клиент выполнил тренировку».</p>' +
-    step(1, 'В настройках центра: час ежедневного напоминания и кнопка «Разрешить системные уведомления».') +
-    tip('Нажатие на уведомление сразу открывает нужный раздел.') }
+{ id:'tools', icon:'🧰',
+  title:{ ru:'Инструменты тренера', en:'Trainer Tools', he:'כלי המאמן' },
+  topics:[
+  { id:'dash', icon:'📊',
+    title:{ ru:'Сводка дня', en:'Daily Summary', he:'סיכום יומי' },
+    html:{
+      ru:'<p>Кнопка ' + k('📊 Сводка дня') + ' на главном экране — утренний обзор:</p>' +
+         fig('<div class="enc-grid"><div>🗓 события сегодня</div><div>✅ кто тренировался</div><div>💬 непрочитанные</div><div>💰 абонементы-алерты</div><div>🎂 дни рождения</div><div>😴 молчат 7+ дней</div></div>') +
+         tip('Нажатие на строку сразу открывает чат или абонемент этого клиента.'),
+      en:'<p>The ' + k('📊 Daily Summary') + ' button on the home screen — a morning overview:</p>' +
+         fig('<div class="enc-grid"><div>🗓 today’s events</div><div>✅ who worked out</div><div>💬 unread</div><div>💰 subscription alerts</div><div>🎂 birthdays</div><div>😴 silent 7+ days</div></div>') +
+         tip('Tapping a row immediately opens that client’s chat or subscription.'),
+      he:'<p>כפתור ' + k('📊 סיכום יומי') + ' במסך הבית — סקירת בוקר:</p>' +
+         fig('<div class="enc-grid"><div>🗓 אירועים היום</div><div>✅ מי התאמן</div><div>💬 לא נקראו</div><div>💰 התראות מנוי</div><div>🎂 ימי הולדת</div><div>😴 שקטים 7+ ימים</div></div>') +
+         tip('לחיצה על שורה פותחת מיד את הצ׳אט או המנוי של אותו לקוח.')
+    }},
+  { id:'tpl', icon:'📦',
+    title:{ ru:'Шаблоны программ и рационов', en:'Program and Diet Templates', he:'תבניות תוכניות ותפריטים' },
+    html:{
+      ru:step(1,'Составьте программу → ' + k('📦 Шаблоны') + ' → «💾 Сохранить текущую как шаблон».') +
+         step(2,'У другого клиента: ' + k('📦 Шаблоны') + ' → «➕ Добавить к текущей» или «♻️ Заменить текущую».') +
+         tip('Шаблоны общие для всех клиентов и синхронизируются с облаком. В режиме питания — те же шаблоны для рационов.'),
+      en:step(1,'Build a program → ' + k('📦 Templates') + ' → "💾 Save Current as Template".') +
+         step(2,'For another client: ' + k('📦 Templates') + ' → "➕ Add to Current" or "♻️ Replace Current".') +
+         tip('Templates are shared across all clients and sync to the cloud. In nutrition mode — same templates for diets.'),
+      he:step(1,'בנו תוכנית → ' + k('📦 תבניות') + ' → "💾 שמור נוכחית כתבנית".') +
+         step(2,'אצל לקוח אחר: ' + k('📦 תבניות') + ' → "➕ הוסף לנוכחית" או "♻️ החלף נוכחית".') +
+         tip('תבניות משותפות לכל הלקוחות ומסונכרנות עם הענן. במצב תזונה — אותן תבניות לתפריטים.')
+    }},
+  { id:'measures', icon:'📏',
+    title:{ ru:'Замеры тела и фото-прогресс', en:'Body Measurements and Photo Progress', he:'מדידות גוף והתקדמות תמונות' },
+    html:{
+      ru:step(1,'Кнопка ' + k('📏') + ' у клиента → «➕ Добавить замер»: вес, талия, грудь, бицепс и др.') +
+         step(2,'Появляются карточки с динамикой за 30 дней и графики по каждому параметру.') +
+         step(3,'Вкладка «📸 Фото-прогресс»: снимки раз в 2–4 недели, сравнение «Было → Стало».') +
+         tip('Вес из замера автоматически обновляет вес в профиле и нормы калорий.'),
+      en:step(1,'The ' + k('📏') + ' button on a client → "➕ Add Measurement": weight, waist, chest, biceps, etc.') +
+         step(2,'Cards appear showing 30-day dynamics and charts per parameter.') +
+         step(3,'The "📸 Photo Progress" tab: photos every 2–4 weeks, "Before → After" comparison.') +
+         tip('Weight from a measurement automatically updates the profile weight and calorie targets.'),
+      he:step(1,'כפתור ' + k('📏') + ' אצל לקוח → "➕ הוסף מדידה": משקל, מותן, חזה, זרוע ועוד.') +
+         step(2,'מופיעים כרטיסים עם דינמיקה של 30 יום וגרפים לכל פרמטר.') +
+         step(3,'לשונית "📸 התקדמות תמונות": תמונות כל 2–4 שבועות, השוואת "לפני → אחרי".') +
+         tip('משקל ממדידה מעדכן אוטומטית את המשקל בפרופיל ומכסות הקלוריות.')
+    }},
+  { id:'subs', icon:'💰',
+    title:{ ru:'Абонементы и оплаты', en:'Subscriptions and Payments', he:'מנויים ותשלומים' },
+    html:{
+      ru:step(1,'Кнопка ' + k('💰') + ' у клиента → «➕ Новый абонемент»: по занятиям (например, 12) или по сроку (месяц).') +
+         step(2,'Занятие списывается автоматически после каждой сохранённой тренировки; вручную — кнопки «−1» / «+1».') +
+         step(3,'Статусы: ✅ активен → ⚠️ заканчивается → ⛔ закончился. История всех операций — 📜.') +
+         tip('Клиент видит свой абонемент в «Ещё → 💰 Мой абонемент» (только просмотр).'),
+      en:step(1,'The ' + k('💰') + ' button on a client → "➕ New Subscription": by sessions (e.g. 12) or by period (month).') +
+         step(2,'A session is deducted automatically after each saved workout; manually — the "−1" / "+1" buttons.') +
+         step(3,'Statuses: ✅ active → ⚠️ ending soon → ⛔ used up. History of all actions — 📜.') +
+         tip('The client sees their subscription in "More → 💰 My Subscription" (read-only).'),
+      he:step(1,'כפתור ' + k('💰') + ' אצל לקוח → "➕ מנוי חדש": לפי אימונים (למשל 12) או לפי תקופה (חודש).') +
+         step(2,'אימון מנוכה אוטומטית אחרי כל אימון שמור; ידנית — כפתורי "−1" / "+1".') +
+         step(3,'סטטוסים: ✅ פעיל → ⚠️ עומד להיגמר → ⛔ נגמר. היסטוריית כל הפעולות — 📜.') +
+         tip('הלקוח רואה את המנוי ב"עוד → 💰 המנוי שלי" (קריאה בלבד).')
+    }},
+  { id:'chat', icon:'💬',
+    title:{ ru:'Чат с клиентом', en:'Chat with Client', he:'צ׳אט עם לקוח' },
+    html:{
+      ru:'<p>Кнопка ' + k('💬') + ' у тренера, вкладка «Чат» у клиента. Красный счётчик — непрочитанные.</p>' +
+         '<p>✓ — отправлено, ✓✓ — прочитано. Сообщения доходят между устройствами через облако.</p>',
+      en:'<p>The ' + k('💬') + ' button for the trainer, the "Chat" tab for the client. Red counter — unread.</p>' +
+         '<p>✓ — sent, ✓✓ — read. Messages reach across devices via the cloud.</p>',
+      he:'<p>כפתור ' + k('💬') + ' אצל המאמן, לשונית "צ׳אט" אצל הלקוח. מונה אדום — לא נקראו.</p>' +
+         '<p>✓ — נשלח, ✓✓ — נקרא. הודעות מגיעות בין מכשירים דרך הענן.</p>'
+    }},
+  { id:'notif', icon:'🔔',
+    title:{ ru:'Уведомления', en:'Notifications', he:'התראות' },
+    html:{
+      ru:'<p>Колокольчик ' + k('🔔') + ' в углу — центр уведомлений: напоминания о тренировке и питании, алерты абонементов, новые сообщения, «клиент выполнил тренировку».</p>' +
+         step(1,'В настройках центра: час ежедневного напоминания и кнопка «Разрешить системные уведомления».') +
+         tip('Нажатие на уведомление сразу открывает нужный раздел.'),
+      en:'<p>The ' + k('🔔') + ' bell in the corner — notification center: workout and nutrition reminders, subscription alerts, new messages, "client completed a workout".</p>' +
+         step(1,'In the center settings: daily reminder hour and the "Allow system notifications" button.') +
+         tip('Tapping a notification immediately opens the relevant section.'),
+      he:'<p>פעמון ' + k('🔔') + ' בפינה — מרכז התראות: תזכורות אימון ותזונה, התראות מנוי, הודעות חדשות, "לקוח השלים אימון".</p>' +
+         step(1,'בהגדרות המרכז: שעת תזכורת יומית וכפתור "אפשר התראות מערכת".') +
+         tip('לחיצה על התראה פותחת מיד את המדור הרלוונטי.')
+    }}
 ]},
 
 /* ================= ПЕЧАТЬ И ЭКСПОРТ ================= */
-{ id:'export', icon:'🖨️', title:'Печать и отправка', topics:[
-  { id:'printpg', icon:'🖨️', title:'Печать на бланк Private Gym', html:
-    step(1, 'Составьте тренировку → кнопка ' + k('🖨️ Private Gym') + '.') +
-    step(2, 'Откроется окно: вставьте фирменный бланк в принтер — печатается только текст по клеткам карточки.') +
-    step(3, 'Первый раз: включите «сетка», напечатайте на чистом листе, сверьте с бланком на просвет и подгоните X/Y.') +
-    step(4, 'Галочка «настройка строк» — точная подстройка каждой секции (верх, шаг, число строк). Всё запоминается.') +
-    warn('Упражнения сами раскладываются по строкам бланка: грудь→חזה, предплечья→יד קידמית, поясница/шея→זוקפי גב, низ→רגליים, разминка и кардио→нижняя таблица.') },
-  { id:'whatsapp', icon:'📤', title:'Отправка программы в WhatsApp', html:
-    step(1, 'Кнопка ' + k('📤 WhatsApp') + ' в режиме тренировок или питания.') +
-    step(2, 'Создаётся красивая карточка-картинка с программой и брендом зала.') +
-    step(3, 'На телефоне откроется «Поделиться» → WhatsApp; на компьютере картинка скачается — перетащите её в WhatsApp Web.') },
-  { id:'print2', icon:'📄', title:'Обычная печать и Excel', html:
-    '<p>' + k('🖨️ Печать') + ' — аккуратный документ с программой/планом. ' + k('📤 Экспорт') + ' — таблица CSV/Excel для своих расчётов.</p>' }
+{ id:'export', icon:'🖨️',
+  title:{ ru:'Печать и отправка', en:'Print and Share', he:'הדפסה ושיתוף' },
+  topics:[
+  { id:'printpg', icon:'🖨️',
+    title:{ ru:'Печать на бланк Private Gym', en:'Printing on Private Gym Form', he:'הדפסה על טופס Private Gym' },
+    html:{
+      ru:step(1,'Составьте тренировку → кнопка ' + k('🖨️ Private Gym') + '.') +
+         step(2,'Откроется окно: вставьте фирменный бланк в принтер — печатается только текст по клеткам карточки.') +
+         step(3,'Первый раз: включите «сетка», напечатайте на чистом листе, сверьте с бланком на просвет и подгоните X/Y.') +
+         step(4,'Галочка «настройка строк» — точная подстройка каждой секции (верх, шаг, число строк). Всё запоминается.') +
+         warn('Упражнения сами раскладываются по строкам бланка: грудь→חזה, предплечья→יד קידמית, поясница/шея→זוקפי גב, низ→רגליים, разминка и кардио→нижняя таблица.'),
+      en:step(1,'Build a workout → the ' + k('🖨️ Private Gym') + ' button.') +
+         step(2,'A window opens: insert the branded form into the printer — only text in the card boxes is printed.') +
+         step(3,'First time: enable "grid", print on a blank sheet, align with the form against light and adjust X/Y.') +
+         step(4,'The "row settings" checkbox — fine-tune each section (top, step, number of rows). Everything is remembered.') +
+         warn('Exercises auto-distribute across form rows: chest→חזה, forearms→יד קידמית, lower back/neck→זוקפי גב, legs→רגליים, warmup & cardio→bottom table.'),
+      he:step(1,'בנו אימון → כפתור ' + k('🖨️ Private Gym') + '.') +
+         step(2,'נפתח חלון: הכניסו את הטופס הממותג למדפסת — מודפס רק טקסט בתאי הכרטיס.') +
+         step(3,'בפעם הראשונה: הפעילו "רשת", הדפיסו על דף ריק, השוו מול הטופס באור וכוונו X/Y.') +
+         step(4,'תיבת "הגדרת שורות" — כיוונון מדויק של כל חלק (עליון, צעד, מספר שורות). הכל נשמר.') +
+         warn('תרגילים מתחלקים אוטומטית לשורות הטופס: חזה→חזה, אמות→יד קידמית, גב תחתון/צוואר→זוקפי גב, רגליים→רגליים, חימום וכרדיו→טבלה תחתונה.')
+    }},
+  { id:'whatsapp', icon:'📤',
+    title:{ ru:'Отправка программы в WhatsApp', en:'Send Program to WhatsApp', he:'שליחת תוכנית ל-WhatsApp' },
+    html:{
+      ru:step(1,'Кнопка ' + k('📤 WhatsApp') + ' в режиме тренировок или питания.') +
+         step(2,'Создаётся красивая карточка-картинка с программой и брендом зала.') +
+         step(3,'На телефоне откроется «Поделиться» → WhatsApp; на компьютере картинка скачается — перетащите её в WhatsApp Web.'),
+      en:step(1,'The ' + k('📤 WhatsApp') + ' button in workout or nutrition mode.') +
+         step(2,'A nice card-image with the program and gym branding is created.') +
+         step(3,'On phone the "Share" menu opens → WhatsApp; on desktop the image downloads — drag it into WhatsApp Web.'),
+      he:step(1,'כפתור ' + k('📤 WhatsApp') + ' במצב אימון או תזונה.') +
+         step(2,'נוצרת כרטיסיית תמונה יפה עם התוכנית והמיתוג של המכון.') +
+         step(3,'בטלפון נפתח תפריט "שיתוף" → WhatsApp; במחשב התמונה תורד — גררו אותה ל-WhatsApp Web.')
+    }},
+  { id:'print2', icon:'📄',
+    title:{ ru:'Обычная печать и Excel', en:'Standard Print and Excel', he:'הדפסה רגילה ו-Excel' },
+    html:{
+      ru:'<p>' + k('🖨️ Печать') + ' — аккуратный документ с программой/планом. ' + k('📤 Экспорт') + ' — таблица CSV/Excel для своих расчётов.</p>',
+      en:'<p>' + k('🖨️ Print') + ' — a tidy document with the program/plan. ' + k('📤 Export') + ' — a CSV/Excel table for your own calculations.</p>',
+      he:'<p>' + k('🖨️ הדפסה') + ' — מסמך מסודר עם התוכנית/התפריט. ' + k('📤 ייצוא') + ' — טבלת CSV/Excel לחישובים עצמאיים.</p>'
+    }}
 ]},
 
 /* ================= НАСТРОЙКИ И ОБЛАКО ================= */
-{ id:'system', icon:'⚙️', title:'Настройки, облако, данные', topics:[
-  { id:'themes', icon:'🕐', title:'Темы и внешний вид', html:
-    step(1, k('⚙️ Настройки') + ' → «Темы по времени суток»: 25 тем для утра, дня, вечера и ночи с фонами.') +
-    step(2, 'Там же: масштаб интерфейса, язык (русский/иврит/английский), шрифты, свои цвета.') +
-    tip('У клиента свои настройки: «Ещё → ⚙️ Настройки» — язык, масштаб, темы.') },
-  { id:'cloud', icon:'☁️', title:'Облако Google: одна учётка на всех устройствах', html:
-    step(1, 'Нажмите ' + k('Войти через Google') + ' (кнопка в углу или на экране входа).') +
-    step(2, 'Все данные синхронизируются: начали тренировку на телефоне — продолжили на планшете.') +
-    step(3, 'Маленький аватар в углу показывает статус: 🟢 синхронизировано, 🔵 идёт синхронизация, 🟠 офлайн.') +
-    warn('Без входа в Google данные хранятся только на этом устройстве.') },
-  { id:'backup', icon:'🛡', title:'Резервные копии и роли', html:
-    step(1, 'Ручная копия: на главном экране «💾 Резервная копия» — файл со всеми данными; «Восстановить» — загрузка файла.') +
-    step(2, 'Автокопия создаётся раз в неделю сама (хранятся 3 последних).') +
-    step(3, 'Роли тренеров: 👑 владелец, 🏋️ тренер, 👁 стажёр (только просмотр, изменения заблокированы).') },
-  { id:'back', icon:'🔙', title:'Кнопка «Назад» и выход', html:
-    '<p>Кнопка «Назад» на телефоне закрывает открытые окна по очереди и не выбрасывает из приложения.</p>' +
-    '<p>При попытке выйти появится вопрос «Выйти из приложения?» с кнопками «✅ Остаться» / «🚪 Выйти».</p>' }
+{ id:'system', icon:'⚙️',
+  title:{ ru:'Настройки, облако, данные', en:'Settings, Cloud, Data', he:'הגדרות, ענן, נתונים' },
+  topics:[
+  { id:'themes', icon:'🕐',
+    title:{ ru:'Темы и внешний вид', en:'Themes and Appearance', he:'ערכות נושא ומראה' },
+    html:{
+      ru:step(1,k('⚙️ Настройки') + ' → «Темы по времени суток»: 25 тем для утра, дня, вечера и ночи с фонами.') +
+         step(2,'Там же: масштаб интерфейса, язык (русский/иврит/английский), шрифты, свои цвета.') +
+         tip('У клиента свои настройки: «Ещё → ⚙️ Настройки» — язык, масштаб, темы.'),
+      en:step(1,k('⚙️ Settings') + ' → "Time-of-day themes": 25 themes for morning, day, evening, and night with backgrounds.') +
+         step(2,'There too: interface scale, language (Russian/Hebrew/English), fonts, custom colors.') +
+         tip('The client has their own settings: "More → ⚙️ Settings" — language, scale, themes.'),
+      he:step(1,k('⚙️ הגדרות') + ' → "ערכות נושא לפי שעה": 25 ערכות לבוקר, צהריים, ערב ולילה עם רקעים.') +
+         step(2,'גם שם: מרחק ממשק, שפה (רוסית/עברית/אנגלית), גופנים, צבעים משלכם.') +
+         tip('ללקוח הגדרות משלו: "עוד → ⚙️ הגדרות" — שפה, מרחק, ערכות נושא.')
+    }},
+  { id:'cloud', icon:'☁️',
+    title:{ ru:'Облако Google: одна учётка на всех устройствах', en:'Google Cloud: One Account for All Devices', he:'ענן Google: חשבון אחד לכל המכשירים' },
+    html:{
+      ru:step(1,'Нажмите ' + k('Войти через Google') + ' (кнопка в углу или на экране входа).') +
+         step(2,'Все данные синхронизируются: начали тренировку на телефоне — продолжили на планшете.') +
+         step(3,'Маленький аватар в углу показывает статус: 🟢 синхронизировано, 🔵 идёт синхронизация, 🟠 офлайн.') +
+         warn('Без входа в Google данные хранятся только на этом устройстве.'),
+      en:step(1,'Tap ' + k('Sign in with Google') + ' (the corner button or on the login screen).') +
+         step(2,'All data syncs: started a workout on your phone — continue on your tablet.') +
+         step(3,'A small avatar in the corner shows the status: 🟢 synced, 🔵 syncing, 🟠 offline.') +
+         warn('Without signing in to Google, data is stored only on this device.'),
+      he:step(1,'לחצו ' + k('כניסה דרך Google') + ' (כפתור בפינה או במסך הכניסה).') +
+         step(2,'כל הנתונים מסונכרנים: התחלתם אימון בטלפון — המשכתם בטאבלט.') +
+         step(3,'אווטר קטן בפינה מציג סטטוס: 🟢 מסונכרן, 🔵 בסנכרון, 🟠 לא מקוון.') +
+         warn('בלי כניסה ל-Google הנתונים נשמרים רק במכשיר הזה.')
+    }},
+  { id:'backup', icon:'🛡',
+    title:{ ru:'Резервные копии и роли', en:'Backups and Roles', he:'גיבויים ותפקידים' },
+    html:{
+      ru:step(1,'Ручная копия: на главном экране «💾 Резервная копия» — файл со всеми данными; «Восстановить» — загрузка файла.') +
+         step(2,'Автокопия создаётся раз в неделю сама (хранятся 3 последних).') +
+         step(3,'Роли тренеров: 👑 владелец, 🏋️ тренер, 👁 стажёр (только просмотр, изменения заблокированы).'),
+      en:step(1,'Manual backup: on the home screen "💾 Backup" — a file with all data; "Restore" — upload a file.') +
+         step(2,'An auto-backup is created weekly (the 3 most recent are kept).') +
+         step(3,'Trainer roles: 👑 owner, 🏋️ trainer, 👁 intern (view-only, edits blocked).'),
+      he:step(1,'גיבוי ידני: במסך הבית "💾 גיבוי" — קובץ עם כל הנתונים; "שחזר" — העלאת קובץ.') +
+         step(2,'גיבוי אוטומטי נוצר פעם בשבוע (נשמרים 3 האחרונים).') +
+         step(3,'תפקידי מאמנים: 👑 בעלים, 🏋️ מאמן, 👁 מתמחה (צפייה בלבד, עריכות חסומות).')
+    }},
+  { id:'back', icon:'🔙',
+    title:{ ru:'Кнопка «Назад» и выход', en:'"Back" Button and Exit', he:'כפתור "חזור" ויציאה' },
+    html:{
+      ru:'<p>Кнопка «Назад» на телефоне закрывает открытые окна по очереди и не выбрасывает из приложения.</p>' +
+         '<p>При попытке выйти появится вопрос «Выйти из приложения?» с кнопками «✅ Остаться» / «🚪 Выйти».</p>',
+      en:'<p>The "Back" button on phone closes open windows one by one and does not exit the app.</p>' +
+         '<p>When trying to exit, a prompt "Exit the app?" appears with buttons "✅ Stay" / "🚪 Exit".</p>',
+      he:'<p>כפתור "חזור" בטלפון סוגר חלונות פתוחים אחד-אחד ולא יוצא מהאפליקציה.</p>' +
+         '<p>בניסיון לצאת יופיע שאלה "לצאת מהאפליקציה?" עם כפתורים "✅ להישאר" / "🚪 לצאת".</p>'
+    }}
 ]}
 ];
 
-/* ---------- рендер ---------- */
+/* ====================== СОСТОЯНИЕ ====================== */
 var encState = { open: {}, q: '' };
 
+/* ====================== ОТКРЫТЬ / ЗАКРЫТЬ ====================== */
 window.openEncyclopedia = function(topicPath){
     if (!document.getElementById('encOverlay')){
         var ov = document.createElement('div');
         ov.id = 'encOverlay';
         ov.innerHTML = '<div class="enc-sheet">' +
-            '<div class="enc-head"><div class="enc-title">📚 Энциклопедия</div>' +
+            '<div class="enc-head"><div class="enc-title">' + etL(ENC_UI.title) + '</div>' +
             '<button class="enc-x" onclick="closeEncyclopedia()">✕</button></div>' +
-            '<div class="enc-search"><input type="search" id="encSearch" placeholder="🔍 Поиск по энциклопедии..." oninput="encSetQ(this.value)"></div>' +
+            '<div class="enc-search"><input type="search" id="encSearch" placeholder="' + etL(ENC_UI.search) + '" oninput="encSetQ(this.value)"></div>' +
             '<div class="enc-scroll"><div id="encBody"></div></div>' +
         '</div>';
         ov.addEventListener('click', function(e){ if (e.target === ov) closeEncyclopedia(); });
         document.body.appendChild(ov);
+    } else {
+        /* при смене языка обновляем заголовок и плейсхолдер */
+        var tt = document.querySelector('#encOverlay .enc-title'); if (tt) tt.textContent = etL(ENC_UI.title);
+        var si = document.getElementById('encSearch'); if (si) si.placeholder = etL(ENC_UI.search);
     }
     document.getElementById('encOverlay').style.display = 'flex';
     if (topicPath){
@@ -33653,47 +34099,52 @@ window.encToggle = function(key){
     encRender();
 };
 
+/* ====================== РЕНДЕР ====================== */
 function encRender(){
     var box = document.getElementById('encBody');
     if (!box) return;
     var q = encState.q;
     var h = '';
     ENC_SECTIONS.forEach(function(sec){
+        var secTitle = etL(sec.title);
         var topics = sec.topics;
         if (q){
             topics = topics.filter(function(tp){
-                return (tp.title + ' ' + tp.html).toLowerCase().indexOf(q) >= 0;
+                var tpTitle = etL(tp.title);
+                var tpHtml = etL(tp.html);
+                return (tpTitle + ' ' + tpHtml).toLowerCase().indexOf(q) >= 0;
             });
             if (!topics.length) return;
         }
         var secOpen = q ? true : !!encState.open[sec.id];
         h += '<div class="enc-sec-head" onclick="encToggle(\'' + sec.id + '\')">' +
-            '<span class="ico">' + sec.icon + '</span><span class="ttl">' + sec.title + '</span>' +
+            '<span class="ico">' + sec.icon + '</span><span class="ttl">' + secTitle + '</span>' +
             '<span class="cnt">' + topics.length + '</span><span class="arr">' + (secOpen ? '▲' : '▼') + '</span></div>';
         if (!secOpen) return;
         topics.forEach(function(tp){
             var key = sec.id + '/' + tp.id;
             var tOpen = q ? true : !!encState.open[key];
             h += '<div class="enc-topic-head' + (tOpen ? ' open' : '') + '" onclick="encToggle(\'' + key + '\')">' +
-                '<span class="ico">' + tp.icon + '</span><span class="ttl">' + tp.title + '</span>' +
+                '<span class="ico">' + tp.icon + '</span><span class="ttl">' + etL(tp.title) + '</span>' +
                 '<span class="arr">' + (tOpen ? '−' : '+') + '</span></div>';
-            if (tOpen) h += '<div class="enc-topic-body">' + tp.html + '</div>';
+            if (tOpen) h += '<div class="enc-topic-body">' + etL(tp.html) + '</div>';
         });
     });
-    box.innerHTML = h || '<div class="enc-none">Ничего не найдено</div>';
+    box.innerHTML = h || '<div class="enc-none">' + etL(ENC_UI.notFound) + '</div>';
 }
 
-/* ---------- кнопка возле «Сводка дня» ---------- */
+/* ====================== КНОПКА ====================== */
 function encInjectBtn(){
     var dashBtn = document.getElementById('dshHomeBtn');
-    if (!dashBtn || document.getElementById('encHomeBtn')) return;
+    var existing = document.getElementById('encHomeBtn');
+    if (existing){ existing.textContent = etL(ENC_UI.btnLabel); return; } /* обновляем текст при смене языка */
+    if (!dashBtn) return;
     var b = document.createElement('button');
     b.id = 'encHomeBtn';
     b.className = 'dsh-home-btn enc-home-btn';
-    b.textContent = '📚 Энциклопедия';
+    b.textContent = etL(ENC_UI.btnLabel);
     b.onclick = function(){ openEncyclopedia(); };
     dashBtn.parentNode.insertBefore(b, dashBtn.nextSibling);
-    /* обернуть обе кнопки в ряд */
     if (!dashBtn.parentNode.classList.contains('enc-btnrow-done')){
         var wrap = document.createElement('div');
         wrap.className = 'enc-btnrow enc-btnrow-done';
@@ -33703,8 +34154,29 @@ function encInjectBtn(){
     }
 }
 
+/* ====================== INIT (с поддержкой смены языка) ====================== */
 function encInit(){
     encInjectBtn();
+    /* перерисовка при смене языка системы */
+    var origAL = window.applyLanguage;
+    if (typeof origAL === 'function' && !window.__encLangHook){
+        window.__encLangHook = true;
+        window.applyLanguage = function(){
+            var r = origAL.apply(this, arguments);
+            try {
+                var btn = document.getElementById('encHomeBtn');
+                if (btn) btn.textContent = etL(ENC_UI.btnLabel);
+                var ov = document.getElementById('encOverlay');
+                if (ov && ov.style.display === 'flex'){
+                    var tt = ov.querySelector('.enc-title'); if (tt) tt.textContent = etL(ENC_UI.title);
+                    var si = document.getElementById('encSearch'); if (si) si.placeholder = etL(ENC_UI.search);
+                    encRender();
+                }
+            } catch(e){}
+            return r;
+        };
+    }
+    /* перерисовка кнопки после обновления главного экрана */
     var origRU = window.renderUsers;
     if (typeof origRU === 'function' && !window.__encRuHook){
         window.__encRuHook = true;
@@ -33905,5 +34377,9 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0abee885b292212',t:'MTc4MTI5OTU2NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
+<script src="video-call.js"></script>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b297521e4ee8b9',t:'MTc4MTM2OTM5Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
 </html>
