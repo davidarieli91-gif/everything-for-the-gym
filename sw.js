@@ -1,16 +1,10 @@
 /* ============================================================
-   Service Worker — Private Gym PWA
-   Кэширует приложение для офлайн-работы в зале.
-   Стратегии:
-   - index.html: network-first (свежая версия при наличии сети,
-     кэш как запасной вариант офлайн)
-   - иконки/манифест: cache-first
-   - фото упражнений (raw.githubusercontent) и шрифты: cache-first
-     с докачкой (растущий кэш)
-   - Firebase/Google API: всегда сеть (не кэшируем)
+   Service Worker — Private Gym PWA (v12)
+   Стратегия: network-first для ВСЕХ своих файлов
+   (всегда отдаёт свежую версию из сети, кэш только для офлайн)
    ============================================================ */
-const APP_CACHE = 'pg-app-v10';
-const MEDIA_CACHE = 'pg-media-v1';
+const APP_CACHE = 'pg-app-v12';
+const MEDIA_CACHE = 'pg-media-v2';
 
 const PRECACHE = [
   './',
@@ -26,7 +20,7 @@ self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(APP_CACHE)
       .then((c) => c.addAll(PRECACHE))
-      .catch(() => {}) // не валим установку, если что-то не докачалось
+      .catch(() => {})
       .then(() => self.skipWaiting())
   );
 });
@@ -43,7 +37,6 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-/* сообщение от страницы: применить обновление немедленно */
 self.addEventListener('message', (e) => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
@@ -54,7 +47,7 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(req.url);
 
-  /* Firebase, Google авторизация, аналитика — только сеть */
+  /* Firebase, Google — только сеть */
   if (
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('firebaseapp.com') ||
@@ -63,28 +56,14 @@ self.addEventListener('fetch', (e) => {
     url.hostname.includes('google-analytics.com') ||
     url.hostname.includes('googletagmanager.com') ||
     url.hostname.includes('accounts.google.com') ||
-    url.hostname.includes('apis.google.com')
+    url.hostname.includes('apis.google.com') ||
+    url.hostname.includes('unpkg.com') ||
+    url.hostname.includes('meet.jit.si')
   ) {
-    return; // браузер сам сходит в сеть
-  }
-
-  /* навигация / index.html: network-first */
-  if (req.mode === 'navigate' || url.pathname.endsWith('/index.html') || url.pathname === '/' ) {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(APP_CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
-          return res;
-        })
-        .catch(() =>
-          caches.match('./index.html').then((r) => r || caches.match('./'))
-        )
-    );
     return;
   }
 
-  /* фото упражнений с GitHub CDN, gstatic-шрифты, гифки: cache-first */
+  /* фото упражнений с GitHub, шрифты: cache-first (они большие и не меняются) */
   if (
     url.hostname === 'raw.githubusercontent.com' ||
     url.hostname === 'fonts.gstatic.com' ||
@@ -107,19 +86,23 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  /* остальное со своего домена: cache-first с обновлением */
+  /* ВСЁ остальное со своего домена: NETWORK-FIRST (свежая версия!) */
   if (url.origin === self.location.origin) {
     e.respondWith(
-      caches.match(req).then((cached) => {
-        const network = fetch(req).then((res) => {
+      fetch(req)
+        .then((res) => {
+          /* обновляем кэш свежим файлом */
           if (res && res.ok) {
             const copy = res.clone();
             caches.open(APP_CACHE).then((c) => c.put(req, copy)).catch(() => {});
           }
           return res;
-        }).catch(() => cached);
-        return cached || network;
-      })
+        })
+        .catch(() =>
+          /* нет сети — отдаём кэш */
+          caches.match(req).then((cached) => cached || caches.match('./index.html'))
+        )
     );
+    return;
   }
 });

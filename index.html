@@ -34865,9 +34865,546 @@ else setTimeout(init,1300);
 })();
 </script>
 
+<script>
+/* ============================================================
+   CONTEXT MENU + CALENDAR WIDGET + CUSTOM PANELS
+   ────────────────────────────────────────────────────────────
+   • Кастомное контекстное меню (правый клик / долгое нажатие)
+   • Виджет календаря (день / неделя / месяц)
+   • Создание пользовательских панелей
+   ============================================================ */
+(function(){
+'use strict';
+var W=window;function E(id){return document.getElementById(id);}
+var L=(typeof currentLang!=='undefined')?currentLang:'ru';
+
+var CM_T={
+    newPanel:{ru:'📋 Новая панель',en:'📋 New panel',he:'📋 פאנל חדש'},
+    newNote:{ru:'📝 Заметка',en:'📝 Note',he:'📝 פתק'},
+    newLink:{ru:'🔗 Быстрая ссылка',en:'🔗 Quick link',he:'🔗 קישור'},
+    newChecklist:{ru:'✅ Чек-лист',en:'✅ Checklist',he:'✅ רשימה'},
+    newGoal:{ru:'🎯 Цель',en:'🎯 Goal',he:'🎯 יעד'},
+    newCalendar:{ru:'📅 Календарь',en:'📅 Calendar',he:'📅 יומן'},
+    newClock:{ru:'🕐 Часы',en:'🕐 Clock',he:'🕐 שעון'},
+    newCalculator:{ru:'🔢 Калькулятор',en:'🔢 Calculator',he:'🔢 מחשבון'},
+    addWidget:{ru:'➕ Добавить виджет',en:'➕ Add widget',he:'➕ ווידג׳ט'},
+    editScreen:{ru:'✏️ Редактировать экран',en:'✏️ Edit layout',he:'✏️ עריכה'},
+    goClients:{ru:'👥 Клиенты',en:'👥 Clients',he:'👥 לקוחות'},
+    goCalendar:{ru:'📅 Календарь',en:'📅 Calendar',he:'📅 יומן'},
+    goSettings:{ru:'⚙️ Настройки',en:'⚙️ Settings',he:'⚙️ הגדרות'},
+    goBackup:{ru:'💾 Резервная копия',en:'💾 Backup',he:'💾 גיבוי'},
+    goDashboard:{ru:'📊 Сводка дня',en:'📊 Summary',he:'📊 סיכום'},
+    goEncyclopedia:{ru:'📚 Энциклопедия',en:'📚 Encyclopedia',he:'📚 אנציקלופדיה'},
+    goScanner:{ru:'📷 Сканер',en:'📷 Scanner',he:'📷 סריקה'},
+    paste:{ru:'📋 Вставить панель здесь',en:'📋 Place panel here',he:'📋 הצב כאן'},
+    refresh:{ru:'🔄 Обновить',en:'🔄 Refresh',he:'🔄 רענן'},
+    cancel:{ru:'Закрыть',en:'Close',he:'סגור'}
+};
+function ct(k){return(CM_T[k]&&(CM_T[k][L]||CM_T[k].ru))||k;}
+
+/* ====================== CSS ====================== */
+function injectCSS(){
+    if(document.getElementById('cmCSS'))return;
+    var s=document.createElement('style');s.id='cmCSS';s.textContent=
+    /* Контекстное меню */
+    '#ctxMenu{display:none;position:fixed;z-index:100000;background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:6px;min-width:220px;max-width:280px;overflow-y:auto;max-height:70vh;}'+
+    '#ctxMenu.open{display:block;animation:cmFade .12s ease-out;}'+
+    '@keyframes cmFade{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}'+
+    '.ctx-group{font-size:.65em;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px 4px;}'+
+    '.ctx-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.88em;font-weight:600;color:var(--text-primary);transition:background .1s;user-select:none;}'+
+    '.ctx-item:hover{background:rgba(16,185,129,.1);}'+
+    '.ctx-item .ico{font-size:1.2em;width:22px;text-align:center;flex-shrink:0;}'+
+    '.ctx-sep{height:1px;background:var(--border-color);margin:4px 8px;}'+
+    'body.dark-theme #ctxMenu{box-shadow:0 12px 40px rgba(0,0,0,.5);}'+
+    /* Пользовательские панели */
+    '.custom-panel{background:var(--surface-color);border:1px solid var(--border-color);border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden;position:absolute;}'+
+    'body.dark-theme .custom-panel{background:rgba(255,255,255,.05)}'+
+    '.custom-panel-title{font-size:.72em;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}'+
+    '.custom-panel-body{font-size:.9em;color:var(--text-primary);}'+
+    '.cp-check-item{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;}'+
+    '.cp-check-box{width:18px;height:18px;border:2px solid var(--border-color);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}'+
+    '.cp-check-item.done .cp-check-box{background:var(--primary-color);border-color:var(--primary-color);color:#fff;}'+
+    '.cp-check-item.done .cp-check-text{text-decoration:line-through;opacity:.5;}'+
+    '.cp-check-text{flex:1;font-size:.9em;}'+
+    '.cp-add-row{display:flex;gap:6px;margin-top:8px;}'+
+    '.cp-add-input{flex:1;padding:6px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:.85em;background:var(--surface-color);color:var(--text-primary);}'+
+    '.cp-add-btn{padding:6px 12px;border:none;border-radius:8px;background:var(--primary-color);color:#fff;cursor:pointer;font-weight:700;font-size:.85em;}'+
+    '.cp-note-area{width:100%;min-height:60px;resize:vertical;padding:8px;border:1px solid var(--border-color);border-radius:8px;font-family:inherit;font-size:.9em;background:var(--surface-color);color:var(--text-primary);}'+
+    '.cp-link-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;transition:.1s;}'+
+    '.cp-link-item:hover{background:rgba(59,130,246,.08);}'+
+    '.cp-goal-bar{height:8px;background:var(--border-color);border-radius:999px;overflow:hidden;margin:4px 0;}'+
+    '.cp-goal-fill{height:100%;background:linear-gradient(90deg,var(--primary-color),var(--primary-dark));border-radius:999px;transition:width .4s;}'+
+    /* Календарь-виджет */
+    '.cw-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:.72em;}'+
+    '.cw-dow{text-align:center;font-weight:700;color:var(--text-light);padding:3px 0;font-size:.9em;}'+
+    '.cw-dow.we{color:#EF4444;}'+
+    '.cw-day{text-align:center;padding:4px 2px;border-radius:6px;cursor:pointer;transition:.1s;min-height:24px;display:flex;align-items:center;justify-content:center;position:relative;}'+
+    '.cw-day:hover{background:rgba(16,185,129,.12);}'+
+    '.cw-day.today{background:var(--primary-color);color:#fff;font-weight:700;}'+
+    '.cw-day.other{opacity:.3;}'+
+    '.cw-day.has-event::after{content:"";position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#F59E0B;}'+
+    '.cw-day.today.has-event::after{background:#fff;}'+
+    '.cw-mode-bar{display:flex;gap:4px;margin-bottom:8px;}'+
+    '.cw-mode-btn{flex:1;padding:4px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);color:var(--text-primary);cursor:pointer;font-size:.82em;font-weight:600;text-align:center;}'+
+    '.cw-mode-btn.active{background:var(--primary-color);color:#fff;border-color:var(--primary-color);}'+
+    '.cw-month-header{text-align:center;font-weight:700;font-size:.9em;margin-bottom:6px;color:var(--primary-color);}'+
+    '.cw-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}'+
+    '.cw-week-day{border:1px solid var(--border-color);border-radius:6px;min-height:50px;padding:3px;font-size:.72em;}'+
+    '.cw-week-day.today{border-color:var(--primary-color);background:rgba(16,185,129,.05);}'+
+    '.cw-week-day-num{font-weight:700;margin-bottom:2px;}'+
+    '.cw-event-pill{font-size:.8em;background:rgba(59,130,246,.15);color:#3B82F6;border-radius:3px;padding:1px 3px;margin:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'+
+    '.cw-day-view{text-align:center;}'+
+    '.cw-day-date{font-size:1.2em;font-weight:700;color:var(--primary-color);margin-bottom:8px;}'+
+    '.cw-day-events{text-align:left;}'+
+    '.cw-no-events{color:var(--text-light);font-size:.85em;text-align:center;padding:12px;}'+
+    '';
+    document.head.appendChild(s);
+}
+
+/* ====================== КОНТЕКСТНОЕ МЕНЮ ====================== */
+var ctxClickPos={x:0,y:0};
+
+function buildMenu(){
+    if(document.getElementById('ctxMenu'))return;
+    var m=document.createElement('div');m.id='ctxMenu';
+    document.body.appendChild(m);
+    /* Закрытие по клику вне меню */
+    document.addEventListener('click',function(e){
+        var m2=document.getElementById('ctxMenu');
+        if(m2&&!m2.contains(e.target))m2.classList.remove('open');
+    });
+    /* Закрытие по Esc */
+    document.addEventListener('keydown',function(e){
+        if(e.key==='Escape'){var m2=document.getElementById('ctxMenu');if(m2)m2.classList.remove('open');}
+    });
+}
+
+function showCtx(x,y,items){
+    var m=E('ctxMenu');if(!m)buildMenu();m=E('ctxMenu');if(!m)return;
+    var h='';
+    items.forEach(function(it){
+        if(it.sep){h+='<div class="ctx-sep"></div>';return;}
+        if(it.group){h+='<div class="ctx-group">'+it.group+'</div>';return;}
+        h+='<div class="ctx-item" data-act="'+(it.act||'')+'">'+
+            '<span class="ico">'+(it.ico||'')+'</span>'+
+            '<span>'+it.label+'</span></div>';
+    });
+    h+='<div class="ctx-sep"></div><div class="ctx-item" data-act="cancel"><span class="ico">✕</span><span>'+ct('cancel')+'</span></div>';
+    m.innerHTML=h;
+    /* позиция */
+    m.style.left=Math.min(x,window.innerWidth-240)+'px';
+    m.style.top=Math.min(y,window.innerHeight-m.offsetHeight-20)+'px';
+    if(m.offsetTop+m.offsetHeight>window.innerHeight)m.style.top=(window.innerHeight-m.offsetHeight-20)+'px';
+    m.classList.add('open');
+    /* обработчики */
+    m.querySelectorAll('.ctx-item').forEach(function(el){
+        el.addEventListener('click',function(){
+            var act=el.getAttribute('data-act');
+            m.classList.remove('open');
+            if(act&&act!=='cancel')executeCtx(act);
+        });
+    });
+}
+
+function executeCtx(act){
+    var pos=ctxClickPos;
+    switch(act){
+        case 'newNote':CustomPanels.create('note',pos);break;
+        case 'newLink':CustomPanels.create('link',pos);break;
+        case 'newChecklist':CustomPanels.create('checklist',pos);break;
+        case 'newGoal':CustomPanels.create('goal',pos);break;
+        case 'newCalendar':if(W.heAddW)W.heAddW('calendarWidget');break;
+        case 'newClock':if(W.heAddW)W.heAddW('clock');break;
+        case 'newCalculator':if(W.heAddW)W.heAddW('calc');break;
+        case 'addWidget':if(W.heShowW)W.heShowW();break;
+        case 'editScreen':if(W.heToggle)W.heToggle();break;
+        case 'goClients':if(W.renderUsers)W.renderUsers();if(W.openUser)W.openUser();break;
+        case 'goCalendar':if(W.openCalendarModal)W.openCalendarModal();break;
+        case 'goSettings':if(W.openSettingsModal)W.openSettingsModal();break;
+        case 'goBackup':if(W.backupAllData)W.backupAllData();break;
+        case 'goDashboard':if(W.openDashboard)W.openDashboard();break;
+        case 'goEncyclopedia':if(W.openEncyclopedia)W.openEncyclopedia();break;
+        case 'goScanner':if(W.openBarcodeScanner)W.openBarcodeScanner();break;
+        case 'refresh':location.reload();break;
+    }
+}
+
+function getDefaultMenu(){
+    return [
+        {group:ct('newPanel')},
+        {ico:'📝',label:ct('newNote'),act:'newNote'},
+        {ico:'✅',label:ct('newChecklist'),act:'newChecklist'},
+        {ico:'🔗',label:ct('newLink'),act:'newLink'},
+        {ico:'🎯',label:ct('newGoal'),act:'newGoal'},
+        {sep:true},
+        {ico:'📅',label:ct('newCalendar'),act:'newCalendar'},
+        {ico:'🕐',label:ct('newClock'),act:'newClock'},
+        {ico:'🔢',label:ct('newCalculator'),act:'newCalculator'},
+        {ico:'➕',label:ct('addWidget'),act:'addWidget'},
+        {sep:true},
+        {group:'Навигация'},
+        {ico:'📊',label:ct('goDashboard'),act:'goDashboard'},
+        {ico:'👥',label:ct('goClients'),act:'goClients'},
+        {ico:'📅',label:ct('goCalendar'),act:'goCalendar'},
+        {ico:'📚',label:ct('goEncyclopedia'),act:'goEncyclopedia'},
+        {ico:'📷',label:ct('goScanner'),act:'goScanner'},
+        {sep:true},
+        {ico:'✏️',label:ct('editScreen'),act:'editScreen'},
+        {ico:'⚙️',label:ct('goSettings'),act:'goSettings'},
+        {ico:'💾',label:ct('goBackup'),act:'goBackup'},
+        {ico:'🔄',label:ct('refresh'),act:'refresh'}
+    ];
+}
+
+/* Перехват правого клика */
+function setupContextCapture(){
+    document.addEventListener('contextmenu',function(e){
+        /* только на главном экране */
+        var hs=document.getElementById('homeScreen');
+        if(!hs||hs.classList.contains('hidden')||hs.style.display==='none')return;
+        /* не показываем в модалках */
+        if(e.target.closest('.modal,.tools-modal,.calendar-modal,.scanner-modal,.enc-sheet,.ntf-sheet,#ctxMenu'))return;
+        e.preventDefault();
+        ctxClickPos={x:e.clientX,y:e.clientY};
+        buildMenu();
+        showCtx(e.clientX,e.clientY,getDefaultMenu());
+    });
+    /* Долгое нажатие для touch */
+    var touchTimer=null,touchPos=null;
+    document.addEventListener('touchstart',function(e){
+        var hs=document.getElementById('homeScreen');
+        if(!hs||hs.classList.contains('hidden'))return;
+        if(e.target.closest('.modal,.tools-modal,.calendar-modal,#ctxMenu,.he-bar,.he-r'))return;
+        var t=e.touches[0];
+        touchPos={x:t.clientX,y:t.clientY};
+        touchTimer=setTimeout(function(){
+            ctxClickPos=touchPos;
+            buildMenu();
+            showCtx(touchPos.x,touchPos.y,getDefaultMenu());
+            /* вибрация */
+            if(navigator.vibrate)navigator.vibrate(50);
+        },600);
+    },{passive:true});
+    document.addEventListener('touchmove',function(){
+        if(touchTimer){clearTimeout(touchTimer);touchTimer=null;}
+    },{passive:true});
+    document.addEventListener('touchend',function(){
+        if(touchTimer){clearTimeout(touchTimer);touchTimer=null;}
+    },{passive:true});
+}
+
+/* ====================== ВИДЖЕТ КАЛЕНДАРЯ ====================== */
+var CW={
+    mode:'month',
+    refDate:new Date()
+};
+/* Добавим календарь в существующий WG (через heAddW) */
+function setupCalendarWidget(){
+    /* Если WG определён в hEdit v5 — расширим его */
+    if(typeof W.WG==='object'){
+        if(!W.WG.calendarWidget){
+            W.WG.calendarWidget={
+                t:{ru:'Календарь',en:'Calendar',he:'יומן'},
+                i:'📅',
+                r:function(){return '<div id="cwRoot"></div>';},
+                init:function(){CW.render();}
+            };
+        }
+    }else{
+        /* если WG нет — попробуем позже */
+        setTimeout(setupCalendarWidget,500);
+    }
+}
+
+CW.getDOW=function(){return L==='he'?['א','ב','ג','ד','ה','ו','ש']:L==='en'?['Su','Mo','Tu','We','Th','Fr','Sa']:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];};
+CW.getMonthName=function(m){var names=L==='he'?['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']:L==='en'?['January','February','March','April','May','June','July','August','September','October','November','December']:['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];return names[m]||'';};
+
+CW.getEvents=function(){
+    try{return JSON.parse(localStorage.getItem('calendarEvents')||'[]');}catch(e){return[];}
+};
+CW.eventsOnDate=function(dateStr){
+    return CW.getEvents().filter(function(e){return e.date===dateStr;});
+};
+CW.toDateStr=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+
+CW.render=function(){
+    var root=E('cwRoot');if(!root)return;
+    var modeBtns='<div class="cw-mode-bar">'+
+        '<button class="cw-mode-btn'+(CW.mode==='day'?' active':'')+'" onclick="CW.setMode(\'day\')">'+(L==='he'?'יום':L==='en'?'Day':'День')+'</button>'+
+        '<button class="cw-mode-btn'+(CW.mode==='week'?' active':'')+'" onclick="CW.setMode(\'week\')">'+(L==='he'?'שבוע':L==='en'?'Week':'Неделя')+'</button>'+
+        '<button class="cw-mode-btn'+(CW.mode==='month'?' active':'')+'" onclick="CW.setMode(\'month\')">'+(L==='he'?'חודש':L==='en'?'Month':'Месяц')+'</button>'+
+    '</div>';
+    if(CW.mode==='month')root.innerHTML=modeBtns+CW.renderMonth();
+    else if(CW.mode==='week')root.innerHTML=modeBtns+CW.renderWeek();
+    else root.innerHTML=modeBtns+CW.renderDay();
+};
+W.CW=CW;
+CW.setMode=function(m){CW.mode=m;CW.render();};
+CW.shift=function(dir){
+    var d=new Date(CW.refDate);
+    if(CW.mode==='month')d.setMonth(d.getMonth()+dir);
+    else if(CW.mode==='week')d.setDate(d.getDate()+dir*7);
+    else d.setDate(d.getDate()+dir);
+    CW.refDate=d;CW.render();
+};
+
+CW.renderMonth=function(){
+    var now=new Date(),y=CW.refDate.getFullYear(),m=CW.refDate.getMonth();
+    var first=new Date(y,m,1);var startDow=first.getDay();
+    var daysInMonth=new Date(y,m+1,0).getDate();
+    var prevDays=new Date(y,m,0).getDate();
+    var dow=CW.getDOW();var events=CW.getEvents();
+    var evDates={};events.forEach(function(e){evDates[e.date]=1;});
+    var h='<div class="cw-month-header">'+
+        '<span style="cursor:pointer" onclick="CW.shift(-1)">‹ </span>'+
+        CW.getMonthName(m)+' '+y+
+        '<span style="cursor:pointer" onclick="CW.shift(1)"> ›</span></div>';
+    h+='<div class="cw-grid">';
+    dow.forEach(function(d,i){h+='<div class="cw-dow'+(i===0||i===6?' we':'')+'">'+d+'</div>';});
+    /* пред. месяц */
+    for(var i=startDow-1;i>=0;i--){h+='<div class="cw-day other">'+(prevDays-i)+'</div>';}
+    /* текущий */
+    for(var d=1;d<=daysInMonth;d++){
+        var ds=CW.toDateStr(new Date(y,m,d));
+        var isToday=now.getFullYear()===y&&now.getMonth()===m&&now.getDate()===d;
+        var hasEv=evDates[ds];
+        h+='<div class="cw-day'+(isToday?' today':'')+(hasEv?' has-event':'')+'" onclick="CW.selectDate(\''+ds+'\')" title="'+(CW.eventsOnDate(ds).length?'(' +CW.eventsOnDate(ds).length+')':'')+'">'+d+'</div>';
+    }
+    /* следующий */
+    var totalCells=startDow+daysInMonth;
+    var fill=7-(totalCells%7);if(fill<7)for(var j=1;j<=fill;j++){h+='<div class="cw-day other">'+j+'</div>';}
+    h+='</div>';
+    var todayEv=CW.eventsOnDate(CW.toDateStr(now));
+    if(todayEv.length){h+='<div style="margin-top:8px;font-size:.78em;font-weight:700;color:var(--text-secondary);">Сегодня ('+todayEv.length+'):</div>';todayEv.slice(0,3).forEach(function(e){h+='<div class="cw-event-pill">'+(e.time||'')+' '+ (e.title||e.clientName||'')+'</div>';});}
+    return h;
+};
+CW.renderWeek=function(){
+    var now=new Date(),dow=CW.getDOW();
+    var start=new Date(CW.refDate);start.setDate(start.getDate()-start.getDay());
+    var events=CW.getEvents();
+    var h='<div class="cw-month-header"><span style="cursor:pointer" onclick="CW.shift(-1)">‹</span> '+(L==='he'?'שבוע':L==='en'?'Week':'Неделя')+' <span style="cursor:pointer" onclick="CW.shift(1)">›</span></div>';
+    h+='<div class="cw-week-grid">';
+    for(var i=0;i<7;i++){
+        var d=new Date(start);d.setDate(start.getDate()+i);
+        var ds=CW.toDateStr(d);
+        var isToday=CW.toDateStr(now)===ds;
+        var dayEvents=events.filter(function(e){return e.date===ds;});
+        h+='<div class="cw-week-day'+(isToday?' today':'')+'" onclick="CW.selectDate(\''+ds+'\')">';
+        h+='<div class="cw-week-day-num">'+dow[i]+' '+d.getDate()+'</div>';
+        dayEvents.slice(0,3).forEach(function(e){h+='<div class="cw-event-pill">'+(e.time||'')+' '+(e.title||e.clientName||'')+'</div>';});
+        if(dayEvents.length>3)h+='<div style="font-size:.7em;color:var(--text-light);">+'+(dayEvents.length-3)+'</div>';
+        h+='</div>';
+    }
+    h+='</div>';return h;
+};
+CW.renderDay=function(){
+    var now=new Date();
+    var ds=CW.toDateStr(CW.refDate);
+    var isToday=CW.toDateStr(now)===ds;
+    var events=CW.eventsOnDate(ds).sort(function(a,b){return (a.time||'').localeCompare(b.time||'');});
+    var h='<div class="cw-day-view"><div class="cw-month-header"><span style="cursor:pointer" onclick="CW.shift(-1)">‹</span> '+CW.refDate.toLocaleDateString()+' <span style="cursor:pointer" onclick="CW.shift(1)">›</span></div>';
+    h+='<div class="cw-day-date">'+(isToday?(L==='he'?'היום':L==='en'?'Today':'Сегодня')+': ':'')+CW.refDate.toLocaleDateString(L==='he'?'he-IL':L==='en'?'en-US':'ru-RU',{weekday:'long',day:'numeric',month:'long'})+'</div>';
+    if(!events.length){h+='<div class="cw-no-events">'+(L==='he'?'אין אירועים':L==='en'?'No events':'Нет событий')+'</div>';}
+    else{h+='<div class="cw-day-events">';events.forEach(function(e){h+='<div class="cw-event-pill" style="margin-bottom:4px;padding:6px;">'+(e.time?'⏰ '+e.time:'')+(e.title?' 📋 '+e.title:'')+(e.clientName?' 👤 '+e.clientName:'')+'</div>';});h+='</div>';}
+    h+='</div>';return h;
+};
+CW.selectDate=function(ds){
+    CW.refDate=new Date(ds);CW.mode='day';CW.render();
+    if(W.openCalendarModal)setTimeout(function(){W.openCalendarModal();},200);
+};
+
+/* ====================== ПОЛЬЗОВАТЕЛЬСКИЕ ПАНЕЛИ ====================== */
+var CP=CustomPanels={
+    panels:[],
+    nextId:1,
+    load:function(){
+        try{var d=JSON.parse(localStorage.getItem('customPanels'));if(d){this.panels=d.panels||[];this.nextId=d.nextId||1;}}catch(e){}
+    },
+    save:function(){
+        try{localStorage.setItem('customPanels',JSON.stringify({panels:this.panels,nextId:this.nextId}));}catch(e){}
+    },
+    create:function(type,pos){
+        var id='cp_'+(this.nextId++);
+        var panel={id:id,type:type,x:pos.x||100,y:pos.y||100,w:250,h:0,
+            title:'',data:{}};
+        if(type==='note'){panel.title=L==='he'?'פתק':L==='en'?'Note':'Заметка';panel.data.text='';panel.w=260;panel.h=180;}
+        if(type==='checklist'){panel.title=L==='he'?'רשימה':L==='en'?'Checklist':'Чек-лист';panel.data.items=[];panel.w=260;panel.h=220;}
+        if(type==='link'){panel.title=L==='he'?'קישורים':L==='en'?'Links':'Ссылки';panel.data.links=[{label:'WhatsApp',url:'https://wa.me/'},{label:'Google',url:'https://google.com'}];panel.w=220;panel.h=160;}
+        if(type==='goal'){panel.title=L==='he'?'יעד':L==='en'?'Goal':'Цель';panel.data={name:'',current:0,target:100,unit:'%'};panel.w=240;panel.h=150;}
+        this.panels.push(panel);
+        this.save();
+        this.render();
+        if(typeof showToast==='function')showToast('✅ '+panel.title);
+    },
+    remove:function(id){
+        this.panels=this.panels.filter(function(p){return p.id!==id;});
+        this.save();this.render();
+    },
+    update:function(id,changes){
+        var p=this.panels.find(function(x){return x.id===id;});
+        if(p){Object.assign(p,changes);this.save();}
+    },
+    updateData:function(id,key,val){
+        var p=this.panels.find(function(x){return x.id===id;});
+        if(p){p.data=p.data||{};p.data[key]=val;this.save();}
+    },
+    render:function(){
+        var c=E('customPanelsContainer');
+        if(!c){
+            c=document.createElement('div');
+            c.id='customPanelsContainer';
+            c.style.cssText='width:100%;max-width:1100px;margin:0 auto 16px;position:relative;z-index:1';
+            var hs=document.getElementById('homeScreen');
+            if(hs)hs.appendChild(c);
+        }
+        if(!this.panels.length){c.style.display='none';c.innerHTML='';return;}
+        c.style.display='block';
+        var editing=document.body.classList.contains('he-edit');
+        var html='';
+        this.panels.forEach(function(p){
+            var st='position:absolute;left:'+p.x+'px;top:'+p.y+'px;width:'+p.w+'px;'+(p.h?'height:'+p.h+'px':'');
+            html+='<div class="custom-panel" data-cp="'+p.id+'" style="'+st+'">';
+            if(editing){
+                html+='<div class="he-bar"><span>'+p.title+'</span><button class="he-bar-x" onclick="CustomPanels.remove(\''+p.id+'\')">✕</button></div>';
+            }else{
+                html+='<div class="custom-panel-title">'+p.title+'<button onclick="CustomPanels.remove(\''+p.id+'\')" style="margin-left:auto;background:none;border:none;color:var(--text-light);cursor:pointer;font-size:1em;">✕</button></div>';
+            }
+            html+=CP.renderBody(p);
+            html+='</div>';
+        });
+        c.innerHTML=html;
+        /* drag в режиме редактирования */
+        if(editing){
+            this.panels.forEach(function(p){
+                var el=c.querySelector('[data-cp="'+p.id+'"]');if(!el)return;
+                var bar=el.querySelector('.he-bar');
+                if(bar){
+                    bar.addEventListener('mousedown',function(e){
+                        if(e.target.classList.contains('he-bar-x'))return;
+                        CP.startDrag(e,el,p);
+                    });
+                }
+            });
+        }
+    },
+    renderBody:function(p){
+        if(p.type==='note'){
+            return '<textarea class="cp-note-area" placeholder="..." oninput="CustomPanels.updateData(\''+p.id+'\',\'text\',this.value)" style="height:'+(p.h?p.h-60:100)+'px">'+(p.data.text||'')+'</textarea>';
+        }
+        if(p.type==='checklist'){
+            var items=p.data.items||[];
+            var h='<div>';
+            items.forEach(function(it,idx){
+                h+='<div class="cp-check-item'+(it.done?' done':'')+'" onclick="CustomPanels.toggleCheck(\''+p.id+'\','+idx+')">';
+                h+='<div class="cp-check-box">'+(it.done?'✓':'')+'</div>';
+                h+='<div class="cp-check-text">'+(it.text||'')+'</div>';
+                h+='<button onclick="event.stopPropagation();CustomPanels.removeCheck(\''+p.id+'\','+idx+')" style="background:none;border:none;color:var(--text-light);cursor:pointer;">✕</button>';
+                h+='</div>';
+            });
+            h+='<div class="cp-add-row"><input type="text" class="cp-add-input" placeholder="'+(L==='he'?'פריט חדש':L==='en'?'New item':'Новый пункт')+'" onkeypress="if(event.key===\'Enter\'){CustomPanels.addCheck(\''+p.id+'\',this.value);this.value=\'\';}"><button class="cp-add-btn" onclick="var i=this.previousElementSibling;CustomPanels.addCheck(\''+p.id+'\',i.value);i.value=\'\';">+</button></div>';
+            return h+'</div>';
+        }
+        if(p.type==='link'){
+            var links=p.data.links||[];
+            var h='<div>';
+            links.forEach(function(ln,idx){
+                h+='<div class="cp-link-item" onclick="window.open(\''+ln.url+'\',\'_blank\')">';
+                h+='<span style="font-size:1.3em;">🔗</span><span style="flex:1;font-weight:600;">'+(ln.label||ln.url)+'</span>';
+                h+='</div>';
+            });
+            h+='<div class="cp-add-row"><input type="text" class="cp-add-input" placeholder="'+(L==='he'?'שם':L==='en'?'Label':'Название')+'" id="cpLbl_'+p.id+'"><input type="text" class="cp-add-input" placeholder="URL" id="cpUrl_'+p.id+'"><button class="cp-add-btn" onclick="CustomPanels.addLink(\''+p.id+'\')">+</button></div>';
+            return h+'</div>';
+        }
+        if(p.type==='goal'){
+            var d=p.data;var pct=Math.round((d.current/d.target)*100)||0;
+            var h='<div style="padding:4px">';
+            h+='<div style="font-weight:700;margin-bottom:6px;">'+(d.name||(L==='he'?'יעד חדש':L==='en'?'New goal':'Новая цель'))+'</div>';
+            h+='<div class="cp-goal-bar"><div class="cp-goal-fill" style="width:'+pct+'%;"></div></div>';
+            h+='<div style="display:flex;justify-content:space-between;font-size:.85em;margin-bottom:8px;"><span><b>'+d.current+'</b>/'+d.target+' '+(d.unit||'')+'</span><span>'+pct+'%</span></div>';
+            h+='<div style="display:flex;gap:4px;"><button onclick="CustomPanels.goalAdd(\''+p.id+'\',1)" style="flex:1;padding:4px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);color:var(--text-primary);cursor:pointer;font-weight:600;">+1</button><button onclick="CustomPanels.goalAdd(\''+p.id+'\',5)" style="flex:1;padding:4px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);color:var(--text-primary);cursor:pointer;font-weight:600;">+5</button><button onclick="CustomPanels.goalAdd(\''+p.id+'\',-1)" style="flex:1;padding:4px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);color:var(--text-primary);cursor:pointer;">−1</button></div>';
+            h+='</div>';return h;
+        }
+        return '<div>?</div>';
+    },
+    addCheck:function(id,text){
+        if(!text||!text.trim())return;
+        var p=this.panels.find(function(x){return x.id===id;});if(!p)return;
+        p.data.items=p.data.items||[];p.data.items.push({text:text.trim(),done:false});
+        this.save();this.render();
+    },
+    toggleCheck:function(id,idx){
+        var p=this.panels.find(function(x){return x.id===id;});if(!p||!p.data.items[idx])return;
+        p.data.items[idx].done=!p.data.items[idx].done;this.save();this.render();
+    },
+    removeCheck:function(id,idx){
+        var p=this.panels.find(function(x){return x.id===id;});if(!p)return;
+        p.data.items.splice(idx,1);this.save();this.render();
+    },
+    addLink:function(id){
+        var lbl=E('cpLbl_'+id),url=E('cpUrl_'+id);
+        if(!url||!url.value)return;
+        var p=this.panels.find(function(x){return x.id===id;});if(!p)return;
+        p.data.links=p.data.links||[];
+        p.data.links.push({label:(lbl&&lbl.value)||url.value,url:url.value});
+        this.save();this.render();
+    },
+    goalAdd:function(id,amount){
+        var p=this.panels.find(function(x){return x.id===id;});if(!p)return;
+        p.data.current=Math.max(0,(p.data.current||0)+amount);
+        if(p.data.current>p.data.current)p.data.current=p.data.target;
+        this.save();this.render();
+    },
+    startDrag:function(e,el,panel){
+        var sx=e.touches?e.touches[0].clientX:e.clientX;
+        var sy=e.touches?e.touches[0].clientY:e.clientY;
+        var ox=panel.x,oy=panel.y;
+        el.style.zIndex='500';
+        function mv(ev){
+            var cx=ev.touches?ev.touches[0].clientX:ev.clientX;
+            var cy=ev.touches?ev.touches[0].clientY:ev.clientY;
+            panel.x=Math.max(0,ox+(cx-sx));
+            panel.y=Math.max(0,oy+(cy-sy));
+            el.style.left=panel.x+'px';el.style.top=panel.y+'px';
+        }
+        function up(){
+            el.style.zIndex='';
+            CP.save();
+            document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
+            document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',up);
+        }
+        document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+        document.addEventListener('touchmove',mv,{passive:false});document.addEventListener('touchend',up);
+    }
+};
+W.CustomPanels=CP;
+
+/* ====================== INIT ====================== */
+function init(){
+    injectCSS();
+    setupContextCapture();
+    CP.load();
+    /* Календарь добавим в WG когда она появится */
+    setTimeout(setupCalendarWidget,1500);
+    /* Рендер пользовательских панелей */
+    setTimeout(function(){CP.render();},1400);
+    /* Обновлять календарь при смене языка */
+    var origAL=window.applyLanguage;
+    if(typeof origAL==='function'&&!window.__cmLH){
+        window.__cmLH=true;
+        window.applyLanguage=function(){
+            var r=origAL.apply(this,arguments);
+            try{L=(typeof currentLang!=='undefined')?currentLang:'ru';CP.render();CW.render();}catch(e){}
+            return r;
+        };
+    }
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1400);});
+else setTimeout(init,1400);
+})();
+</script>
+
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
