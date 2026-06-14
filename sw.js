@@ -3,7 +3,7 @@
    Стратегия: network-first для ВСЕХ своих файлов
    (всегда отдаёт свежую версию из сети, кэш только для офлайн)
    ============================================================ */
-const APP_CACHE = 'pg-app-v12';
+const APP_CACHE = 'pg-app-v13';
 const MEDIA_CACHE = 'pg-media-v2';
 
 const PRECACHE = [

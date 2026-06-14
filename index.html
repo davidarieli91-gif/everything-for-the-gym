@@ -3,6 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+    /* ===== ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША + SAFE STORAGE ===== */
+    (function(){
+        var NEED_VER = 13;
+        /* Безопасное хранилище (работает даже на file:// протоколе) */
+        window.safeStore = {
+            _data: {},
+            getItem: function(k) {
+                try { return localStorage.getItem(k); }
+                catch(e) {
+                    try { return this._data[k] || null; }
+                    catch(e2) { return null; }
+                }
+            },
+            setItem: function(k, v) {
+                try { localStorage.setItem(k, v); }
+                catch(e) {
+                    try { sessionStorage.setItem(k, v); }
+                    catch(e2) { this._data[k] = v; }
+                }
+            },
+            removeItem: function(k) {
+                try { localStorage.removeItem(k); }
+                catch(e) {
+                    try { sessionStorage.removeItem(k); }
+                    catch(e2) { delete this._data[k]; }
+                }
+            }
+        };
+        try {
+            var cur = parseInt(safeStore.getItem('appVer')||'0');
+            if (cur < NEED_VER) {
+                /* Удаляем ВСЕ service workers (только на http/https) */
+                if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+                    try { navigator.serviceWorker.getRegistrations().then(function(regs){
+                        regs.forEach(function(r){ r.unregister(); });
+                    }).catch(function(){}); } catch(e){}
+                }
+                /* Удаляем ВСЕ кэши */
+                if ('caches' in window && location.protocol.indexOf('http') === 0) {
+                    try { caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); }).catch(function(){}); } catch(e){}
+                }
+                safeStore.setItem('appVer', String(NEED_VER));
+                console.log('[APP] Кэш очищен, версия ' + NEED_VER);
+            }
+        } catch(e){}
+    })();
+    </script>
+        <script>
+    /* ===== LOCALSTORAGE SHIM для file:// протокола ===== */
+    (function(){
+        if (location.protocol !== 'file:') return;
+        var _mem = {};
+        try { localStorage.getItem('test'); }
+        catch(e) {
+            console.log('[APP] file:// режим: localStorage недоступен, используем память');
+            try {
+                Object.defineProperty(window, 'localStorage', {
+                    value: {
+                        getItem: function(k){ return _mem[k] !== undefined ? _mem[k] : null; },
+                        setItem: function(k,v){ _mem[k] = String(v); },
+                        removeItem: function(k){ delete _mem[k]; },
+                        clear: function(){ _mem = {}; },
+                        key: function(i){ return Object.keys(_mem)[i] || null; },
+                        get length(){ return Object.keys(_mem).length; }
+                    },
+                    writable: false
+                });
+            } catch(e2) {}
+        }
+    })();
+    </script>
     <title>Планировщик Питания - Израиль (Custom)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3B82F6">
@@ -34502,7 +34574,11 @@ bmi:{t:{ru:'ИМТ',en:'BMI',he:'BMI'},i:'⚖️',r:function(){return'<div style
 stop:{t:{ru:'Секундомер',en:'Stopwatch',he:'שעון עצר'},i:'⏱',r:function(){return'<div style="text-align:center;padding:6px"><div style="font-size:1.6em;font-weight:800;color:var(--primary-color);margin-bottom:5px" id="hwSd">00:00.0</div><div style="display:flex;gap:3px;justify-content:center"><button onclick="hwST()" id="hwSb" style="padding:3px 10px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);color:var(--text-primary);cursor:pointer">▶</button><button onclick="hwSR()" style="padding:3px 10px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);color:var(--text-primary);cursor:pointer">↺</button></div></div>';},init:function(){W._hst=0;W._hsr=false;W.hwST=function(){var b=E('hwSb');if(W._hsr){clearInterval(W._hsi);W._hsr=false;if(b)b.textContent='▶'}else{W._hsr=true;if(b)b.textContent='⏸';W._hsi=setInterval(function(){W._hst+=100;var ms=W._hst,s=Math.floor(ms/1000),mm=Math.floor(s/60),ss=s%60,cs=Math.floor((ms%1000)/100);var d=E('hwSd');if(d)d.textContent=String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')+'.'+cs},100)}};W.hwSR=function(){if(W._hsi)clearInterval(W._hsi);W._hst=0;W._hsr=false;var d=E('hwSd');if(d)d.textContent='00:00.0';var b=E('hwSb');if(b)b.textContent='▶'};}},
 idea:{t:{ru:'Идея',en:'Idea',he:'רעיון'},i:'🎲',r:function(){return'<div style="text-align:center;padding:6px"><div style="font-size:1em;font-weight:700;margin-bottom:6px;color:var(--primary-color);min-height:1.4em" id="hwIt">Нажми 🎲</div><button onclick="var E=[\'Жим лёжа\',\'Приседания\',\'Становая\',\'Подтягивания\',\'Отжимания\',\'Тяга блока\',\'Жим гантелей\',\'Выпады\',\'Планка\',\'Скручивания\',\'Румынская тяга\',\'Жим ногами\'];var t=document.getElementById(\'hwIt\');if(t)t.textContent=E[Math.floor(Math.random()*E.length)]" style="padding:5px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);cursor:pointer;font-weight:600">🎲 Упражнение</button></div>';},init:function(){}},
 quote:{t:{ru:'Цитата',en:'Quote',he:'ציטוט'},i:'💬',r:function(){return'<div style="text-align:center;padding:6px"><div style="font-size:.95em;font-weight:700;margin-bottom:6px;color:var(--primary-color);min-height:1.4em" id="hwQt">—</div><button onclick="var Q=[\'Дисциплина — мост между целями и достижениями\',\'Сила не приходит от победы\',\'Тело достигает того, во что верит разум\',\'Единственная плохая тренировка — той, что не было\',\'Не считай дни, заставь дни считаться\'];var t=document.getElementById(\'hwQt\');if(t)t.textContent=Q[Math.floor(Math.random()*Q.length)]" style="padding:5px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);cursor:pointer;font-weight:600">💬 Новая</button></div>';},init:function(){}}
+,
+calendarWidget:{t:{ru:'Календарь',en:'Calendar',he:'יומן'},i:'📅',r:function(){return '<div id="cwRoot"></div>';},init:function(){if(W.CW)W.CW.render();}}
 };
+W.WG=WG;
+/* placeholder removed
 
 /* ====================== СОСТОЯНИЕ — ЕДИНОЕ ====================== */
 /* pos содержит ВСЕ элементы: панели и виджеты в одном пространстве */
@@ -34833,7 +34909,7 @@ W.heAddW=function(k){
     var idx=s.widgets.length;
     s.widgets.push({id:k});
     s.pos['w_'+idx]={x:30+Math.random()*150,y:300+Math.random()*80,w:230,h:0};
-    saveS(s);document.getElementById('heModal').classList.remove('open');renderWidgets();
+    saveS(s);var _m=document.getElementById('heModal');if(_m)_m.classList.remove('open');renderWidgets();
 };
 W.heReset=function(){localStorage.removeItem('heState5');location.reload();};
 
@@ -34879,25 +34955,25 @@ var W=window;function E(id){return document.getElementById(id);}
 var L=(typeof currentLang!=='undefined')?currentLang:'ru';
 
 var CM_T={
-    newPanel:{ru:'📋 Новая панель',en:'📋 New panel',he:'📋 פאנל חדש'},
-    newNote:{ru:'📝 Заметка',en:'📝 Note',he:'📝 פתק'},
-    newLink:{ru:'🔗 Быстрая ссылка',en:'🔗 Quick link',he:'🔗 קישור'},
-    newChecklist:{ru:'✅ Чек-лист',en:'✅ Checklist',he:'✅ רשימה'},
-    newGoal:{ru:'🎯 Цель',en:'🎯 Goal',he:'🎯 יעד'},
-    newCalendar:{ru:'📅 Календарь',en:'📅 Calendar',he:'📅 יומן'},
-    newClock:{ru:'🕐 Часы',en:'🕐 Clock',he:'🕐 שעון'},
-    newCalculator:{ru:'🔢 Калькулятор',en:'🔢 Calculator',he:'🔢 מחשבון'},
-    addWidget:{ru:'➕ Добавить виджет',en:'➕ Add widget',he:'➕ ווידג׳ט'},
-    editScreen:{ru:'✏️ Редактировать экран',en:'✏️ Edit layout',he:'✏️ עריכה'},
-    goClients:{ru:'👥 Клиенты',en:'👥 Clients',he:'👥 לקוחות'},
-    goCalendar:{ru:'📅 Календарь',en:'📅 Calendar',he:'📅 יומן'},
-    goSettings:{ru:'⚙️ Настройки',en:'⚙️ Settings',he:'⚙️ הגדרות'},
-    goBackup:{ru:'💾 Резервная копия',en:'💾 Backup',he:'💾 גיבוי'},
-    goDashboard:{ru:'📊 Сводка дня',en:'📊 Summary',he:'📊 סיכום'},
-    goEncyclopedia:{ru:'📚 Энциклопедия',en:'📚 Encyclopedia',he:'📚 אנציקלופדיה'},
-    goScanner:{ru:'📷 Сканер',en:'📷 Scanner',he:'📷 סריקה'},
-    paste:{ru:'📋 Вставить панель здесь',en:'📋 Place panel here',he:'📋 הצב כאן'},
-    refresh:{ru:'🔄 Обновить',en:'🔄 Refresh',he:'🔄 רענן'},
+    newPanel:{ru:'Новая панель',en:'New panel',he:'פאנל חדש'},
+    newNote:{ru:'Заметка',en:'Note',he:'פתק'},
+    newLink:{ru:'Быстрая ссылка',en:'Quick link',he:'קישור'},
+    newChecklist:{ru:'Чек-лист',en:'Checklist',he:'רשימה'},
+    newGoal:{ru:'Цель',en:'Goal',he:'יעד'},
+    newCalendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
+    newClock:{ru:'Часы',en:'Clock',he:'שעון'},
+    newCalculator:{ru:'Калькулятор',en:'Calculator',he:'מחשבון'},
+    addWidget:{ru:'Добавить виджет',en:'Add widget',he:'ווידג׳ט'},
+    editScreen:{ru:'Редактировать экран',en:'Edit layout',he:'עריכה'},
+    goClients:{ru:'Клиенты',en:'Clients',he:'לקוחות'},
+    goCalendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
+    goSettings:{ru:'Настройки',en:'Settings',he:'הגדרות'},
+    goBackup:{ru:'Резервная копия',en:'Backup',he:'גיבוי'},
+    goDashboard:{ru:'Сводка дня',en:'Summary',he:'סיכום'},
+    goEncyclopedia:{ru:'Энциклопедия',en:'Encyclopedia',he:'אנציקלופדיה'},
+    goScanner:{ru:'Сканер',en:'Scanner',he:'סריקה'},
+    paste:{ru:'Вставить панель здесь',en:'Place panel here',he:'הצב כאן'},
+    refresh:{ru:'Обновить',en:'Refresh',he:'רענן'},
     cancel:{ru:'Закрыть',en:'Close',he:'סגור'}
 };
 function ct(k){return(CM_T[k]&&(CM_T[k][L]||CM_T[k].ru))||k;}
@@ -35214,7 +35290,7 @@ CW.selectDate=function(ds){
 };
 
 /* ====================== ПОЛЬЗОВАТЕЛЬСКИЕ ПАНЕЛИ ====================== */
-var CP=CustomPanels={
+var CustomPanels,CP;CP=CustomPanels={
     panels:[],
     nextId:1,
     load:function(){
@@ -35376,7 +35452,7 @@ var CP=CustomPanels={
         document.addEventListener('touchmove',mv,{passive:false});document.addEventListener('touchend',up);
     }
 };
-W.CustomPanels=CP;
+W.CustomPanels=CustomPanels;
 
 /* ====================== INIT ====================== */
 function init(){
@@ -35403,8 +35479,280 @@ else setTimeout(init,1400);
 })();
 </script>
 
+<script>
+/* ============================================================
+   OS MODULE — Taskbar + Multi-window + Global Search
+   ────────────────────────────────────────────────────────────
+   1. Taskbar: показывает открытые окна, переключение
+   2. Multi-window: табы для клиентов
+   3. Global Search (Ctrl+K): поиск по всем данным
+   ============================================================ */
+(function(){
+'use strict';
+var W=window;
+function E(id){return document.getElementById(id);}
+var L=(typeof currentLang!=='undefined')?currentLang:'ru';
+
+var OS_T={
+    searchPh:{ru:'🔍 Поиск: клиенты, продукты, задачи...',en:'🔍 Search: clients, foods, tasks...',he:'🔍 חיפוש...'},
+    searchRes:{ru:'Результаты',en:'Results',he:'תוצאות'},
+    noRes:{ru:'Ничего не найдено',en:'Nothing found',he:'לא נמצא'},
+    taskbarApps:{ru:'Приложения',en:'Apps',he:'אפליקציות'},
+    winClients:{ru:'Клиенты',en:'Clients',he:'לקוחות'},
+    winCalendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
+    winTasks:{ru:'Задачи',en:'Tasks',he:'משימות'},
+    winShop:{ru:'Магазин',en:'Shop',he:'חנות'},
+    winEnc:{ru:'Энциклопедия',en:'Encyclopedia',he:'אנציקלופדיה'},
+    winDash:{ru:'Сводка',en:'Summary',he:'סיכום'},
+    winSet:{ru:'Настройки',en:'Settings',he:'הגדרות'},
+    minimize:{ru:'Свернуть',en:'Minimize',he:'מזער'},
+    close:{ru:'Закрыть',en:'Close',he:'סגור'}
+};
+function ot(k){return(OS_T[k]&&(OS_T[k][L]||OS_T[k].ru))||k;}
+
+/* ====================== CSS ====================== */
+function injectCSS(){
+    if(document.getElementById('osCSS'))return;
+    var s=document.createElement('style');s.id='osCSS';s.textContent=
+    /* Таскбар */
+    '#osTaskbar{position:fixed;bottom:0;left:0;right:0;height:48px;background:rgba(15,23,42,.96);backdrop-filter:blur(12px);display:flex;align-items:center;gap:4px;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:9000;box-shadow:0 -2px 12px rgba(0,0,0,.15);overflow-x:auto;scrollbar-width:none;}'+
+    '#osTaskbar::-webkit-scrollbar{display:none;}'+
+    '.os-tb-item{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;cursor:pointer;color:#cbd5e1;font-size:.8em;font-weight:600;white-space:nowrap;transition:.12s;flex-shrink:0;position:relative;}'+
+    '.os-tb-item:hover{background:rgba(255,255,255,.1);color:#fff;}'+
+    '.os-tb-item.active{background:rgba(59,130,246,.3);color:#fff;}'+
+    '.os-tb-item .ico{font-size:1.2em;}'+
+    '.os-tb-item .close{width:16px;height:16px;border-radius:50%;background:rgba(239,68,68,.7);color:#fff;display:none;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}'+
+    '.os-tb-item:hover .close{display:flex;}'+
+    '.os-tb-item .dot{width:6px;height:6px;border-radius:50%;background:#10B981;flex-shrink:0;}'+
+    '.os-tb-sep{width:1px;height:24px;background:rgba(255,255,255,.15);margin:0 4px;flex-shrink:0;}'+
+    '.os-tb-start{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;font-weight:700;font-size:.8em;cursor:pointer;flex-shrink:0;}'+
+    'body.has-taskbar{padding-bottom:48px!important;}'+
+    /* Глобальный поиск */
+    '#osSearchOverlay{display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.7);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding-top:10vh;}'+
+    '#osSearchOverlay.open{display:flex;}'+
+    '.os-search-box{background:var(--surface-color);border-radius:16px;width:90%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden;}'+
+    '.os-search-input{width:100%;padding:16px 20px;border:none;font-size:1.1em;background:transparent;color:var(--text-primary);outline:none;font-family:inherit;}'+
+    '.os-search-results{max-height:50vh;overflow-y:auto;}'+
+    '.os-search-cat{padding:6px 20px;font-size:.7em;font-weight:700;color:var(--text-light);text-transform:uppercase;background:rgba(0,0,0,.02);}'+
+    '.os-search-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:.1s;}'+
+    '.os-search-item:hover{background:rgba(59,130,246,.08);}'+
+    '.os-search-item .ico{font-size:1.3em;width:28px;text-align:center;flex-shrink:0;}'+
+    '.os-search-item .txt{flex:1;min-width:0;}'+
+    '.os-search-item .name{font-weight:600;color:var(--text-primary);font-size:.9em;}'+
+    '.os-search-item .sub{font-size:.75em;color:var(--text-secondary);}'+
+    '.os-search-empty{text-align:center;padding:30px;color:var(--text-light);font-size:.9em;}'+
+    /* Подложка таскбара чтобы не перекрывал */
+    '@media(max-width:768px){.os-tb-item{padding:6px 8px;font-size:.72em;}}'+
+    '';
+    document.head.appendChild(s);
+}
+
+/* ====================== ОТКРЫТЫЕ ОКНА ====================== */
+var openWindows={}; /* id -> {label, ico, closeFn} */
+
+function openWin(id,label,ico,closeFn){
+    openWindows[id]={label:label,ico:ico,closeFn:closeFn};
+    renderTaskbar();
+}
+function closeWin(id){
+    var w=openWindows[id];
+    if(w&&w.closeFn){try{w.closeFn();}catch(e){}}
+    delete openWindows[id];
+    renderTaskbar();
+}
+function setActiveWin(id){renderTaskbar();}
+
+function renderTaskbar(){
+    var tb=E('osTaskbar');if(!tb)return;
+    var h='<div class="os-tb-start" onclick="heToggle()">✏️</div>';
+    h+='<div class="os-tb-start" onclick="osSearchOpen()" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8);">🔍</div>';
+    /* Быстрый запуск */
+    var quickApps=[
+        {id:'qClients',ico:'👥',label:ot('winClients'),act:'if(W.renderUsers)W.renderUsers();'},
+        {id:'qCal',ico:'📅',label:ot('winCalendar'),act:'if(W.openCalendarModal)W.openCalendarModal();'},
+        {id:'qTasks',ico:'✅',label:ot('winTasks'),act:'if(W.openTasksModal)W.openTasksModal();'},
+        {id:'qShop',ico:'🛒',label:ot('winShop'),act:'if(W.openShopModal)W.openShopModal();'},
+        {id:'qEnc',ico:'📚',label:ot('winEnc'),act:'if(W.openEncyclopedia)W.openEncyclopedia();'},
+        {id:'qDash',ico:'📊',label:ot('winDash'),act:'if(W.openDashboard)W.openDashboard();'},
+        {id:'qSet',ico:'⚙️',label:ot('winSet'),act:'if(W.openSettingsModal)W.openSettingsModal();'}
+    ];
+    quickApps.forEach(function(a){
+        h+='<div class="os-tb-item" title="'+a.label+'" onclick="'+a.act+'"><span class="ico">'+a.ico+'</span><span class="dot"></span></div>';
+    });
+    /* открытые окна */
+    var winKeys=Object.keys(openWindows);
+    if(winKeys.length){
+        h+='<div class="os-tb-sep"></div>';
+        winKeys.forEach(function(id){
+            var w=openWindows[id];
+            h+='<div class="os-tb-item active" title="'+w.label+'" onclick="closeWin(\''+id+'\')">'+
+                '<span class="ico">'+w.ico+'</span><span>'+w.label.substring(0,15)+'</span>'+
+                '<span class="close">✕</span></div>';
+        });
+    }
+    tb.innerHTML=h;
+}
+
+/* ====================== ГЛОБАЛЬНЫЙ ПОИСК ====================== */
+function searchAll(q){
+    if(!q||q.length<2)return[];
+    q=q.toLowerCase();
+    var results=[];
+    /* Клиенты */
+    try{
+        var users=JSON.parse(localStorage.getItem('nutritionUsers')||'[]');
+        users.forEach(function(u){
+            var name=(u.name||'')+' '+(u.lastName||'')+' '+(u.phone||'')+' '+(u.notes||'');
+            if(name.toLowerCase().indexOf(q)>=0){
+                results.push({cat:'clients',ico:u.avatar||'👤',name:(u.name||'')+' '+(u.lastName||''),sub:u.phone||'',action:'openUser',uid:u.id});
+            }
+        });
+    }catch(e){}
+    /* Задачи */
+    try{
+        var tasks=JSON.parse(localStorage.getItem('tasksList')||'[]');
+        tasks.forEach(function(t){
+            if((t.title||'').toLowerCase().indexOf(q)>=0||((t.desc||'')).toLowerCase().indexOf(q)>=0){
+                results.push({cat:'tasks',ico:'✅',name:t.title||'',sub:t.desc||'',action:'openTasksModal'});
+            }
+        });
+    }catch(e){}
+    /* Лиды */
+    try{
+        var leads=JSON.parse(localStorage.getItem('leadsList')||'[]');
+        leads.forEach(function(l){
+            if((l.name||'').toLowerCase().indexOf(q)>=0||(l.phone||'').toLowerCase().indexOf(q)>=0){
+                results.push({cat:'leads',ico:'🌟',name:l.name||'',sub:l.phone||'',action:'openLeadsModal'});
+            }
+        });
+    }catch(e){}
+    /* Товары магазина */
+    try{
+        var items=JSON.parse(localStorage.getItem('shopItems')||'[]');
+        items.forEach(function(i){
+            if((i.name||'').toLowerCase().indexOf(q)>=0||(i.brand||'').toLowerCase().indexOf(q)>=0){
+                results.push({cat:'shop',ico:'🛒',name:i.name||'',sub:i.brand||'',action:'openShopModal'});
+            }
+        });
+    }catch(e){}
+    /* События календаря */
+    try{
+        var events=JSON.parse(localStorage.getItem('calendarEvents')||'[]');
+        events.forEach(function(e){
+            if((e.title||'').toLowerCase().indexOf(q)>=0||(e.clientName||'').toLowerCase().indexOf(q)>=0){
+                results.push({cat:'calendar',ico:'📅',name:e.title||e.clientName||'',sub:e.date+' '+(e.time||''),action:'openCalendarModal'});
+            }
+        });
+    }catch(e){}
+    return results.slice(0,30);
+}
+
+var catLabels={clients:{ru:'Клиенты',en:'Clients',he:'לקוחות'},tasks:{ru:'Задачи',en:'Tasks',he:'משימות'},leads:{ru:'Лиды',en:'Leads',he:'לידים'},shop:{ru:'Магазин',en:'Shop',he:'חנות'},calendar:{ru:'Календарь',en:'Calendar',he:'יומן'}};
+function catLabel(c){return catLabels[c]?(catLabels[c][L]||catLabels[c].ru):c;}
+
+function osSearchOpen(){
+    var ov=E('osSearchOverlay');
+    if(!ov){
+        ov=document.createElement('div');ov.id='osSearchOverlay';
+        ov.innerHTML='<div class="os-search-box">'+
+            '<input type="text" class="os-search-input" id="osSearchInput" placeholder="'+ot('searchPh')+'" autofocus>'+
+            '<div class="os-search-results" id="osSearchResults"></div></div>';
+        ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('open');});
+        document.body.appendChild(ov);
+        var inp=E('osSearchInput');
+        var timer=null;
+        inp.addEventListener('input',function(){
+            if(timer)clearTimeout(timer);
+            timer=setTimeout(function(){osSearchRender(inp.value);},200);
+        });
+        inp.addEventListener('keydown',function(e){
+            if(e.key==='Escape')ov.classList.remove('open');
+            if(e.key==='Enter'){
+                var first=E('osSearchResults').querySelector('.os-search-item');
+                if(first)first.click();
+            }
+        });
+    }
+    ov.classList.add('open');
+    setTimeout(function(){var i=E('osSearchInput');if(i){i.value='';i.focus();osSearchRender('');}},50);
+}
+W.osSearchOpen=osSearchOpen;
+W.closeWin=closeWin;
+
+function osSearchRender(q){
+    var box=E('osSearchResults');if(!box)return;
+    if(!q||q.length<2){box.innerHTML='<div class="os-search-empty">'+ot('searchPh')+'</div>';return;}
+    var results=searchAll(q);
+    if(!results.length){box.innerHTML='<div class="os-search-empty">'+ot('noRes')+'</div>';return;}
+    var curCat='';
+    var h='';
+    results.forEach(function(r){
+        if(r.cat!==curCat){curCat=r.cat;h+='<div class="os-search-cat">'+catLabel(curCat)+'</div>';}
+        h+='<div class="os-search-item" onclick="osSearchAction(\''+r.action+'\',\''+(r.uid||'')+'\')">'+
+            '<span class="ico">'+r.ico+'</span>'+
+            '<div class="txt"><div class="name">'+escapeHtml2(r.name)+'</div>'+
+            '<div class="sub">'+escapeHtml2(r.sub)+'</div></div></div>';
+    });
+    box.innerHTML=h;
+}
+W.osSearchAction=function(action,uid){
+    E('osSearchOverlay').classList.remove('open');
+    if(action==='openUser'&&uid){
+        /* открыть клиента */
+        if(W.currentUserId!==undefined)W.currentUserId=uid;
+        var hs=E('homeScreen');if(hs)hs.classList.add('hidden');
+        var ac=E('appContainer');if(ac)ac.classList.remove('hidden');
+    }else if(action==='openTasksModal'&&W.openTasksModal)W.openTasksModal();
+    else if(action==='openLeadsModal'&&W.openLeadsModal)W.openLeadsModal();
+    else if(action==='openShopModal'&&W.openShopModal)W.openShopModal();
+    else if(action==='openCalendarModal'&&W.openCalendarModal)W.openCalendarModal();
+};
+function escapeHtml2(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+/* ====================== INIT ====================== */
+function init(){
+    injectCSS();
+    /* Таскбар */
+    if(!E('osTaskbar')){
+        var tb=document.createElement('div');tb.id='osTaskbar';document.body.appendChild(tb);
+        document.body.classList.add('has-taskbar');
+        renderTaskbar();
+    }
+    /* Ctrl+K — поиск */
+    document.addEventListener('keydown',function(e){
+        if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();osSearchOpen();}
+        if((e.ctrlKey||e.metaKey)&&e.key==='b'){e.preventDefault();if(W.heToggle)W.heToggle();}
+    });
+    /* Отслеживание открытых модалок для таскбара */
+    setInterval(function(){
+        var openMods=[];
+        var modals=['leadsModal','tasksModal','shopModal','settingsModal','calendarModal','barcodeScannerModal','dshOverlay','encOverlay','ntfOverlay'];
+        modals.forEach(function(id){
+            var el=E(id);
+            if(el){
+                var isOpen=el.style.display==='flex'||el.classList.contains('open')||el.classList.contains('modal')&&el.style.display==='block';
+                if(isOpen&&!openWindows[id]){
+                    var labels={leadsModal:['🌟',ot('winClients')],tasksModal:['✅',ot('winTasks')],shopModal:['🛒',ot('winShop')],settingsModal:['⚙️',ot('winSet')],calendarModal:['📅',ot('winCalendar')],barcodeScannerModal:['📷','Сканер'],dshOverlay:['📊',ot('winDash')],encOverlay:['📚',ot('winEnc')],ntfOverlay:['🔔','Уведомления']};
+                    var lb=labels[id]||['📋','Окно'];
+                    openWindows[id]={label:lb[1],ico:lb[0],closeFn:(function(mid){return function(){var e=E(mid);if(e){if(e.classList.contains('open'))e.classList.remove('open');else if(e.classList.contains('modal'))e.style.display='none';else e.style.display='none';}};})(id)};
+                    renderTaskbar();
+                }else if(!isOpen&&openWindows[id]){
+                    delete openWindows[id];
+                    renderTaskbar();
+                }
+            }
+        });
+    },800);
+    /* язык */
+    var o=window.applyLanguage;if(typeof o==='function'&&!W.__osLH){W.__osLH=true;window.applyLanguage=function(){var r=o.apply(this,arguments);try{L=(typeof currentLang!=='undefined')?currentLang:'ru';renderTaskbar();}catch(e){}return r;};}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1500);});
+else setTimeout(init,1500);
+})();
+</script>
+
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b6a656ebab2212',t:'MTc4MTQxMTk1MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
