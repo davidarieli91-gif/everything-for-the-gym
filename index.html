@@ -4687,6 +4687,25 @@
         .add-user-modal .modal-content {
             max-width: 420px;
         }
+        /* FIX: модалка добавления клиента помещается на мобильном */
+        body.layout-mobile .add-user-modal .modal-content,
+        body.layout-tablet .add-user-modal .modal-content {
+            max-width: 100% !important;
+            max-height: 100vh !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            height: 100dvh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        body.layout-mobile .modal-content {
+            max-height: 100dvh !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        body.layout-mobile .modal {
+            overflow-y: auto !important;
+        }
 
         /* ===== ОБЩИЕ УЛУЧШЕНИЯ UI ===== */
         /* Липкий хедер планировщика */
@@ -5244,6 +5263,20 @@
         body.layout-mobile .main-header h1 {
             font-size: 1.1em;
         }
+        /* ===== FIX: mode-switch всегда виден на мобильном ===== */
+        body.layout-mobile .main-header > div:first-child {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+        }
+        body.layout-mobile .mode-switch {
+            display: inline-flex !important;
+            flex-shrink: 0;
+        }
+        body.layout-mobile .mode-switch-btn {
+            padding: 8px 14px;
+            font-size: 0.9em;
+        }
+
 
         body.layout-mobile .planner-section {
             overflow: visible;
@@ -14100,7 +14133,7 @@
         // Настройка drag & drop
         function setupDragAndDrop() {
             document.addEventListener('dragstart', function(e) {
-                if (e.target.classList.contains('product-card')) {
+                if (e.target && e.target.classList && e.target.classList.contains('product-card')) {
                     draggedProduct = JSON.parse(e.target.dataset.product);
                     e.target.classList.add('dragging');
                     e.dataTransfer.setData('text/plain', JSON.stringify(draggedProduct));
@@ -14109,7 +14142,7 @@
             });
 
             document.addEventListener('dragend', function(e) {
-                if (e.target.classList.contains('product-card')) {
+                if (e.target && e.target.classList && e.target.classList.contains('product-card')) {
                     e.target.classList.remove('dragging');
                 }
             });
@@ -17148,21 +17181,22 @@
         }
 
         // ---------- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ----------
-        function switchAppMode(mode) {
+        window.switchAppMode = function(mode) {
             const body = document.body;
             if (mode === 'workout') {
                 body.classList.add('mode-workout');
-                document.getElementById('modeBtnWorkout').classList.add('active');
-                document.getElementById('modeBtnNutrition').classList.remove('active');
-                loadWorkoutPlan();
-                renderExercises();
+                var bw=document.getElementById('modeBtnWorkout');if(bw)bw.classList.add('active');
+                var bn=document.getElementById('modeBtnNutrition');if(bn)bn.classList.remove('active');
+                if(typeof loadWorkoutPlan==='function')loadWorkoutPlan();
+                if(typeof renderExercises==='function')renderExercises();
             } else {
                 body.classList.remove('mode-workout');
-                document.getElementById('modeBtnNutrition').classList.add('active');
-                document.getElementById('modeBtnWorkout').classList.remove('active');
+                var bn2=document.getElementById('modeBtnNutrition');if(bn2)bn2.classList.add('active');
+                var bw2=document.getElementById('modeBtnWorkout');if(bw2)bw2.classList.remove('active');
             }
             try { safeSetItem('appMode', mode); } catch(e){}
-        }
+            try { localStorage.setItem('appMode', mode); } catch(e){}
+        };
 
         // ---------- ПЕЧАТЬ ----------
         // ============================================================
@@ -33674,7 +33708,7 @@ var TOOL_T = {
 };
 function tt2(k){var l=(typeof currentLang!=='undefined')?currentLang:'ru';return (TOOL_T[k]&&(TOOL_T[k][l]||TOOL_T[k].ru))||k;}
 
-function injectHomeTools(){
+function injectHomeTools(){return;/* отключено — кнопки в панели задач */
     var hero = document.getElementById('homeHeroCustom');
     if (!hero) return;
     var existing = document.getElementById('homeToolsPanel');
@@ -34752,7 +34786,14 @@ function setupPanels(){
 function renderWidgets(){
     var s=loadS();
     var c=document.getElementById('heWidgets');
-    if(!c){c=document.createElement('div');c.id='heWidgets';c.style.cssText='width:100%;max-width:1100px;margin:0 auto 16px;position:relative;z-index:1';var tp=document.getElementById('homeToolsPanel');if(tp&&tp.parentNode)tp.parentNode.insertBefore(c,tp.nextSibling);}
+    if(!c){
+        c=document.createElement('div');c.id='heWidgets';
+        c.style.cssText='width:100%;max-width:1100px;margin:0 auto 16px;position:relative;z-index:1;min-height:0;';
+        /* Помещаем виджеты В home-main чтобы они были в том же пространстве */
+        var main=document.querySelector('.home-main');
+        if(main){main.appendChild(c);}
+        else{var hs=document.getElementById('homeScreen');if(hs)hs.appendChild(c);}
+    }
     if(!s.widgets.length){c.style.display='none';c.innerHTML='';return;}
     c.style.display='block';
     var editing=document.body.classList.contains('he-edit');
@@ -34847,6 +34888,12 @@ function applyAll(){
             startDrag(e,el,dir,function(){return s.pos[p.id];},function(np){s.pos[p.id]=np;saveS(s);},p.minW,p.minH);
         },function(){s.hidden.push(p.id);saveS(s);applyAll();});
     });
+    /* FIX: вынести toolsPanel из hero чтобы они двигались независимо */
+    var hero=document.getElementById('homeHeroCustom');
+    var tools=document.getElementById('homeToolsPanel');
+    if(hero&&tools&&tools.parentNode===hero){
+        hero.parentNode.insertBefore(tools,hero.nextSibling);
+    }
     renderWidgets();
 }
 
@@ -34889,7 +34936,7 @@ function buildBar(){
     b.innerHTML='<div class="he-i">'+ht('hint')+'</div>'+
         '<button class="he-b he-b-a" onclick="heShowW()">'+ht('addWidget')+'</button>'+
         '<button class="he-b he-b-r" onclick="heReset()">'+ht('reset')+'</button>'+
-        '<button class="he-b he-b-d" onclick="heToggle()">'+ht('done')+'</button>';
+        '<button class="he-b he-b-d" onclick="window.heToggle&&window.heToggle()">'+ht('done')+'</button>';
     document.body.appendChild(b);
 }
 
@@ -35479,280 +35526,275 @@ else setTimeout(init,1400);
 })();
 </script>
 
+
+
 <script>
 /* ============================================================
-   OS MODULE — Taskbar + Multi-window + Global Search
+   OS MODULE v2 — Taskbar + Search + Mode Switch
    ────────────────────────────────────────────────────────────
-   1. Taskbar: показывает открытые окна, переключение
-   2. Multi-window: табы для клиентов
-   3. Global Search (Ctrl+K): поиск по всем данным
+   • Панель задач ВИДНА на всех устройствах (ПК + мобильный)
+   • Переключение Питание↔Тренировки прямо в панели
+   • Глобальный поиск (Ctrl+K)
+   • Контекстное меню для добавления/удаления кнопок
+   • Кнопки сохраняются в localStorage
    ============================================================ */
 (function(){
 'use strict';
-var W=window;
-function E(id){return document.getElementById(id);}
+var W=window;function E(id){return document.getElementById(id);}
 var L=(typeof currentLang!=='undefined')?currentLang:'ru';
 
-var OS_T={
-    searchPh:{ru:'🔍 Поиск: клиенты, продукты, задачи...',en:'🔍 Search: clients, foods, tasks...',he:'🔍 חיפוש...'},
-    searchRes:{ru:'Результаты',en:'Results',he:'תוצאות'},
+var TB_T={
+    nutrition:{ru:'Питание',en:'Nutrition',he:'תזונה'},
+    workout:{ru:'Тренировки',en:'Workout',he:'אימונים'},
+    search:{ru:'Поиск',en:'Search',he:'חיפוש'},
+    edit:{ru:'Экран',en:'Layout',he:'עריכה'},
+    clients:{ru:'Клиенты',en:'Clients',he:'לקוחות'},
+    calendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
+    tasks:{ru:'Задачи',en:'Tasks',he:'משימות'},
+    shop:{ru:'Магазин',en:'Shop',he:'חנות'},
+    encyclopedia:{ru:'Справка',en:'Help',he:'עזרה'},
+    dashboard:{ru:'Сводка',en:'Summary',he:'סיכום'},
+    settings:{ru:'Настройки',en:'Settings',he:'הגדרות'},
+    scanner:{ru:'Сканер',en:'Scan',he:'סריקה'},
+    backup:{ru:'Копия',en:'Backup',he:'גיבוי'},
+    scanPh:{ru:'🔍 Поиск...',en:'🔍 Search...',he:'🔍 חיפוש...'},
     noRes:{ru:'Ничего не найдено',en:'Nothing found',he:'לא נמצא'},
-    taskbarApps:{ru:'Приложения',en:'Apps',he:'אפליקציות'},
-    winClients:{ru:'Клиенты',en:'Clients',he:'לקוחות'},
-    winCalendar:{ru:'Календарь',en:'Calendar',he:'יומן'},
-    winTasks:{ru:'Задачи',en:'Tasks',he:'משימות'},
-    winShop:{ru:'Магазин',en:'Shop',he:'חנות'},
-    winEnc:{ru:'Энциклопедия',en:'Encyclopedia',he:'אנציקלופדיה'},
-    winDash:{ru:'Сводка',en:'Summary',he:'סיכום'},
-    winSet:{ru:'Настройки',en:'Settings',he:'הגדרות'},
-    minimize:{ru:'Свернуть',en:'Minimize',he:'מזער'},
-    close:{ru:'Закрыть',en:'Close',he:'סגור'}
+    addBtn:{ru:'➕ Добавить кнопку',en:'➕ Add button',he:'➕ הוסף'},
+    rmBtn:{ru:'✕ Убрать кнопку',en:'✕ Remove button',he:'✕ הסר'},
+    customize:{ru:'⚙️ Настроить панель',en:'⚙️ Customize',he:'⚙️ התאם'}
 };
-function ot(k){return(OS_T[k]&&(OS_T[k][L]||OS_T[k].ru))||k;}
+function tt(k){return(TB_T[k]&&(TB_T[k][L]||TB_T[k].ru))||k;}
+
+/* ====================== ДОСТУПНЫЕ КНОПКИ ====================== */
+var ALL_BUTTONS={
+    mode:{ico:'🍽️',act:'tbSwitchMode()',label:'mode',fixed:true},
+    search:{ico:'🔍',act:'osSearchOpen()',label:'search',fixed:true},
+    edit:{ico:'✏️',act:'window.heToggle&&window.heToggle()',label:'edit',fixed:true},
+    clients:{ico:'👥',act:'window.renderUsers&&window.renderUsers()',label:'clients'},
+    calendar:{ico:'📅',act:'window.openCalendarModal&&window.openCalendarModal()',label:'calendar'},
+    tasks:{ico:'✅',act:'window.openTasksModal&&window.openTasksModal()',label:'tasks'},
+    shop:{ico:'🛒',act:'window.openShopModal&&window.openShopModal()',label:'shop'},
+    encyclopedia:{ico:'📚',act:'window.openEncyclopedia&&window.openEncyclopedia()',label:'encyclopedia'},
+    dashboard:{ico:'📊',act:'window.openDashboard&&window.openDashboard()',label:'dashboard'},
+    settings:{ico:'⚙️',act:'window.openSettingsModal&&window.openSettingsModal()',label:'settings'},
+    scanner:{ico:'📷',act:'window.openBarcodeScanner&&window.openBarcodeScanner()',label:'scanner'},
+    backup:{ico:'💾',act:'window.backupAllData&&window.backupAllData()',label:'backup'}
+};
+
+/* ====================== СОСТОЯНИЕ ====================== */
+function loadBtns(){
+    try{var b=JSON.parse(localStorage.getItem('tbButtons'));if(Array.isArray(b))return b;}catch(e){}
+    return['mode','search','edit','clients','calendar','tasks','shop','encyclopedia','dashboard','settings'];
+}
+function saveBtns(b){try{localStorage.setItem('tbButtons',JSON.stringify(b));}catch(e){}}
 
 /* ====================== CSS ====================== */
 function injectCSS(){
-    if(document.getElementById('osCSS'))return;
-    var s=document.createElement('style');s.id='osCSS';s.textContent=
-    /* Таскбар */
-    '#osTaskbar{position:fixed;bottom:0;left:0;right:0;height:48px;background:rgba(15,23,42,.96);backdrop-filter:blur(12px);display:flex;align-items:center;gap:4px;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:9000;box-shadow:0 -2px 12px rgba(0,0,0,.15);overflow-x:auto;scrollbar-width:none;}'+
+    if(document.getElementById('tbCSS'))return;
+    var s=document.createElement('style');s.id='tbCSS';s.textContent=
+    /* Панель задач */
+    '#osTaskbar{position:fixed;bottom:0;left:0;right:0;height:50px;background:rgba(15,23,42,.97);backdrop-filter:blur(12px);display:flex;align-items:center;gap:2px;padding:0 6px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:9000;box-shadow:0 -2px 16px rgba(0,0,0,.2);overflow-x:auto;scrollbar-width:none;}'+
     '#osTaskbar::-webkit-scrollbar{display:none;}'+
-    '.os-tb-item{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;cursor:pointer;color:#cbd5e1;font-size:.8em;font-weight:600;white-space:nowrap;transition:.12s;flex-shrink:0;position:relative;}'+
-    '.os-tb-item:hover{background:rgba(255,255,255,.1);color:#fff;}'+
-    '.os-tb-item.active{background:rgba(59,130,246,.3);color:#fff;}'+
-    '.os-tb-item .ico{font-size:1.2em;}'+
-    '.os-tb-item .close{width:16px;height:16px;border-radius:50%;background:rgba(239,68,68,.7);color:#fff;display:none;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}'+
-    '.os-tb-item:hover .close{display:flex;}'+
-    '.os-tb-item .dot{width:6px;height:6px;border-radius:50%;background:#10B981;flex-shrink:0;}'+
-    '.os-tb-sep{width:1px;height:24px;background:rgba(255,255,255,.15);margin:0 4px;flex-shrink:0;}'+
-    '.os-tb-start{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;font-weight:700;font-size:.8em;cursor:pointer;flex-shrink:0;}'+
-    'body.has-taskbar{padding-bottom:48px!important;}'+
-    /* Глобальный поиск */
-    '#osSearchOverlay{display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.7);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding-top:10vh;}'+
+    '.tb-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 8px;border-radius:8px;cursor:pointer;color:#94a3b8;font-size:9px;font-weight:600;white-space:nowrap;transition:.12s;flex-shrink:0;min-width:46px;height:44px;border:none;background:transparent;font-family:inherit;-webkit-tap-highlight-color:transparent;}'+
+    '.tb-btn:hover{background:rgba(255,255,255,.08);color:#fff;}'+
+    '.tb-btn:active{transform:scale(.92);}'+
+    '.tb-btn.active{background:rgba(59,130,246,.25);color:#fff;}'+
+    '.tb-btn .ico{font-size:18px;line-height:1;}'+
+    '.tb-btn .lbl{font-size:8px;line-height:1;opacity:.8;max-width:60px;overflow:hidden;text-overflow:ellipsis;}'+
+    '.tb-sep{width:1px;height:28px;background:rgba(255,255,255,.12);margin:0 2px;flex-shrink:0;}'+
+    /* Режим Питание красным */
+    'body:not(.mode-workout) .tb-btn[data-tb-id="mode"] .ico{filter:hue-rotate(-30deg);}'+
+    /* Подложка */
+    'body{padding-bottom:50px!important;}'+
+    '@media(min-width:1025px){body{padding-bottom:50px!important;}}'+
+    /* Скрыть старые кнопки на главном экране (теперь в панели задач) */
+    '#homeToolsPanel,.home-tools-panel,.home-tools-grid{display:none!important;}'+
+    /* Поиск */
+    '#osSearchOverlay{display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.7);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding-top:8vh;}'+
     '#osSearchOverlay.open{display:flex;}'+
-    '.os-search-box{background:var(--surface-color);border-radius:16px;width:90%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden;}'+
+    '.os-search-box{background:var(--surface-color);border-radius:16px;width:92%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden;}'+
     '.os-search-input{width:100%;padding:16px 20px;border:none;font-size:1.1em;background:transparent;color:var(--text-primary);outline:none;font-family:inherit;}'+
     '.os-search-results{max-height:50vh;overflow-y:auto;}'+
-    '.os-search-cat{padding:6px 20px;font-size:.7em;font-weight:700;color:var(--text-light);text-transform:uppercase;background:rgba(0,0,0,.02);}'+
-    '.os-search-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:.1s;}'+
+    '.os-search-cat{padding:6px 20px;font-size:.7em;font-weight:700;color:var(--text-light);text-transform:uppercase;}'+
+    '.os-search-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;}'+
     '.os-search-item:hover{background:rgba(59,130,246,.08);}'+
-    '.os-search-item .ico{font-size:1.3em;width:28px;text-align:center;flex-shrink:0;}'+
-    '.os-search-item .txt{flex:1;min-width:0;}'+
+    '.os-search-item .ico{font-size:1.3em;}'+
     '.os-search-item .name{font-weight:600;color:var(--text-primary);font-size:.9em;}'+
     '.os-search-item .sub{font-size:.75em;color:var(--text-secondary);}'+
-    '.os-search-empty{text-align:center;padding:30px;color:var(--text-light);font-size:.9em;}'+
-    /* Подложка таскбара чтобы не перекрывал */
-    '@media(max-width:768px){.os-tb-item{padding:6px 8px;font-size:.72em;}}'+
+    '.os-search-empty{text-align:center;padding:30px;color:var(--text-light);}'+
+    /* Контекстное меню панели */
+    '#tbCtxMenu{display:none;position:fixed;z-index:100001;background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:6px;min-width:200px;max-height:70vh;overflow-y:auto;}'+
+    '#tbCtxMenu.open{display:block;}'+
+    '.tb-ctx-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.85em;font-weight:600;color:var(--text-primary);transition:.1s;}'+
+    '.tb-ctx-item:hover{background:rgba(16,185,129,.1);}'+
+    '.tb-ctx-item .ico{font-size:1.2em;width:22px;text-align:center;}'+
+    '.tb-ctx-check{margin-left:auto;color:var(--primary-color);font-weight:800;}'+
+    '.tb-ctx-sep{height:1px;background:var(--border-color);margin:4px 8px;}'+
+    '.tb-ctx-group{font-size:.65em;font-weight:700;color:var(--text-light);text-transform:uppercase;padding:8px 12px 4px;}'+
     '';
     document.head.appendChild(s);
 }
 
-/* ====================== ОТКРЫТЫЕ ОКНА ====================== */
-var openWindows={}; /* id -> {label, ico, closeFn} */
-
-function openWin(id,label,ico,closeFn){
-    openWindows[id]={label:label,ico:ico,closeFn:closeFn};
-    renderTaskbar();
-}
-function closeWin(id){
-    var w=openWindows[id];
-    if(w&&w.closeFn){try{w.closeFn();}catch(e){}}
-    delete openWindows[id];
-    renderTaskbar();
-}
-function setActiveWin(id){renderTaskbar();}
-
+/* ====================== РЕНДЕР ПАНЕЛИ ====================== */
 function renderTaskbar(){
     var tb=E('osTaskbar');if(!tb)return;
-    var h='<div class="os-tb-start" onclick="heToggle()">✏️</div>';
-    h+='<div class="os-tb-start" onclick="osSearchOpen()" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8);">🔍</div>';
-    /* Быстрый запуск */
-    var quickApps=[
-        {id:'qClients',ico:'👥',label:ot('winClients'),act:'if(W.renderUsers)W.renderUsers();'},
-        {id:'qCal',ico:'📅',label:ot('winCalendar'),act:'if(W.openCalendarModal)W.openCalendarModal();'},
-        {id:'qTasks',ico:'✅',label:ot('winTasks'),act:'if(W.openTasksModal)W.openTasksModal();'},
-        {id:'qShop',ico:'🛒',label:ot('winShop'),act:'if(W.openShopModal)W.openShopModal();'},
-        {id:'qEnc',ico:'📚',label:ot('winEnc'),act:'if(W.openEncyclopedia)W.openEncyclopedia();'},
-        {id:'qDash',ico:'📊',label:ot('winDash'),act:'if(W.openDashboard)W.openDashboard();'},
-        {id:'qSet',ico:'⚙️',label:ot('winSet'),act:'if(W.openSettingsModal)W.openSettingsModal();'}
-    ];
-    quickApps.forEach(function(a){
-        h+='<div class="os-tb-item" title="'+a.label+'" onclick="'+a.act+'"><span class="ico">'+a.ico+'</span><span class="dot"></span></div>';
+    var btns=loadBtns();
+    var h='';
+    btns.forEach(function(id){
+        var b=ALL_BUTTONS[id];if(!b)return;
+        var isActive=(id==='mode'&&!document.body.classList.contains('mode-workout'))?false:false;
+        h+='<button class="tb-btn'+(isActive?' active':'')+'" data-tb-id="'+id+'" onclick="'+b.act+'" title="'+tt(b.label)+'">'+
+            '<span class="ico">'+tbIcon(id)+'</span>'+
+            '<span class="lbl">'+tt(b.label)+'</span></button>';
     });
-    /* открытые окна */
-    var winKeys=Object.keys(openWindows);
-    if(winKeys.length){
-        h+='<div class="os-tb-sep"></div>';
-        winKeys.forEach(function(id){
-            var w=openWindows[id];
-            h+='<div class="os-tb-item active" title="'+w.label+'" onclick="closeWin(\''+id+'\')">'+
-                '<span class="ico">'+w.ico+'</span><span>'+w.label.substring(0,15)+'</span>'+
-                '<span class="close">✕</span></div>';
-        });
-    }
+    /* кнопка настройки панели */
+    h+='<div class="tb-sep"></div>';
+    h+='<button class="tb-btn" onclick="tbShowCtx(event)" title="'+tt('customize')+'"><span class="ico">⚙️</span><span class="lbl">+</span></button>';
     tb.innerHTML=h;
 }
 
-/* ====================== ГЛОБАЛЬНЫЙ ПОИСК ====================== */
-function searchAll(q){
-    if(!q||q.length<2)return[];
-    q=q.toLowerCase();
-    var results=[];
-    /* Клиенты */
-    try{
-        var users=JSON.parse(localStorage.getItem('nutritionUsers')||'[]');
-        users.forEach(function(u){
-            var name=(u.name||'')+' '+(u.lastName||'')+' '+(u.phone||'')+' '+(u.notes||'');
-            if(name.toLowerCase().indexOf(q)>=0){
-                results.push({cat:'clients',ico:u.avatar||'👤',name:(u.name||'')+' '+(u.lastName||''),sub:u.phone||'',action:'openUser',uid:u.id});
-            }
-        });
-    }catch(e){}
-    /* Задачи */
-    try{
-        var tasks=JSON.parse(localStorage.getItem('tasksList')||'[]');
-        tasks.forEach(function(t){
-            if((t.title||'').toLowerCase().indexOf(q)>=0||((t.desc||'')).toLowerCase().indexOf(q)>=0){
-                results.push({cat:'tasks',ico:'✅',name:t.title||'',sub:t.desc||'',action:'openTasksModal'});
-            }
-        });
-    }catch(e){}
-    /* Лиды */
-    try{
-        var leads=JSON.parse(localStorage.getItem('leadsList')||'[]');
-        leads.forEach(function(l){
-            if((l.name||'').toLowerCase().indexOf(q)>=0||(l.phone||'').toLowerCase().indexOf(q)>=0){
-                results.push({cat:'leads',ico:'🌟',name:l.name||'',sub:l.phone||'',action:'openLeadsModal'});
-            }
-        });
-    }catch(e){}
-    /* Товары магазина */
-    try{
-        var items=JSON.parse(localStorage.getItem('shopItems')||'[]');
-        items.forEach(function(i){
-            if((i.name||'').toLowerCase().indexOf(q)>=0||(i.brand||'').toLowerCase().indexOf(q)>=0){
-                results.push({cat:'shop',ico:'🛒',name:i.name||'',sub:i.brand||'',action:'openShopModal'});
-            }
-        });
-    }catch(e){}
-    /* События календаря */
-    try{
-        var events=JSON.parse(localStorage.getItem('calendarEvents')||'[]');
-        events.forEach(function(e){
-            if((e.title||'').toLowerCase().indexOf(q)>=0||(e.clientName||'').toLowerCase().indexOf(q)>=0){
-                results.push({cat:'calendar',ico:'📅',name:e.title||e.clientName||'',sub:e.date+' '+(e.time||''),action:'openCalendarModal'});
-            }
-        });
-    }catch(e){}
-    return results.slice(0,30);
+/* Иконка режима меняется */
+function tbIcon(id){
+    if(id==='mode'){
+        var wk=document.body.classList.contains('mode-workout');
+        return wk?'🏋️':'🍽️';
+    }
+    return ALL_BUTTONS[id]?ALL_BUTTONS[id].ico:'?';
 }
 
-var catLabels={clients:{ru:'Клиенты',en:'Clients',he:'לקוחות'},tasks:{ru:'Задачи',en:'Tasks',he:'משימות'},leads:{ru:'Лиды',en:'Leads',he:'לידים'},shop:{ru:'Магазин',en:'Shop',he:'חנות'},calendar:{ru:'Календарь',en:'Calendar',he:'יומן'}};
-function catLabel(c){return catLabels[c]?(catLabels[c][L]||catLabels[c].ru):c;}
+/* Переключение режима */
+W.tbSwitchMode=function(){
+    var wk=document.body.classList.contains('mode-workout');
+    if(window.switchAppMode)window.switchAppMode(wk?'nutrition':'workout');
+    setTimeout(renderTaskbar,100);
+};
 
-function osSearchOpen(){
+/* ====================== КОНТЕКСТНОЕ МЕНЮ ПАНЕЛИ ====================== */
+W.tbShowCtx=function(e){
+    if(e)e.preventDefault();
+    var m=E('tbCtxMenu');
+    if(!m){m=document.createElement('div');m.id='tbCtxMenu';document.body.appendChild(m);
+        document.addEventListener('click',function(ev){if(!m.contains(ev.target))m.classList.remove('open');});
+    }
+    var btns=loadBtns();
+    var h='<div class="tb-ctx-group">'+tt('customize')+'</div>';
+    Object.keys(ALL_BUTTONS).forEach(function(id){
+        var b=ALL_BUTTONS[id];
+        var isOn=btns.indexOf(id)>=0;
+        if(b.fixed&&!isOn)return; /* fixed всегда показываются */
+        h+='<div class="tb-ctx-item" onclick="tbToggleBtn(\''+id+'\')">'+
+            '<span class="ico">'+b.ico+'</span><span>'+tt(b.label)+'</span>'+
+            (isOn?'<span class="tb-ctx-check">✓</span>':'')+'</div>';
+    });
+    h+='<div class="tb-ctx-sep"></div>';
+    h+='<div class="tb-ctx-item" onclick="document.getElementById(\'tbCtxMenu\').classList.remove(\'open\')"><span class="ico">✕</span><span>Закрыть</span></div>';
+    m.innerHTML=h;
+    m.style.left='50%';
+    m.style.transform='translateX(-50%)';
+    m.style.bottom='56px';
+    m.classList.add('open');
+};
+W.tbToggleBtn=function(id){
+    var btns=loadBtns();
+    var b=ALL_BUTTONS[id];if(!b)return;
+    var i=btns.indexOf(id);
+    if(i>=0){
+        if(b.fixed){if(window.showToast)window.showToast('⚠️');return;}
+        btns.splice(i,1);
+    }else{
+        /* вставляем перед последней (кнопкой настройки) */
+        btns.push(id);
+    }
+    saveBtns(btns);
+    renderTaskbar();
+    W.tbShowCtx();
+};
+
+/* ====================== ГЛОБАЛЬНЫЙ ПОИСК ====================== */
+W.osSearchOpen=function(){
     var ov=E('osSearchOverlay');
     if(!ov){
         ov=document.createElement('div');ov.id='osSearchOverlay';
         ov.innerHTML='<div class="os-search-box">'+
-            '<input type="text" class="os-search-input" id="osSearchInput" placeholder="'+ot('searchPh')+'" autofocus>'+
+            '<input type="text" class="os-search-input" id="osSearchInput" placeholder="'+tt('scanPh')+'">'+
             '<div class="os-search-results" id="osSearchResults"></div></div>';
         ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('open');});
         document.body.appendChild(ov);
-        var inp=E('osSearchInput');
-        var timer=null;
-        inp.addEventListener('input',function(){
-            if(timer)clearTimeout(timer);
-            timer=setTimeout(function(){osSearchRender(inp.value);},200);
-        });
+        var inp=E('osSearchInput');var timer=null;
+        inp.addEventListener('input',function(){if(timer)clearTimeout(timer);timer=setTimeout(function(){osSearchRender(inp.value);},200);});
         inp.addEventListener('keydown',function(e){
             if(e.key==='Escape')ov.classList.remove('open');
-            if(e.key==='Enter'){
-                var first=E('osSearchResults').querySelector('.os-search-item');
-                if(first)first.click();
-            }
+            if(e.key==='Enter'){var f=E('osSearchResults').querySelector('.os-search-item');if(f)f.click();}
         });
     }
     ov.classList.add('open');
     setTimeout(function(){var i=E('osSearchInput');if(i){i.value='';i.focus();osSearchRender('');}},50);
-}
-W.osSearchOpen=osSearchOpen;
-W.closeWin=closeWin;
+};
 
 function osSearchRender(q){
     var box=E('osSearchResults');if(!box)return;
-    if(!q||q.length<2){box.innerHTML='<div class="os-search-empty">'+ot('searchPh')+'</div>';return;}
-    var results=searchAll(q);
-    if(!results.length){box.innerHTML='<div class="os-search-empty">'+ot('noRes')+'</div>';return;}
-    var curCat='';
-    var h='';
+    if(!q||q.length<2){box.innerHTML='<div class="os-search-empty">'+tt('scanPh')+'</div>';return;}
+    q=q.toLowerCase();var results=[];
+    try{JSON.parse(localStorage.getItem('nutritionUsers')||'[]').forEach(function(u){
+        if(((u.name||'')+(u.lastName||'')+(u.phone||'')).toLowerCase().indexOf(q)>=0)
+            results.push({cat:'Клиенты',ico:u.avatar||'👤',name:(u.name||'')+' '+(u.lastName||''),sub:u.phone||'',uid:u.id});
+    });}catch(e){}
+    try{JSON.parse(localStorage.getItem('tasksList')||'[]').forEach(function(t){
+        if((t.title||'').toLowerCase().indexOf(q)>=0)results.push({cat:'Задачи',ico:'✅',name:t.title||'',sub:''});
+    });}catch(e){}
+    try{JSON.parse(localStorage.getItem('leadsList')||'[]').forEach(function(l){
+        if((l.name||'').toLowerCase().indexOf(q)>=0)results.push({cat:'Лиды',ico:'🌟',name:l.name||'',sub:l.phone||''});
+    });}catch(e){}
+    try{JSON.parse(localStorage.getItem('shopItems')||'[]').forEach(function(i){
+        if((i.name||'').toLowerCase().indexOf(q)>=0)results.push({cat:'Магазин',ico:'🛒',name:i.name||'',sub:i.brand||''});
+    });}catch(e){}
+    results=results.slice(0,20);
+    if(!results.length){box.innerHTML='<div class="os-search-empty">'+tt('noRes')+'</div>';return;}
+    var cur='';var h='';
     results.forEach(function(r){
-        if(r.cat!==curCat){curCat=r.cat;h+='<div class="os-search-cat">'+catLabel(curCat)+'</div>';}
-        h+='<div class="os-search-item" onclick="osSearchAction(\''+r.action+'\',\''+(r.uid||'')+'\')">'+
-            '<span class="ico">'+r.ico+'</span>'+
-            '<div class="txt"><div class="name">'+escapeHtml2(r.name)+'</div>'+
-            '<div class="sub">'+escapeHtml2(r.sub)+'</div></div></div>';
+        if(r.cat!==cur){cur=r.cat;h+='<div class="os-search-cat">'+cur+'</div>';}
+        h+='<div class="os-search-item" onclick="osSearchAction(\''+(r.uid||'')+'\')"><span class="ico">'+r.ico+'</span><div><div class="name">'+esc(r.name)+'</div><div class="sub">'+esc(r.sub)+'</div></div></div>';
     });
     box.innerHTML=h;
 }
-W.osSearchAction=function(action,uid){
-    E('osSearchOverlay').classList.remove('open');
-    if(action==='openUser'&&uid){
-        /* открыть клиента */
-        if(W.currentUserId!==undefined)W.currentUserId=uid;
-        var hs=E('homeScreen');if(hs)hs.classList.add('hidden');
-        var ac=E('appContainer');if(ac)ac.classList.remove('hidden');
-    }else if(action==='openTasksModal'&&W.openTasksModal)W.openTasksModal();
-    else if(action==='openLeadsModal'&&W.openLeadsModal)W.openLeadsModal();
-    else if(action==='openShopModal'&&W.openShopModal)W.openShopModal();
-    else if(action==='openCalendarModal'&&W.openCalendarModal)W.openCalendarModal();
+W.osSearchAction=function(uid){
+    var ov=E('osSearchOverlay');if(ov)ov.classList.remove('open');
+    if(uid&&window.openUser){window.openUser(uid);}
 };
-function escapeHtml2(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
 /* ====================== INIT ====================== */
 function init(){
     injectCSS();
-    /* Таскбар */
     if(!E('osTaskbar')){
-        var tb=document.createElement('div');tb.id='osTaskbar';document.body.appendChild(tb);
-        document.body.classList.add('has-taskbar');
-        renderTaskbar();
+        var tb=document.createElement('div');tb.id='osTaskbar';
+        document.body.appendChild(tb);
     }
-    /* Ctrl+K — поиск */
+    renderTaskbar();
+    /* Ctrl+K */
     document.addEventListener('keydown',function(e){
-        if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();osSearchOpen();}
-        if((e.ctrlKey||e.metaKey)&&e.key==='b'){e.preventDefault();if(W.heToggle)W.heToggle();}
+        if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();W.osSearchOpen();}
     });
-    /* Отслеживание открытых модалок для таскбара */
-    setInterval(function(){
-        var openMods=[];
-        var modals=['leadsModal','tasksModal','shopModal','settingsModal','calendarModal','barcodeScannerModal','dshOverlay','encOverlay','ntfOverlay'];
-        modals.forEach(function(id){
-            var el=E(id);
-            if(el){
-                var isOpen=el.style.display==='flex'||el.classList.contains('open')||el.classList.contains('modal')&&el.style.display==='block';
-                if(isOpen&&!openWindows[id]){
-                    var labels={leadsModal:['🌟',ot('winClients')],tasksModal:['✅',ot('winTasks')],shopModal:['🛒',ot('winShop')],settingsModal:['⚙️',ot('winSet')],calendarModal:['📅',ot('winCalendar')],barcodeScannerModal:['📷','Сканер'],dshOverlay:['📊',ot('winDash')],encOverlay:['📚',ot('winEnc')],ntfOverlay:['🔔','Уведомления']};
-                    var lb=labels[id]||['📋','Окно'];
-                    openWindows[id]={label:lb[1],ico:lb[0],closeFn:(function(mid){return function(){var e=E(mid);if(e){if(e.classList.contains('open'))e.classList.remove('open');else if(e.classList.contains('modal'))e.style.display='none';else e.style.display='none';}};})(id)};
-                    renderTaskbar();
-                }else if(!isOpen&&openWindows[id]){
-                    delete openWindows[id];
-                    renderTaskbar();
-                }
-            }
-        });
-    },800);
-    /* язык */
-    var o=window.applyLanguage;if(typeof o==='function'&&!W.__osLH){W.__osLH=true;window.applyLanguage=function(){var r=o.apply(this,arguments);try{L=(typeof currentLang!=='undefined')?currentLang:'ru';renderTaskbar();}catch(e){}return r;};}
+    /* Обновлять иконку режима при смене */
+    var origSAM=window.switchAppMode;
+    if(typeof origSAM==='function'&&!W.__tbSAM){
+        W.__tbSAM=true;
+        window.switchAppMode=function(){var r=origSAM.apply(this,arguments);setTimeout(renderTaskbar,200);return r;};
+    }
+    /* Перерисовка при смене языка */
+    var origAL=window.applyLanguage;
+    if(typeof origAL==='function'&&!W.__tbLH){
+        W.__tbLH=true;
+        window.applyLanguage=function(){var r=origAL.apply(this,arguments);try{L=(typeof currentLang!=='undefined')?currentLang:'ru';renderTaskbar();}catch(e){}return r;};
+    }
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1500);});
-else setTimeout(init,1500);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1200);});
+else setTimeout(init,1200);
 })();
 </script>
 
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b6a656ebab2212',t:'MTc4MTQxMTk1MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b8595f789943de',t:'MTc4MTQyOTc3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
