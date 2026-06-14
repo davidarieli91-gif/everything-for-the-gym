@@ -4812,7 +4812,7 @@
         .fab-add-meal {
             display: none;
             position: fixed;
-            bottom: 20px;
+            bottom: 60px;
             right: 20px;
             z-index: 200;
             width: 56px;
@@ -5495,16 +5495,17 @@
             justify-content: center;
         }
 
+        /* Отключаем старую мобильную навигацию — теперь всё в панели задач */
         body.layout-mobile .sidebar-toggle {
-            display: flex;
+            display: none !important;
         }
 
         body.layout-mobile .sidebar-collapse-btn {
-            display: block;
+            display: none !important;
         }
 
         body.layout-mobile .mobile-nav {
-            display: block;
+            display: none !important;
         }
 
         /* Отступ снизу для мобильной навигации */
@@ -5516,15 +5517,17 @@
             padding-bottom: 80px;
         }
 
-        /* Скрываем дублирующие кнопки на смартфоне (они в нижней навигации) */
-        body.layout-mobile .action-buttons .action-btn[data-i18n="btnAddMeal"],
-        body.layout-mobile .action-buttons .action-btn[data-i18n="btnSavePlan"],
-        body.layout-mobile .action-buttons .action-btn[data-i18n="btnPrint2"] {
-            display: none;
+        /* Показываем ВСЕ кнопки в шапке на смартфоне */
+        body.layout-mobile .action-buttons .action-btn,
+        body.layout-mobile .header-actions .action-btn {
+            display: inline-flex !important;
         }
-
-        body.layout-mobile .header-actions .action-btn[data-i18n="btnPrint"],
-        body.layout-mobile .header-actions .action-btn[data-i18n="btnSave"] {
+        /* Делаем шапку скроллируемой */
+        body.layout-mobile .main-header {
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        body.layout-mobile .main-header::-webkit-scrollbar {
             display: none;
         }
 
@@ -7156,7 +7159,7 @@
 
         /* Применяем переменные размеров к карточкам */
         .products-list {
-            grid-template-columns: repeat(auto-fill, minmax(var(--card-product-min), 1fr)) !important;
+            grid-template-columns: repeat(auto-fill, minmax(var(--card-product-min), 1fr));
         }
         .product-card-thumb {
             width: var(--card-product-thumb);
@@ -7573,7 +7576,7 @@
     </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;background:#10B981;color:#fff;font-size:11px;font-weight:800;padding:3px 16px;border-radius:0 0 10px 10px;pointer-events:none;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);">v15</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;background:#10B981;color:#fff;font-size:11px;font-weight:800;padding:3px 16px;border-radius:0 0 10px 10px;pointer-events:none;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);">v16</div>
 <script>setTimeout(function(){var b=document.getElementById("verBadge");if(b)b.style.display="none";},6000);</script>
     <!-- ===== ЭКРАН 1: ПОЛЬЗОВАТЕЛИ (РЕДИЗАЙН) ===== -->
     <div class="home-screen" id="homeScreen">
@@ -28273,7 +28276,7 @@ body.dark-theme .home-tool-card { background: rgba(255,255,255,0.05); }
 /* Кнопки «Сводка дня» / «Энциклопедия» — теперь в общей панели инструментов */
 
         /* ===== FAB СКАНЕР ШТРИХ-КОДА (мобильная версия) ===== */
-        .fab-barcode { display: none; position: fixed; z-index: 8200; bottom: 78px; right: 16px; width: 52px; height: 52px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1d4ed8); color: #fff; font-size: 1.5em; cursor: pointer; box-shadow: 0 6px 20px rgba(59,130,246,0.5); align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+        .fab-barcode { display: none; position: fixed; z-index: 8200; bottom: 60px; right: 16px; width: 52px; height: 52px; border: none; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #1d4ed8); color: #fff; font-size: 1.5em; cursor: pointer; box-shadow: 0 6px 20px rgba(59,130,246,0.5); align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
         .fab-barcode:active { transform: scale(0.92); }
         /* показываем FAB на мобильных в режиме питания (mode-workout отсутствует) И когда открыт планировщик */
         body.layout-mobile:not(.mode-workout) .app-container:not(.hidden) ~ .fab-barcode:not(.app-hidden),
@@ -35862,5 +35865,5 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b947350c0be8b9',t:'MTc4MTQzOTUxMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
