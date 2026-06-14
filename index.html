@@ -1189,36 +1189,46 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .modal[style*="display: block"],
+        .modal[style*="display:block"] {
+            display: flex !important;
         }
 
         .modal-content {
             background: var(--surface-color);
-            margin: 2% auto;
+            margin: auto;
             padding: 20px;
             border-radius: 12px;
-            width: 90%;
+            width: 100%;
             max-width: 600px;
             box-shadow: var(--shadow-lg);
-            max-height: 96vh;
+            max-height: calc(100vh - 20px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             animation: modalFadeIn 0.3s ease-out;
             box-sizing: border-box;
+            position: relative;
         }
-        /* ФИКС: На мобильном все модалки на весь экран */
+        /* ФИКС: На мобильном все модалки помещаются на экран */
         body.layout-mobile .modal-content,
         body.layout-tablet .modal-content {
-            margin: 0 !important;
+            margin: auto !important;
             width: 100% !important;
             max-width: 100% !important;
-            max-height: 100dvh !important;
-            height: 100dvh;
-            border-radius: 0 !important;
+            max-height: calc(100dvh - 20px) !important;
+            border-radius: 12px !important;
             overflow-y: auto !important;
         }
-        /* Сам фон модалки тоже скроллится */
         body.layout-mobile .modal,
         body.layout-tablet .modal {
+            padding: 10px !important;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
         }
@@ -7563,6 +7573,8 @@
     </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;background:#10B981;color:#fff;font-size:11px;font-weight:800;padding:3px 16px;border-radius:0 0 10px 10px;pointer-events:none;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);">v15</div>
+<script>setTimeout(function(){var b=document.getElementById("verBadge");if(b)b.style.display="none";},6000);</script>
     <!-- ===== ЭКРАН 1: ПОЛЬЗОВАТЕЛИ (РЕДИЗАЙН) ===== -->
     <div class="home-screen" id="homeScreen">
         <!-- HERO - КАСТОМНОЕ ЛОГО -->
@@ -13492,7 +13504,7 @@
             const btnEl = document.getElementById('saveUserBtn');
             if (btnEl) btnEl.textContent = t('btnSaveChanges') || '💾 Сохранить изменения';
 
-            document.getElementById('addUserModal').style.display = 'block';
+            document.getElementById('addUserModal').style.display = 'flex';
         }
 
         // ===== Документы клиента =====
@@ -13594,7 +13606,7 @@
             const btnEl = document.getElementById('saveUserBtn');
             if (btnEl) btnEl.textContent = t('btnCreateUser') || 'Создать';
 
-            document.getElementById('addUserModal').style.display = 'block';
+            document.getElementById('addUserModal').style.display = 'flex';
         }
 
         // ===== Работа с фото клиента =====
@@ -13767,7 +13779,7 @@
                 document.getElementById('protein').textContent = user.norms.protein;
                 document.getElementById('fat').textContent = user.norms.fat;
                 document.getElementById('carbs').textContent = user.norms.carbs;
-                document.getElementById('resultsSection').style.display = 'block';
+                document.getElementById('resultsSection').style.display = 'flex';
                 document.getElementById('progressContainer').style.display = 'flex';
             }
 
@@ -13967,7 +13979,7 @@
             const sidebarToggleBtn = document.getElementById('sidebarToggle');
 
             if (layout === 'mobile') {
-                if (mobileNav) mobileNav.style.display = 'block';
+                if (mobileNav) mobileNav.style.display = 'flex';
                 if (fabBtn) fabBtn.style.display = 'flex';
             } else if (layout === 'tablet') {
                 if (mobileNav) mobileNav.style.display = 'none';
@@ -14451,8 +14463,8 @@
             document.getElementById('protein').textContent = protein.toFixed(1);
             document.getElementById('fat').textContent = fat.toFixed(1);
             document.getElementById('carbs').textContent = carbs.toFixed(1);
-            document.getElementById('resultsSection').style.display = 'block';
-            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'flex';
+            document.getElementById('progressContainer').style.display = 'flex';
             
             savePlan();
             updateProgressBars();
@@ -14870,7 +14882,7 @@
             const banner = document.getElementById('targetSumBanner');
             if (banner) {
                 if (sumPercent > 0) {
-                    banner.style.display = 'block';
+                    banner.style.display = 'flex';
                     const ok = Math.abs(sumPercent - 100) < 0.5;
                     banner.style.color = ok ? 'var(--success-color)' : 'var(--warning-color)';
                     banner.textContent = (t('targetSumLabel') || 'Сумма распределения') + ': ' + sumPercent + '%' +
@@ -14903,7 +14915,7 @@
             
             // Показываем resultsSection если есть нормы или есть приёмы
             if (meals.length > 0 || (document.getElementById('calories').textContent !== '0')) {
-                document.getElementById('resultsSection').style.display = 'block';
+                document.getElementById('resultsSection').style.display = 'flex';
             }
         }
 
@@ -15557,11 +15569,11 @@
 
         // Открытие модальных окон
         function openSettingsModal() {
-            document.getElementById('settingsModal').style.display = 'block';
+            document.getElementById('settingsModal').style.display = 'flex';
         }
 
         function openAddProductModal() {
-            document.getElementById('addProductModal').style.display = 'block';
+            document.getElementById('addProductModal').style.display = 'flex';
             document.getElementById('unitsContainer').innerHTML = '';
             addUnitRow();
         }
@@ -15641,7 +15653,7 @@
             // Build units editor
             buildEditUnits(p.units || {});
             
-            document.getElementById('editProductModal').style.display = 'block';
+            document.getElementById('editProductModal').style.display = 'flex';
         }
 
         function buildEditUnits(units) {
@@ -17234,6 +17246,14 @@
             }
             try { safeSetItem('appMode', mode); } catch(e){}
             try { localStorage.setItem('appMode', mode); } catch(e){}
+
+        /* ФИКС: конвертировать display:block в display:flex для .modal */
+        setInterval(function(){
+            document.querySelectorAll('.modal').forEach(function(m){
+                if(m.style.display==='block'){m.style.display='flex';}
+            });
+        }, 200);
+
         };
 
         // ---------- ПЕЧАТЬ ----------
@@ -21184,7 +21204,7 @@
             // сброс инвентаря
             selectExEquip('none');
             updateExIconPreview();
-            modal.style.display = 'block';
+            modal.style.display = 'flex';
             // обновлять превью при вводе
             ['newExEmoji','newExGroup','newExNameRu','newExNameEn','newExNameHe'].forEach(id => {
                 const el = document.getElementById(id);
@@ -21253,7 +21273,7 @@
                 }
             }
 
-            modal.style.display = 'block';
+            modal.style.display = 'flex';
             ['newExEmoji','newExGroup','newExNameRu','newExNameEn','newExNameHe'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && !el.__previewBound) {
@@ -24082,7 +24102,7 @@
             
             overlay.style.display = 'flex';
             list.style.display = 'none';
-            form.style.display = 'block';
+            form.style.display = 'flex';
             if (loggedInPanel) loggedInPanel.style.display = 'none';
             document.getElementById('trainerPasswordInput').value = '';
             document.getElementById('trainerPasswordInput').focus();
@@ -24109,7 +24129,7 @@
             const subtitleEl = document.getElementById('trainerLoginSubtitle');
             if (titleEl) titleEl.textContent = t('trLoginTitle');
             if (subtitleEl) subtitleEl.textContent = t('trLoginSubtitle');
-            list.style.display = 'block';
+            list.style.display = 'flex';
             form.style.display = 'none';
             if (loggedInPanel) loggedInPanel.style.display = 'none';
             selectedTrainerForLogin = null;
@@ -24163,7 +24183,7 @@
             if (subtitleEl) subtitleEl.textContent = '';
             list.style.display = 'none';
             form.style.display = 'none';
-            if (loggedInPanel) loggedInPanel.style.display = 'block';
+            if (loggedInPanel) loggedInPanel.style.display = 'flex';
             overlay.style.display = 'flex';
 
             // Translate buttons
@@ -24250,7 +24270,7 @@
                     </div>
                 `).join('');
             }
-            document.getElementById('trainerLoginList').style.display = 'block';
+            document.getElementById('trainerLoginList').style.display = 'flex';
             document.getElementById('trainerLoginForm').style.display = 'none';
             return false;
         }
@@ -24591,12 +24611,12 @@
             const removeBtn = document.getElementById('tpAvatarRemoveBtn');
             if (p.avatar) {
                 avatarImg.src = p.avatar;
-                avatarImg.style.display = 'block';
+                avatarImg.style.display = 'flex';
                 avatarPlaceholder.style.display = 'none';
                 removeBtn.style.display = 'inline-flex';
             } else {
                 avatarImg.style.display = 'none';
-                avatarPlaceholder.style.display = 'block';
+                avatarPlaceholder.style.display = 'flex';
                 removeBtn.style.display = 'none';
             }
 
@@ -24677,7 +24697,7 @@
             compressImageToDataURL(file, 512, 0.88).then(dataUrl => {
                 const avatarImg = document.getElementById('tpAvatarImg');
                 avatarImg.src = dataUrl;
-                avatarImg.style.display = 'block';
+                avatarImg.style.display = 'flex';
                 document.getElementById('tpAvatarPlaceholder').style.display = 'none';
                 document.getElementById('tpAvatarRemoveBtn').style.display = 'inline-flex';
                 // Save immediately
@@ -24693,7 +24713,7 @@
             const avatarImg = document.getElementById('tpAvatarImg');
             avatarImg.src = '';
             avatarImg.style.display = 'none';
-            document.getElementById('tpAvatarPlaceholder').style.display = 'block';
+            document.getElementById('tpAvatarPlaceholder').style.display = 'flex';
             document.getElementById('tpAvatarRemoveBtn').style.display = 'none';
             const p = getTrainerProfile(__tpEditingId) || {};
             p.avatar = '';
@@ -25429,12 +25449,12 @@
 
             if (!nameOrPhone || !pwd) {
                 errEl.textContent = t('clientLoginFill') || 'Введите имя и пароль';
-                errEl.style.display = 'block';
+                errEl.style.display = 'flex';
                 return;
             }
             if (pwd.length < 4) {
                 errEl.textContent = t('clientPwdMin') || 'Мин. 4 символа';
-                errEl.style.display = 'block';
+                errEl.style.display = 'flex';
                 return;
             }
 
@@ -25447,14 +25467,14 @@
 
             if (!user || !user.clientPassword) {
                 errEl.textContent = t('clientNotFound') || 'Клиент не найден или пароль не задан';
-                errEl.style.display = 'block';
+                errEl.style.display = 'flex';
                 return;
             }
 
             const hashed = await hashPassword(pwd);
             if (hashed !== user.clientPassword) {
                 errEl.textContent = t('clientWrongPwd') || 'Неверный пароль';
-                errEl.style.display = 'block';
+                errEl.style.display = 'flex';
                 return;
             }
 
@@ -33905,8 +33925,8 @@ window.bkrSetRole = function(trainerId, role){
 
 /* ---------- init ---------- */
 function dashInit(){
-    dshInjectBtn();
-    injectHomeTools();
+    /* dshInjectBtn(); отключено */
+    /* injectHomeTools(); отключено */
     bkrAutoBackup();
     bkrApplyViewerMode();
     var origAL = window.applyLanguage;
@@ -33920,7 +33940,7 @@ function dashInit(){
                 var ov = document.getElementById('dshOverlay');
                 if (ov && ov.style.display === 'flex') dshRender();
             } catch(e){}
-            try { injectHomeTools(); } catch(e){}
+            try { /* injectHomeTools(); отключено */ } catch(e){}
             return r;
         };
     }
@@ -33930,8 +33950,8 @@ function dashInit(){
         window.__dshRuHook = true;
         window.renderUsers = function(){
             var r = origRU.apply(this, arguments);
-            try { dshInjectBtn(); } catch(e){}
-            try { injectHomeTools(); } catch(e){}
+            try { /* dshInjectBtn(); отключено */ } catch(e){}
+            try { /* injectHomeTools(); отключено */ } catch(e){}
             return r;
         };
     }
@@ -34564,7 +34584,7 @@ function encInjectBtn(){ /* no-op: кнопка в injectHomeTools */ }
 
 /* ====================== INIT (с поддержкой смены языка) ====================== */
 function encInit(){
-    encInjectBtn();
+    /* encInjectBtn(); отключено */
     /* перерисовка при смене языка системы */
     var origAL = window.applyLanguage;
     if (typeof origAL === 'function' && !window.__encLangHook){
@@ -34590,7 +34610,7 @@ function encInit(){
         window.__encRuHook = true;
         window.renderUsers = function(){
             var r = origRU.apply(this, arguments);
-            try { encInjectBtn(); } catch(e){}
+            try { /* encInjectBtn(); отключено */ } catch(e){}
             return r;
         };
     }
@@ -34747,12 +34767,17 @@ function startDrag(e,el,dir,getPos,setPos,minW,minH){
         minW=minW||140;minH=minH||100;
         if(dir==='drag'){
             nx=ox+dx;ny=oy+dy;
-            /* Ограничиваем: не уходит за левый край, оставляем минимум 80px справа */
-            var maxRight=window.innerWidth-80;
-            var maxLeft=-(nw-120);
-            nx=Math.max(maxLeft,Math.min(nx,maxRight));
-            /* Не уходит за верх (под шапку) и не уходит за низ (над панелью задач) */
-            ny=Math.max(0,Math.min(ny,window.innerHeight-80));
+            /* ЖЁСТКИЕ ГРАНИЦЫ ЭКРАНА:
+               - Левый край: от 0 до ширина_экрана - 80px
+               - Правый край: не заходит за 80px от правого края
+               - Верх: не выше 0px (учитывая прокрутку)
+               - Низ: не ниже высота_экрана - 100px (не под панель задач)
+            */
+            var sw=window.innerWidth,sh=window.innerHeight;
+            nx=Math.max(0,Math.min(nx,sw-nw));
+            ny=Math.max(0,Math.min(ny,sh-80));
+            /* если панель шире экрана — не даём утащить */
+            if(nw>sw)nx=0;
         }else{
             if(dir.indexOf('n')>=0){ny=oy+dy;nh=oh-dy;if(nh<minH){nh=minH;ny=oy+oh-minH;}}
             if(dir.indexOf('s')>=0){nh=oh+dy;if(nh<minH)nh=minH;}
@@ -34908,12 +34933,8 @@ function renderWidgets(){
 function applyAll(){
     var s=loadS();
     var editing=document.body.classList.contains('he-edit');
-    /* кнопки */
-    var grid=document.querySelector('.home-tools-grid');
-    if(grid)grid.querySelectorAll('.home-tool-card').forEach(function(b){
-        var tid=b.getAttribute('data-tid');if(!tid)return;
-        if(s.hidden.indexOf(tid)>=0)b.classList.add('he-hidden');else b.classList.remove('he-hidden');
-    });
+    /* кнопки home-tools-grid отключены — они в панели задач */
+    /* (старый блок удалён) */
     /* панели */
     var panels=getPanels();
     panels.forEach(function(p){
@@ -34922,6 +34943,10 @@ function applyAll(){
         el.style.display='';
         if(s.pos[p.id]){
             var pos=s.pos[p.id];
+            /* Ограничиваем позиции границами экрана */
+            var sw=window.innerWidth,sh=window.innerHeight;
+            pos.x=Math.max(0,Math.min(pos.x,sw-pos.w-10));
+            pos.y=Math.max(0,Math.min(pos.y,sh-80));
             el.style.position='absolute';
             el.style.left=pos.x+'px';el.style.top=pos.y+'px';el.style.width=pos.w+'px';el.style.height=pos.h+'px';
         }
@@ -34930,12 +34955,7 @@ function applyAll(){
             startDrag(e,el,dir,function(){return s.pos[p.id];},function(np){s.pos[p.id]=np;saveS(s);},p.minW,p.minH);
         },function(){s.hidden.push(p.id);saveS(s);applyAll();});
     });
-    /* FIX: вынести toolsPanel из hero чтобы они двигались независимо */
-    var hero=document.getElementById('homeHeroCustom');
-    var tools=document.getElementById('homeToolsPanel');
-    if(hero&&tools&&tools.parentNode===hero){
-        hero.parentNode.insertBefore(tools,hero.nextSibling);
-    }
+    /* toolsPanel отключён, кнопки в панели задач */
     renderWidgets();
 }
 
@@ -34948,21 +34968,15 @@ function enterEdit(){
     var panels=getPanels();
     panels.forEach(function(p){
         var el=document.querySelector(p.sel);if(!el)return;
-        if(!s.pos[p.id]){s.pos[p.id]={x:el.offsetLeft,y:el.offsetTop,w:el.offsetWidth,h:el.offsetHeight};}
+        if(!s.pos[p.id]){
+            var sw=window.innerWidth,sh=window.innerHeight;
+            var x=Math.max(0,Math.min(el.offsetLeft,sw-el.offsetWidth-10));
+            var y=Math.max(0,Math.min(el.offsetTop,sh-100));
+            s.pos[p.id]={x:x,y:y,w:el.offsetWidth,h:el.offsetHeight};
+        }
     });
     saveS(s);
-    /* кнопки — клик = скрыть */
-    var grid=document.querySelector('.home-tools-grid');
-    if(grid)grid.querySelectorAll('.home-tool-card').forEach(function(b){
-        b.onmousedown=function(e){
-            if(document.body.classList.contains('he-edit')&&b.getAttribute('data-tid')!=='hedit'){
-                e.preventDefault();e.stopPropagation();
-                var id=b.getAttribute('data-tid');var s2=loadS();var i=s2.hidden.indexOf(id);
-                if(i>=0)s2.hidden.splice(i,1);else s2.hidden.push(id);
-                saveS(s2);applyAll();return false;
-            }
-        };
-    });
+    /* обработка старых кнопок отключена */
     buildBar();applyAll();
 }
 function exitEdit(){
@@ -35637,6 +35651,8 @@ function injectCSS(){
     /* Панель задач */
     '#osTaskbar{position:fixed;bottom:0;left:0;right:0;height:50px;background:rgba(15,23,42,.97);backdrop-filter:blur(12px);display:flex;align-items:center;gap:2px;padding:0 6px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:9000;box-shadow:0 -2px 16px rgba(0,0,0,.2);overflow-x:auto;scrollbar-width:none;}'+
     '#osTaskbar::-webkit-scrollbar{display:none;}'+
+    '#osTaskbar.tb-center{justify-content:center!important;}'+
+    '#osTaskbar.tb-right{justify-content:flex-end!important;}'+
     '.tb-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 8px;border-radius:8px;cursor:pointer;color:#94a3b8;font-size:9px;font-weight:600;white-space:nowrap;transition:.12s;flex-shrink:0;min-width:46px;height:44px;border:none;background:transparent;font-family:inherit;-webkit-tap-highlight-color:transparent;}'+
     '.tb-btn:hover{background:rgba(255,255,255,.08);color:#fff;}'+
     '.tb-btn:active{transform:scale(.92);}'+
@@ -35650,7 +35666,7 @@ function injectCSS(){
     'body{padding-bottom:50px!important;}'+
     '@media(min-width:1025px){body{padding-bottom:50px!important;}}'+
     /* Скрыть старые кнопки на главном экране (теперь в панели задач) */
-    '#homeToolsPanel,.home-tools-panel,.home-tools-grid{display:none!important;}'+
+    '#homeToolsPanel,.home-tools-panel,.home-tools-grid,.dsh-home-btn,.enc-home-btn,#dshHomeBtn,#encHomeBtn{display:none!important;}'+
     /* Поиск */
     '#osSearchOverlay{display:none;position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.7);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding-top:8vh;}'+
     '#osSearchOverlay.open{display:flex;}'+
@@ -35730,14 +35746,19 @@ W.tbShowCtx=function(e){
             '<span class="ico">'+b.ico+'</span><span>'+tt(b.label)+'</span>'+
             (isOn?'<span class="tb-ctx-check">✓</span>':'')+'</div>';
     });
-    h+='<div class="tb-ctx-sep"></div>';
-    h+='<div class="tb-ctx-item" onclick="document.getElementById(\'tbCtxMenu\').classList.remove(\'open\')"><span class="ico">✕</span><span>Закрыть</span></div>';
+    h+='<div class="tb-ctx-sep"></div>'+
+        '<div class="tb-ctx-item" onclick="tbAlign(\'left\')"><span class="ico">⬅️</span><span>Слева</span></div>'+
+        '<div class="tb-ctx-item" onclick="tbAlign(\'center\')"><span class="ico">↔️</span><span>По центру</span></div>'+
+        '<div class="tb-ctx-item" onclick="tbAlign(\'right\')"><span class="ico">➡️</span><span>Справа</span></div>'+
+        '<div class="tb-ctx-sep"></div>'+
+        '<div class="tb-ctx-item" onclick="document.getElementById(\'tbCtxMenu\').classList.remove(\'open\')"><span class="ico">✕</span><span>Закрыть</span></div>';
     m.innerHTML=h;
     m.style.left='50%';
     m.style.transform='translateX(-50%)';
     m.style.bottom='56px';
     m.classList.add('open');
 };
+W.tbAlign=function(pos){var tb=E("osTaskbar");if(!tb)return;tb.classList.remove("tb-left","tb-center","tb-right");tb.classList.add("tb-"+pos);try{localStorage.setItem("tbAlign",pos);}catch(e){}E("tbCtxMenu").classList.remove("open");};
 W.tbToggleBtn=function(id){
     var btns=loadBtns();
     var b=ALL_BUTTONS[id];if(!b)return;
@@ -35815,6 +35836,7 @@ function init(){
         document.body.appendChild(tb);
     }
     renderTaskbar();
+    try{var al=localStorage.getItem("tbAlign");if(al){var tb=E("osTaskbar");if(tb)tb.classList.add("tb-"+al);}}catch(e){}
     /* Ctrl+K */
     document.addEventListener('keydown',function(e){
         if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();W.osSearchOpen();}
@@ -35840,5 +35862,5 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b8cb9b9b4a659f',t:'MTc4MTQzNDQ0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
