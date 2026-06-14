@@ -358,7 +358,7 @@
             overflow-y: auto;
             padding: 8px !important;
             display: grid !important;
-            grid-template-columns: repeat(auto-fill, minmax(var(--card-product-min, 130px), 1fr)) !important;
+            grid-template-columns: repeat(auto-fill, minmax(var(--card-product-min, 130px), 1fr));
             gap: 6px !important;
             align-content: start !important;
         }
@@ -5523,7 +5523,6 @@
         body.layout-mobile .main-header {
             overflow-x: auto;
             scrollbar-width: none;
-            max-height: 120px;
         }
         body.layout-mobile .main-header::-webkit-scrollbar {
             display: none;
@@ -7574,13 +7573,13 @@
     </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:0;z-index:99999;background:#10B981;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:0 0 8px 0;pointer-events:all;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;max-width:280px;line-height:1.4;" onclick="this.style.display='none'">v19 ✅ загружено</div>
+<div id="verBadge" style="position:fixed;top:0;left:0;z-index:99999;background:#10B981;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:0 0 8px 0;pointer-events:all;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;max-width:280px;line-height:1.4;" onclick="this.style.display='none'">v20 ✅ загружено</div>
 <script>
 setTimeout(function(){
     var b=document.getElementById("verBadge");
     if(!b)return;
     var diag=[];
-    diag.push("v19");
+    diag.push("v20");
     diag.push("localStorage: "+(typeof localStorage!=='undefined'?'OK':'BLOCKED'));
     diag.push("switchAppMode: "+(typeof switchAppMode==='function'?'OK':'MISSING'));
     diag.push("heToggle: "+(typeof heToggle==='function'?'OK':'MISSING'));
@@ -21625,6 +21624,11 @@ setTimeout(function(){
             const es = parseInt(localStorage.getItem('exerciseCardSize') || '42');
             if (!isNaN(es)) setExerciseCardSize(es);
         }
+        /* Применять размер карточек при каждом рендере продуктов */
+        setInterval(function(){
+            var slider = document.getElementById('productCardSizeSlider');
+            if(slider && slider.value) setProductCardSize(slider.value);
+        }, 2000);
 
         /* =====================================================================
            СКАНЕР ШТРИХ-КОДОВ + ИНТЕГРАЦИЯ С OPEN FOOD FACTS
@@ -35889,5 +35893,5 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b995b5385943de',t:'MTc4MTQ0MjcyNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b9eb4d0d35b2ed',t:'MTc4MTQ0NjIzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
