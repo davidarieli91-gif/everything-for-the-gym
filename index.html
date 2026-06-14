@@ -1193,15 +1193,34 @@
 
         .modal-content {
             background: var(--surface-color);
-            margin: 5% auto;
-            padding: 25px;
+            margin: 2% auto;
+            padding: 20px;
             border-radius: 12px;
-            width: 80%;
+            width: 90%;
             max-width: 600px;
             box-shadow: var(--shadow-lg);
-            max-height: 90vh;
+            max-height: 96vh;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             animation: modalFadeIn 0.3s ease-out;
+            box-sizing: border-box;
+        }
+        /* ФИКС: На мобильном все модалки на весь экран */
+        body.layout-mobile .modal-content,
+        body.layout-tablet .modal-content {
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            max-height: 100dvh !important;
+            height: 100dvh;
+            border-radius: 0 !important;
+            overflow-y: auto !important;
+        }
+        /* Сам фон модалки тоже скроллится */
+        body.layout-mobile .modal,
+        body.layout-tablet .modal {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
 
         @keyframes modalFadeIn {
@@ -34728,8 +34747,12 @@ function startDrag(e,el,dir,getPos,setPos,minW,minH){
         minW=minW||140;minH=minH||100;
         if(dir==='drag'){
             nx=ox+dx;ny=oy+dy;
-            nx=Math.max(-nw+100,Math.min(nx,window.innerWidth-100));
-            ny=Math.max(0,ny);
+            /* Ограничиваем: не уходит за левый край, оставляем минимум 80px справа */
+            var maxRight=window.innerWidth-80;
+            var maxLeft=-(nw-120);
+            nx=Math.max(maxLeft,Math.min(nx,maxRight));
+            /* Не уходит за верх (под шапку) и не уходит за низ (над панелью задач) */
+            ny=Math.max(0,Math.min(ny,window.innerHeight-80));
         }else{
             if(dir.indexOf('n')>=0){ny=oy+dy;nh=oh-dy;if(nh<minH){nh=minH;ny=oy+oh-minH;}}
             if(dir.indexOf('s')>=0){nh=oh+dy;if(nh<minH)nh=minH;}
@@ -35668,8 +35691,10 @@ function renderTaskbar(){
     });
     /* кнопка настройки панели */
     h+='<div class="tb-sep"></div>';
-    h+='<button class="tb-btn" onclick="tbShowCtx(event)" title="'+tt('customize')+'"><span class="ico">⚙️</span><span class="lbl">+</span></button>';
+    h+='<button class="tb-btn" id="tbCustomizeBtn" title="'+tt('customize')+'"><span class="ico">⚙️</span><span class="lbl">+</span></button>';
     tb.innerHTML=h;
+    var cb=document.getElementById('tbCustomizeBtn');
+    if(cb)cb.onclick=function(e){e.preventDefault();e.stopPropagation();W.tbShowCtx(e);};
 }
 
 /* Иконка режима меняется */
@@ -35815,6 +35840,5 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b8cb9b9b4a659f',t:'MTc4MTQzNDQ0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
