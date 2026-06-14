@@ -4,75 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-    /* ===== ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША + SAFE STORAGE ===== */
+    /* ============================================================
+       АГРЕССИВНЫЙ SHIM localStorage для file:// протокола (Edge)
+       Edge Tracking Prevention блокирует localStorage на file://
+       но НЕ выбрасывает ошибку — просто тихо возвращает null.
+       Поэтому проверяем РЕАЛЬНУЮ запись/чтение.
+       ============================================================ */
     (function(){
-        var NEED_VER = 13;
-        /* Безопасное хранилище (работает даже на file:// протоколе) */
-        window.safeStore = {
-            _data: {},
-            getItem: function(k) {
-                try { return localStorage.getItem(k); }
-                catch(e) {
-                    try { return this._data[k] || null; }
-                    catch(e2) { return null; }
-                }
-            },
-            setItem: function(k, v) {
-                try { localStorage.setItem(k, v); }
-                catch(e) {
-                    try { sessionStorage.setItem(k, v); }
-                    catch(e2) { this._data[k] = v; }
-                }
-            },
-            removeItem: function(k) {
-                try { localStorage.removeItem(k); }
-                catch(e) {
-                    try { sessionStorage.removeItem(k); }
-                    catch(e2) { delete this._data[k]; }
-                }
-            }
-        };
-        try {
-            var cur = parseInt(safeStore.getItem('appVer')||'0');
-            if (cur < NEED_VER) {
-                /* Удаляем ВСЕ service workers (только на http/https) */
-                if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
-                    try { navigator.serviceWorker.getRegistrations().then(function(regs){
-                        regs.forEach(function(r){ r.unregister(); });
-                    }).catch(function(){}); } catch(e){}
-                }
-                /* Удаляем ВСЕ кэши */
-                if ('caches' in window && location.protocol.indexOf('http') === 0) {
-                    try { caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); }).catch(function(){}); } catch(e){}
-                }
-                safeStore.setItem('appVer', String(NEED_VER));
-                console.log('[APP] Кэш очищен, версия ' + NEED_VER);
-            }
-        } catch(e){}
-    })();
-    </script>
-        <script>
-    /* ===== LOCALSTORAGE SHIM для file:// протокола ===== */
-    (function(){
-        if (location.protocol !== 'file:') return;
         var _mem = {};
-        try { localStorage.getItem('test'); }
-        catch(e) {
-            console.log('[APP] file:// режим: localStorage недоступен, используем память');
+        var lsBlocked = false;
+
+        /* Тест: реально ли работает localStorage? */
+        try {
+            var testKey = '__test_' + Date.now();
+            localStorage.setItem(testKey, '1');
+            var testVal = localStorage.getItem(testKey);
+            localStorage.removeItem(testKey);
+            if (testVal !== '1') lsBlocked = true;
+        } catch(e) {
+            lsBlocked = true;
+        }
+
+        if (lsBlocked) {
+            console.log('[APP] ⚠️ localStorage заблокирован (file://) — используем память');
+            /* Полная замена localStorage */
+            var fakeLS = {
+                _data: _mem,
+                getItem: function(k) {
+                    return _mem[k] !== undefined ? _mem[k] : null;
+                },
+                setItem: function(k, v) {
+                    _mem[k] = String(v);
+                },
+                removeItem: function(k) {
+                    delete _mem[k];
+                },
+                clear: function() {
+                    _mem = {};
+                },
+                key: function(i) {
+                    var keys = Object.keys(_mem);
+                    return keys[i] || null;
+                }
+            };
+            Object.defineProperty(fakeLS, 'length', {
+                get: function() { return Object.keys(_mem).length; }
+            });
             try {
                 Object.defineProperty(window, 'localStorage', {
-                    value: {
-                        getItem: function(k){ return _mem[k] !== undefined ? _mem[k] : null; },
-                        setItem: function(k,v){ _mem[k] = String(v); },
-                        removeItem: function(k){ delete _mem[k]; },
-                        clear: function(){ _mem = {}; },
-                        key: function(i){ return Object.keys(_mem)[i] || null; },
-                        get length(){ return Object.keys(_mem).length; }
-                    },
-                    writable: false
+                    value: fakeLS,
+                    writable: false,
+                    configurable: true
                 });
-            } catch(e2) {}
+            } catch(e) {
+                window._localStorage = fakeLS;
+            }
+            /* Также заменим sessionStorage на всякий случай */
+            try {
+                Object.defineProperty(window, 'sessionStorage', {
+                    value: fakeLS,
+                    writable: false,
+                    configurable: true
+                });
+            } catch(e) {}
         }
+
+        /* Безопасные обёртки */
+        window.safeGetItem = function(k) {
+            try { return localStorage.getItem(k); }
+            catch(e) { return _mem[k] !== undefined ? _mem[k] : null; }
+        };
+        window.safeSetItem = function(k, v) {
+            try { localStorage.setItem(k, v); }
+            catch(e) { _mem[k] = String(v); }
+        };
+
+        /* Очистка старого кэша */
+        try {
+            if (location.protocol.indexOf('http') === 0) {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs){
+                        regs.forEach(function(r){ r.unregister(); });
+                    }).catch(function(){});
+                }
+                if ('caches' in window) {
+                    caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); }).catch(function(){});
+                }
+            }
+        } catch(e){}
     })();
     </script>
     <title>Планировщик Питания - Израиль (Custom)</title>
@@ -35796,5 +35815,6 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b8595f789943de',t:'MTc4MTQyOTc3MA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
 </html>
