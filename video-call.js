@@ -37,7 +37,8 @@ var VC_T = {
     busy:        {ru:'Линия занята', en:'Line busy', he:'קו תפוס'},
     peerInUse:   {ru:'Эта учётка уже в видеозвонке на другом устройстве', en:'This account is already in a call elsewhere', he:'חשבון זה כבר בשיחה'},
     inviteSent:  {ru:'📨 Приглашение отправлено в чат', en:'📨 Invitation sent to chat', he:'📨 ההזמנה נשלחה'},
-    inviteTrainer:{ru:'📹 Я в видеозвонке. Откройте вкладку 📹 в приложении, чтобы присоединиться.', en:'📹 I am in a video call. Open the 📹 tab in the app to join.', he:'📹 אני בשיחת וידאו. פתחו את לשונית 📹 כדי להצטרף.'}
+    videoTab:    {ru:'Видео', en:'Video', he:'וידאו'},
+    inviteTrainer:{ru:'📹 Я в видеозвонке. Нажмите 📹 внизу экрана, чтобы присоединиться.', en:'📹 I am in a video call. Tap 📹 at the bottom to join.', he:'📹 אני בשיחת וידאו. לחצו על 📹 בתחתית המסך כדי להצטרף.'}
 };
 function vt(k){var l=(typeof currentLang!=='undefined')?currentLang:'ru';return (VC_T[k]&&(VC_T[k][l]||VC_T[k].ru))||k;}
 function vEsc(s){return (typeof escapeHtml==='function')?escapeHtml(String(s==null?'':s)):String(s);}
@@ -178,7 +179,6 @@ window.vcAccept=function(){
             S.localStream=stream;
             call.answer(stream);
             S.call=call;
-            S.dc=call.peerConnection; /* нет прямого dc у MediaConnection — используем отдельный */
             call.on('stream',function(remote){
                 S.remoteStream=remote;
                 S.status='connected';
@@ -210,9 +210,9 @@ function sendSignal(type){
 /* ======================== ИСХОДЯЩИЙ ЗВОНОК ======================== */
 /* Переопределяем openVideoCall из Jitsi-модуля */
 window.openVideoCall=function(uid, role){
-    if(!uid){ if(typeof showToast==='function') showToast(vt('noClient')); return; }
-    if(S.status!=='idle'){ if(typeof showToast==='function') showToast(vt('busy')); return; }
     role=role||'trainer';
+    if(role==='trainer'&&!uid){ if(typeof showToast==='function') showToast(vt('noClient')); return; }
+    if(S.status!=='idle'){ if(typeof showToast==='function') showToast(vt('busy')); return; }
 
     /* имя/аватар партнёра */
     var pn='', pa='📞';
@@ -569,6 +569,29 @@ function vcInjectTrainerBtn(){
     anchor.parentNode.insertBefore(b,anchor.nextSibling);
 }
 
+/* Кнопка 📹 в нижней навигации клиента */
+function vcInjectClientNav(){
+    var orig=window.csRenderNav;
+    if(typeof orig!=='function'||window.__vcNavHook) return;
+    window.__vcNavHook=true;
+    window.csRenderNav=function(){
+        orig.apply(this,arguments);
+        try{
+            var el=document.getElementById('csNav');
+            if(!el||document.getElementById('csVideoNavBtn')) return;
+            var moreBtn=el.querySelector('button:last-child');
+            var btn=document.createElement('button');
+            btn.className='mp-nav-item';
+            btn.id='csVideoNavBtn';
+            btn.innerHTML='<span class="mp-nav-ico">📹</span><span>'+vt('videoTab')+'</span>';
+            btn.onclick=function(){
+                if(typeof __clientUser!=='undefined'&&__clientUser) openVideoCall(null,'client');
+            };
+            el.insertBefore(btn,moreBtn);
+        }catch(e){}
+    };
+}
+
 /* ======================== INIT ======================== */
 function vcInit(){
     vcInjectStyles();
@@ -583,6 +606,7 @@ function vcInit(){
         },15000);
     },2500);
     vcInjectTrainerBtn();
+    vcInjectClientNav();
     /* повторная вставка кнопки после перерисовки главного экрана */
     var origRU=window.renderUsers;
     if(typeof origRU==='function'&&!window.__vcRuHook){
@@ -598,6 +622,8 @@ function vcInit(){
             try{
                 var b=document.getElementById('vidTrainerBtn'); if(b) b.title=vt('title');
                 var bt=document.getElementById('vcBell'); if(bt) bt.title=vt('title');
+                var cv=document.getElementById('csVideoNavBtn');
+                if(cv){ var sp=cv.querySelectorAll('span'); if(sp.length>1) sp[1].textContent=vt('videoTab'); }
             }catch(e){}
             return r;
         };

@@ -79,16 +79,34 @@
             catch(e) { _mem[k] = String(v); }
         };
 
-        /* Очистка старого кэша */
+        /* PWA: Service Worker (офлайн-кэш). Принудительный сброс: ?resetCache=1 */
         try {
             if (location.protocol.indexOf('http') === 0) {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then(function(regs){
-                        regs.forEach(function(r){ r.unregister(); });
-                    }).catch(function(){});
-                }
-                if ('caches' in window) {
-                    caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); }).catch(function(){});
+                if (location.search.indexOf('resetCache=1') >= 0) {
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.getRegistrations().then(function(regs){
+                            regs.forEach(function(r){ r.unregister(); });
+                        }).catch(function(){});
+                    }
+                    if ('caches' in window) {
+                        caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); }).catch(function(){});
+                    }
+                } else if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', function(){
+                        navigator.serviceWorker.register('./sw.js').then(function(reg){
+                            reg.addEventListener('updatefound', function(){
+                                var nw = reg.installing;
+                                if (!nw) return;
+                                nw.addEventListener('statechange', function(){
+                                    if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                                        if (typeof showToast === 'function') {
+                                            showToast('Доступно обновление. Перезагрузите страницу.');
+                                        }
+                                    }
+                                });
+                            });
+                        }).catch(function(err){ console.warn('[SW] register failed', err); });
+                    });
                 }
             }
         } catch(e){}
@@ -24344,10 +24362,15 @@ setTimeout(function(){
             try { if (!localStorage.getItem('taskTemplates')) { localStorage.setItem('taskTemplates', JSON.stringify(getDefaultTaskTemplates())); } } catch(e) {}
             try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e) {}
             try { checkTrainerSession(); } catch(e) {}
-            // восстановить режим
+            // восстановить режим (PWA-shortcut из manifest имеет приоритет)
             const savedMode = safeGetItem('appMode');
-            if (savedMode === 'workout') {
-                switchAppMode('workout');
+            try {
+                const shortcut = new URLSearchParams(location.search).get('shortcut');
+                if (shortcut === 'workout') switchAppMode('workout');
+                else if (shortcut === 'nutrition') switchAppMode('nutrition');
+                else if (savedMode === 'workout') switchAppMode('workout');
+            } catch(e) {
+                if (savedMode === 'workout') switchAppMode('workout');
             }
             // подмена openUser: при смене пользователя подгружать тренировки тоже
             try {
@@ -35893,5 +35916,5 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b9eb4d0d35b2ed',t:'MTc4MTQ0NjIzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
