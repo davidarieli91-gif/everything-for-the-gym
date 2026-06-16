@@ -35759,6 +35759,11 @@ function renderTaskbar(){
             '<span class="ico">'+tbIcon(id)+'</span>'+
             '<span class="lbl">'+tt(b.label)+'</span></button>';
     });
+    /* zoom + / - на нижней панели */
+    var zPct = Math.round((window.__pgZoom ? window.__pgZoom.s : 1) * 100);
+    h += '<div class="tb-sep"></div>';
+    h += '<button class="tb-btn" onclick="pgZoomStep(-1)" title="Расширить поле зрения (сжать к центру)"><span class="ico">➕</span><span class="lbl" id="tbZoomLbl">' + zPct + '%</span></button>';
+    h += '<button class="tb-btn" onclick="pgZoomStep(1)" title="Увеличить масштаб (приблизить)"><span class="ico">➖</span></button>';
     /* кнопка настройки панели */
     h+='<div class="tb-sep"></div>';
     h+='<button class="tb-btn" id="tbCustomizeBtn" title="'+tt('customize')+'"><span class="ico">⚙️</span><span class="lbl">+</span></button>';
@@ -35916,5 +35921,116 @@ else setTimeout(init,1200);
 <!-- ===== ВИДЕОЗВОНКИ (WebRTC + PeerJS) ===== -->
 <script src="video-call.js"></script>
 
-</body>
+<script>
+/* ========== ZOOM / МАСШТАБ (Taskbar + / -) ========== */
+(function(){
+    var Z = window.__pgZoom = { s: 1.0, min: 0.5, max: 2.0, step: 0.05 };
+
+    var nativeZoom = false;
+    function detectNativeZoom(){
+        try {
+            var t = document.createElement('div');
+            t.style.cssText = 'zoom:2;position:absolute;visibility:hidden';
+            document.body.appendChild(t);
+            var ok = (parseFloat(window.getComputedStyle(t).zoom) === 2);
+            document.body.removeChild(t);
+            return ok;
+        } catch(e){ return false; }
+    }
+
+    function apply(){
+        var s = Z.s;
+        var body = document.body;
+        var html = document.documentElement;
+        var tb  = document.getElementById('osTaskbar');
+        if (!nativeZoom) nativeZoom = detectNativeZoom();
+
+        var lbl = document.getElementById('tbZoomLbl');
+        if (lbl) lbl.textContent = Math.round(s*100)+'%';
+
+        if (nativeZoom) {
+            /* Chrome/Edge/Safari/FF126+: нативный zoom — пересчитывает layout.
+               При zoom < 1 содержимое визуально уменьшается, «съезжая» к началу.
+               Добавляем transform-origin:center через margin-left/right:auto и
+               увеличенную ширину, чтобы содержимое центрировалось и расширялось. */
+            body.style.zoom = s;
+            body.style.transform = '';
+            body.style.transformOrigin = '';
+            var inv = 1 / s;
+            body.style.width = (inv * 100) + '%';
+            body.style.minHeight = (inv * 100) + 'vh';
+            body.style.margin = '0 auto';
+            html.style.overflowX = (s < 1) ? 'auto' : '';
+            html.style.overflowY = '';
+            if (tb) {
+                tb.style.zoom = (1 / s);
+                tb.style.transform = '';
+                tb.style.transformOrigin = '';
+            }
+        } else {
+            /* Fallback: transform scale на body с origin=center — содержимое
+               сжимается к центру экрана. Компенсация width/minHeight чтобы
+               не обрезались края, а поле зрения расширялось. */
+            body.style.zoom = '';
+            body.style.transform = 'scale(' + s + ')';
+            body.style.transformOrigin = 'center top';
+            var inv = 1 / s;
+            body.style.width = (inv * 100) + '%';
+            body.style.minHeight = (inv * 100) + 'vh';
+            body.style.margin = '0 auto';
+            html.style.overflowX = (s < 1) ? 'auto' : '';
+            html.style.overflowY = '';
+            if (tb) {
+                tb.style.zoom = '';
+                tb.style.transform = 'scale(' + (1 / s) + ')';
+                tb.style.transformOrigin = 'bottom left';
+            }
+        }
+
+        try { localStorage.setItem('pgAppZoom', String(s)); } catch(e){}
+    }
+
+    window.pgZoomStep = function(dir){
+        // dir = -1 → кнопка ➕: zoom OUT, сжимаем к центру, расширяем поле зрения
+        // dir = +1 → кнопка ➖: zoom IN, увеличиваем, приближаем
+        var ns = (dir < 0) ? Z.s - Z.step : Z.s + Z.step;
+        ns = Math.max(Z.min, Math.min(Z.max, parseFloat(ns.toFixed(3))));
+        if (ns === Z.s) return;
+        Z.s = ns;
+        apply();
+    };
+
+    window.pgZoomReset = function(){
+        Z.s = 1.0;
+        apply();
+    };
+
+    document.addEventListener('keydown', function(e){
+        if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            pgZoomReset();
+        }
+    });
+
+    try {
+        var sv = parseFloat(localStorage.getItem('pgAppZoom'));
+        if (!isNaN(sv) && sv >= Z.min && sv <= Z.max) Z.s = sv;
+    } catch(e){}
+
+    if (!document.getElementById('pgZoomTrans')) {
+        var st = document.createElement('style');
+        st.id = 'pgZoomTrans';
+        st.textContent = 'body, html, #osTaskbar { transition: zoom .25s ease, transform .25s ease, width .25s ease, min-height .25s ease, margin .25s ease; }';
+        document.head.appendChild(st);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 300); });
+    } else {
+        setTimeout(apply, 300);
+    }
+})();
+</script>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0c6bfc66a9b2674',t:'MTc4MTU4MDc2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
