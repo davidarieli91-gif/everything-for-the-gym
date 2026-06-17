@@ -160,6 +160,121 @@
             padding: 0;
         }
 
+        /* ============================================================
+           ПЛАВНЫЙ МОБИЛЬНЫЙ СКРОЛЛИНГ
+           Обеспечивает плавную инерцию на iOS/Android, лёгкое
+           перемещение вверх-вниз по технике тренировки, питанию
+           и в системе клиента.
+           ============================================================ */
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            /* Гарантируем что html разрешает скроллинг */
+            overflow-y: auto !important;
+            height: auto !important;
+        }
+        /* На мобильных/планшетах body НЕ должен блокировать скроллинг.
+           Если body имеет height:fixed (как в этом приложении) —
+           html берёт на себя скроллинг. */
+        body.layout-mobile,
+        body.layout-tablet {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            position: static !important;
+            height: auto !important;
+            min-height: 100vh;
+        }
+        /* Если body.planner-active на мобильных всё же включился —
+           отменяем overflow:hidden, потому что на мобильных скролл
+           должен работать */
+        body.layout-mobile.planner-active,
+        body.layout-tablet.planner-active {
+            overflow: auto !important;
+        }
+        /* ГАРАНТИЯ: trainer-locked на мобильных НЕ должен блокировать
+           touch-events и размывать app-container. Если пользователь
+           видит app-container (тренер залогинен), блокировка должна
+           быть снята. Это решает проблему «не могу скроллить» и
+           «всё размыто». */
+        body.layout-mobile.trainer-locked .app-container,
+        body.layout-tablet.trainer-locked .app-container,
+        body.layout-mobile.trainer-locked .home-main,
+        body.layout-tablet.trainer-locked .home-main,
+        body.layout-mobile.trainer-locked .home-hero,
+        body.layout-tablet.trainer-locked .home-hero,
+        body.layout-mobile.trainer-locked .side-panel,
+        body.layout-tablet.trainer-locked .side-panel {
+            filter: none !important;
+            pointer-events: auto !important;
+            user-select: auto !important;
+        }
+        /* app-container на мобильных должен занимать всю высоту и
+           позволять внутренний скроллинг */
+        body.layout-mobile .app-container,
+        body.layout-tablet .app-container {
+            overflow: visible !important;
+            height: auto !important;
+        }
+        body.layout-mobile .main-content,
+        body.layout-tablet .main-content {
+            overflow: visible !important;
+        }
+        /* Гарантия что ничего не блокирует touch на основной области */
+        body.layout-mobile #workoutsContainer,
+        body.layout-tablet #workoutsContainer,
+        body.layout-mobile #mealsContainer,
+        body.layout-tablet #mealsContainer,
+        body.layout-mobile .planner-section,
+        body.layout-tablet .planner-section {
+            touch-action: pan-y !important;
+            pointer-events: auto !important;
+        }
+        /* momentum-скролл только для контейнеров, которые
+           реально скроллятся (overflow: auto/scroll). */
+        .modal-content,
+        .mp-scroll,
+        .scrollable,
+        [data-scrollable] {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        /* Кнопки быстрой прокрутки (появляются при скролле) */
+        .pg-scroll-fab {
+            position: fixed;
+            right: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.95);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,.35);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            font-size: 22px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 99999; /* выше taskbar (9000) и backdrop (100040) */
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            transition: opacity .2s, transform .2s;
+            line-height: 1;
+            padding: 0;
+        }
+        .pg-scroll-fab.visible { display: flex; }
+        .pg-scroll-fab:active { transform: scale(0.92); }
+        /* Внизу: над #osTaskbar (высота 50px) — отступ 64px */
+        .pg-scroll-fab.down { bottom: 64px; }
+        /* Вверх: над кнопкой "вниз" + отступ 12px */
+        .pg-scroll-fab.up { bottom: 124px; }
+        @media (hover: none) and (pointer: coarse) {
+            .pg-scroll-fab { width: 54px; height: 54px; font-size: 26px; }
+            .pg-scroll-fab.down { bottom: 70px; }
+            .pg-scroll-fab.up { bottom: 134px; }
+        }
+
         button, .icon-btn, .control-btn, .category-tab, .cooking-filter, .cooking-badge, .product-card, .row-delete, .close-modal, .preset-color, .theme-option, .font-option {
             user-select: none;
         }
@@ -17313,7 +17428,7 @@ setTimeout(function(){
                 trainer:  { x:56,  y:59,   w:44 }    // שם המדריך
             },
             genderMark: { zx:103.2, nx:98.2, y:30.8 }, // отметка מין: ז / נ
-            /* колонки основной таблицы (мм слева) */
+            /* колонки основной таблицы (מм слева) */
             cols: {
                 name:   { x:53,   w:122 },
                 sets:   { x:41.8, w:10  },
@@ -17338,7 +17453,6 @@ setTimeout(function(){
                 timeX: 167.5, timeW: 15.5 // משך זמן
             }
         };
-
         // Какая строка карточки соответствует группе/подгруппе упражнения
         function pgTargetRow(e) {
             const g = e.groupId || '';
@@ -17381,15 +17495,23 @@ setTimeout(function(){
             } catch(err) {}
             return L;
         }
-
-        function pgEsc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
+        // ─── Экранирование HTML для ячеек печати (используется в cell()) ───
+        // Без этой функции printPrivateGym() падает с ReferenceError при первом
+        // же упражнении с текстом. Экранируем &, <, >, ", '.
+        function pgEsc(s) {
+            if (s == null) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
         function printPrivateGym() {
             const data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);
             if (!data.length) { showToast(t('wkNoData') || 'Нет данных'); return; }
             const user = currentUserId ? getUsers().find(u => u.id === currentUserId) : null;
 
-            /* собрать все упражнения всех тренировок и разложить по строкам карточки */
             const buckets = { chest:[], back:[], front_arm:[], rear_arm:[], erectors:[], abs:[], shoulders:[], legs:[], aero_warm:[], aero_cardio:[] };
             data.forEach(w => (w.exercises || []).forEach(e => {
                 const found = e.exId ? findExerciseById(e.exId, e.groupId, e.subId) : null;
@@ -17398,55 +17520,56 @@ setTimeout(function(){
                 buckets[pgTargetRow(e)].push({ name: exName, sets: e.sets || '', reps: e.reps || '', weight: e.weight || '', note: e.note || '' });
             }));
 
-            /* калибровка из localStorage */
-            let cal = { x: 0, y: 0 };
-            try { cal = JSON.parse(localStorage.getItem('pgPrintCal') || '{"x":0,"y":0}'); } catch(err) {}
+            // Калибровка: позиция + поворот + масштаб всего листа
+            let cal = { x: 0, y: 0, rot: 0, scale: 1 };
+            try { cal = Object.assign({x:0,y:0,rot:0,scale:1}, JSON.parse(localStorage.getItem('pgPrintCal') || '{}')); } catch(err) {}
 
             const L = pgGetLayout();
             const cell = (x, y, w, txt, opts) => {
                 opts = opts || {};
                 if (txt == null || txt === '') return '';
                 return '<div class="c"' + (opts.sec ? ' data-sec="' + opts.sec + '" data-row="' + opts.row + '"' : '') +
+                    (opts.block ? ' data-block="' + opts.block + '"' : '') +
+                    ' data-ox="' + x + '" data-ow="' + w + '" data-oy="' + y + '"' +
                     ' style="left:' + x + 'mm; top:' + y + 'mm; width:' + w + 'mm;' +
                     (opts.center ? 'text-align:center;' : 'text-align:right;') +
                     (opts.fs ? 'font-size:' + opts.fs + 'pt;' : '') +
                     '">' + pgEsc(txt) + '</div>';
             };
 
-            let body = '';
+            let infoBody = '';
+            let mainBody = '';
+            let aeroBody = '';
 
-            /* ---- анкета ---- */
             if (user) {
                 const parts = String(user.name || '').trim().split(/\s+/);
                 const firstName = user.lastName ? user.name : (parts[0] || '');
                 const lastName = user.lastName || parts.slice(1).join(' ');
-                body += cell(L.fields.lastName.x, L.fields.lastName.y, L.fields.lastName.w, lastName, {center:1});
-                body += cell(L.fields.firstName.x, L.fields.firstName.y, L.fields.firstName.w, firstName, {center:1});
-                body += cell(L.fields.age.x, L.fields.age.y, L.fields.age.w, user.age || '', {center:1});
-                body += cell(L.fields.weight.x, L.fields.weight.y, L.fields.weight.w, user.weight || '', {center:1});
+                infoBody += cell(L.fields.lastName.x, L.fields.lastName.y, L.fields.lastName.w, lastName, {center:1, block:'info'});
+                infoBody += cell(L.fields.firstName.x, L.fields.firstName.y, L.fields.firstName.w, firstName, {center:1, block:'info'});
+                infoBody += cell(L.fields.age.x, L.fields.age.y, L.fields.age.w, user.age || '', {center:1, block:'info'});
+                infoBody += cell(L.fields.weight.x, L.fields.weight.y, L.fields.weight.w, user.weight || '', {center:1, block:'info'});
                 const goalMap = { lose:'ירידה במשקל', maintain:'שמירה על משקל', gain:'עלייה במסת שריר' };
-                body += cell(L.fields.goal.x, L.fields.goal.y, L.fields.goal.w, goalMap[user.goal] || '', {center:1});
+                infoBody += cell(L.fields.goal.x, L.fields.goal.y, L.fields.goal.w, goalMap[user.goal] || '', {center:1, block:'info'});
                 if (user.gender === 'male' || user.gender === 'female') {
                     const gx = user.gender === 'male' ? L.genderMark.zx : L.genderMark.nx;
-                    body += '<div class="gmark" style="left:' + gx + 'mm; top:' + L.genderMark.y + 'mm;"></div>';
+                    infoBody += '<div class="gmark" data-block="info" style="left:' + gx + 'mm; top:' + L.genderMark.y + 'mm;"></div>';
                 }
             }
             const today = new Date();
             const dstr = String(today.getDate()).padStart(2,'0') + '.' + String(today.getMonth()+1).padStart(2,'0') + '.' + today.getFullYear();
-            body += cell(L.fields.fromDate.x, L.fields.fromDate.y, L.fields.fromDate.w, dstr, {center:1});
-            body += cell(L.fields.perWeek.x, L.fields.perWeek.y, L.fields.perWeek.w, data.length, {center:1});
+            infoBody += cell(L.fields.fromDate.x, L.fields.fromDate.y, L.fields.fromDate.w, dstr, {center:1, block:'info'});
+            infoBody += cell(L.fields.perWeek.x, L.fields.perWeek.y, L.fields.perWeek.w, data.length, {center:1, block:'info'});
             try {
                 if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.name) {
-                    body += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, currentTrainer.name, {center:1});
+                    infoBody += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, currentTrainer.name, {center:1, block:'info'});
                 }
             } catch(err) {}
 
-            /* ---- основная таблица ---- */
             Object.keys(L.sections).forEach(secId => {
                 const sec = L.sections[secId];
                 const items = buckets[secId] || [];
                 if (!items.length) return;
-                /* если упражнений больше, чем строк — лишние приклеиваем к последней строке */
                 const rows = [];
                 items.forEach((it, i) => {
                     if (i < sec.rows) rows.push([it]);
@@ -17457,22 +17580,21 @@ setTimeout(function(){
                     const multi = arr.length > 1;
                     const nm = arr.map(a => a.name).join(' | ');
                     const fs = multi ? 6.5 : (nm.length > 55 ? 7 : 8.5);
-                    body += cell(L.cols.name.x, y, L.cols.name.w, nm, { fs: fs, sec: secId, row: r });
-                    body += cell(L.cols.sets.x, y, L.cols.sets.w, arr[0].sets, { center:1, sec: secId, row: r });
-                    body += cell(L.cols.reps.x, y, L.cols.reps.w, multi ? arr.map(a=>a.reps).filter(Boolean).join('/') : arr[0].reps, { center:1, fs: multi ? 6.5 : null, sec: secId, row: r });
-                    body += cell(L.cols.weight.x, y, L.cols.weight.w, multi ? arr.map(a=>a.weight).filter(Boolean).join('/') : arr[0].weight, { center:1, fs: multi ? 6.5 : null, sec: secId, row: r });
+                    mainBody += cell(L.cols.name.x, y, L.cols.name.w, nm, { fs: fs, sec: secId, row: r, block:'main' });
+                    mainBody += cell(L.cols.sets.x, y, L.cols.sets.w, arr[0].sets, { center:1, sec: secId, row: r, block:'main' });
+                    mainBody += cell(L.cols.reps.x, y, L.cols.reps.w, multi ? arr.map(a=>a.reps).filter(Boolean).join('/') : arr[0].reps, { center:1, fs: multi ? 6.5 : null, sec: secId, row: r, block:'main' });
+                    mainBody += cell(L.cols.weight.x, y, L.cols.weight.w, multi ? arr.map(a=>a.weight).filter(Boolean).join('/') : arr[0].weight, { center:1, fs: multi ? 6.5 : null, sec: secId, row: r, block:'main' });
                 });
             });
 
-            /* ---- нижняя таблица: разминка → строка 1, кардио → строки 2 и 3 ---- */
             const aeroPut = (rowIdx, items) => {
                 if (!items.length) return;
                 const row = L.aero.rows[rowIdx];
                 const y = row.y + (row.h - 4.2) / 2;
                 const nm = items.map(a => a.name + (a.sets && a.reps ? ' ' + a.sets + '×' + a.reps : '')).join(' | ');
-                body += cell(L.aero.nameX, y, L.aero.nameW, nm, { fs: items.length > 1 ? 6.5 : 8 });
+                aeroBody += cell(L.aero.nameX, y, L.aero.nameW, nm, { fs: items.length > 1 ? 6.5 : 8, block:'aero' });
                 const tm = items.map(a => a.note || a.reps).filter(Boolean)[0] || '';
-                body += cell(L.aero.timeX, y, L.aero.timeW, tm, { center:1 });
+                aeroBody += cell(L.aero.timeX, y, L.aero.timeW, tm, { center:1, block:'aero' });
             };
             aeroPut(0, buckets.aero_warm);
             const cardio = buckets.aero_cardio;
@@ -17481,7 +17603,6 @@ setTimeout(function(){
                 if (cardio.length > 1) aeroPut(2, cardio.slice(1));
             }
 
-            /* ---- калибровочная сетка (для пробной печати на чистом листе) ---- */
             let grid = '<div id="pgGrid" style="display:none;">';
             Object.keys(L.sections).forEach(secId => {
                 const s = L.sections[secId];
@@ -17495,93 +17616,332 @@ setTimeout(function(){
             });
             grid += '</div>';
 
+            const secData = Object.keys(L.sections).map(id => ({ id:id, label:L.sections[id].label, top:L.sections[id].top, rowH:L.sections[id].rowH, rows:L.sections[id].rows }));
+
+            // ─── КЭШ текущих параметров блоков для live-обновления ───
+            const ov0 = (function(){ try { return JSON.parse(localStorage.getItem('pgLayoutOv') || '{}'); } catch(e) { return {}; } })();
+            const bInfo = Object.assign({x:0,y:0,w:1,h:1,rot:0,fs:0}, ov0.blockInfo || {});
+            const bMain = Object.assign({x:0,y:0,w:1,h:1,rot:0,fs:0}, ov0.blockMain || {});
+            const bAero = Object.assign({x:0,y:0,w:1,h:1,rot:0,fs:0}, ov0.blockAero || {});
+            const colsOv = Object.assign({scale:1,offsetX:0,rowH_global:0}, ov0.cols || {});
+            const aeroOv = Object.assign({offsetX:0,offsetY:0,rowH:0}, ov0.aero || {});
+
+            // ─── Глобальные настройки таблиц (ширина/высота) ───
+            const tblOv = Object.assign({width:100, rowH:4.7}, ov0.table || {});
+
             const html = '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>Private Gym</title><style>' +
                 '@page { size: A4 portrait; margin: 0; }' +
                 'html,body{margin:0;padding:0;}' +
-                'body{font-family:Arial,"Segoe UI",sans-serif;}' +
-                '#sheet{position:relative; width:210mm; height:297mm; overflow:hidden;}' +
+                'body{font-family:Arial,"Segoe UI",sans-serif;background:#f1f5f9;}' +
+                '#sheetWrap{display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:60px 10px 30px;}' +
+                '#sheet{position:relative; width:210mm; height:297mm; overflow:hidden; background:#fff; box-shadow:0 8px 30px rgba(0,0,0,.18);}' +
+                '.block{position:absolute; left:0; top:0; width:210mm; height:297mm; transform-origin:0 0;}' +
                 '.c{position:absolute; font-size:8.5pt; font-weight:600; color:#111; line-height:1.05; white-space:nowrap; overflow:hidden; direction:rtl;}' +
-                '.gmark{position:absolute; width:5.5mm; height:5mm; border:0.5mm solid #111; border-radius:50%;}' +
+                '.gmark{position:absolute; width:5.5mm; height:5.5mm; border:0.5mm solid #111; border-radius:50%;}' +
                 '#pgGrid .g{position:absolute; border:0.2mm dashed #c00; color:#c00; font-size:7pt;}' +
                 '#pgGrid .g span{position:absolute; right:1mm; top:0;}' +
-                '#bar{position:fixed; top:0; left:0; right:0; background:#0F172A; color:#fff; padding:10px 14px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:14px; z-index:10; direction:ltr;}' +
-                '#bar input[type=number]{width:64px; padding:4px; border-radius:6px; border:none; text-align:center;}' +
-                '#bar button{padding:8px 18px; border:none; border-radius:8px; background:#10B981; color:#fff; font-weight:700; cursor:pointer;}' +
-                '#bar label{display:flex; align-items:center; gap:5px;}' +
-                '#tunePanel{position:fixed; top:56px; left:0; right:0; background:#1E293B; color:#fff; padding:8px 14px; z-index:9; font-size:12px; direction:ltr; max-height:40vh; overflow:auto;}' +
-                '#tunePanel table{border-collapse:collapse;}' +
-                '#tunePanel td,#tunePanel th{padding:2px 8px; text-align:center;}' +
-                '#tunePanel input{width:58px; padding:2px 4px; border:none; border-radius:4px; text-align:center;}' +
-                '@media print{ #tunePanel{display:none !important;} }' +
-                'body{padding-top:0;} #spacer{height:56px;}' +
-                '@media print { #bar,#spacer{display:none !important;} }' +
+                /* ─── ПРОЗРАЧНАЯ ВЕРХНЯЯ ПАНЕЛЬ ─── */
+                '#bar{position:fixed; top:0; left:0; right:0; background:rgba(15,23,42,0.42); color:#fff; padding:6px 12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12px; z-index:20; direction:ltr; border-bottom:1px solid rgba(255,255,255,.12);}' +
+                '#bar:hover{background:rgba(15,23,42,0.72);}' +
+                '#bar.with-blur{backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);}' +
+                '#bar b{font-weight:700; letter-spacing:.3px;}' +
+                '#bar input[type=number]{width:52px; padding:3px 4px; border-radius:6px; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.13); color:#fff; text-align:center; font-size:11px;}' +
+                '#bar input[type=range]{width:110px; vertical-align:middle; accent-color:#10B981;}' +
+                '#bar button{padding:6px 14px; border:none; border-radius:7px; background:#10B981; color:#fff; font-weight:700; cursor:pointer; font-size:11px; transition:transform .12s, background .15s;}' +
+                '#bar button:hover{background:#059669;}' +
+                '#bar button:active{transform:scale(.94);}' +
+                '#bar button.ghost{background:rgba(255,255,255,.15);}' +
+                '#bar button.ghost:hover{background:rgba(255,255,255,.28);}' +
+                '#bar label{display:flex; align-items:center; gap:3px; white-space:nowrap; font-size:11px; opacity:.95;}' +
+                '#bar .sep{width:1px; height:22px; background:rgba(255,255,255,.2); margin:0 4px;}' +
+                '#bar .hint{opacity:.7; font-size:10px; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}' +
+                '#bar input[type=checkbox]{accent-color:#10B981; width:14px; height:14px;}' +
+                /* ─── ПРОЗРАЧНАЯ ПАНЕЛЬ НАСТРОЙКИ (БЕЗ blur по умолчанию) ─── */
+                '#tunePanel{position:fixed; top:48px; left:8px; right:8px; background:rgba(15,23,42,0.42); color:#fff; padding:10px 14px; z-index:18; font-size:11px; direction:ltr; max-height:70vh; overflow:auto; display:flex; flex-wrap:wrap; gap:14px; border-radius:10px; border:1px solid rgba(255,255,255,.12); -webkit-overflow-scrolling:touch;}' +
+                '#tunePanel:hover{background:rgba(15,23,42,0.72);}' +
+                '#tunePanel.with-blur{backdrop-filter:blur(14px) saturate(1.6); -webkit-backdrop-filter:blur(14px) saturate(1.6);}' +
+                '#tunePanel .tune-group{flex:1; min-width:200px; background:rgba(255,255,255,.06); padding:8px 10px; border-radius:8px;}' +
+                '#tunePanel h4{margin:0 0 6px; font-size:12px; color:#a7f3d0; font-weight:700; letter-spacing:.3px;}' +
+                '#tunePanel label{display:inline-flex; align-items:center; gap:3px; margin:2px 4px 2px 0; font-size:10.5px;}' +
+                '#tunePanel input{width:48px; padding:2px 3px; border:1px solid rgba(255,255,255,.18); border-radius:4px; background:rgba(255,255,255,.13); color:#fff; text-align:center; font-size:10.5px;}' +
+                '#tunePanel input.wide{width:64px;}' +
+                '#tunePanel input[type=range]{width:80px; vertical-align:middle; accent-color:#10B981;}' +
+                '#tunePanel input[type=checkbox]{accent-color:#10B981; width:13px; height:13px;}' +
+                '#tunePanel table{border-collapse:collapse; width:100%; margin-top:4px;}' +
+                '#tunePanel td,#tunePanel th{padding:2px 4px; text-align:center; font-size:10.5px; border-bottom:1px solid rgba(255,255,255,.08);}' +
+                '#tunePanel th{background:rgba(255,255,255,.08); color:#cbd5e1; font-weight:600;}' +
+                '#tunePanel button{padding:3px 10px; border:none; border-radius:5px; background:#ef4444; color:#fff; font-weight:700; cursor:pointer; font-size:10.5px;}' +
+                '#tunePanel button.ghost{background:rgba(255,255,255,.15);}' +
+                '#tunePanel button.ghost:hover{background:rgba(255,255,255,.28);}' +
+                '#tunePanel .hint{opacity:.7; font-size:10px; margin-top:4px; line-height:1.4;}' +
+                /* ─── Печать: скрываем все панели ─── */
+                '@media print{ #tunePanel,#bar,#sheetWrap{display:none !important;} #sheet{box-shadow:none; transform:none !important;} body{background:#fff; padding:0;} .block{transform:none !important;}}' +
+                /* ─── Переменная прозрачности панелей ─── */
+                ':root{ --bar-opacity:0.42; --panel-opacity:0.42; }' +
+                '#bar{ background:rgba(15,23,42, var(--bar-opacity)) !important; }' +
+                '#tunePanel{ background:rgba(15,23,42, var(--panel-opacity)) !important; }' +
+                /* ─── Стилизация галочек блоков (крупные, цветные) ─── */
+                '#bar .blk-toggle{ display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.18); font-size:10.5px; cursor:pointer; user-select:none; }' +
+                '#bar .blk-toggle.off{ opacity:.45; }' +
+                '#bar .blk-toggle input{ accent-color:#10B981; width:14px; height:14px; }' +
+                /* ─── Спрятанный блок (display:none) ─── */
+                '.block.hidden-block{ display:none !important; }' +
                 '</style></head><body>' +
                 '<div id="bar">' +
-                    '<b>Private Gym</b>' +
-                    '<label>X (мм): <input type="number" id="offX" step="0.5" value="' + (cal.x || 0) + '"></label>' +
-                    '<label>Y (мм): <input type="number" id="offY" step="0.5" value="' + (cal.y || 0) + '"></label>' +
+                    '<b>🏋️ Private Gym</b>' +
+                    '<div class="sep"></div>' +
+                    '<label>X: <input type="number" id="offX" step="0.5" value="' + (cal.x || 0) + '"></label>' +
+                    '<label>Y: <input type="number" id="offY" step="0.5" value="' + (cal.y || 0) + '"></label>' +
+                    '<div class="sep"></div>' +
+                    '<label>↻ Поворот: <input type="range" id="rot" min="-180" max="180" step="0.5" value="' + (cal.rot || 0) + '"><span id="rotVal" style="min-width:38px;display:inline-block;">' + (cal.rot || 0) + '°</span></label>' +
+                    '<label>🔍 Масштаб: <input type="range" id="scl" min="0.5" max="2" step="0.01" value="' + (cal.scale || 1) + '"><span id="sclVal" style="min-width:34px;display:inline-block;">' + Math.round((cal.scale || 1) * 100) + '%</span></label>' +
+                    '<div class="sep"></div>' +
+                    '<label>👁 Прозрачность: <input type="range" id="opa" min="0" max="1" step="0.05" value="0.42"><span id="opaVal" style="min-width:34px;display:inline-block;">42%</span></label>' +
+                    '<div class="sep"></div>' +
+                    '<button class="ghost" id="rotL"  title="Поворот влево на 1°">⟲ −1°</button>' +
+                    '<button class="ghost" id="rotR"  title="Поворот вправо на 1°">⟳ +1°</button>' +
+                    '<button class="ghost" id="rotReset" title="Сброс поворота">⊕ 0°</button>' +
+                    '<div class="sep"></div>' +
+                    '<label class="blk-toggle" id="blk1ToggleLbl"><input type="checkbox" id="blk1Chk" checked> 1📋</label>' +
+                    '<label class="blk-toggle" id="blk2ToggleLbl"><input type="checkbox" id="blk2Chk" checked> 2💪</label>' +
+                    '<label class="blk-toggle" id="blk3ToggleLbl"><input type="checkbox" id="blk3Chk" checked> 3🏃</label>' +
+                    '<div class="sep"></div>' +
                     '<label><input type="checkbox" id="gridChk"> сетка</label>' +
-                    '<label><input type="checkbox" id="tuneChk"> настройка строк</label>' +
+                    '<label><input type="checkbox" id="tuneChk" checked> блоки</label>' +
+                    '<label><input type="checkbox" id="blurChk"> размытие</label>' +
                     '<button onclick="window.print()">🖨️ Печать</button>' +
-                    '<span style="opacity:.7; font-size:12px;">Сначала: «сетка» + печать на чистом листе → сверьте с бланком → подгоните X/Y и секции.</span>' +
+                    '<span class="hint">Поворот/масштаб/прозрачность → сверху. Блоки 1/2/3 — вкл/выкл.</span>' +
                 '</div>' +
-                '<div id="tunePanel" style="display:none;"></div>' +
-                '<div id="spacer"></div>' +
-                '<div id="sheet">' + body + grid + '</div>' +
+                '<div id="tunePanel">' +
+                    /* ─── БЛОК 1: Анкета ─── */
+                    '<div class="tune-group">' +
+                        '<h4>📋 Блок 1 — Анкета (имя, возраст, вес)</h4>' +
+                        '<label>X: <input type="number" id="bix" step="0.5" value="' + bInfo.x + '"></label>' +
+                        '<label>Y: <input type="number" id="biy" step="0.5" value="' + bInfo.y + '"></label>' +
+                        '<label>Ширина: <input type="number" id="biw" step="0.01" min="0.3" max="3" value="' + bInfo.w + '"></label>' +
+                        '<label>Высота: <input type="number" id="bih" step="0.01" min="0.3" max="3" value="' + bInfo.h + '"></label>' +
+                        '<label>Поворот: <input type="range" id="bir" min="-30" max="30" step="0.5" value="' + bInfo.rot + '"><span id="birVal">' + bInfo.rot + '°</span></label>' +
+                        '<label>Шрифт: <input type="number" id="bifs" step="0.1" min="5" max="14" value="' + (bInfo.fs || 8.5) + '"></label>' +
+                    '</div>' +
+                    /* ─── БЛОК 2: Техника тренировки ─── */
+                    '<div class="tune-group">' +
+                        '<h4>💪 Блок 2 — Техника тренировки</h4>' +
+                        '<label>X: <input type="number" id="bmx" step="0.5" value="' + bMain.x + '"></label>' +
+                        '<label>Y: <input type="number" id="bmy" step="0.5" value="' + bMain.y + '"></label>' +
+                        '<label>Ширина: <input type="number" id="bmw" step="0.01" min="0.3" max="3" value="' + bMain.w + '"></label>' +
+                        '<label>Высота: <input type="number" id="bmh" step="0.01" min="0.3" max="3" value="' + bMain.h + '"></label>' +
+                        '<label>Поворот: <input type="range" id="bmr" min="-30" max="30" step="0.5" value="' + bMain.rot + '"><span id="bmrVal">' + bMain.rot + '°</span></label>' +
+                        '<label>Сдвиг колонок X: <input type="number" id="colX" step="0.5" value="' + colsOv.offsetX + '"></label>' +
+                        '<label>Масштаб колонок: <input type="number" id="colS" step="0.01" min="0.3" max="2" value="' + colsOv.scale + '"></label>' +
+                    '</div>' +
+                    /* ─── БЛОК 3: Разминка и кардио ─── */
+                    '<div class="tune-group">' +
+                        '<h4>🏃 Блок 3 — Разминка и кардио</h4>' +
+                        '<label>X: <input type="number" id="bax" step="0.5" value="' + bAero.x + '"></label>' +
+                        '<label>Y: <input type="number" id="bay" step="0.5" value="' + bAero.y + '"></label>' +
+                        '<label>Ширина: <input type="number" id="baw" step="0.01" min="0.3" max="3" value="' + bAero.w + '"></label>' +
+                        '<label>Высота: <input type="number" id="bah" step="0.01" min="0.3" max="3" value="' + bAero.h + '"></label>' +
+                        '<label>Поворот: <input type="range" id="bar" min="-30" max="30" step="0.5" value="' + bAero.rot + '"><span id="barVal">' + bAero.rot + '°</span></label>' +
+                        '<label>Сдвиг X: <input type="number" id="aeroX" step="0.5" value="' + aeroOv.offsetX + '"></label>' +
+                        '<label>Сдвиг Y: <input type="number" id="aeroY" step="0.5" value="' + aeroOv.offsetY + '"></label>' +
+                    '</div>' +
+                    /* ─── ТАБЛИЦА: ширина и высота строк ─── */
+                    '<div class="tune-group" style="flex:1.3; min-width:260px;">' +
+                        '<h4>📐 Секции таблицы — строки и ширина</h4>' +
+                        '<label>Ширина таблицы %: <input type="number" id="tblW" step="1" min="40" max="100" value="' + tblOv.width + '"></label>' +
+                        '<label>Высота строки (мм): <input type="number" id="tblRH" step="0.1" min="3" max="10" value="' + tblOv.rowH + '"></label>' +
+                        '<table><tr><th>Секция</th><th>верх</th><th>шаг</th><th>строк</th><th>ширина %</th></tr>' +
+                        secData.map(s => '<tr><td>' + s.label + '</td>' +
+                            '<td><input type="number" step="0.2" id="t_' + s.id + '" value="' + s.top + '"></td>' +
+                            '<td><input type="number" step="0.1" id="h_' + s.id + '" value="' + s.rowH + '"></td>' +
+                            '<td><input type="number" step="1" min="1" id="r_' + s.id + '" value="' + s.rows + '"></td>' +
+                            '<td><input type="number" step="1" min="40" max="100" id="w_' + s.id + '" value="' + (ov0.sections && ov0.sections[s.id] && ov0.sections[s.id].w || 100) + '"></td>' +
+                            '</tr>').join('') +
+                        '</table>' +
+                        '<div class="hint">↑ / ↓ = верх строки и шаг (мм). «Строк» применится при следующем открытии. ' +
+                        '<button onclick="resetTune()" style="margin-left:6px;">↺ Сброс всего</button></div>' +
+                    '</div>' +
+                '</div>' +
+                '<div id="sheetWrap">' +
+                    '<div id="sheet">' +
+                        '<div id="blockInfo" class="block">' + infoBody + '</div>' +
+                        '<div id="blockMain" class="block">' + mainBody + '</div>' +
+                        '<div id="blockAero" class="block">' + aeroBody + '</div>' +
+                        grid +
+                    '</div>' +
+                '</div>' +
                 '<scr' + 'ipt>' +
                 'var sheet=document.getElementById("sheet");' +
-                'var SECS=' + JSON.stringify(Object.keys(L.sections).map(id => ({ id:id, label:L.sections[id].label, top:L.sections[id].top, rowH:L.sections[id].rowH, rows:L.sections[id].rows }))) + ';' +
+                'var SECS=' + JSON.stringify(secData) + ';' +
+                /* ─── ГЛОБАЛЬНЫЙ apply: X/Y/поворот/масштаб всего листа ─── */
                 'function apply(){' +
                     'var x=parseFloat(document.getElementById("offX").value)||0;' +
                     'var y=parseFloat(document.getElementById("offY").value)||0;' +
-                    'sheet.style.transform="translate("+x+"mm,"+y+"mm)";' +
-                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintCal", JSON.stringify({x:x,y:y})); }catch(e){}' +
+                    'var rot=parseFloat(document.getElementById("rot").value)||0;' +
+                    'var sc=parseFloat(document.getElementById("scl").value)||1;' +
+                    'sheet.style.transformOrigin="105mm 148.5mm";' +
+                    'sheet.style.transform="translate("+x+"mm,"+y+"mm) rotate("+rot+"deg) scale("+sc+")";' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintCal", JSON.stringify({x:x,y:y,rot:rot,scale:sc})); }catch(e){}' +
+                    'var rv=document.getElementById("rotVal"); if(rv) rv.textContent=rot+"°";' +
+                    'var sv=document.getElementById("sclVal"); if(sv) sv.textContent=Math.round(sc*100)+"%";' +
                 '}' +
+                /* ─── ПРОЗРАЧНОСТЬ панелей ─── */
+                'function applyOpacity(){' +
+                    'var o=parseFloat(document.getElementById("opa").value); if(isNaN(o)) o=0.42;' +
+                    'o=Math.max(0, Math.min(1, o));' +
+                    'document.documentElement.style.setProperty("--bar-opacity", o);' +
+                    'document.documentElement.style.setProperty("--panel-opacity", o);' +
+                    'var ov=document.getElementById("opaVal"); if(ov) ov.textContent=Math.round(o*100)+"%";' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintOpacity", String(o)); }catch(e){}' +
+                '}' +
+                /* ─── ВКЛ/ВЫКЛ БЛОКОВ 1/2/3 ─── */
+                'function applyBlockToggles(){' +
+                    'var b1=document.getElementById("blk1Chk").checked;' +
+                    'var b2=document.getElementById("blk2Chk").checked;' +
+                    'var b3=document.getElementById("blk3Chk").checked;' +
+                    'var i=document.getElementById("blockInfo");' +
+                    'var m=document.getElementById("blockMain");' +
+                    'var a=document.getElementById("blockAero");' +
+                    'if(i){ if(b1) i.classList.remove("hidden-block"); else i.classList.add("hidden-block"); }' +
+                    'if(m){ if(b2) m.classList.remove("hidden-block"); else m.classList.add("hidden-block"); }' +
+                    'if(a){ if(b3) a.classList.remove("hidden-block"); else a.classList.add("hidden-block"); }' +
+                    'document.getElementById("blk1ToggleLbl").classList.toggle("off", !b1);' +
+                    'document.getElementById("blk2ToggleLbl").classList.toggle("off", !b2);' +
+                    'document.getElementById("blk3ToggleLbl").classList.toggle("off", !b3);' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintBlocks", JSON.stringify({b1:b1,b2:b2,b3:b3})); }catch(e){}' +
+                '}' +
+                /* ─── БЛОКИ: каждый со своим X/Y/шириной/высотой/поворотом ─── */
+                'function applyBlocks(){' +
+                    'function applyOne(prefix, blockId, fsDefault){' +
+                        'var x=parseFloat(document.getElementById(prefix+"x").value)||0;' +
+                        'var y=parseFloat(document.getElementById(prefix+"y").value)||0;' +
+                        'var w=parseFloat(document.getElementById(prefix+"w").value)||1;' +
+                        'var h=parseFloat(document.getElementById(prefix+"h").value)||1;' +
+                        'var r=parseFloat(document.getElementById(prefix+"r").value)||0;' +
+                        'var fs=parseFloat(document.getElementById(prefix+"fs").value)||0;' +
+                        'var el=document.getElementById(blockId);' +
+                        'el.style.transformOrigin="0 0";' +
+                        'el.style.transform="translate("+x+"mm,"+y+"mm) scale("+w+","+h+") rotate("+r+"deg)";' +
+                        'if(fs>0) el.querySelectorAll(".c").forEach(function(c){c.style.fontSize=fs+"pt";});' +
+                        'var rv=document.getElementById(prefix+"rVal"); if(rv) rv.textContent=r+"°";' +
+                        'return {x:x,y:y,w:w,h:h,rot:r,fs:fs};' +
+                    '}' +
+                    'var i=applyOne("bi","blockInfo");' +
+                    'var m=applyOne("bm","blockMain");' +
+                    'var a=applyOne("ba","blockAero");' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.blockInfo=i; ov.blockMain=m; ov.blockAero=a; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                '}' +
+                /* ─── КОЛОНКИ основной таблицы (масштаб + сдвиг) ─── */
+                'function applyCols(){' +
+                    'var s=parseFloat(document.getElementById("colS").value)||1;' +
+                    'var ox=parseFloat(document.getElementById("colX").value)||0;' +
+                    'document.querySelectorAll("#blockMain .c").forEach(function(el){' +
+                        'var ol=parseFloat(el.getAttribute("data-ox"))||0;' +
+                        'var ow=parseFloat(el.getAttribute("data-ow"))||0;' +
+                        'el.style.left=(ol*s+ox)+"mm";' +
+                        'el.style.width=(ow*s)+"mm";' +
+                    '});' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.cols={scale:s,offsetX:ox}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                '}' +
+                /* ─── АЭРО: сдвиг X/Y всей группы ─── */
+                'function applyAero(){' +
+                    'var ax=parseFloat(document.getElementById("aeroX").value)||0;' +
+                    'var ay=parseFloat(document.getElementById("aeroY").value)||0;' +
+                    'document.querySelectorAll("#blockAero .c").forEach(function(el){' +
+                        'var ol=parseFloat(el.getAttribute("data-ox"))||0;' +
+                        'var oy=parseFloat(el.getAttribute("data-oy"))||0;' +
+                        'el.style.left=(ol+ax)+"mm";' +
+                        'el.style.top=(oy+ay)+"mm";' +
+                    '});' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.aero={offsetX:ax,offsetY:ay}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                '}' +
+                /* ─── СЕКЦИИ: верх/шаг/строк/ширина каждой секции ─── */
                 'function applySections(){' +
-                    'var ov={sections:{}};' +
+                    'var ov={sections:{}, table:{}};' +
+                    'var tblW=parseFloat(document.getElementById("tblW").value)||100;' +
+                    'var tblRH=parseFloat(document.getElementById("tblRH").value)||4.7;' +
+                    'ov.table={width:tblW,rowH:tblRH};' +
                     'SECS.forEach(function(s){' +
                         'var top=parseFloat(document.getElementById("t_"+s.id).value)||s.top;' +
                         'var rh=parseFloat(document.getElementById("h_"+s.id).value)||s.rowH;' +
-                        'ov.sections[s.id]={top:top,rowH:rh,rows:parseInt(document.getElementById("r_"+s.id).value)||s.rows};' +
-                        /* двигаем готовые ячейки и сетку */
+                        'var sw=parseFloat(document.getElementById("w_"+s.id).value)||100;' +
+                        'ov.sections[s.id]={top:top,rowH:rh,rows:parseInt(document.getElementById("r_"+s.id).value)||s.rows, w:sw};' +
                         'document.querySelectorAll("[data-sec=\'"+s.id+"\']").forEach(function(el){' +
                             'var r=parseInt(el.dataset.row)||0;' +
-                            'if(el.classList.contains("g")){ el.style.top=(top+r*rh)+"mm"; el.style.height=rh+"mm"; }' +
+                            'if(el.classList.contains("g")){ el.style.top=(top+r*rh)+"mm"; el.style.height=rh+"mm"; el.style.width=(185*sw/100)+"mm"; }' +
                             'else { el.style.top=(top+r*rh+(rh-4.2)/2)+"mm"; }' +
                         '});' +
                     '});' +
-                    'try{ if(window.opener) window.opener.localStorage.setItem("pgLayoutOv", JSON.stringify(ov)); }catch(e){}' +
+                    'try{ var full=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); full.sections=ov.sections; full.table=ov.table; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(full)); }catch(e){}' +
                 '}' +
-                'function buildTune(){' +
-                    'var p=document.getElementById("tunePanel");' +
-                    'var h="<table><tr><th></th><th>верх (мм)</th><th>шаг строки (мм)</th><th>строк</th></tr>";' +
-                    'SECS.forEach(function(s){' +
-                        'h+="<tr><td>"+s.label+"</td>"+' +
-                            '"<td><input type=number step=0.2 id=t_"+s.id+" value="+s.top+"></td>"+' +
-                            '"<td><input type=number step=0.1 id=h_"+s.id+" value="+s.rowH+"></td>"+' +
-                            '"<td><input type=number step=1 min=1 id=r_"+s.id+" value="+s.rows+"></td></tr>";' +
+                /* ─── СБРОС ─── */
+                'function resetTune(){ try{ if(window.opener){ window.opener.localStorage.removeItem("pgLayoutOv"); window.opener.localStorage.removeItem("pgPrintCal"); } }catch(e){} alert("Сброшено. Закройте и откройте печать заново."); }' +
+                /* ─── Слушатели верхней панели ─── */
+                '["offX","offY","rot","scl"].forEach(function(id){' +
+                    'document.getElementById(id).addEventListener("input",apply);' +
+                '});' +
+                'document.getElementById("rotL").addEventListener("click",function(){ var r=parseFloat(document.getElementById("rot").value)||0; r=Math.max(-180, r-1); document.getElementById("rot").value=r; apply(); });' +
+                'document.getElementById("rotR").addEventListener("click",function(){ var r=parseFloat(document.getElementById("rot").value)||0; r=Math.min(180, r+1); document.getElementById("rot").value=r; apply(); });' +
+                'document.getElementById("rotReset").addEventListener("click",function(){ document.getElementById("rot").value=0; apply(); });' +
+                /* ─── Слушатель прозрачности ─── */
+                'document.getElementById("opa").addEventListener("input",applyOpacity);' +
+                /* ─── Слушатели вкл/выкл блоков 1/2/3 ─── */
+                '["blk1Chk","blk2Chk","blk3Chk"].forEach(function(id){' +
+                    'document.getElementById(id).addEventListener("change",applyBlockToggles);' +
+                '});' +
+                /* ─── Слушатель размытия (blur) ─── */
+                'document.getElementById("blurChk").addEventListener("change",function(){' +
+                    'var b=document.getElementById("bar"); var p=document.getElementById("tunePanel");' +
+                    'if(this.checked){ b.classList.add("with-blur"); p.classList.add("with-blur"); }' +
+                    'else { b.classList.remove("with-blur"); p.classList.remove("with-blur"); }' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintBlur", this.checked ? "1" : "0"); }catch(e){}' +
+                '});' +
+                /* ─── Восстановить сохранённое состояние blur ─── */
+                'try{' +
+                    'var savedBlur=window.opener ? window.opener.localStorage.getItem("pgPrintBlur") : null;' +
+                    'if(savedBlur==="1"){ document.getElementById("blurChk").checked=true; document.getElementById("bar").classList.add("with-blur"); document.getElementById("tunePanel").classList.add("with-blur"); }' +
+                '}catch(e){}' +
+                /* ─── Восстановить сохранённые значения прозрачности и блоков ─── */
+                'try{' +
+                    'var savedOpa=window.opener ? window.opener.localStorage.getItem("pgPrintOpacity") : null;' +
+                    'if(savedOpa!==null){ document.getElementById("opa").value=savedOpa; }' +
+                    'var savedBlks=window.opener ? window.opener.localStorage.getItem("pgPrintBlocks") : null;' +
+                    'if(savedBlks){ var sb=JSON.parse(savedBlks);' +
+                        'document.getElementById("blk1Chk").checked=sb.b1!==false;' +
+                        'document.getElementById("blk2Chk").checked=sb.b2!==false;' +
+                        'document.getElementById("blk3Chk").checked=sb.b3!==false;' +
+                    '}' +
+                '}catch(e){}' +
+                /* ─── Слушатели блоков ─── */
+                '["bix","biy","biw","bih","bir","bifs","bmx","bmy","bmw","bmh","bmr","bax","bay","baw","bah","bar"].forEach(function(id){' +
+                    'document.getElementById(id).addEventListener("input",applyBlocks);' +
+                '});' +
+                /* ─── Слушатели колонок и аэро ─── */
+                '["colS","colX"].forEach(function(id){ document.getElementById(id).addEventListener("input",function(){ applyCols(); }); });' +
+                '["aeroX","aeroY"].forEach(function(id){ document.getElementById(id).addEventListener("input",applyAero); });' +
+                /* ─── Слушатели секций и таблицы ─── */
+                '["tblW","tblRH"].forEach(function(id){ document.getElementById(id).addEventListener("input",applySections); });' +
+                'SECS.forEach(function(s){' +
+                    '["t_","h_","r_","w_"].forEach(function(p){' +
+                        'var el=document.getElementById(p+s.id); if(el) el.addEventListener("input",applySections);' +
                     '});' +
-                    'h+="</table><div style=\'font-size:11px;opacity:.75;margin-top:4px;\'>Изменения видны сразу и сохраняются. «Строк» применится при следующем открытии печати. <button onclick=\'resetTune()\' style=\'padding:2px 10px;\'>↺ Сброс</button></div>";' +
-                    'p.innerHTML=h;' +
-                    'p.querySelectorAll("input").forEach(function(i){ i.addEventListener("input",applySections); });' +
-                '}' +
-                'function resetTune(){ try{ if(window.opener) window.opener.localStorage.removeItem("pgLayoutOv"); }catch(e){} alert("Сброшено. Закройте и откройте печать заново."); }' +
-                'document.getElementById("offX").addEventListener("input",apply);' +
-                'document.getElementById("offY").addEventListener("input",apply);' +
+                '});' +
+                /* ─── Сетка и панель ─── */
                 'document.getElementById("gridChk").addEventListener("change",function(){' +
                     'document.getElementById("pgGrid").style.display=this.checked?"block":"none";' +
                 '});' +
                 'document.getElementById("tuneChk").addEventListener("change",function(){' +
-                    'document.getElementById("tunePanel").style.display=this.checked?"block":"none";' +
+                    'document.getElementById("tunePanel").style.display=this.checked?"flex":"none";' +
                 '});' +
-                'buildTune();' +
-                'apply();' +
+                /* ─── Применить всё при старте ─── */
+                'apply(); applyOpacity(); applyBlockToggles(); applyBlocks(); applyCols(); applyAero(); applySections();' +
                 '</scr' + 'ipt></body></html>';
 
             const win = window.open('', '_blank');
             win.document.write(html);
             win.document.close();
         }
+
 
 
         // ============================================================
@@ -35760,7 +36120,7 @@ function renderTaskbar(){
             '<span class="lbl">'+tt(b.label)+'</span></button>';
     });
     /* zoom + / - на нижней панели */
-    var zPct = Math.round((window.__pgZoom ? window.__pgZoom.s : 1) * 100);
+    var zPct = Math.round((window.__pgZoom && window.__pgZoom.s || 1) * 100);
     h += '<div class="tb-sep"></div>';
     h += '<button class="tb-btn" onclick="pgZoomStep(-1)" title="Расширить поле зрения (сжать к центру)"><span class="ico">➕</span><span class="lbl" id="tbZoomLbl">' + zPct + '%</span></button>';
     h += '<button class="tb-btn" onclick="pgZoomStep(1)" title="Увеличить масштаб (приблизить)"><span class="ico">➖</span></button>';
@@ -35922,68 +36282,108 @@ else setTimeout(init,1200);
 <script src="video-call.js"></script>
 
 <script>
-/* ========== ZOOM / МАСШТАБ (Taskbar + / -) ========== */
+/* ========== ZOOM / МАСШТАБ (Taskbar + / -) ==========
+   + (zoom out) — сжимает всё содержимое к центру, расширяя поле зрения.
+   - (zoom in)  — приближает, увеличивая масштаб.
+   Поддерживает zoom (Chrome/Edge/Safari/FF126+) и transform fallback.
+   ==================================================== */
 (function(){
-    var Z = window.__pgZoom = { s: 1.0, min: 0.5, max: 2.0, step: 0.05 };
+    var Z = window.__pgZoom = { s: 1.0, min: 0.35, max: 2.5, step: 0.05 };
 
-    var nativeZoom = false;
-    function detectNativeZoom(){
-        try {
-            var t = document.createElement('div');
-            t.style.cssText = 'zoom:2;position:absolute;visibility:hidden';
-            document.body.appendChild(t);
-            var ok = (parseFloat(window.getComputedStyle(t).zoom) === 2);
-            document.body.removeChild(t);
-            return ok;
-        } catch(e){ return false; }
-    }
+    /* Определяем, поддерживает ли браузер zoom */
+    var hasZoom = false;
+    try {
+        var t = document.createElement('div');
+        t.style.zoom = '0.5';
+        hasZoom = (t.style.zoom === '0.5');
+    } catch(e) {}
 
     function apply(){
         var s = Z.s;
-        var body = document.body;
         var html = document.documentElement;
+        var body = document.body;
         var tb  = document.getElementById('osTaskbar');
-        if (!nativeZoom) nativeZoom = detectNativeZoom();
 
         var lbl = document.getElementById('tbZoomLbl');
-        if (lbl) lbl.textContent = Math.round(s*100)+'%';
+        if(lbl) lbl.textContent = Math.round(s*100)+'%';
 
-        if (nativeZoom) {
-            /* Chrome/Edge/Safari/FF126+: нативный zoom — пересчитывает layout.
-               При zoom < 1 содержимое визуально уменьшается, «съезжая» к началу.
-               Добавляем transform-origin:center через margin-left/right:auto и
-               увеличенную ширину, чтобы содержимое центрировалось и расширялось. */
-            body.style.zoom = s;
+        if (s === 1) {
+            /* Сброс: убираем все inline-стили, возвращаем браузерный дефолт */
+            html.style.zoom = '';
+            html.style.transform = '';
+            html.style.transformOrigin = '';
+            html.style.width = '';
+            html.style.height = '';
+            html.style.overflowX = '';
+            html.style.overflowY = '';
+            body.style.width = '';
+            body.style.minHeight = '';
+            body.style.margin = '';
             body.style.transform = '';
             body.style.transformOrigin = '';
-            var inv = 1 / s;
-            body.style.width = (inv * 100) + '%';
-            body.style.minHeight = (inv * 100) + 'vh';
-            body.style.margin = '0 auto';
-            html.style.overflowX = (s < 1) ? 'auto' : '';
+            if(tb){
+                tb.style.zoom = '';
+                tb.style.transform = '';
+                tb.style.transformOrigin = '';
+                tb.style.width = '';
+            }
+            return;
+        }
+
+        if (hasZoom) {
+            /* === НАТИВНЫЙ ZOOM (рекомендуемый) ===
+               zoom на <html> пересчитывает layout, fixed-элементы
+               (taskbar, модалки, оверлеи) остаются на своих местах.
+               Прокрутка остаётся естественной — браузер сам управляет
+               overflow в зависимости от уменьшённого/увеличенного layout. */
+            html.style.zoom = s;
+            html.style.transform = '';
+            html.style.transformOrigin = '';
+            html.style.width = '';
+            html.style.height = '';
+            html.style.overflowX = '';
             html.style.overflowY = '';
-            if (tb) {
+            body.style.width = '';
+            body.style.minHeight = '';
+            body.style.margin = '';
+            body.style.transform = '';
+            body.style.transformOrigin = '';
+
+            /* Taskbar компенсируем обратным масштабом, чтобы оставался
+               чётким и не уезжал за пределы экрана */
+            if(tb){
                 tb.style.zoom = (1 / s);
                 tb.style.transform = '';
                 tb.style.transformOrigin = '';
+                tb.style.width = (100 * s) + '%';
             }
         } else {
-            /* Fallback: transform scale на body с origin=center — содержимое
-               сжимается к центру экрана. Компенсация width/minHeight чтобы
-               не обрезались края, а поле зрения расширялось. */
-            body.style.zoom = '';
+            /* === FALLBACK: transform scale на body ===
+               Для старых Firefox (<126) или браузеров без zoom. */
+            html.style.zoom = '';
+
+            /* Сжимаем к центру верхней точки (center top) — по горизонтали центр,
+               по вертикали верх, чтобы скролл сохранялся естественно. */
             body.style.transform = 'scale(' + s + ')';
             body.style.transformOrigin = 'center top';
-            var inv = 1 / s;
-            body.style.width = (inv * 100) + '%';
-            body.style.minHeight = (inv * 100) + 'vh';
+
+            /* Компенсируем уменьшение масштаба увеличением логических размеров,
+               чтобы содержимое не обрезалось, а поле зрения расширялось */
+            body.style.width = (100 / s) + '%';
+            body.style.minHeight = (100 / s) + 'vh';
             body.style.margin = '0 auto';
-            html.style.overflowX = (s < 1) ? 'auto' : '';
-            html.style.overflowY = '';
-            if (tb) {
+
+            /* Разрешаем прокрутку по html, чтобы вытащить всё, что не влезает */
+            html.style.overflowX = 'auto';
+            html.style.overflowY = 'auto';
+
+            /* Taskbar — fixed внутри трансформированного body уедёт.
+               Компенсируем инверсным scale и позиционируем относительно viewport. */
+            if(tb){
                 tb.style.zoom = '';
                 tb.style.transform = 'scale(' + (1 / s) + ')';
                 tb.style.transformOrigin = 'bottom left';
+                tb.style.width = (100 * s) + '%';
             }
         }
 
@@ -35991,9 +36391,9 @@ else setTimeout(init,1200);
     }
 
     window.pgZoomStep = function(dir){
-        // dir = -1 → кнопка ➕: zoom OUT, сжимаем к центру, расширяем поле зрения
-        // dir = +1 → кнопка ➖: zoom IN, увеличиваем, приближаем
-        var ns = (dir < 0) ? Z.s - Z.step : Z.s + Z.step;
+        /*  dir = -1  →  кнопка +  →  zoom OUT  (сжать к центру, расширить поле зрения)
+            dir = +1  →  кнопка -  →  zoom IN   (приблизить, увеличить)   */
+        var ns = dir > 0 ? Z.s + Z.step : Z.s - Z.step;
         ns = Math.max(Z.min, Math.min(Z.max, parseFloat(ns.toFixed(3))));
         if (ns === Z.s) return;
         Z.s = ns;
@@ -36005,32 +36405,222 @@ else setTimeout(init,1200);
         apply();
     };
 
+    /* Горячие клавиши: Ctrl+0 = сброс, Ctrl+Plus = zoom in, Ctrl+Minus = zoom out */
     document.addEventListener('keydown', function(e){
-        if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        if (!e.ctrlKey && !e.metaKey) return;
+        if (e.key === '0' || e.key === 'Insert') {
             e.preventDefault();
             pgZoomReset();
+        } else if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            pgZoomStep(-1); /* + на клавиатуре = zoom out (больше видно) */
+        } else if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            pgZoomStep(1);  /* - на клавиатуре = zoom in (крупнее) */
         }
     });
 
+    /* Восстанавливаем сохранённый масштаб */
     try {
         var sv = parseFloat(localStorage.getItem('pgAppZoom'));
         if (!isNaN(sv) && sv >= Z.min && sv <= Z.max) Z.s = sv;
     } catch(e){}
 
+    /* Плавный переход масштаба */
     if (!document.getElementById('pgZoomTrans')) {
         var st = document.createElement('style');
         st.id = 'pgZoomTrans';
-        st.textContent = 'body, html, #osTaskbar { transition: zoom .25s ease, transform .25s ease, width .25s ease, min-height .25s ease, margin .25s ease; }';
+        st.textContent = 'html, body, #osTaskbar { transition: zoom .25s ease, transform .25s ease, width .25s ease, min-height .25s ease, margin .25s ease; }';
         document.head.appendChild(st);
     }
 
+    /* Применяем с небольшой задержкой, чтобы DOM был готов */
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 300); });
+        document.addEventListener('DOMContentLoaded', function(){ setTimeout(apply, 400); });
     } else {
-        setTimeout(apply, 300);
+        setTimeout(apply, 400);
     }
 })();
 </script>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0c6bfc66a9b2674',t:'MTc4MTU4MDc2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<!-- Кнопки быстрой прокрутки (мобильный плавный скроллинг) -->
+<button id="pgScrollUp"   class="pg-scroll-fab up"   aria-label="Наверх"     title="Наверх">↑</button>
+<button id="pgScrollDown" class="pg-scroll-fab down" aria-label="Вниз"       title="Вниз">↓</button>
+
+<script>
+/* ============================================================
+   ГАРАНТИЯ СКРОЛЛИНГА НА МОБИЛЬНЫХ
+   Принудительно убирает блокировки, которые мешают скроллить:
+   - trainer-locked (если сессия тренера активна)
+   - body overflow:hidden от planner-active
+   - filter:blur и pointer-events:none на app-container
+   Запускается после загрузки и периодически проверяет состояние.
+   ============================================================ */
+(function(){
+    'use strict';
+    function isMobile(){
+        return document.body.classList.contains('layout-mobile') ||
+               document.body.classList.contains('layout-tablet') ||
+               window.innerWidth <= 1024;
+    }
+    function isTrainerLoggedIn(){
+        try {
+            var s = localStorage.getItem('currentTrainerSession');
+            if (!s) return false;
+            var data = JSON.parse(s);
+            // Сессия действительна 8 часов
+            if (data.loginTime && (Date.now() - data.loginTime > 8 * 3600000)) return false;
+            return !!data.id;
+        } catch(e) { return false; }
+    }
+    function enforceScroll(){
+        if (!isMobile()) return;
+        // Если тренер залогинен — убрать trainer-locked
+        if (isTrainerLoggedIn()) {
+            if (document.body.classList.contains('trainer-locked')) {
+                document.body.classList.remove('trainer-locked');
+                console.log('[PG-scroll] removed trainer-locked (trainer is logged in)');
+            }
+        }
+        // Гарантировать что html/body могут скроллиться
+        var html = document.documentElement;
+        var body = document.body;
+        if (getComputedStyle(html).overflowY === 'hidden') html.style.overflowY = 'auto';
+        if (getComputedStyle(body).overflowY === 'hidden' || getComputedStyle(body).overflow === 'hidden') {
+            body.style.overflow = 'auto';
+        }
+        // Снять filter:blur с app-container если он видимый
+        var ac = document.getElementById('appContainer');
+        if (ac && ac.offsetParent !== null) {
+            var cs = getComputedStyle(ac);
+            if (cs.filter && cs.filter !== 'none') {
+                ac.style.filter = 'none';
+            }
+            if (cs.pointerEvents === 'none') {
+                ac.style.pointerEvents = 'auto';
+            }
+        }
+    }
+    // Запуск после загрузки DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){ setTimeout(enforceScroll, 200); });
+    } else {
+        setTimeout(enforceScroll, 200);
+    }
+    // Проверять каждые 2 секунды (на случай если состояние изменится)
+    setInterval(enforceScroll, 2000);
+    // При смене ориентации/resize
+    window.addEventListener('resize', function(){ setTimeout(enforceScroll, 300); });
+    window.addEventListener('orientationchange', function(){ setTimeout(enforceScroll, 500); });
+})();
+</script>
+
+<script>
+/* ============================================================
+   ПЛАВНЫЙ МОБИЛЬНЫЙ СКРОЛЛИНГ — FAB-кнопки вверх/вниз
+   Появляются после прокрутки > 300px. Лёгкий скролл к началу
+   или концу активной области (body или #clientSpace).
+   ============================================================ */
+(function(){
+    'use strict';
+    var up   = document.getElementById('pgScrollUp');
+    var down = document.getElementById('pgScrollDown');
+    if (!up || !down) return;
+
+    /* Найти скроллируемый элемент: проверяем по приоритету
+       1) #clientSpace (открытый клиентский режим)
+       2) Любой видимый контейнер с overflow:auto/scroll и scrollHeight > clientHeight
+          (но НЕ body — body часто имеет height:fixed и не скроллится)
+       3) DocumentElement (window scroll) — предпочтительный fallback
+       4) null — скролл через window.scrollTo */
+    function getScroller(){
+        try {
+            // 1) #clientSpace — открытый клиентский режим
+            var cs = document.getElementById('clientSpace');
+            if (cs && cs.offsetParent !== null &&
+                cs.scrollHeight > cs.clientHeight + 50 &&
+                getComputedStyle(cs).overflowY !== 'visible') {
+                return cs;
+            }
+            // 2) Видимые скроллируемые контейнеры (но НЕ body)
+            var candidates = document.querySelectorAll('.mode-section, .app-content, .main-content, #workoutsContainer, #mealsContainer, .scrollable, [data-scrollable], .client-list');
+            for (var i = 0; i < candidates.length; i++) {
+                var el = candidates[i];
+                // Пропускаем скрытые элементы
+                if (el.offsetParent === null) continue;
+                // Пропускаем body и html
+                if (el === document.body || el === document.documentElement) continue;
+                var cs2 = getComputedStyle(el);
+                if ((cs2.overflowY === 'auto' || cs2.overflowY === 'scroll') &&
+                    el.scrollHeight > el.clientHeight + 50) {
+                    return el;
+                }
+            }
+            // 3) Если html выше viewport — скроллится window (через documentElement)
+            if (document.documentElement.scrollHeight > window.innerHeight + 50) {
+                return document.documentElement;
+            }
+            // 4) Если у body height:auto (не фиксированная) и он скроллится
+            var bcs = getComputedStyle(document.body);
+            if (bcs.height === 'auto' &&
+                (bcs.overflowY === 'auto' || bcs.overflowY === 'scroll') &&
+                document.body.scrollHeight > window.innerHeight + 50) {
+                return document.body;
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function currentY(){
+        var sc = getScroller();
+        if (sc) return sc.scrollTop;
+        return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+    function maxY(){
+        var sc = getScroller();
+        if (sc) return Math.max(0, sc.scrollHeight - sc.clientHeight);
+        return Math.max(0, Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight);
+    }
+    function scrollTo(target){
+        var sc = getScroller();
+        if (sc) sc.scrollTo({ top: target, behavior: 'smooth' });
+        else window.scrollTo({ top: target, behavior: 'smooth' });
+    }
+
+    function update(){
+        var y = currentY();
+        var max = maxY();
+        // UP видна если прокрутили вниз хотя бы на 150px
+        if (y > 150) up.classList.add('visible');    else up.classList.remove('visible');
+        // DOWN видна если ещё есть куда скроллить (хотя бы 100px)
+        if (max > 200 && y < max - 100) down.classList.add('visible'); else down.classList.remove('visible');
+    }
+
+    up.addEventListener('click',   function(e){ e.preventDefault(); e.stopPropagation(); scrollTo(0);    return false; });
+    down.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); scrollTo(maxY()); return false; });
+
+    /* Throttle: не чаще чем раз в 200мс */
+    var scheduled = false;
+    function onScroll(){
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(function(){ scheduled = false; update(); });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.body.addEventListener('scroll', onScroll, { passive: true });
+    document.documentElement.addEventListener('scroll', onScroll, { passive: true });
+    var cs = document.getElementById('clientSpace');
+    if (cs) cs.addEventListener('scroll', onScroll, { passive: true });
+
+    /* Проверка каждые 1.2с — на случай если scroll-событие не всплывает
+       (например, при переключении режимов/вкладок). */
+    setInterval(update, 1200);
+    /* Стартовая проверка после полной загрузки */
+    setTimeout(update, 500);
+    setTimeout(update, 2000);
+})();
+</script>
+</body>
 </html>
