@@ -14373,7 +14373,19 @@ setTimeout(function(){
                 
                 const productData = e.dataTransfer.getData('text/plain');
                 if (productData) {
-                    const product = JSON.parse(productData);
+                    let product;
+                    try {
+                        /* Если строка URL-кодирована (начинается с %7B = "{"),
+                           сначала декодируем её. */
+                        let dataStr = productData;
+                        if (dataStr.trim().startsWith('%7B') || dataStr.trim().startsWith('%5B')) {
+                            try { dataStr = decodeURIComponent(dataStr); } catch(e){}
+                        }
+                        product = JSON.parse(dataStr);
+                    } catch(err) {
+                        console.warn('Drop: cannot parse product data', err);
+                        return;
+                    }
                     
                     const meal = e.target.closest('.meal');
                     if (meal) {
@@ -17284,6 +17296,21 @@ setTimeout(function(){
                         if (o.rows != null) L.sections[id].rows = Math.max(1, parseInt(o.rows));
                     });
                 }
+                if (ov && ov.fields) {
+                    Object.keys(ov.fields).forEach(id => {
+                        if (!L.fields[id]) return;
+                        const o = ov.fields[id];
+                        if (o.x != null)  L.fields[id].x = parseFloat(o.x);
+                        if (o.y != null)  L.fields[id].y = parseFloat(o.y);
+                        if (o.w != null)  L.fields[id].w = parseFloat(o.w);
+                        if (o.fs != null) L.fields[id].fs = parseFloat(o.fs);
+                    });
+                }
+                if (ov && ov.genderMark) {
+                    if (ov.genderMark.zx != null) L.genderMark.zx = parseFloat(ov.genderMark.zx);
+                    if (ov.genderMark.nx != null) L.genderMark.nx = parseFloat(ov.genderMark.nx);
+                    if (ov.genderMark.y != null)  L.genderMark.y  = parseFloat(ov.genderMark.y);
+                }
             } catch(err) {}
             return L;
         }
@@ -17322,6 +17349,7 @@ setTimeout(function(){
                 if (txt == null || txt === '') return '';
                 return '<div class="c"' + (opts.sec ? ' data-sec="' + opts.sec + '" data-row="' + opts.row + '"' : '') +
                     (opts.block ? ' data-block="' + opts.block + '"' : '') +
+                    (opts.field ? ' data-field="' + opts.field + '"' : '') +
                     ' data-ox="' + x + '" data-ow="' + w + '" data-oy="' + y + '"' +
                     ' style="left:' + x + 'mm; top:' + y + 'mm; width:' + w + 'mm;' +
                     (opts.center ? 'text-align:center;' : 'text-align:right;') +
@@ -17337,26 +17365,31 @@ setTimeout(function(){
                 const parts = String(user.name || '').trim().split(/\s+/);
                 const firstName = user.lastName ? user.name : (parts[0] || '');
                 const lastName = user.lastName || parts.slice(1).join(' ');
-                infoBody += cell(L.fields.lastName.x, L.fields.lastName.y, L.fields.lastName.w, lastName, {center:1, block:'info'});
-                infoBody += cell(L.fields.firstName.x, L.fields.firstName.y, L.fields.firstName.w, firstName, {center:1, block:'info'});
-                infoBody += cell(L.fields.age.x, L.fields.age.y, L.fields.age.w, user.age || '', {center:1, block:'info'});
-                infoBody += cell(L.fields.weight.x, L.fields.weight.y, L.fields.weight.w, user.weight || '', {center:1, block:'info'});
+                infoBody += cell(L.fields.lastName.x, L.fields.lastName.y, L.fields.lastName.w, lastName, {center:1, block:'info', field:'lastName'});
+                infoBody += cell(L.fields.firstName.x, L.fields.firstName.y, L.fields.firstName.w, firstName, {center:1, block:'info', field:'firstName'});
+                infoBody += cell(L.fields.age.x, L.fields.age.y, L.fields.age.w, user.age || '', {center:1, block:'info', field:'age'});
+                infoBody += cell(L.fields.weight.x, L.fields.weight.y, L.fields.weight.w, user.weight || '', {center:1, block:'info', field:'weight'});
                 const goalMap = { lose:'ירידה במשקל', maintain:'שמירה על משקל', gain:'עלייה במסת שריר' };
-                infoBody += cell(L.fields.goal.x, L.fields.goal.y, L.fields.goal.w, goalMap[user.goal] || '', {center:1, block:'info'});
+                infoBody += cell(L.fields.goal.x, L.fields.goal.y, L.fields.goal.w, goalMap[user.goal] || '', {center:1, block:'info', field:'goal'});
                 if (user.gender === 'male' || user.gender === 'female') {
                     const gx = user.gender === 'male' ? L.genderMark.zx : L.genderMark.nx;
-                    infoBody += '<div class="gmark" data-block="info" style="left:' + gx + 'mm; top:' + L.genderMark.y + 'mm;"></div>';
+                    infoBody += '<div class="gmark" data-block="info" data-field="gender" style="left:' + gx + 'mm; top:' + L.genderMark.y + 'mm;"></div>';
                 }
             }
             const today = new Date();
             const dstr = String(today.getDate()).padStart(2,'0') + '.' + String(today.getMonth()+1).padStart(2,'0') + '.' + today.getFullYear();
-            infoBody += cell(L.fields.fromDate.x, L.fields.fromDate.y, L.fields.fromDate.w, dstr, {center:1, block:'info'});
-            infoBody += cell(L.fields.perWeek.x, L.fields.perWeek.y, L.fields.perWeek.w, data.length, {center:1, block:'info'});
+            infoBody += cell(L.fields.fromDate.x, L.fields.fromDate.y, L.fields.fromDate.w, dstr, {center:1, block:'info', field:'fromDate'});
+            infoBody += cell(L.fields.toDate.x, L.fields.toDate.y, L.fields.toDate.w, '', {center:1, block:'info', field:'toDate'});
+            infoBody += cell(L.fields.perWeek.x, L.fields.perWeek.y, L.fields.perWeek.w, data.length, {center:1, block:'info', field:'perWeek'});
             try {
                 if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.name) {
-                    infoBody += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, currentTrainer.name, {center:1, block:'info'});
+                    infoBody += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, currentTrainer.name, {center:1, block:'info', field:'trainer'});
+                } else {
+                    infoBody += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, '', {center:1, block:'info', field:'trainer'});
                 }
-            } catch(err) {}
+            } catch(err) {
+                infoBody += cell(L.fields.trainer.x, L.fields.trainer.y, L.fields.trainer.w, '', {center:1, block:'info', field:'trainer'});
+            }
 
             Object.keys(L.sections).forEach(secId => {
                 const sec = L.sections[secId];
@@ -17421,6 +17454,18 @@ setTimeout(function(){
             // ─── Глобальные настройки таблиц (ширина/высота) ───
             const tblOv = Object.assign({width:100, rowH:4.7}, ov0.table || {});
 
+            /* ─── Данные полей анкеты для построения таблицы настройки ─── */
+            const fieldLabels = { lastName:'Фамилия', firstName:'Имя', age:'Возраст', weight:'Вес', fromDate:'С даты', toDate:'По дату', goal:'Цель', perWeek:'Раз/нед', trainer:'Тренер' };
+            const fieldOv0 = (ov0.fields || {});
+            const fieldData = Object.keys(L.fields).map(id => ({
+                id: id,
+                label: fieldLabels[id] || id,
+                x: (fieldOv0[id] && fieldOv0[id].x != null) ? fieldOv0[id].x : L.fields[id].x,
+                y: (fieldOv0[id] && fieldOv0[id].y != null) ? fieldOv0[id].y : L.fields[id].y,
+                w: (fieldOv0[id] && fieldOv0[id].w != null) ? fieldOv0[id].w : L.fields[id].w,
+                fs: (fieldOv0[id] && fieldOv0[id].fs != null) ? fieldOv0[id].fs : ''
+            }));
+
             const html = '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><title>Private Gym</title><style>' +
                 '@page { size: A4 portrait; margin: 0; }' +
                 'html,body{margin:0;padding:0;}' +
@@ -17467,7 +17512,7 @@ setTimeout(function(){
                 '#tunePanel button.ghost:hover{background:rgba(255,255,255,.28);}' +
                 '#tunePanel .hint{opacity:.7; font-size:10px; margin-top:4px; line-height:1.4;}' +
                 /* ─── Печать: скрываем все панели ─── */
-                '@media print{ #tunePanel,#bar,#sheetWrap{display:none !important;} #sheet{box-shadow:none; transform:none !important;} body{background:#fff; padding:0;} .block{transform:none !important;}}' +
+                '@media print{ #tunePanel,#bar{display:none !important;} #sheetWrap{display:block !important; min-height:0 !important; padding:0 !important; margin:0 !important;} #sheet{box-shadow:none !important; transform:none !important; margin:0 !important; page-break-after:avoid;} body{background:#fff !important; padding:0 !important; margin:0 !important;} html,body{height:auto !important;} .block{transform:none !important;} .c{transform:none !important;}}' +
                 /* ─── Переменная прозрачности панелей ─── */
                 ':root{ --bar-opacity:0.42; --panel-opacity:0.42; }' +
                 '#bar{ background:rgba(15,23,42, var(--bar-opacity)) !important; }' +
@@ -17514,6 +17559,16 @@ setTimeout(function(){
                         '<label>Высота: <input type="number" id="bih" step="0.01" min="0.3" max="3" value="' + bInfo.h + '"></label>' +
                         '<label>Поворот: <input type="range" id="bir" min="-30" max="30" step="0.5" value="' + bInfo.rot + '"><span id="birVal">' + bInfo.rot + '°</span></label>' +
                         '<label>Шрифт: <input type="number" id="bifs" step="0.1" min="5" max="14" value="' + (bInfo.fs || 8.5) + '"></label>' +
+                        /* ─── ПОСТРОЧНАЯ НАСТРОЙКА КАЖДОГО ПОЛЯ АНКЕТЫ ─── */
+                        '<table style="margin-top:6px;"><tr><th>Поле</th><th>X</th><th>Y</th><th>Ширина</th><th>Шрифт</th></tr>' +
+                        fieldData.map(f => '<tr><td style="text-align:right;font-size:10px;">' + f.label + '</td>' +
+                            '<td><input type="number" step="0.5" id="fld_' + f.id + '_x" value="' + f.x + '"></td>' +
+                            '<td><input type="number" step="0.5" id="fld_' + f.id + '_y" value="' + f.y + '"></td>' +
+                            '<td><input type="number" step="0.5" id="fld_' + f.id + '_w" value="' + f.w + '"></td>' +
+                            '<td><input type="number" step="0.1" min="5" max="14" id="fld_' + f.id + '_fs" value="' + (f.fs || '') + '"></td>' +
+                            '</tr>').join('') +
+                        '</table>' +
+                        '<div class="hint">↑ Каждое поле анкеты отдельно: X, Y, ширина, шрифт.</div>' +
                     '</div>' +
                     /* ─── БЛОК 2: Техника тренировки ─── */
                     '<div class="tune-group">' +
@@ -17647,6 +17702,26 @@ setTimeout(function(){
                     '});' +
                     'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.aero={offsetX:ax,offsetY:ay}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
                 '}' +
+                /* ─── ПОЛЯ АНКЕТЫ: каждое поле отдельно (X/Y/W/Font) ─── */
+                'function applyFields(){' +
+                    'var fields={};' +
+                    '["lastName","firstName","age","weight","fromDate","toDate","goal","perWeek","trainer"].forEach(function(fid){' +
+                        'var xEl=document.getElementById("fld_"+fid+"_x");' +
+                        'var yEl=document.getElementById("fld_"+fid+"_y");' +
+                        'var wEl=document.getElementById("fld_"+fid+"_w");' +
+                        'var fsEl=document.getElementById("fld_"+fid+"_fs");' +
+                        'if(!xEl||!yEl||!wEl) return;' +
+                        'var x=parseFloat(xEl.value)||0;' +
+                        'var y=parseFloat(yEl.value)||0;' +
+                        'var w=parseFloat(wEl.value)||10;' +
+                        'var fs=fsEl?parseFloat(fsEl.value)||0:0;' +
+                        'fields[fid]={x:x,y:y,w:w,fs:fs};' +
+                        /* обновляем позицию конкретной ячейки */
+                        'var el=document.querySelector("[data-field=\'"+fid+"\']");' +
+                        'if(el){ el.style.left=x+"mm"; el.style.top=y+"mm"; el.style.width=w+"mm"; if(fs>0) el.style.fontSize=fs+"pt"; }' +
+                    '});' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.fields=fields; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                '}' +
                 /* ─── СЕКЦИИ: верх/шаг/строк/ширина каждой секции ─── */
                 'function applySections(){' +
                     'var ov={sections:{}, table:{}};' +
@@ -17711,6 +17786,12 @@ setTimeout(function(){
                 /* ─── Слушатели колонок и аэро ─── */
                 '["colS","colX"].forEach(function(id){ document.getElementById(id).addEventListener("input",function(){ applyCols(); }); });' +
                 '["aeroX","aeroY"].forEach(function(id){ document.getElementById(id).addEventListener("input",applyAero); });' +
+                /* ─── Слушатели полей анкеты ─── */
+                '["lastName","firstName","age","weight","fromDate","toDate","goal","perWeek","trainer"].forEach(function(fid){' +
+                    '["x","y","w","fs"].forEach(function(p){' +
+                        'var el=document.getElementById("fld_"+fid+"_"+p); if(el) el.addEventListener("input",applyFields);' +
+                    '});' +
+                '});' +
                 /* ─── Слушатели секций и таблицы ─── */
                 '["tblW","tblRH"].forEach(function(id){ document.getElementById(id).addEventListener("input",applySections); });' +
                 'SECS.forEach(function(s){' +
@@ -17726,7 +17807,7 @@ setTimeout(function(){
                     'document.getElementById("tunePanel").style.display=this.checked?"flex":"none";' +
                 '});' +
                 /* ─── Применить всё при старте ─── */
-                'apply(); applyOpacity(); applyBlockToggles(); applyBlocks(); applyCols(); applyAero(); applySections();' +
+                'apply(); applyOpacity(); applyBlockToggles(); applyBlocks(); applyCols(); applyAero(); applySections(); applyFields();' +
                 '</scr' + 'ipt></body></html>';
 
             const win = window.open('', '_blank');
