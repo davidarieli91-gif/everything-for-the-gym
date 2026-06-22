@@ -8430,6 +8430,267 @@
         }
 
         /* ============================================================
+           ЯРЛЫКИ НА РАБОЧЕМ СТОЛЕ (как Windows 11 desktop icons)
+           ============================================================ */
+        .win11-shortcut {
+            position: absolute;
+            width: 88px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.1s, transform 0.1s;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+        .win11-shortcut:hover {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+        }
+        .win11-shortcut:active {
+            transform: scale(0.95);
+        }
+        .win11-shortcut.selected {
+            background: rgba(59, 130, 246, 0.3);
+            outline: 1px solid rgba(59, 130, 246, 0.6);
+        }
+        .win11-shortcut-icon {
+            font-size: 2.2em;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        .win11-shortcut-name {
+            font-size: 0.74em;
+            text-align: center;
+            line-height: 1.2;
+            word-break: break-word;
+            max-width: 100%;
+        }
+        .win11-shortcut-delete {
+            position: absolute;
+            top: 2px; right: 2px;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.85);
+            color: white;
+            border: none;
+            font-size: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .win11-shortcut:hover .win11-shortcut-delete { display: flex; }
+
+        /* ============================================================
+           ОКНО ЧАСОВ С БУДИЛЬНИКОМ
+           ============================================================ */
+        .win11-clock-app {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .win11-clock-big {
+            font-size: 3.5em;
+            font-weight: 300;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+        }
+        .win11-clock-date-big {
+            text-align: center;
+            opacity: 0.7;
+            font-size: 0.95em;
+            margin-top: -10px;
+        }
+        .win11-clock-section-title {
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+        .win11-alarm-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .win11-alarm-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        body.dark-theme .win11-alarm-item {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .win11-alarm-time {
+            font-size: 1.3em;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        .win11-alarm-label { opacity: 0.7; font-size: 0.82em; }
+        .win11-alarm-toggle {
+            width: 40px; height: 22px;
+            border-radius: 11px;
+            border: none;
+            background: rgba(0, 0, 0, 0.15);
+            position: relative;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        body.dark-theme .win11-alarm-toggle { background: rgba(255, 255, 255, 0.15); }
+        .win11-alarm-toggle.on { background: #10b981; }
+        .win11-alarm-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 18px; height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.15s;
+        }
+        .win11-alarm-toggle.on::after { left: 20px; }
+        .win11-alarm-delete {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 4px 8px;
+        }
+        .win11-alarm-add {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .win11-alarm-add input, .win11-alarm-add select {
+            padding: 6px 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.6);
+            color: inherit;
+            font-size: 0.85em;
+        }
+        body.dark-theme .win11-alarm-add input,
+        body.dark-theme .win11-alarm-add select {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .win11-alarm-add button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        /* ============================================================
+           ДИАЛОГ СОХРАНЕНИЯ ПРОГРАММЫ (питание/тренировка)
+           ============================================================ */
+        .win11-save-dialog {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .win11-save-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .win11-save-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+        .win11-save-input {
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.6);
+            color: inherit;
+            font-size: 0.9em;
+        }
+        body.dark-theme .win11-save-input {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .win11-save-targets {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .win11-save-target {
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            color: inherit;
+            cursor: pointer;
+            font-size: 0.88em;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            text-align: center;
+            transition: background 0.1s;
+            font-family: inherit;
+        }
+        body.dark-theme .win11-save-target {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .win11-save-target:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+        .win11-save-target-icon { font-size: 1.8em; }
+        .win11-save-target-name { font-weight: 600; }
+        .win11-save-target-desc { font-size: 0.78em; opacity: 0.7; }
+
+        /* Уведомления-программа */
+        .win11-notif-app {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            height: 100%;
+            box-sizing: border-box;
+        }
+        .win11-notif-item {
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        body.dark-theme .win11-notif-item { background: rgba(255, 255, 255, 0.05); }
+        .win11-notif-title { font-weight: 600; font-size: 0.88em; margin-bottom: 4px; }
+        .win11-notif-text { font-size: 0.82em; opacity: 0.8; line-height: 1.4; }
+        .win11-notif-time { font-size: 0.72em; opacity: 0.5; margin-top: 4px; }
+        .win11-notif-empty {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+        }
+
+        /* ============================================================
            ОКНА WIN11 (файловый проводник и др.)
            ============================================================ */
         .win11-window {
@@ -9160,12 +9421,7 @@ setTimeout(function(){
                     <div id="clientLoginError" style="display:none; color:#EF4444; font-size:0.85em; padding:8px; background:rgba(239,68,68,0.1); border-radius:8px; margin-bottom:8px;"></div>
                     <button class="custom-logo-btn" style="width:100%; background:linear-gradient(135deg,#3B82F6,#1d4ed8); color:white; border:none; padding:12px; font-size:1em; font-weight:700;" onclick="clientLogin()" data-i18n="clientLoginBtn">Войти</button>
                 </div>
-                <!-- BUG-031: Guest mode button — escape overlay without auth -->
-                <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border-color); text-align:center;">
-                    <button class="custom-logo-btn" style="width:100%; padding:10px; background:transparent; color:var(--text-secondary); border:1px solid var(--border-color); font-size:0.9em;" onclick="enterGuestMode()">
-                        👤 <span data-i18n="guestModeBtn">Войти как гость</span>
-                    </button>
-                </div>
+<!-- Guest mode удалён — только тренеры и клиенты -->
             </div>
         </div>
 
@@ -9186,12 +9442,13 @@ setTimeout(function(){
                 <button class="win11-taskbar-btn" data-tooltip="Магазин" onclick="win11OpenApp('shop')">🛒</button>
                 <button class="win11-taskbar-btn" data-tooltip="Лиды" onclick="win11OpenApp('leads')">🌟</button>
                 <button class="win11-taskbar-btn" data-tooltip="Чат" onclick="win11OpenApp('chat')">💬</button>
+                <button class="win11-taskbar-btn" data-tooltip="Уведомления" onclick="openNotificationsApp()">🔔</button>
                 <button class="win11-taskbar-btn" data-tooltip="Файловый проводник" onclick="openFileExplorer('documents')">📁</button>
                 <button class="win11-taskbar-btn" data-tooltip="Профиль тренера" onclick="win11OpenApp('trainer')">👨‍🏫</button>
                 <button class="win11-taskbar-btn" data-tooltip="Настройки" onclick="openSettingsModal()">⚙️</button>
             </div>
             <div class="win11-system-tray">
-                <div class="win11-tray-clock" onclick="win11ToggleStartMenu(event)">
+                <div class="win11-tray-clock" onclick="window.__win11OpenClockApp(event)">
                     <div class="win11-tray-time" id="win11TrayTime">--:--</div>
                     <div class="win11-tray-date" id="win11TrayDate">--</div>
                 </div>
@@ -9279,6 +9536,24 @@ setTimeout(function(){
             </div>
             <div class="win11-context-item" onclick="win11CtxOpenScanner()">
                 <span class="win11-context-item-icon">📷</span> <span>Сканер штрих-кода</span>
+            </div>
+            <div class="win11-context-separator"></div>
+            <!-- Ярлыки и программы -->
+            <div class="win11-context-group">Ярлыки и программы</div>
+            <div class="win11-context-item" onclick="win11CtxAddShortcut()">
+                <span class="win11-context-item-icon">📌</span> <span>Добавить ярлык</span>
+            </div>
+            <div class="win11-context-item" onclick="win11CtxSavePlan()">
+                <span class="win11-context-item-icon">💾</span> <span>Сохранить программу питания</span>
+            </div>
+            <div class="win11-context-item" onclick="win11CtxSaveWorkout()">
+                <span class="win11-context-item-icon">💾</span> <span>Сохранить программу тренировок</span>
+            </div>
+            <div class="win11-context-item" onclick="win11CtxOpenNotifications()">
+                <span class="win11-context-item-icon">🔔</span> <span>Уведомления</span>
+            </div>
+            <div class="win11-context-item" onclick="win11CtxOpenClock()">
+                <span class="win11-context-item-icon">🕐</span> <span>Часы и будильник</span>
             </div>
             <div class="win11-context-separator"></div>
             <!-- Настройки -->
@@ -15402,10 +15677,21 @@ setTimeout(function(){
                 users = existingUsers;
 
                 closeModal('addUserModal');
-                renderUsers(); if(typeof updateLockBadges==='function') updateLockBadges();
+                /* Безопасный re-render: если старые элементы скрыты — обновляем Win11 виджет */
+                try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+                try { if (typeof updateLockBadges === 'function') updateLockBadges(); } catch(e){}
+                /* Обновить Win11 виджеты клиентов и сводки */
+                try { if (typeof window.__win11RefreshClients === 'function') window.__win11RefreshClients(); } catch(e){}
+                try {
+                    if (typeof window.__win11RenderSummary === 'function') {
+                        var sw = document.querySelector('.win11-widget[data-widget-id="summary"]');
+                        if (sw) window.__win11RenderSummary(sw.querySelector('.win11-widget-body'));
+                    }
+                } catch(e){}
             } catch(err) {
                 console.error('saveNewUser error:', err);
-                alert('Error: ' + err.message);
+                if (typeof showToast === 'function') showToast('⚠️ Ошибка: ' + err.message, 'error');
+                else alert('Error: ' + err.message);
             }
         }
 
@@ -26250,9 +26536,28 @@ setTimeout(function(){
                     }));
                     loadTrainers();
                     showToast(t('trLoginWelcome') + currentTrainer.name + '!');
+                    /* Снять блокировку и СРАЗУ скрыть overlay —
+                       пользователь попадает на рабочий стол без лишних кликов */
                     document.body.classList.remove('trainer-locked');
-                    // Show logged-in panel instead of hiding overlay
-                    showTrainerLoggedInPanel();
+                    var overlay = document.getElementById('trainerLoginOverlay');
+                    if (overlay) overlay.style.display = 'none';
+                    /* Обновить Win11 рабочий стол: виджеты, ярлыки, имя в меню Пуск */
+                    try {
+                        if (typeof window.__win11RefreshClients === 'function') window.__win11RefreshClients();
+                    } catch(e) {}
+                    try {
+                        if (typeof window.__win11RenderSummary === 'function') {
+                            var sw = document.querySelector('.win11-widget[data-widget-id="summary"]');
+                            if (sw) window.__win11RenderSummary(sw.querySelector('.win11-widget-body'));
+                        }
+                    } catch(e) {}
+                    /* Обновить имя тренера в меню Пуск */
+                    try {
+                        var nameEl = document.getElementById('win11StartUserName');
+                        if (nameEl && currentTrainer) {
+                            nameEl.textContent = currentTrainer.name + (currentTrainer.lastName ? ' ' + currentTrainer.lastName : '');
+                        }
+                    } catch(e) {}
                 } else {
                     alert(t('trLoginWrongPass'));
                     document.getElementById('trainerPasswordInput').value = '';
@@ -26324,13 +26629,25 @@ setTimeout(function(){
             if (session) {
                 try {
                     const data = JSON.parse(session);
-                    const trainer = getTrainers().find(t => t.id === data.id);
-                    if (trainer) {
-                        currentTrainer = trainer;
-                        document.body.classList.remove('trainer-locked');
-                        // Just hide overlay — trainer is already logged in
-                        document.getElementById('trainerLoginOverlay').style.display = 'none';
-                        return true;
+                    /* Проверка срока действия сессии (8 часов) */
+                    if (data.loginTime && (Date.now() - data.loginTime > 8 * 3600000)) {
+                        /* Сессия истекла */
+                        localStorage.removeItem('currentTrainerSession');
+                    } else {
+                        const trainer = getTrainers().find(t => t.id === data.id);
+                        if (trainer) {
+                            currentTrainer = trainer;
+                            /* Принудительно снять блокировку и скрыть overlay */
+                            document.body.classList.remove('trainer-locked');
+                            var ov = document.getElementById('trainerLoginOverlay');
+                            if (ov) ov.style.display = 'none';
+                            /* Обновить имя тренера в Win11 меню Пуск */
+                            var nameEl = document.getElementById('win11StartUserName');
+                            if (nameEl) {
+                                nameEl.textContent = trainer.name + (trainer.lastName ? ' ' + trainer.lastName : '');
+                            }
+                            return true;
+                        }
                     }
                 } catch(e) {}
             }
@@ -27541,16 +27858,11 @@ setTimeout(function(){
             }
         }
 
-        /* BUG-031: Guest mode — escape trainer-overlay without auth */
+        /* Guest mode удалён — используется только тренерами и клиентами.
+           Функция сохранена для обратной совместимости, но делает logout. */
         function enterGuestMode() {
-            var overlay = document.getElementById('trainerLoginOverlay');
-            if (overlay) overlay.style.display = 'none';
-            document.body.classList.remove('trainer-locked');
-            document.body.style.overflow = '';
-            try { safeSetItem('guestMode', '1'); } catch(e){}
-            if (typeof showToast === 'function') {
-                showToast('👤 Гостевой режим — некоторые функции недоступны', 'info');
-            }
+            /* Аналог выхода — показывает экран входа */
+            if (typeof checkTrainerSession === 'function') checkTrainerSession();
         }
 
         async function clientLogin() {
@@ -30798,10 +31110,8 @@ body.role-viewer .ex-row-delete, body.role-viewer .clear-btn,
 body.role-viewer #addTrainerBtn { display: none !important; }
 
 /* ===== NOTIFICATIONS (ntf) ===== */
-#ntfBell { position: fixed; bottom: 10px; left: 56px; z-index: 9000; width: 38px; height: 38px; border: 1px solid var(--border-color); border-radius: 50%; background: var(--surface-color); font-size: 1.05em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.12); opacity: .92; -webkit-tap-highlight-color: transparent; }
-body[dir="rtl"] #ntfBell { left: auto; right: 56px; }
-#ntfBell:hover { opacity: 1; transform: translateY(-1px); }
-#ntfBell.has { animation: ntfRing 2.4s ease-in-out infinite; }
+/* ntfBell скрыт — уведомления теперь как программа в Win11 taskbar */
+#ntfBell { display: none !important; }
 @keyframes ntfRing { 0%,88%,100% { transform: rotate(0); } 90% { transform: rotate(12deg); } 93% { transform: rotate(-10deg); } 96% { transform: rotate(6deg); } }
 .ntf-badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #EF4444; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 body.mp-active #ntfBell, body.layout-mobile #ntfBell { bottom: 90px; left: 54px; }
@@ -38249,31 +38559,23 @@ W.osSearchAction=function(uid){
 };
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
-/* ====================== INIT ====================== */
+/* ====================== INIT (ДЕАКТИВИРОВАНО — Win11 taskbar используется) ====================== */
 function init(){
-    injectCSS();
-    if(!E('osTaskbar')){
-        var tb=document.createElement('div');tb.id='osTaskbar';
-        document.body.appendChild(tb);
-    }
-    renderTaskbar();
-    try{var al=localStorage.getItem("tbAlign");if(al){var tb=E("osTaskbar");if(tb)tb.classList.add("tb-"+al);}}catch(e){}
-    /* Ctrl+K */
+    /* Старая панель задач #osTaskbar больше не создаётся.
+       Win11 имеет собственную панель задач (.win11-taskbar).
+       Ctrl+K поиск переадресован на Win11 меню Пуск. */
     document.addEventListener('keydown',function(e){
-        if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();W.osSearchOpen();}
+        if((e.ctrlKey||e.metaKey)&&e.key==='k'){
+            e.preventDefault();
+            if(typeof win11ToggleStartMenu==='function') win11ToggleStartMenu(null);
+        }
     });
-    /* Обновлять иконку режима при смене */
-    var origSAM=window.switchAppMode;
-    if(typeof origSAM==='function'&&!W.__tbSAM){
-        W.__tbSAM=true;
-        window.switchAppMode=function(){var r=origSAM.apply(this,arguments);setTimeout(renderTaskbar,200);return r;};
-    }
-    /* Перерисовка при смене языка */
-    var origAL=window.applyLanguage;
-    if(typeof origAL==='function'&&!W.__tbLH){
-        W.__tbLH=true;
-        window.applyLanguage=function(){var r=origAL.apply(this,arguments);try{L=(typeof currentLang!=='undefined')?currentLang:'ru';renderTaskbar();}catch(e){}return r;};
-    }
+    /* Скрыть #osTaskbar если он был создан ранее */
+    var old=document.getElementById('osTaskbar');
+    if(old){old.style.display='none !important'; old.remove();}
+    /* Скрыть #ntfBell (уведомления теперь как программа в Win11 taskbar) */
+    var bell=document.getElementById('ntfBell');
+    if(bell){bell.style.display='none !important'; bell.remove();}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1200);});
 else setTimeout(init,1200);
@@ -38959,14 +39261,21 @@ function attachDragHandlers(widget, id){
     var header = widget.querySelector('.win11-widget-header');
     if (!header) return;
 
+    function isPinned(){ return widget.classList.contains('win11-widget-pinned'); }
+    function isControlClick(e){
+        return e.target.closest('.win11-widget-close, .win11-widget-pin-btn');
+    }
+
     header.addEventListener('mousedown', function(e){
-        if (e.target.classList.contains('win11-widget-close')) return;
+        if (isControlClick(e)) return;
+        if (isPinned()) return;  /* Закреплённые виджеты не перетаскиваются */
         startDrag(widget, id, e.clientX, e.clientY, e);
     });
 
     /* Touch support */
     header.addEventListener('touchstart', function(e){
-        if (e.target.classList.contains('win11-widget-close')) return;
+        if (isControlClick(e)) return;
+        if (isPinned()) return;  /* Закреплённые виджеты не перетаскиваются */
         var t = e.touches[0];
         startDrag(widget, id, t.clientX, t.clientY, e);
     }, { passive: true });
@@ -39506,6 +39815,33 @@ window.win11CtxOpenFiles = function(){
     hideContextMenu();
     openFileExplorer('documents');
 };
+window.win11CtxAddShortcut = function(){
+    hideContextMenu();
+    var name = prompt('Название ярлыка:');
+    if (!name) return;
+    var icon = prompt('Иконка (эмодзи):', '📄');
+    if (!icon) icon = '📄';
+    var actions = ['planner', 'workout', 'clients', 'calendar', 'tasks', 'shop', 'leads', 'chat', 'trainer', 'files', 'notifications', 'clock', 'summary', 'savePlan', 'saveWorkout'];
+    var action = prompt('Действие (' + actions.join(', ') + '):', 'planner');
+    if (actions.indexOf(action) < 0) action = 'planner';
+    window.__win11AddShortcut({ icon: icon, name: name, action: action });
+};
+window.win11CtxSavePlan = function(){
+    hideContextMenu();
+    openSavePlanDialog();
+};
+window.win11CtxSaveWorkout = function(){
+    hideContextMenu();
+    openSaveWorkoutDialog();
+};
+window.win11CtxOpenNotifications = function(){
+    hideContextMenu();
+    openNotificationsApp();
+};
+window.win11CtxOpenClock = function(){
+    hideContextMenu();
+    openClockApp();
+};
 window.win11CtxAddClient = function(){
     hideContextMenu();
     window.__win11AddClient();
@@ -40003,6 +40339,494 @@ window.__win11DownloadDoc = function(winId){
    ============================================================ */
 loadFiles();
 loadPinned();
+
+/* ============================================================
+   ЯРЛЫКИ НА РАБОЧЕМ СТОЛЕ
+   ============================================================ */
+var desktopShortcuts = [];
+function loadShortcuts(){
+    try { desktopShortcuts = JSON.parse(localStorage.getItem('win11_shortcuts')) || []; } catch(e) { desktopShortcuts = []; }
+    /* Демо-ярлыки если пусто */
+    if (!desktopShortcuts.length) {
+        desktopShortcuts = [
+            { id: 'sc_planner', icon: '🍽️', name: 'Планировщик', x: 20, y: 20, action: 'planner' },
+            { id: 'sc_workout', icon: '🏋️', name: 'Тренировки', x: 20, y: 120, action: 'workout' },
+            { id: 'sc_clients', icon: '👥', name: 'Клиенты', x: 20, y: 220, action: 'clients' },
+            { id: 'sc_calendar', icon: '📅', name: 'Календарь', x: 20, y: 320, action: 'calendar' }
+        ];
+        saveShortcuts();
+    }
+}
+function saveShortcuts(){
+    try { localStorage.setItem('win11_shortcuts', JSON.stringify(desktopShortcuts)); } catch(e) {}
+}
+function renderShortcuts(){
+    var area = document.getElementById('win11DesktopArea');
+    if (!area) return;
+    /* Удалить старые */
+    area.querySelectorAll('.win11-shortcut').forEach(function(el){ el.remove(); });
+    /* Создать новые */
+    desktopShortcuts.forEach(function(sc){
+        var el = document.createElement('div');
+        el.className = 'win11-shortcut';
+        el.dataset.scId = sc.id;
+        el.style.left = sc.x + 'px';
+        el.style.top = sc.y + 'px';
+        el.innerHTML = '' +
+            '<button class="win11-shortcut-delete" onclick="window.__win11DeleteShortcut(\'' + sc.id + '\')">✕</button>' +
+            '<div class="win11-shortcut-icon">' + sc.icon + '</div>' +
+            '<div class="win11-shortcut-name">' + (typeof escapeHtml === 'function' ? escapeHtml(sc.name) : sc.name) + '</div>';
+        el.addEventListener('dblclick', function(){
+            window.__win11RunShortcut(sc.id);
+        });
+        el.addEventListener('click', function(e){
+            /* Выделить */
+            area.querySelectorAll('.win11-shortcut.selected').forEach(function(s){ s.classList.remove('selected'); });
+            el.classList.add('selected');
+        });
+        /* Drag */
+        attachShortcutDrag(el, sc);
+        area.appendChild(el);
+    });
+}
+function attachShortcutDrag(el, sc){
+    var drag = null;
+    el.addEventListener('mousedown', function(e){
+        if (e.target.classList.contains('win11-shortcut-delete')) return;
+        var rect = el.getBoundingClientRect();
+        var area = document.getElementById('win11DesktopArea');
+        var areaRect = area.getBoundingClientRect();
+        drag = { offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top, areaRect: areaRect };
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', function(e){
+        if (!drag) return;
+        var x = e.clientX - drag.areaRect.left - drag.offsetX;
+        var y = e.clientY - drag.areaRect.top - drag.offsetY;
+        x = Math.max(0, Math.min(x, drag.areaRect.width - 90));
+        y = Math.max(0, Math.min(y, drag.areaRect.height - 80));
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+    });
+    document.addEventListener('mouseup', function(){
+        if (drag) {
+            drag = null;
+            /* Сохранить позицию */
+            sc.x = parseInt(el.style.left, 10);
+            sc.y = parseInt(el.style.top, 10);
+            saveShortcuts();
+        }
+    });
+    /* Touch */
+    el.addEventListener('touchstart', function(e){
+        if (e.target.classList.contains('win11-shortcut-delete')) return;
+        var t = e.touches[0];
+        var rect = el.getBoundingClientRect();
+        var area = document.getElementById('win11DesktopArea');
+        var areaRect = area.getBoundingClientRect();
+        drag = { offsetX: t.clientX - rect.left, offsetY: t.clientY - rect.top, areaRect: areaRect, touch: true };
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e){
+        if (!drag || !drag.touch) return;
+        var t = e.touches[0];
+        var x = t.clientX - drag.areaRect.left - drag.offsetX;
+        var y = t.clientY - drag.areaRect.top - drag.offsetY;
+        x = Math.max(0, Math.min(x, drag.areaRect.width - 90));
+        y = Math.max(0, Math.min(y, drag.areaRect.height - 80));
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+    }, { passive: true });
+    document.addEventListener('touchend', function(){
+        if (drag && drag.touch) {
+            drag = null;
+            sc.x = parseInt(el.style.left, 10);
+            sc.y = parseInt(el.style.top, 10);
+            saveShortcuts();
+        }
+    });
+}
+window.__win11RunShortcut = function(id){
+    var sc = desktopShortcuts.find(function(s){ return s.id === id; });
+    if (!sc) return;
+    if (sc.action === 'planner') win11OpenApp('planner');
+    else if (sc.action === 'workout') win11OpenApp('workout');
+    else if (sc.action === 'clients') window.__win11AddWidget('clients');
+    else if (sc.action === 'calendar') win11OpenApp('calendar');
+    else if (sc.action === 'tasks') win11OpenApp('tasks');
+    else if (sc.action === 'shop') win11OpenApp('shop');
+    else if (sc.action === 'leads') win11OpenApp('leads');
+    else if (sc.action === 'chat') win11OpenApp('chat');
+    else if (sc.action === 'trainer') win11OpenApp('trainer');
+    else if (sc.action === 'files') openFileExplorer('documents');
+    else if (sc.action === 'notifications') openNotificationsApp();
+    else if (sc.action === 'clock') openClockApp();
+    else if (sc.action === 'summary') window.__win11AddWidget('summary');
+    else if (sc.action === 'savePlan') openSavePlanDialog();
+    else if (sc.action === 'saveWorkout') openSaveWorkoutDialog();
+    else if (sc.fileId && win11Files[sc.fileId]) openDocViewer(win11Files[sc.fileId]);
+};
+window.__win11DeleteShortcut = function(id){
+    desktopShortcuts = desktopShortcuts.filter(function(s){ return s.id !== id; });
+    saveShortcuts();
+    renderShortcuts();
+};
+window.__win11AddShortcut = function(opts){
+    var sc = {
+        id: 'sc_' + Date.now(),
+        icon: opts.icon || '📄',
+        name: opts.name || 'Ярлык',
+        x: opts.x || 30 + desktopShortcuts.length * 10,
+        y: opts.y || 30 + desktopShortcuts.length * 10,
+        action: opts.action,
+        fileId: opts.fileId
+    };
+    desktopShortcuts.push(sc);
+    saveShortcuts();
+    renderShortcuts();
+    if (typeof showToast === 'function') showToast('📌 Ярлык добавлен', 'success');
+};
+
+/* ============================================================
+   ПРИЛОЖЕНИЕ ЧАСЫ С БУДИЛЬНИКОМ
+   ============================================================ */
+var win11Alarms = [];
+function loadAlarms(){
+    try { win11Alarms = JSON.parse(localStorage.getItem('win11_alarms')) || []; } catch(e) { win11Alarms = []; }
+}
+function saveAlarms(){
+    try { localStorage.setItem('win11_alarms', JSON.stringify(win11Alarms)); } catch(e) {}
+}
+function openClockApp(){
+    var id = 'clockApp';
+    if (win11Windows[id]) { focusWindow(id); if (win11Windows[id].minimized) window.__win11MinimizeWin(id); return; }
+    createWin11Window({
+        id: id,
+        icon: '🕐',
+        title: 'Часы и будильник',
+        width: 380,
+        height: 520,
+        content: function(body){
+            body.innerHTML = '' +
+                '<div class="win11-clock-app">' +
+                    '<div class="win11-clock-big" id="clockAppBig">--:--:--</div>' +
+                    '<div class="win11-clock-date-big" id="clockAppDate">--</div>' +
+                    '<div>' +
+                        '<div class="win11-clock-section-title">⏰ Будильники</div>' +
+                        '<div class="win11-alarm-list" id="alarmList"></div>' +
+                        '<div class="win11-alarm-add">' +
+                            '<input type="time" id="alarmTime" value="07:00">' +
+                            '<input type="text" id="alarmLabel" placeholder="Название" style="flex:1;">' +
+                            '<button onclick="window.__win11AddAlarm()">＋</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            renderAlarms();
+            /* Обновлять время каждую секунду */
+            var upd = function(){
+                var now = new Date();
+                var big = document.getElementById('clockAppBig');
+                var date = document.getElementById('clockAppDate');
+                if (big) big.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+                if (date) {
+                    var days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+                    var months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+                    date.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()];
+                }
+                /* Проверка будильников */
+                checkAlarms(now);
+            };
+            upd();
+            var timer = setInterval(upd, 1000);
+            win11Windows[id].timer = timer;
+        }
+    });
+}
+function renderAlarms(){
+    var list = document.getElementById('alarmList');
+    if (!list) return;
+    if (!win11Alarms.length) {
+        list.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">Нет будильников</div>';
+        return;
+    }
+    list.innerHTML = win11Alarms.map(function(a){
+        return '<div class="win11-alarm-item">' +
+            '<div>' +
+                '<div class="win11-alarm-time">' + a.time + '</div>' +
+                '<div class="win11-alarm-label">' + (typeof escapeHtml === 'function' ? escapeHtml(a.label || 'Будильник') : (a.label || 'Будильник')) + '</div>' +
+            '</div>' +
+            '<div style="display:flex; gap:8px; align-items:center;">' +
+                '<button class="win11-alarm-toggle' + (a.on ? ' on' : '') + '" onclick="window.__win11ToggleAlarm(\'' + a.id + '\')"></button>' +
+                '<button class="win11-alarm-delete" onclick="window.__win11DeleteAlarm(\'' + a.id + '\')">🗑</button>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+window.__win11AddAlarm = function(){
+    var time = document.getElementById('alarmTime').value;
+    var label = document.getElementById('alarmLabel').value || 'Будильник';
+    if (!time) return;
+    win11Alarms.push({ id: 'al_' + Date.now(), time: time, label: label, on: true });
+    saveAlarms();
+    renderAlarms();
+    if (typeof showToast === 'function') showToast('⏰ Будильник на ' + time + ' установлен', 'success');
+};
+window.__win11ToggleAlarm = function(id){
+    var a = win11Alarms.find(function(x){ return x.id === id; });
+    if (a) { a.on = !a.on; saveAlarms(); renderAlarms(); }
+};
+window.__win11DeleteAlarm = function(id){
+    win11Alarms = win11Alarms.filter(function(a){ return a.id !== id; });
+    saveAlarms();
+    renderAlarms();
+};
+function checkAlarms(now){
+    var curTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    win11Alarms.forEach(function(a){
+        if (a.on && a.time === curTime && !a.triggered) {
+            a.triggered = true;
+            setTimeout(function(){ a.triggered = false; }, 60000);  /* не срабатывать повторно минуту */
+            if (typeof showToast === 'function') showToast('⏰ ' + a.label + ' — ' + a.time, 'info');
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            try {
+                if (typeof playNotifSound === 'function') playNotifSound();
+            } catch(e) {}
+        }
+    });
+}
+window.__win11OpenClockApp = function(e){
+    if (e) e.stopPropagation();
+    openClockApp();
+};
+
+/* ============================================================
+   ПРИЛОЖЕНИЕ УВЕДОМЛЕНИЯ (вместо ntfBell)
+   ============================================================ */
+function openNotificationsApp(){
+    var id = 'notifApp';
+    if (win11Windows[id]) { focusWindow(id); if (win11Windows[id].minimized) window.__win11MinimizeWin(id); return; }
+    createWin11Window({
+        id: id,
+        icon: '🔔',
+        title: 'Уведомления',
+        width: 400,
+        height: 500,
+        content: function(body){
+            body.innerHTML = '<div class="win11-notif-app" id="notifAppBody"></div>';
+            renderNotifications();
+        }
+    });
+}
+function renderNotifications(){
+    var body = document.getElementById('notifAppBody');
+    if (!body) return;
+    /* Собираем уведомления из задач */
+    var notifs = [];
+    try {
+        var tasks = (typeof getTasks === 'function') ? getTasks() : [];
+        var today = new Date().toISOString().slice(0, 10);
+        tasks.forEach(function(t){
+            if (t.due === today && !t.done) {
+                notifs.push({ title: '📋 Задача сегодня', text: t.title + (t.time ? ' в ' + t.time : ''), time: 'Сегодня' });
+            } else if (t.due && t.due < today && !t.done) {
+                notifs.push({ title: '⚠️ Просрочена', text: t.title, time: 'Просрочено' });
+            }
+        });
+    } catch(e) {}
+    /* Абонементы истекающие */
+    try {
+        var users = getUsers();
+        users.forEach(function(u){
+            var raw = localStorage.getItem('subscriptions_' + u.id);
+            if (!raw) return;
+            var data = JSON.parse(raw);
+            if (!data || !data.plans) return;
+            data.plans.forEach(function(p){
+                if (p.closed) return;
+                if (p.type === 'count') {
+                    var left = (p.total || 0) - (p.used || 0);
+                    if (left <= 1) notifs.push({ title: '💰 Абонемент', text: u.name + ': осталось ' + left + ' занятие', time: 'Скоро' });
+                }
+            });
+        });
+    } catch(e) {}
+    if (!notifs.length) {
+        body.innerHTML = '<div class="win11-notif-empty">🔔 Нет новых уведомлений</div>';
+        return;
+    }
+    body.innerHTML = notifs.map(function(n){
+        return '<div class="win11-notif-item">' +
+            '<div class="win11-notif-title">' + (typeof escapeHtml === 'function' ? escapeHtml(n.title) : n.title) + '</div>' +
+            '<div class="win11-notif-text">' + (typeof escapeHtml === 'function' ? escapeHtml(n.text) : n.text) + '</div>' +
+            '<div class="win11-notif-time">' + (typeof escapeHtml === 'function' ? escapeHtml(n.time) : n.time) + '</div>' +
+        '</div>';
+    }).join('');
+}
+
+/* ============================================================
+   ДИАЛОГ СОХРАНЕНИЯ ПРОГРАММЫ ПИТАНИЯ/ТРЕНИРОВКИ
+   ============================================================ */
+function openSavePlanDialog(){
+    var id = 'savePlanDialog';
+    if (win11Windows[id]) { focusWindow(id); return; }
+    createWin11Window({
+        id: id,
+        icon: '💾',
+        title: 'Сохранить программу питания',
+        width: 480,
+        height: 460,
+        content: function(body){
+            body.innerHTML = '' +
+                '<div class="win11-save-dialog">' +
+                    '<div class="win11-save-section">' +
+                        '<div class="win11-save-label">📝 Название программы</div>' +
+                        '<input type="text" class="win11-save-input" id="savePlanName" placeholder="Например: Программа для набора массы" value="Программа питания ' + new Date().toLocaleDateString(__uiLocale()) + '">' +
+                    '</div>' +
+                    '<div class="win11-save-section">' +
+                        '<div class="win11-save-label">💾 Куда сохранить?</div>' +
+                        '<div class="win11-save-targets">' +
+                            '<button class="win11-save-target" onclick="window.__win11SavePlanTo(\'desktop\')">' +
+                                '<div class="win11-save-target-icon">🖥️</div>' +
+                                '<div class="win11-save-target-name">На рабочий стол</div>' +
+                                '<div class="win11-save-target-desc">Ярлык на столе</div>' +
+                            '</button>' +
+                            '<button class="win11-save-target" onclick="window.__win11SavePlanTo(\'explorer\')">' +
+                                '<div class="win11-save-target-icon">📁</div>' +
+                                '<div class="win11-save-target-name">В проводник</div>' +
+                                '<div class="win11-save-target-desc">В папку Документы</div>' +
+                            '</button>' +
+                            '<button class="win11-save-target" onclick="window.__win11SavePlanTo(\'client\')">' +
+                                '<div class="win11-save-target-icon">👤</div>' +
+                                '<div class="win11-save-target-name">Для клиента</div>' +
+                                '<div class="win11-save-target-desc">Привязать к клиенту</div>' +
+                            '</button>' +
+                            '<button class="win11-save-target" onclick="window.__win11SavePlanTo(\'file\')">' +
+                                '<div class="win11-save-target-icon">📥</div>' +
+                                '<div class="win11-save-target-name">Скачать файл</div>' +
+                                '<div class="win11-save-target-desc">.json на устройство</div>' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }
+    });
+}
+function openSaveWorkoutDialog(){
+    var id = 'saveWorkoutDialog';
+    if (win11Windows[id]) { focusWindow(id); return; }
+    createWin11Window({
+        id: id,
+        icon: '💾',
+        title: 'Сохранить программу тренировок',
+        width: 480,
+        height: 460,
+        content: function(body){
+            body.innerHTML = '' +
+                '<div class="win11-save-dialog">' +
+                    '<div class="win11-save-section">' +
+                        '<div class="win11-save-label">📝 Название программы</div>' +
+                        '<input type="text" class="win11-save-input" id="saveWorkoutName" placeholder="Например: Full Body Workout" value="Программа тренировок ' + new Date().toLocaleDateString(__uiLocale()) + '">' +
+                    '</div>' +
+                    '<div class="win11-save-section">' +
+                        '<div class="win11-save-label">💾 Куда сохранить?</div>' +
+                        '<div class="win11-save-targets">' +
+                            '<button class="win11-save-target" onclick="window.__win11SaveWorkoutTo(\'desktop\')">' +
+                                '<div class="win11-save-target-icon">🖥️</div>' +
+                                '<div class="win11-save-target-name">На рабочий стол</div>' +
+                                '<div class="win11-save-target-desc">Ярлык на столе</div>' +
+                            '</button>' +
+                            '<button class="win11-save-target" onclick="window.__win11SaveWorkoutTo(\'explorer\')">' +
+                                '<div class="win11-save-target-icon">📁</div>' +
+                                '<div class="win11-save-target-name">В проводник</div>' +
+                                '<div class="win11-save-target-desc">В папку Тренировки</div>' +
+                            '</button>' +
+                            '<button class="win11-save-target" onclick="window.__win11SaveWorkoutTo(\'client\')">' +
+                                '<div class="win11-save-target-icon">👤</div>' +
+                                '<div class="win11-save-target-name">Для клиента</div>' +
+                                '<div class="win11-save-target-desc">Привязать к клиенту</div>' +
+                            '</button>' +
+                            '<button class="win11-save-target" onclick="window.__win11SaveWorkoutTo(\'file\')">' +
+                                '<div class="win11-save-target-icon">📥</div>' +
+                                '<div class="win11-save-target-name">Скачать файл</div>' +
+                                '<div class="win11-save-target-desc">.json на устройство</div>' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }
+    });
+}
+function getPlanData(){
+    try {
+        if (typeof currentUserId === 'undefined' || !currentUserId) return null;
+        var raw = localStorage.getItem('nutritionPlan_' + currentUserId);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch(e) { return null; }
+}
+function getWorkoutData(){
+    try {
+        var data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);
+        return data;
+    } catch(e) { return null; }
+}
+window.__win11SavePlanTo = function(target){
+    var name = (document.getElementById('savePlanName') || {}).value || 'Программа питания';
+    var data = getPlanData();
+    if (!data) {
+        if (typeof showToast === 'function') showToast('⚠️ Нет данных программы. Сначала создайте план.', 'error');
+        return;
+    }
+    var json = JSON.stringify({ type: 'nutrition', name: name, data: data, savedAt: new Date().toISOString() }, null, 2);
+    savePlanToTarget(target, name, json, 'nutrition');
+};
+window.__win11SaveWorkoutTo = function(target){
+    var name = (document.getElementById('saveWorkoutName') || {}).value || 'Программа тренировок';
+    var data = getWorkoutData();
+    if (!data || !data.length) {
+        if (typeof showToast === 'function') showToast('⚠️ Нет данных тренировки. Сначала создайте программу.', 'error');
+        return;
+    }
+    var json = JSON.stringify({ type: 'workout', name: name, data: data, savedAt: new Date().toISOString() }, null, 2);
+    savePlanToTarget(target, name, json, 'workout');
+};
+function savePlanToTarget(target, name, json, kind){
+    if (target === 'file') {
+        var blob = new Blob([json], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = name + '.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        if (typeof showToast === 'function') showToast('📥 Файл скачан: ' + name + '.json', 'success');
+    } else if (target === 'desktop') {
+        /* Создать ярлык на рабочем столе */
+        var fileId = 'file_' + Date.now();
+        win11Files[fileId] = { type: 'txt', name: name + '.json', content: 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(json))), isPlan: kind };
+        saveFiles();
+        window.__win11AddShortcut({ icon: kind === 'nutrition' ? '🍽️' : '🏋️', name: name, action: 'openFile', fileId: fileId });
+        if (typeof showToast === 'function') showToast('📌 Ярлык добавлен на рабочий стол', 'success');
+    } else if (target === 'explorer') {
+        var fid = 'file_' + Date.now();
+        win11Files[fid] = { type: 'txt', name: name + '.json', content: 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(json))), isPlan: kind };
+        var folderId = kind === 'nutrition' ? 'documents' : 'workouts';
+        if (win11Files[folderId] && win11Files[folderId].children) win11Files[folderId].children.push(fid);
+        saveFiles();
+        if (typeof showToast === 'function') showToast('📁 Сохранено в проводник: ' + (kind === 'nutrition' ? 'Документы' : 'Тренировки'), 'success');
+    } else if (target === 'client') {
+        /* Привязать к текущему клиенту */
+        if (typeof currentUserId === 'undefined' || !currentUserId) {
+            if (typeof showToast === 'function') showToast('⚠️ Выберите клиента сначала', 'error');
+            return;
+        }
+        var key = kind === 'nutrition' ? ('nutritionPlan_' + currentUserId) : ('workoutPlan_' + currentUserId);
+        try { localStorage.setItem(key, kind === 'nutrition' ? localStorage.getItem('nutritionPlan_' + currentUserId) : JSON.stringify(getWorkoutData())); } catch(e) {}
+        if (typeof showToast === 'function') showToast('👤 Программа привязана к клиенту', 'success');
+    }
+    /* Закрыть диалог */
+    var dialogId = kind === 'nutrition' ? 'savePlanDialog' : 'saveWorkoutDialog';
+    window.__win11CloseWin(dialogId);
+}
 window.win11CtxChangeWallpaper = function(){
     hideContextMenu();
     var input = document.getElementById('win11WallpaperInput');
@@ -40266,6 +41090,7 @@ window.__win11OnLayoutChange = function(){
    ============================================================ */
 function init(){
     loadPositions();
+    loadAlarms();
     /* Применить сохранённые обои */
     applySavedWallpaper();
     /* Дождаться пока DOM полностью готов */
@@ -40273,6 +41098,9 @@ function init(){
         initDefaultWidgets();
         window.__win11UpdateClock();
         applyLayoutToDesktop();
+        /* Рендер ярлыков рабочего стола */
+        loadShortcuts();
+        renderShortcuts();
     }, 200);
     /* Слушать смену layout */
     window.addEventListener('resize', function(){ applyLayoutToDesktop(); });
