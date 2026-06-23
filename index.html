@@ -8517,6 +8517,35 @@
         .win11-widget:hover .win11-widget-size-btn { display: flex; }
         body.dark-theme .win11-widget-size-btn { background: rgba(255,255,255,0.08); }
 
+        /* Контекстное меню файлов */
+        .win11-file-context-menu {
+            position: fixed; min-width: 200px;
+            background: rgba(255,255,255,0.97); backdrop-filter: blur(30px);
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 10px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2); padding: 6px;
+            z-index: 200000; color: #1f2937; display: none;
+        }
+        body.dark-theme .win11-file-context-menu { background: rgba(15,23,42,0.97); color: #f1f5f9; }
+        .win11-file-context-menu.open { display: block; }
+        .win11-file-context-menu .win11-context-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:0.88em; }
+        .win11-file-context-menu .win11-context-item:hover { background: rgba(59,130,246,0.15); }
+        .win11-file-context-menu .win11-context-item.danger:hover { background: rgba(239,68,68,0.15); color:#dc2626; }
+        .win11-file-context-menu .win11-context-item-icon { font-size:1.1em; width:18px; text-align:center; }
+        .win11-file-context-menu .win11-context-separator { height:1px; background:rgba(0,0,0,0.08); margin:4px 0; }
+        .win11-breadcrumbs { display:flex; align-items:center; gap:4px; padding:6px 12px; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.82em; }
+        .win11-breadcrumb-item { cursor:pointer; padding:2px 6px; border-radius:4px; }
+        .win11-breadcrumb-item:hover { background: rgba(59,130,246,0.15); }
+        .win11-breadcrumb-sep { opacity:0.4; }
+        .win11-file-item.dragging { opacity:0.5; }
+        .win11-file-item.drag-over { background: rgba(59,130,246,0.2) !important; outline:2px solid #3b82f6; }
+        .win11-file-item.selected { background: rgba(59,130,246,0.2) !important; }
+        .win11-explorer-search { padding:4px 8px; border:1px solid rgba(0,0,0,0.1); border-radius:5px; font-size:0.8em; width:120px; }
+        .win11-explorer-search:focus { outline:none; border-color:#3b82f6; width:160px; }
+        .win11-explorer-sort { padding:4px 8px; border:1px solid rgba(0,0,0,0.1); border-radius:5px; font-size:0.8em; cursor:pointer; }
+        .win11-text-editor { display:flex; flex-direction:column; height:100%; }
+        .win11-text-editor textarea { flex:1; width:100%; border:none; padding:16px; font-family:'Consolas',monospace; font-size:0.92em; background:transparent; color:inherit; resize:none; outline:none; }
+        .win11-text-editor-toolbar { display:flex; gap:6px; padding:8px 12px; border-bottom:1px solid rgba(0,0,0,0.06); }
+
         /* ============================================================
            ЯРЛЫКИ НА РАБОЧЕМ СТОЛЕ (как Windows 11 desktop icons)
            ============================================================ */
@@ -9863,8 +9892,22 @@ setTimeout(function(){
                 </div>
             </div>
         </div>
+        <!-- Контекстное меню файлов -->
+        <div class="win11-file-context-menu" id="win11FileContextMenu">
+            <div class="win11-context-item" data-file-action="open"><span class="win11-context-item-icon">📂</span> <span>Открыть</span></div>
+            <div class="win11-context-item" data-file-action="edit"><span class="win11-context-item-icon">✏️</span> <span>Редактировать</span></div>
+            <div class="win11-context-separator"></div>
+            <div class="win11-context-item" data-file-action="rename"><span class="win11-context-item-icon">📝</span> <span>Переименовать</span></div>
+            <div class="win11-context-item" data-file-action="move"><span class="win11-context-item-icon">📁</span> <span>Переместить в...</span></div>
+            <div class="win11-context-item" data-file-action="download"><span class="win11-context-item-icon">⬇️</span> <span>Скачать</span></div>
+            <div class="win11-context-item" data-file-action="duplicate"><span class="win11-context-item-icon">📋</span> <span>Дублировать</span></div>
+            <div class="win11-context-separator"></div>
+            <div class="win11-context-item" data-file-action="create-shortcut"><span class="win11-context-item-icon">📌</span> <span>Ярлык на рабочий стол</span></div>
+            <div class="win11-context-separator"></div>
+            <div class="win11-context-item danger" data-file-action="delete"><span class="win11-context-item-icon">🗑</span> <span>Удалить</span></div>
+        </div>
         <!-- Скрытый input для загрузки обоев -->
-        <input type="file" id="win11WallpaperInput" accept="image/*" style="display:none" onchange="window.__win11HandleWallpaper(event)">
+        <input type="file" id="win11WallpaperInput"  accept="image/*" style="display:none" onchange="window.__win11HandleWallpaper(event)">
 
         <!-- Скрытые inputs для совместимости -->
         <input type="file" id="restoreFileInput" accept="application/json,.json" style="display:none" onchange="restoreAllData(event)">
@@ -40750,9 +40793,9 @@ function openFileExplorer(folderId){
     var id = 'fileExplorer';
     if (win11Windows[id]) {
         focusWindow(id);
-        if (win11Windows[id].minimized) window.__win11MinimizeWin(id);
-        /* Перейти в нужную папку */
+        if (win11Windows[id].minimized) __win11MinimizeWin(id);
         win11Windows[id].currentFolder = folderId;
+        renderExplorerSidebar(id);
         renderExplorerContent(id);
         return;
     }
@@ -40760,23 +40803,30 @@ function openFileExplorer(folderId){
         id: id,
         icon: '📁',
         title: 'Файловый проводник',
-        width: 800,
-        height: 540,
+        width: 900,
+        height: 560,
         content: function(body){
             body.innerHTML = '' +
                 '<div class="win11-explorer">' +
                     '<div class="win11-explorer-sidebar" id="explorerSidebar"></div>' +
                     '<div class="win11-explorer-main">' +
                         '<div class="win11-explorer-toolbar">' +
-                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerUp(\'' + id + '\')">⬆️ Вверх</button>' +
-                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerUpload(\'' + id + '\')">⬆️ Загрузить</button>' +
-                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerNewFolder(\'' + id + '\')">📁 Новая папка</button>' +
-                            '<div class="win11-explorer-path" id="explorerPath"></div>' +
+                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerUp(\'' + id + '\')" title="Вверх">⬆️</button>' +
+                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerNewFolder(\'' + id + '\')" title="Новая папка">📁+</button>' +
+                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerNewText(\'' + id + '\')" title="Текстовый файл">📄+</button>' +
+                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerUpload(\'' + id + '\')" title="Загрузить">⬆️</button>' +
+                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerSavePlan(\'' + id + '\')" title="Сохранить питание">🍽️</button>' +
+                            '<button class="win11-explorer-btn" onclick="window.__win11ExplorerSaveWorkout(\'' + id + '\')" title="Сохранить тренировку">🏋️</button>' +
+                            '<input type="text" class="win11-explorer-search" id="explorerSearch" placeholder="🔍 Поиск..." oninput="window.__win11ExplorerSearch(\'' + id + '\', this.value)">' +
+                            '<select class="win11-explorer-sort" id="explorerSort" onchange="window.__win11ExplorerSort(\'' + id + '\', this.value)"><option value="name">Имя</option><option value="type">Тип</option><option value="date">Дата</option></select>' +
                         '</div>' +
+                        '<div class="win11-breadcrumbs" id="explorerBreadcrumbs"></div>' +
                         '<div class="win11-explorer-content" id="explorerContent"></div>' +
                     '</div>' +
                 '</div>';
             win11Windows[id].currentFolder = folderId;
+            win11Windows[id].searchQuery = '';
+            win11Windows[id].sortBy = 'name';
             renderExplorerSidebar(id);
             renderExplorerContent(id);
         }
@@ -40784,47 +40834,74 @@ function openFileExplorer(folderId){
 }
 
 function renderExplorerSidebar(id){
-    var side = document.getElementById('explorerSidebar');
-    if (!side) return;
+    var side = document.getElementById('explorerSidebar'); if (!side) return;
     var cur = win11Windows[id].currentFolder;
-    var items = [
-        { id: 'documents', icon: '📂', name: 'Документы' },
-        { id: 'clients', icon: '👥', name: 'Клиенты' },
-        { id: 'workouts', icon: '🏋️', name: 'Тренировки' }
-    ];
-    side.innerHTML = items.map(function(it){
-        return '<div class="win11-explorer-side-item' + (cur === it.id ? ' active' : '') + '" onclick="window.__win11ExplorerGo(\'' + id + '\', \'' + it.id + '\')">' +
-            '<span class="win11-explorer-side-icon">' + it.icon + '</span>' +
-            '<span>' + it.name + '</span>' +
-        '</div>';
-    }).join('');
+    var items = [{id:'documents',icon:'📂',name:'Документы'},{id:'clients',icon:'👥',name:'Клиенты'},{id:'workouts',icon:'🏋️',name:'Тренировки'}];
+    var userFolders = [];
+    if (win11Files['documents'] && win11Files['documents'].children) {
+        win11Files['documents'].children.forEach(function(fid){ if(win11Files[fid]&&win11Files[fid].type==='folder') userFolders.push({id:fid,icon:'📁',name:win11Files[fid].name}); });
+    }
+    var html = '<div style="padding:8px 12px 4px;font-size:0.72em;font-weight:700;text-transform:uppercase;opacity:0.5;">Папки</div>';
+    html += items.map(function(it){ return '<div class="win11-explorer-side-item'+(cur===it.id?' active':'')+'" onclick="window.__win11ExplorerGo(\''+id+'\',\''+it.id+'\')"><span class="win11-explorer-side-icon">'+it.icon+'</span><span>'+it.name+'</span></div>'; }).join('');
+    if (userFolders.length) {
+        html += '<div style="height:1px;background:rgba(0,0,0,0.08);margin:6px 8px;"></div><div style="padding:8px 12px 4px;font-size:0.72em;font-weight:700;text-transform:uppercase;opacity:0.5;">Мои папки</div>';
+        html += userFolders.map(function(it){ return '<div class="win11-explorer-side-item'+(cur===it.id?' active':'')+'" onclick="window.__win11ExplorerGo(\''+id+'\',\''+it.id+'\')"><span class="win11-explorer-side-icon">'+it.icon+'</span><span>'+escapeHtml(it.name)+'</span></div>'; }).join('');
+    }
+    html += '<div style="height:1px;background:rgba(0,0,0,0.08);margin:6px 8px;"></div><div style="padding:8px 12px 4px;font-size:0.72em;font-weight:700;text-transform:uppercase;opacity:0.5;">Инструменты</div>';
+    html += '<div class="win11-explorer-side-item" onclick="window.__win11ExplorerSavePlan(\''+id+'\')"><span class="win11-explorer-side-icon">🍽️</span><span>Сохранить питание</span></div>';
+    html += '<div class="win11-explorer-side-item" onclick="window.__win11ExplorerSaveWorkout(\''+id+'\')"><span class="win11-explorer-side-icon">🏋️</span><span>Сохранить тренировку</span></div>';
+    html += '<div class="win11-explorer-side-item" onclick="window.__win11ExplorerNewText(\''+id+'\')"><span class="win11-explorer-side-icon">📄</span><span>Новый текст</span></div>';
+    html += '<div class="win11-explorer-side-item" onclick="window.__win11ExplorerNewFolder(\''+id+'\')"><span class="win11-explorer-side-icon">📁</span><span>Новая папка</span></div>';
+    side.innerHTML = html;
 }
 
 function renderExplorerContent(id){
     var content = document.getElementById('explorerContent');
-    var path = document.getElementById('explorerPath');
+    var breadcrumbs = document.getElementById('explorerBreadcrumbs');
     if (!content) return;
     var folderId = win11Windows[id].currentFolder;
     var folder = win11Files[folderId];
-    if (!folder || folder.type !== 'folder') {
-        content.innerHTML = '<div class="win11-file-empty">Папка не найдена</div>';
-        return;
-    }
-    path.textContent = '📁 ' + (folder.name || 'Папка');
+    if (!folder || folder.type !== 'folder') { content.innerHTML = '<div class="win11-file-empty">Папка не найдена</div>'; return; }
 
-    var items = (folder.children || []).map(function(fid){ return win11Files[fid]; }).filter(Boolean);
-    if (!items.length) {
-        content.innerHTML = '<div class="win11-file-empty">📭 Папка пуста.<br><br>Используйте «Загрузить» чтобы добавить файлы (PDF, Word, Excel, TXT, изображения).</div>';
-        return;
+    /* Breadcrumbs */
+    if (breadcrumbs) {
+        var chain = [];
+        var cur = folderId;
+        while (cur && win11Files[cur]) {
+            chain.unshift({ id: cur, name: win11Files[cur].name || 'Папка' });
+            var parent = null;
+            for (var k in win11Files) { if (win11Files[k].type==='folder' && win11Files[k].children && win11Files[k].children.indexOf(cur)>=0) { parent=k; break; } }
+            cur = parent;
+        }
+        if (!chain.length || chain[0].id !== 'documents') chain.unshift({ id: 'documents', name: '🏠 Дом' });
+        breadcrumbs.innerHTML = chain.map(function(c, i){
+            return '<span class="win11-breadcrumb-item" onclick="window.__win11ExplorerGo(\'' + id + '\', \'' + c.id + '\')">' + escapeHtml(c.name) + '</span>' + (i < chain.length - 1 ? '<span class="win11-breadcrumb-sep">›</span>' : '');
+        }).join('');
     }
+
+    var items = (folder.children || []).map(function(fid){ var f = win11Files[fid]; if(!f) return null; f._id = fid; f._created = f._created || Date.now(); return f; }).filter(Boolean);
+    var query = win11Windows[id].searchQuery || '';
+    if (query) { var q = query.toLowerCase(); items = items.filter(function(it){ return (it.name||'').toLowerCase().indexOf(q)>=0; }); }
+    var sortBy = win11Windows[id].sortBy || 'name';
+    items.sort(function(a,b){ if(sortBy==='name') return (a.name||'').localeCompare(b.name||''); if(sortBy==='date') return (b._created||0)-(a._created||0); return 0; });
+    items.sort(function(a,b){ if(a.type==='folder'&&b.type!=='folder') return -1; if(b.type==='folder'&&a.type!=='folder') return 1; return 0; });
+
+    if (!items.length) { content.innerHTML = '<div class="win11-file-empty">' + (query?'🔍 Ничего не найдено':'📭 Папка пуста<br><br>📁+ папка, 📄+ текст, ⬆️ загрузить') + '</div>'; return; }
 
     content.innerHTML = items.map(function(item){
         var icon = getFileIcon(item);
-        var onClick = 'window.__win11OpenFile(\'' + id + '\', \'' + (item.id || '') + '\')';
-        return '<div class="win11-file-item" onclick="' + onClick + '">' +
-            '<div class="win11-file-icon">' + icon + '</div>' +
-            '<div class="win11-file-name">' + (typeof escapeHtml === 'function' ? escapeHtml(item.name || '') : (item.name || '')) + '</div>' +
-        '</div>';
+        var fileId = item._id;
+        var name = escapeHtml(item.name || '');
+        return '<div class="win11-file-item" data-file-id="' + fileId + '" ' +
+            'ondblclick="window.__win11OpenFile(\'' + id + '\', \'' + fileId + '\')" ' +
+            'onclick="window.__win11SelectFile(\'' + id + '\', \'' + fileId + '\', event)" ' +
+            'oncontextmenu="window.__win11FileContextMenu(\'' + id + '\', \'' + fileId + '\', event); return false;" ' +
+            'draggable="true" ' +
+            'ondragstart="window.__win11FileDragStart(event, \'' + fileId + '\')" ' +
+            'ondragover="if(win11Files[\'' + fileId + '\']&&win11Files[\'' + fileId + '\'].type===\'folder\'){event.preventDefault();this.classList.add(\'drag-over\');}" ' +
+            'ondragleave="this.classList.remove(\'drag-over\');" ' +
+            'ondrop="window.__win11FileDrop(event,\'' + id + '\',\'' + fileId + '\');return false;" ' +
+            '><div class="win11-file-icon">' + icon + '</div><div class="win11-file-name">' + name + '</div></div>';
     }).join('');
 }
 
@@ -40886,6 +40963,119 @@ window.__win11ExplorerUpload = function(winId){
         });
     };
     input.click();
+};
+window.__win11SelectFile = function(winId, fileId, e){
+    var content = document.getElementById('explorerContent');
+    if (content) content.querySelectorAll('.win11-file-item.selected').forEach(function(el){ el.classList.remove('selected'); });
+    var item = e.target.closest('.win11-file-item'); if (item) item.classList.add('selected');
+};
+window.__win11FileContextMenu = function(winId, fileId, e){
+    e.preventDefault(); e.stopPropagation();
+    var menu = document.getElementById('win11FileContextMenu'); if (!menu) return;
+    menu.dataset.winId = winId; menu.dataset.fileId = fileId;
+    var x = e.clientX, y = e.clientY;
+    if (x + 220 > window.innerWidth) x = window.innerWidth - 230;
+    if (y + 320 > window.innerHeight) y = window.innerHeight - 330;
+    menu.style.left = x + 'px'; menu.style.top = y + 'px'; menu.classList.add('open');
+    var item = win11Files[fileId];
+    var editItem = menu.querySelector('[data-file-action="edit"]');
+    if (editItem) editItem.style.display = (item && item.type === 'folder') ? 'none' : 'flex';
+};
+document.addEventListener('click', function(e){
+    var menu = document.getElementById('win11FileContextMenu');
+    if (!menu || !menu.classList.contains('open')) return;
+    if (menu.contains(e.target)) return; menu.classList.remove('open');
+});
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){var m=document.getElementById('win11FileContextMenu');if(m)m.classList.remove('open');} });
+document.getElementById('win11FileContextMenu').addEventListener('click', function(e){
+    var item = e.target.closest('[data-file-action]'); if (!item) return; e.stopPropagation();
+    var action = item.dataset.fileAction, winId = this.dataset.winId, fileId = this.dataset.fileId;
+    this.classList.remove('open'); handleFileAction(action, winId, fileId);
+});
+function handleFileAction(action, winId, fileId){
+    var file = win11Files[fileId]; if (!file) return;
+    switch(action){
+        case 'open': window.__win11OpenFile(winId, fileId); break;
+        case 'edit': openTextEditor(winId, fileId); break;
+        case 'rename':
+            var n = prompt('Новое имя:', file.name||''); if(n&&n.trim()){file.name=n.trim();saveFiles();renderExplorerContent(winId);showToast('✅ Переименовано','success');} break;
+        case 'move': showMoveDialog(winId, fileId); break;
+        case 'download': downloadFile(file); break;
+        case 'duplicate':
+            var nid='file_'+Date.now(), cp=JSON.parse(JSON.stringify(file)); cp.name='Копия '+file.name; cp._created=Date.now(); win11Files[nid]=cp;
+            var p=win11Files[win11Windows[winId].currentFolder]; if(p&&p.children)p.children.push(nid); saveFiles(); renderExplorerContent(winId); showToast('📋 Дубликат','success'); break;
+        case 'create-shortcut':
+            window.__win11AddShortcut({icon:getFileIcon(file),name:file.name,action:'openFile',fileId:fileId}); showToast('📌 Ярлык на рабочий стол','success'); break;
+        case 'delete':
+            if(!confirm('Удалить «'+file.name+'»?')) return;
+            for(var k in win11Files){if(win11Files[k].type==='folder'&&win11Files[k].children){var i=win11Files[k].children.indexOf(fileId);if(i>=0)win11Files[k].children.splice(i,1);}}
+            deleteFileRecursive(fileId); saveFiles(); renderExplorerContent(winId); showToast('🗑 Удалено','info'); break;
+    }
+}
+function deleteFileRecursive(fid){ var f=win11Files[fid]; if(!f) return; if(f.type==='folder'&&f.children) f.children.slice().forEach(function(c){deleteFileRecursive(c);}); delete win11Files[fid]; }
+function downloadFile(file){ var a=document.createElement('a'); a.href=file.content||''; a.download=file.name||'file'; document.body.appendChild(a); a.click(); a.remove(); }
+function showMoveDialog(winId, fileId){
+    var folders=[]; for(var k in win11Files){ if(win11Files[k].type==='folder') folders.push({id:k,name:win11Files[k].name}); }
+    var file=win11Files[fileId], cur=win11Windows[winId].currentFolder, mid='moveDialog';
+    if(win11Windows[mid]) __win11CloseWin(mid);
+    createWin11Window({id:mid,icon:'📁',title:'Переместить: '+(file.name||''),width:360,height:400,content:function(body){
+        body.innerHTML='<div style="padding:16px;"><div style="font-size:0.85em;opacity:0.7;margin-bottom:12px;">Выберите папку:</div><div style="max-height:280px;overflow-y:auto;">'+
+        folders.filter(function(f){return f.id!==fileId&&f.id!==cur;}).map(function(f){
+            return '<div class="win11-explorer-side-item" onclick="window.__win11MoveFile(\''+winId+'\',\''+fileId+'\',\''+f.id+'\',\''+mid+'\')"><span class="win11-explorer-side-icon">📁</span><span>'+escapeHtml(f.name)+'</span></div>';
+        }).join('')+'</div></div>';
+    }});
+}
+window.__win11MoveFile = function(winId, fileId, dest, dialogId){
+    for(var k in win11Files){if(win11Files[k].type==='folder'&&win11Files[k].children){var i=win11Files[k].children.indexOf(fileId);if(i>=0)win11Files[k].children.splice(i,1);}}
+    var d=win11Files[dest]; if(d&&d.children) d.children.push(fileId); saveFiles(); __win11CloseWin(dialogId); renderExplorerContent(winId); showToast('📁 Перемещено','success');
+};
+window.__win11FileDragStart = function(e, fileId){ e.dataTransfer.setData('text/plain', fileId); e.target.closest('.win11-file-item').classList.add('dragging'); };
+window.__win11FileDrop = function(e, winId, targetId){
+    e.preventDefault(); e.stopPropagation();
+    var item=e.target.closest('.win11-file-item'); if(item) item.classList.remove('drag-over');
+    var fileId=e.dataTransfer.getData('text/plain'); if(!fileId||fileId===targetId) return;
+    var target=win11Files[targetId]; if(!target||target.type!=='folder') return;
+    if(isFolderChild(targetId, fileId)){ showToast('⚠️ Нельзя переместить внутрь себя','error'); return; }
+    for(var k in win11Files){if(win11Files[k].type==='folder'&&win11Files[k].children){var i=win11Files[k].children.indexOf(fileId);if(i>=0)win11Files[k].children.splice(i,1);}}
+    target.children.push(fileId); saveFiles(); renderExplorerContent(winId); showToast('📁 Перемещено','success');
+};
+function isFolderChild(folderId, childId){ var f=win11Files[folderId]; if(!f||!f.children) return false; if(f.children.indexOf(childId)>=0) return true; return f.children.some(function(c){return isFolderChild(c,childId);}); }
+window.__win11ExplorerSearch = function(winId, q){ if(win11Windows[winId]) win11Windows[winId].searchQuery=q; renderExplorerContent(winId); };
+window.__win11ExplorerSort = function(winId, s){ if(win11Windows[winId]) win11Windows[winId].sortBy=s; renderExplorerContent(winId); };
+window.__win11ExplorerNewText = function(winId){
+    var name=prompt('Имя файла:','Новый файл.txt'); if(!name) return; if(name.indexOf('.')<0) name+='.txt';
+    var fid='file_'+Date.now(); win11Files[fid]={type:'txt',name:name,content:'',_created:Date.now()};
+    var f=win11Files[win11Windows[winId].currentFolder]; if(f&&f.children) f.children.push(fid); saveFiles(); renderExplorerContent(winId); openTextEditor(winId, fid);
+};
+function openTextEditor(winId, fileId){
+    var file=win11Files[fileId]; if(!file) return; var eid='textEditor_'+fileId;
+    if(win11Windows[eid]){focusWindow(eid);if(win11Windows[eid].minimized)__win11MinimizeWin(eid);return;}
+    createWin11Window({id:eid,icon:'📄',title:file.name||'Текст',width:600,height:500,content:function(body){
+        var c=file.content||''; if(c.indexOf('data:')===0){try{c=atob(c.split(',')[1]);}catch(e){c='';}}
+        body.innerHTML='<div class="win11-text-editor"><div class="win11-text-editor-toolbar"><button class="win11-explorer-btn" onclick="window.__win11TextSave(\''+eid+'\',\''+fileId+'\')">💾 Сохранить</button><button class="win11-explorer-btn" onclick="window.__win11TextDownload(\''+fileId+'\')">⬇️ Скачать</button><span style="flex:1;font-size:0.85em;opacity:0.7;">'+escapeHtml(file.name)+'</span></div><textarea id="textEditorArea_'+fileId+'" placeholder="Введите текст...">'+escapeHtml(c)+'</textarea></div>';
+    }});
+}
+window.__win11TextSave = function(eid, fileId){
+    var ta=document.getElementById('textEditorArea_'+fileId); if(!ta) return; var text=ta.value;
+    var du='data:text/plain;base64,'+btoa(unescape(encodeURIComponent(text)));
+    if(win11Files[fileId]){win11Files[fileId].content=du;win11Files[fileId].size=text.length;saveFiles();} showToast('💾 Сохранено','success');
+};
+window.__win11TextDownload = function(fileId){ var f=win11Files[fileId]; if(f) downloadFile(f); };
+window.__win11ExplorerSavePlan = function(winId){
+    var name=prompt('Название:','Программа питания '+new Date().toLocaleDateString(__uiLocale())); if(!name) return;
+    var data=null; try{if(typeof currentUserId!=='undefined'&&currentUserId) data=JSON.parse(localStorage.getItem('nutritionPlan_'+currentUserId)||'null');}catch(e){}
+    if(!data){showToast('⚠️ Нет активного плана. Откройте клиент и создайте план.','error');return;}
+    var json=JSON.stringify({type:'nutrition',name:name,data:data,savedAt:new Date().toISOString()},null,2);
+    var fid='file_'+Date.now(); win11Files[fid]={type:'txt',name:name+'.json',content:'data:application/json;base64,'+btoa(unescape(encodeURIComponent(json))),size:json.length,_created:Date.now()};
+    var f=win11Files[win11Windows[winId].currentFolder]; if(f&&f.children) f.children.push(fid); saveFiles(); renderExplorerContent(winId); showToast('🍽️ Программа сохранена','success');
+};
+window.__win11ExplorerSaveWorkout = function(winId){
+    var name=prompt('Название:','Программа тренировок '+new Date().toLocaleDateString(__uiLocale())); if(!name) return;
+    var data=null; try{data=Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);}catch(e){}
+    if(!data||!data.length){showToast('⚠️ Нет данных тренировки. Откройте планировщик.','error');return;}
+    var json=JSON.stringify({type:'workout',name:name,data:data,savedAt:new Date().toISOString()},null,2);
+    var fid='file_'+Date.now(); win11Files[fid]={type:'txt',name:name+'.json',content:'data:application/json;base64,'+btoa(unescape(encodeURIComponent(json))),size:json.length,_created:Date.now()};
+    var f=win11Files[win11Windows[winId].currentFolder]; if(f&&f.children) f.children.push(fid); saveFiles(); renderExplorerContent(winId); showToast('🏋️ Программа сохранена','success');
 };
 window.__win11ExplorerNewFolder = function(winId){
     var name = prompt('Имя новой папки:');
