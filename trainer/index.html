@@ -31105,12 +31105,13 @@ body[dir="rtl"] .cw-spark { padding: 0 27px; }
 .cw-rep-cont { padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-secondary); font-weight: 600; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
 .cw-pick-bar { width: 5px; height: 34px; border-radius: 4px; flex-shrink: 0; }
 /* live-оверлей тренера */
-#liveWorkoutOverlay { position: fixed; inset: 0; z-index: 10800; display: none; flex-direction: column; background: var(--background-color); }
+#liveWorkoutOverlay { position: fixed; inset: 0; z-index: 10800; display: none; flex-direction: column; background: var(--background-color); height: 100dvh; }
+#liveWorkoutOverlay.show { display: flex !important; }
 .lw-topbar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #b91c1c, #7f1d1d); color: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.2); }
 .lw-titlewrap { flex: 1; min-width: 0; text-align: center; }
 .lw-title { font-weight: 700; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lw-sub { font-size: .72em; opacity: .85; }
-#liveWorkoutScroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#liveWorkoutScroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; height: 100%; }
 #liveWorkoutBody { max-width: 640px; margin: 0 auto; padding: 14px 14px calc(30px + env(safe-area-inset-bottom, 0px)); }
 
 /* окно подтверждения выхода */
@@ -33999,7 +34000,7 @@ window.startTrainerWorkout = function(arg){
     }catch(e){}
 
     var ov = document.getElementById('liveWorkoutOverlay');
-    if (ov) ov.style.display = 'block';
+    if (ov) { ov.style.display = 'flex'; ov.classList.add('show'); }
     var tt = document.getElementById('liveWorkoutTitle');
     if (tt) tt.textContent = w.title || wt('liveTitle');
     var sub = document.getElementById('liveWorkoutSub');
@@ -34020,7 +34021,7 @@ window.cwCloseLive = function(){ cwCloseLiveFinal(); };
 function cwCloseLiveFinal(){
     __cwLive.active = false;
     var ov = document.getElementById('liveWorkoutOverlay');
-    if (ov) ov.style.display = 'none';
+    if (ov) { ov.style.display = 'none'; ov.classList.remove('show'); }
     if (typeof csCloseSheet==='function') try{ csCloseSheet(); }catch(e){}
     if (typeof skipRest==='function') try{ skipRest(); }catch(e){}
     try{ if (typeof loadWorkoutPlan==='function') loadWorkoutPlan(); }catch(e){}
