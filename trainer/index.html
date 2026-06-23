@@ -18387,6 +18387,7 @@ setTimeout(function(){
         }
 
         // ===== БАЗА УПРАЖНЕНИЙ (id + 3 языка + снаряд) =====
+        const EXERCISE_GIFS = {"db_side_bend":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/45_SIDE_BEND.gif","side_bend_roman":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/45_SIDE_BEND.gif","db_lateral_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","db_lateral_raise_seated":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","leaning_lateral_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","rdl_bb":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","romanian_deadlift":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","smith_rdl":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","good_morning":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/GOOD_MORN.gif","good_morning_h":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/GOOD_MORN.gif","crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_CRUNCH_MC-1.gif","bicycle_crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_AIR_BIKE.gif","hip_thrust":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","smith_hip_thrust":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","smith_hip_thrust_glute":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif"};
         const EXERCISE_DB = [
             { id: 'chest', subgroups: [
                 { id: 'chest_upper', exercises: [
@@ -23524,6 +23525,10 @@ setTimeout(function(){
             return urls;
         }
         function getExerciseThumbHtml(ex, group, color) {
+            /* Burnfit GIF check */
+            if (ex && ex.id && typeof EXERCISE_GIFS !== 'undefined' && EXERCISE_GIFS[ex.id]) {
+                return '<img src="' + EXERCISE_GIFS[ex.id] + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">';
+            }
             if (ex && ex.__image) {
                 return '<img src="' + ex.__image + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">';
             }
