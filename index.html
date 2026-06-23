@@ -8429,6 +8429,94 @@
             animation: win11-widget-appear 0.3s ease-out;
         }
 
+        /* Resize handle для окон */
+        .win11-window-resize-handle {
+            position: absolute;
+            right: 0; bottom: 0;
+            width: 20px; height: 20px;
+            cursor: nwse-resize;
+            z-index: 10;
+            opacity: 0.3;
+            transition: opacity 0.15s;
+        }
+        .win11-window-resize-handle:hover { opacity: 1; }
+        .win11-window-resize-handle::after {
+            content: '';
+            position: absolute;
+            right: 4px; bottom: 4px;
+            width: 12px; height: 12px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+        }
+
+        /* Окна ВСЕГДА fixed — поверх всего, не обрезаются */
+        
+
+        /* ============================================================
+           РАЗМЕРЫ ВИДЖЕТОВ (как на Android — 3 размера)
+           ============================================================ */
+        .win11-widget.small {
+            width: 140px !important;
+            min-width: 140px;
+        }
+        .win11-widget.small .win11-widget-header {
+            padding: 6px 8px;
+            font-size: 0.78em;
+        }
+        .win11-widget.small .win11-widget-body {
+            padding: 6px 8px;
+            font-size: 0.78em;
+            max-height: 100px;
+            overflow: auto;
+        }
+        .win11-widget.small .win11-widget-title { font-size: 0.85em; }
+        .win11-widget.small .win11-clients-list { max-height: 80px; }
+
+        .win11-widget.medium {
+            width: 240px !important;
+            min-width: 240px;
+        }
+        .win11-widget.medium .win11-widget-body { max-height: 200px; }
+
+        .win11-widget.large {
+            width: 360px !important;
+            min-width: 360px;
+        }
+        .win11-widget.large .win11-widget-body { max-height: 350px; }
+
+        /* На смартфоне — компактные размеры по умолчанию */
+        body.layout-mobile .win11-widget {
+            width: calc(50vw - 12px) !important;
+            max-width: 180px;
+            min-width: 140px;
+        }
+        body.layout-mobile .win11-widget.small {
+            width: calc(33vw - 8px) !important;
+            min-width: 100px;
+            max-width: 120px;
+        }
+        body.layout-mobile .win11-widget.large {
+            width: calc(100vw - 24px) !important;
+            max-width: 360px;
+        }
+
+        /* Кнопка размера виджета */
+        .win11-widget-size-btn {
+            width: 22px; height: 22px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
+            cursor: pointer;
+            font-size: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+        }
+        .win11-widget:hover .win11-widget-size-btn { display: flex; }
+        body.dark-theme .win11-widget-size-btn { background: rgba(255,255,255,0.08); }
+
         /* ============================================================
            ЯРЛЫКИ НА РАБОЧЕМ СТОЛЕ (как Windows 11 desktop icons)
            ============================================================ */
@@ -8691,6 +8779,163 @@
         }
 
         /* ============================================================
+           ПОДМЕНЮ КОНТЕКСТНОГО МЕНЮ (как Windows 11)
+           ============================================================ */
+        .win11-context-item.has-submenu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .win11-submenu-arrow {
+            margin-left: auto;
+            opacity: 0.5;
+            transition: transform 0.15s;
+            font-size: 0.85em;
+        }
+        .win11-context-item.has-submenu.open .win11-submenu-arrow {
+            transform: rotate(90deg);
+        }
+        .win11-submenu {
+            display: none;
+            padding-left: 24px;
+            background: rgba(0, 0, 0, 0.03);
+        }
+        body.dark-theme .win11-submenu {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .win11-submenu.open {
+            display: block;
+        }
+        .win11-submenu .win11-context-item {
+            font-size: 0.86em;
+        }
+
+        /* ============================================================
+           ANDROID-ПОДОБНЫЙ РАБОЧИЙ СТОЛ (смартфон/планшет)
+           - Сетка позиционирования (snap-to-grid)
+           - Рабочие столы (страницы) — свайп влево/вправо
+           - Иконки/виджеты не накладываются
+           - Авто-добавление нового рабочего стола при нехватке места
+           ============================================================ */
+
+        /* Контейнер страниц рабочих столов */
+        .win11-desktop-pages {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            bottom: 56px;  /* место под панель задач */
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+        }
+        .win11-desktop-pages::-webkit-scrollbar { display: none; }
+
+        /* Одна страница рабочего стола */
+        .win11-desktop-page {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            scroll-snap-align: start;
+            overflow: visible;
+        }
+
+        /* Сетка для позиционирования (snap-to-grid) */
+        body.layout-mobile .win11-desktop-page {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: calc(100% / 4) calc(100% / 6);
+        }
+        body.layout-tablet .win11-desktop-page {
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: calc(100% / 6) calc(100% / 6);
+        }
+
+        /* Индикатор страниц (точки внизу) */
+        .win11-page-indicators {
+            position: absolute;
+            bottom: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .win11-page-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .win11-page-dot.active {
+            background: white;
+            transform: scale(1.3);
+        }
+
+        /* На смартфоне/планшете рабочая область = страницы */
+        body.layout-mobile .win11-desktop-area,
+        body.layout-tablet .win11-desktop-area {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            bottom: 56px;
+            overflow: hidden;
+            display: block;
+            min-height: 0;
+        }
+
+        /* Виджеты и иконки внутри страниц */
+        body.layout-mobile .win11-widget,
+        body.layout-tablet .win11-widget {
+            position: absolute;
+        }
+        body.layout-mobile .win11-shortcut,
+        body.layout-tablet .win11-shortcut {
+            position: absolute;
+        }
+
+        /* Окна поверх страниц */
+        body.layout-mobile .win11-window,
+        body.layout-tablet .win11-window {
+            position: fixed;
+            z-index: 500;
+        }
+
+        /* Панель задач — фиксирована */
+        body.layout-mobile .win11-taskbar,
+        body.layout-tablet .win11-taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        /* Размеры по умолчанию для мобильных виджетов */
+        body.layout-mobile .win11-widget {
+            width: calc(100vw - 32px) !important;
+            max-width: 340px;
+        }
+        body.layout-tablet .win11-widget {
+            max-width: 480px;
+        }
+
+        /* Ярлыки на мобильном — компактнее */
+        body.layout-mobile .win11-shortcut {
+            width: 72px;
+        }
+        body.layout-mobile .win11-shortcut-icon {
+            font-size: 2em;
+        }
+        body.layout-tablet .win11-shortcut {
+            width: 88px;
+        }
+
+        /* ============================================================
            ОКНА WIN11 (файловый проводник и др.)
            ============================================================ */
         .win11-window {
@@ -8705,9 +8950,9 @@
             flex-direction: column;
             color: #1f2937;
             font-family: 'Segoe UI', system-ui, sans-serif;
-            z-index: 500;
-            min-width: 400px;
-            min-height: 300px;
+            z-index: 100000;
+            min-width: 280px;
+            min-height: 200px;
             overflow: hidden;
         }
         body.dark-theme .win11-window {
@@ -8970,10 +9215,7 @@
         /* ============================================================
            ЗАКРЕПЛЁННЫЕ ВИДЖЕТЫ (pin)
            ============================================================ */
-        .win11-widget-pinned {
-            border: 2px solid #3b82f6 !important;
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.25) !important;
-        }
+        /* Pinned widgets — без синей рамки. Badge 📌 в углу + скрытая кнопка ✕ */
         .win11-widget-pinned .win11-widget-close { display: none; }
         .win11-widget-pinned::before {
             content: '📌';
@@ -8991,6 +9233,23 @@
             z-index: 1;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
+        /* Синяя рамка ТОЛЬКО при drag (визуальная подсказка) */
+        .win11-widget.dragging {
+            border: 2px solid #3b82f6 !important;
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.35) !important;
+        }
+        /* Resize handle для виджетов */
+        .win11-widget-resize {
+            position: absolute;
+            right: 0; bottom: 0;
+            width: 16px; height: 16px;
+            cursor: nwse-resize;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 5;
+        }
+        .win11-widget:hover .win11-widget-resize { opacity: 0.4; }
+        .win11-widget-resize:hover { opacity: 1 !important; }
         .win11-widget-pin-btn {
             width: 22px; height: 22px;
             border-radius: 50%;
@@ -9425,16 +9684,20 @@ setTimeout(function(){
             </div>
         </div>
 
-        <!-- РАБОЧАЯ ОБЛАСТЬ WIN11 -->
+        <!-- РАБОЧАЯ ОБЛАСТЬ WIN11 — страницы рабочих столов (Android-like) -->
         <div class="win11-desktop-area" id="win11DesktopArea">
-            <!-- Виджеты добавляются JS-кодом -->
+            <div class="win11-desktop-pages" id="win11DesktopPages">
+                <!-- Страницы добавляются JS-кодом -->
+            </div>
+            <div class="win11-page-indicators" id="win11PageIndicators">
+                <!-- Точки-индикаторы добавляются JS-кодом -->
+            </div>
         </div>
 
         <!-- ПАНЕЛЬ ЗАДАЧ -->
         <div class="win11-taskbar" id="win11Taskbar">
             <div class="win11-taskbar-apps">
                 <button class="win11-taskbar-btn start-btn" id="win11StartBtn" data-tooltip="Пуск" onclick="win11ToggleStartMenu(event)">⊞</button>
-                <button class="win11-taskbar-btn" data-tooltip="Поиск" onclick="win11OpenSearch(event)">🔍</button>
                 <button class="win11-taskbar-btn" data-tooltip="Планировщик питания" onclick="win11OpenApp('planner')">🍽️</button>
                 <button class="win11-taskbar-btn" data-tooltip="Тренировки" onclick="win11OpenApp('workout')">🏋️</button>
                 <button class="win11-taskbar-btn" data-tooltip="Календарь" onclick="win11OpenApp('calendar')">📅</button>
@@ -9475,106 +9738,129 @@ setTimeout(function(){
 
         <!-- КОНТЕКСТНОЕ МЕНЮ (объединённое: Win11 + старое) -->
         <div class="win11-context-menu" id="win11ContextMenu">
-            <!-- Создать -->
-            <div class="win11-context-group">Создать</div>
-            <div class="win11-context-item" onclick="win11CtxAddClient()">
-                <span class="win11-context-item-icon">👤</span> <span>Новый клиент</span>
+            <!-- Создать → раскрывающееся подменю -->
+            <div class="win11-context-item has-submenu" onclick="win11CtxToggleSubmenu(this)">
+                <span class="win11-context-item-icon">➕</span> <span>Создать</span>
+                <span class="win11-submenu-arrow">▸</span>
             </div>
-            <div class="win11-context-item" onclick="win11CtxAddTrainer()">
-                <span class="win11-context-item-icon">👨‍🏫</span> <span>Новый тренер</span>
+            <div class="win11-submenu">
+                <div class="win11-context-item" onclick="win11CtxAddClient()">
+                    <span class="win11-context-item-icon">👤</span> <span>Новый клиент</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddTrainer()">
+                    <span class="win11-context-item-icon">👨‍🏫</span> <span>Новый тренер</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxNewTask()">
+                    <span class="win11-context-item-icon">✅</span> <span>Новая задача</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddShortcut()">
+                    <span class="win11-context-item-icon">📌</span> <span>Ярлык на рабочем столе</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddFile()">
+                    <span class="win11-context-item-icon">📄</span> <span>Файл на рабочий стол</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddFolder()">
+                    <span class="win11-context-item-icon">📁</span> <span>Папка на рабочий стол</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxNewPage()">
+                    <span class="win11-context-item-icon">➕</span> <span>Новая страница рабочего стола</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSavePlan()">
+                    <span class="win11-context-item-icon">💾</span> <span>Программу питания</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSaveWorkout()">
+                    <span class="win11-context-item-icon">💾</span> <span>Программу тренировок</span>
+                </div>
             </div>
-            <div class="win11-context-item" onclick="win11CtxNewNote()">
-                <span class="win11-context-item-icon">📝</span> <span>Новая заметка</span>
+
+            <!-- Виджеты → раскрывающееся подменю -->
+            <div class="win11-context-item has-submenu" onclick="win11CtxToggleSubmenu(this)">
+                <span class="win11-context-item-icon">🧩</span> <span>Виджеты</span>
+                <span class="win11-submenu-arrow">▸</span>
             </div>
-            <div class="win11-context-item" onclick="win11CtxNewTask()">
-                <span class="win11-context-item-icon">✅</span> <span>Новая задача</span>
+            <div class="win11-submenu">
+                <div class="win11-context-item" onclick="win11CtxAddWidget('clients')">
+                    <span class="win11-context-item-icon">👥</span> <span>Клиенты</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('addClient')">
+                    <span class="win11-context-item-icon">➕👤</span> <span>Быстрый клиент</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('addTrainer')">
+                    <span class="win11-context-item-icon">➕👨‍🏫</span> <span>Быстрый тренер</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('tasks')">
+                    <span class="win11-context-item-icon">✅</span> <span>Задачи сегодня</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('subscriptions')">
+                    <span class="win11-context-item-icon">💰</span> <span>Абонементы</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('messages')">
+                    <span class="win11-context-item-icon">💬</span> <span>Сообщения</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('clock')">
+                    <span class="win11-context-item-icon">🕐</span> <span>Часы</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('summary')">
+                    <span class="win11-context-item-icon">📊</span> <span>Сводка дня</span>
+                </div>
             </div>
-            <div class="win11-context-separator"></div>
-            <!-- Виджеты -->
-            <div class="win11-context-group">Виджеты</div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('clients')">
-                <span class="win11-context-item-icon">👥</span> <span>Клиенты</span>
+
+            <!-- Навигация → раскрывающееся подменю -->
+            <div class="win11-context-item has-submenu" onclick="win11CtxToggleSubmenu(this)">
+                <span class="win11-context-item-icon">🧭</span> <span>Навигация</span>
+                <span class="win11-submenu-arrow">▸</span>
             </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('addClient')">
-                <span class="win11-context-item-icon">➕👤</span> <span>Быстрый клиент</span>
+            <div class="win11-submenu">
+                <div class="win11-context-item" onclick="win11CtxOpenPlanner()">
+                    <span class="win11-context-item-icon">🍽️</span> <span>Планировщик питания</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenWorkouts()">
+                    <span class="win11-context-item-icon">🏋️</span> <span>Тренировки</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenCalendar()">
+                    <span class="win11-context-item-icon">📅</span> <span>Календарь</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenTasks()">
+                    <span class="win11-context-item-icon">📋</span> <span>Все задачи</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenFiles()">
+                    <span class="win11-context-item-icon">📁</span> <span>Файловый проводник</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenScanner()">
+                    <span class="win11-context-item-icon">📷</span> <span>Сканер штрих-кода</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenNotifications()">
+                    <span class="win11-context-item-icon">🔔</span> <span>Уведомления</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxOpenClock()">
+                    <span class="win11-context-item-icon">🕐</span> <span>Часы и будильник</span>
+                </div>
             </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('addTrainer')">
-                <span class="win11-context-item-icon">➕👨‍🏫</span> <span>Быстрый тренер</span>
+
+            <!-- Настройки → раскрывающееся подменю -->
+            <div class="win11-context-item has-submenu" onclick="win11CtxToggleSubmenu(this)">
+                <span class="win11-context-item-icon">⚙️</span> <span>Настройки</span>
+                <span class="win11-submenu-arrow">▸</span>
             </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('tasks')">
-                <span class="win11-context-item-icon">✅</span> <span>Задачи сегодня</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('subscriptions')">
-                <span class="win11-context-item-icon">💰</span> <span>Абонементы</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('messages')">
-                <span class="win11-context-item-icon">💬</span> <span>Сообщения</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('clock')">
-                <span class="win11-context-item-icon">🕐</span> <span>Часы</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxAddWidget('summary')">
-                <span class="win11-context-item-icon">📊</span> <span>Сводка дня</span>
-            </div>
-            <div class="win11-context-separator"></div>
-            <!-- Навигация -->
-            <div class="win11-context-group">Навигация</div>
-            <div class="win11-context-item" onclick="win11CtxOpenPlanner()">
-                <span class="win11-context-item-icon">🍽️</span> <span>Планировщик</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenWorkouts()">
-                <span class="win11-context-item-icon">🏋️</span> <span>Тренировки</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenCalendar()">
-                <span class="win11-context-item-icon">📅</span> <span>Календарь</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenTasks()">
-                <span class="win11-context-item-icon">📋</span> <span>Все задачи</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenFiles()">
-                <span class="win11-context-item-icon">📁</span> <span>Файловый проводник</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenScanner()">
-                <span class="win11-context-item-icon">📷</span> <span>Сканер штрих-кода</span>
-            </div>
-            <div class="win11-context-separator"></div>
-            <!-- Ярлыки и программы -->
-            <div class="win11-context-group">Ярлыки и программы</div>
-            <div class="win11-context-item" onclick="win11CtxAddShortcut()">
-                <span class="win11-context-item-icon">📌</span> <span>Добавить ярлык</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxSavePlan()">
-                <span class="win11-context-item-icon">💾</span> <span>Сохранить программу питания</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxSaveWorkout()">
-                <span class="win11-context-item-icon">💾</span> <span>Сохранить программу тренировок</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenNotifications()">
-                <span class="win11-context-item-icon">🔔</span> <span>Уведомления</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxOpenClock()">
-                <span class="win11-context-item-icon">🕐</span> <span>Часы и будильник</span>
-            </div>
-            <div class="win11-context-separator"></div>
-            <!-- Настройки -->
-            <div class="win11-context-item" onclick="win11CtxOpenSettings()">
-                <span class="win11-context-item-icon">⚙️</span> <span>Настройки интерфейса</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxChangeWallpaper()">
-                <span class="win11-context-item-icon">🖼️</span> <span>Сменить обои</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxResetWallpaper()">
-                <span class="win11-context-item-icon">🔄</span> <span>Сбросить обои</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxResetLayout()">
-                <span class="win11-context-item-icon">🔲</span> <span>Сбросить раскладку</span>
-            </div>
-            <div class="win11-context-separator"></div>
-            <div class="win11-context-item" onclick="win11CtxBackup()">
-                <span class="win11-context-item-icon">💾</span> <span>Резервная копия</span>
-            </div>
-            <div class="win11-context-item" onclick="win11CtxRefresh()">
-                <span class="win11-context-item-icon">🔄</span> <span>Обновить</span>
+            <div class="win11-submenu">
+                <div class="win11-context-item" onclick="win11CtxOpenSettings()">
+                    <span class="win11-context-item-icon">⚙️</span> <span>Настройки интерфейса</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxChangeWallpaper()">
+                    <span class="win11-context-item-icon">🖼️</span> <span>Сменить обои</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxResetWallpaper()">
+                    <span class="win11-context-item-icon">🔄</span> <span>Сбросить обои</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxResetLayout()">
+                    <span class="win11-context-item-icon">🔲</span> <span>Сбросить раскладку</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxBackup()">
+                    <span class="win11-context-item-icon">💾</span> <span>Резервная копия</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxRefresh()">
+                    <span class="win11-context-item-icon">🔄</span> <span>Обновить</span>
+                </div>
             </div>
         </div>
         <!-- Скрытый input для загрузки обоев -->
@@ -15335,7 +15621,11 @@ setTimeout(function(){
                     document.getElementById('cvGrid')?.classList.toggle('active', clientsView === 'grid');
                 }
                 renderFavorites(users);
-                renderClientsBase();
+                /* renderClientsBase только если элементы существуют */
+                var clientsList = document.getElementById('clientsList');
+                if (clientsList && clientsList.offsetParent !== null) {
+                    renderClientsBase();
+                }
             } catch(err) {
                 console.error('renderUsers error:', err);
             }
@@ -23922,10 +24212,13 @@ setTimeout(function(){
         function setProductCardSize(px) {
             const v = Math.max(100, Math.min(240, parseInt(px, 10) || 130));
             document.documentElement.style.setProperty('--card-product-min', v + 'px');
-            // ПРИНУДИТЕЛЬНО меняем размер сетки через JS (чтобы пробить !important)
-            document.querySelectorAll('.products-list').forEach(function(list){
-                list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(' + v + 'px, 1fr))';
+            // ПРИНУДИТЕЛЬНО меняем размер сетки через JS (применяем ко всем .products-list и .pr-group-body)
+            document.querySelectorAll('.products-list, .pr-group-body').forEach(function(list){
                 list.style.setProperty('grid-template-columns', 'repeat(auto-fill, minmax(' + v + 'px, 1fr))', 'important');
+            });
+            // Также применяем к .pr-card — задаём min-width
+            document.querySelectorAll('.pr-card').forEach(function(card){
+                card.style.setProperty('min-width', v + 'px', 'important');
             });
             // миниатюра растёт примерно пропорционально
             const thumb = Math.round(v * 0.28);
@@ -23935,6 +24228,15 @@ setTimeout(function(){
             const slider = document.getElementById('productCardSizeSlider');
             if (slider && slider.value != v) slider.value = v;
             try { localStorage.setItem('productCardSize', v); } catch(e) {}
+            // Принудительно перерисовать продукты через 100мс (на случай если DOM пересоздался)
+            setTimeout(function(){
+                document.querySelectorAll('.products-list, .pr-group-body').forEach(function(list){
+                    list.style.setProperty('grid-template-columns', 'repeat(auto-fill, minmax(' + v + 'px, 1fr))', 'important');
+                });
+                document.querySelectorAll('.pr-card').forEach(function(card){
+                    card.style.setProperty('min-width', v + 'px', 'important');
+                });
+            }, 100);
         }
         function adjustProductCardSize(dir) {
             const slider = document.getElementById('productCardSizeSlider');
@@ -29965,6 +30267,10 @@ body.mp-active #appContainer { display: none !important; }
 body.mp-active .mobile-nav,
 body.mp-active .sidebar-toggle,
 body.mp-active .fab-add-meal { display: none !important; }
+/* Скрыть zoom виджет на главном экране (Win11 рабочий стол) — только из настроек */
+#homeScreen:not(.hidden) ~ .ui-scale-widget { display: none !important; }
+body:not(.planner-active):not(.mp-active) .ui-scale-widget { display: none !important; }
+body.mp-active #uiScaleWidget { display: none !important; }
 /* скрываем десктопные плавающие элементы, чтобы не мешали мобильному UI */
 body.mp-active .ui-scale-widget,
 body.mp-active #uiScaleWidget,
@@ -39090,8 +39396,8 @@ else setTimeout(init,1200);
 })();
 </script>
 <script>
-(function(){
-'use strict';
+/* Win11 Desktop — все функции в глобальной области видимости.
+   Без IIFE чтобы onclick из HTML мог их вызывать. */
 
 /* ============================================================
    КОНФИГУРАЦИЯ ВИДЖЕТОВ
@@ -39229,6 +39535,7 @@ function createWidget(id, x, y){
         '<div class="win11-widget-header">' +
             '<div class="win11-widget-title">' + config.title + '</div>' +
             '<div style="display:flex; align-items:center;">' +
+                '<button class="win11-widget-size-btn" onclick="window.__win11CycleWidgetSize(\'' + id + '\')" title="Размер">⤢</button>' +
                 '<button class="win11-widget-pin-btn" onclick="window.__win11PinWidget(\'' + id + '\')" title="Закрепить">📌</button>' +
                 '<button class="win11-widget-close" onclick="window.__win11CloseWidget(\'' + id + '\')" title="Закрыть">✕</button>' +
             '</div>' +
@@ -39236,6 +39543,12 @@ function createWidget(id, x, y){
         '<div class="win11-widget-body"></div>';
     /* Применить сохранённое состояние pin */
     if (widgetPinned.indexOf(id) >= 0) widget.classList.add('win11-widget-pinned');
+    /* Применить сохранённый размер */
+    try {
+        var sizes = JSON.parse(localStorage.getItem('win11_widget_size_class') || '{}');
+        if (sizes[id]) widget.classList.add(sizes[id]);
+        else widget.classList.add('medium');  /* default */
+    } catch(e) { widget.classList.add('medium'); }
 
     var area = document.getElementById('win11DesktopArea');
     if (!area) return;
@@ -39268,17 +39581,44 @@ function attachDragHandlers(widget, id){
 
     header.addEventListener('mousedown', function(e){
         if (isControlClick(e)) return;
-        if (isPinned()) return;  /* Закреплённые виджеты не перетаскиваются */
+        if (isPinned()) return;
         startDrag(widget, id, e.clientX, e.clientY, e);
     });
 
     /* Touch support */
     header.addEventListener('touchstart', function(e){
         if (isControlClick(e)) return;
-        if (isPinned()) return;  /* Закреплённые виджеты не перетаскиваются */
+        if (isPinned()) return;
         var t = e.touches[0];
         startDrag(widget, id, t.clientX, t.clientY, e);
     }, { passive: true });
+}
+
+/* Snap-to-grid после drag на мобильном/планшете */
+function snapWidgetToGrid(widget, id){
+    if (!isMobileLayout() && !isTabletLayout()) return;
+    var page = widget.closest('.win11-desktop-page');
+    if (!page) return;
+    var pageRect = page.getBoundingClientRect();
+    var widgetRect = widget.getBoundingClientRect();
+    var x = widgetRect.left - pageRect.left;
+    var y = widgetRect.top - pageRect.top;
+    var snapped = snapToGrid(x, y);
+    widget.style.left = snapped.x + 'px';
+    widget.style.top = snapped.y + 'px';
+    /* Сохранить позицию в сетке */
+    var pageIdx = parseInt(page.dataset.pageIdx || '0', 10);
+    /* Обновить или добавить item */
+    var existing = desktopPages[pageIdx] && desktopPages[pageIdx].items.find(function(it){
+        return it.type === 'widget' && it.id === id;
+    });
+    if (existing) {
+        existing.col = snapped.col;
+        existing.row = snapped.row;
+    } else if (desktopPages[pageIdx]) {
+        desktopPages[pageIdx].items.push({ type: 'widget', id: id, col: snapped.col, row: snapped.row, page: pageIdx });
+    }
+    saveDesktopPages();
 }
 
 function startDrag(widget, id, startX, startY, e){
@@ -39338,6 +39678,9 @@ function onDragEnd(){
         y: parseInt(widget.style.top, 10) || 0
     };
     savePositions();
+
+    /* На мобильном/планшете — snap-to-grid */
+    snapWidgetToGrid(widget, id);
 
     dragState = null;
     document.removeEventListener('mousemove', onDragMove);
@@ -39815,6 +40158,132 @@ window.win11CtxOpenFiles = function(){
     hideContextMenu();
     openFileExplorer('documents');
 };
+/* Раскрытие/закрытие подменю в контекстном меню */
+window.win11CtxToggleSubmenu = function(item){
+    var submenu = item.nextElementSibling;
+    if (!submenu || !submenu.classList.contains('win11-submenu')) return;
+    var isOpen = submenu.classList.contains('open');
+    /* Закрыть все другие подменю */
+    document.querySelectorAll('.win11-submenu.open').forEach(function(s){ s.classList.remove('open'); });
+    document.querySelectorAll('.win11-context-item.has-submenu.open').forEach(function(i){ i.classList.remove('open'); });
+    if (!isOpen) {
+        submenu.classList.add('open');
+        item.classList.add('open');
+    }
+    /* Предотвратить закрытие контекстного меню */
+    event.stopPropagation();
+};
+
+/* Resize для виджетов — добавляем handle после createWidget */
+var origCreateWidget = createWidget;
+createWidget = function(id, x, y){
+    origCreateWidget(id, x, y);
+    /* Добавить resize handle */
+    var widget = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
+    if (widget && !widget.querySelector('.win11-widget-resize')) {
+        var resize = document.createElement('div');
+        resize.className = 'win11-widget-resize';
+        resize.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M12 12 L12 9 M12 12 L9 12 M12 12 L5 5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>';
+        widget.appendChild(resize);
+        attachWidgetResize(widget, id);
+    }
+};
+function attachWidgetResize(widget, id){
+    var resize = widget.querySelector('.win11-widget-resize');
+    if (!resize) return;
+    var rInfo = null;
+
+    function startResize(clientX, clientY, isTouch){
+        if (widget.classList.contains('win11-widget-pinned')) return false;
+        var rect = widget.getBoundingClientRect();
+        /* Зафиксировать начальные размеры */
+        rInfo = {
+            startX: clientX,
+            startY: clientY,
+            startW: rect.width,
+            startH: rect.height,
+            touch: !!isTouch
+        };
+        /* Установить явную ширину и высоту (избежать auto) */
+        widget.style.width = rect.width + 'px';
+        widget.style.height = rect.height + 'px';
+        return true;
+    }
+
+    function doResize(clientX, clientY){
+        if (!rInfo) return;
+        /* Размер = стартовый + дельта. Можно увеличивать И уменьшать.
+           Минимум: 160px ширина, 100px высота.
+           Максимум: viewport — 20px (чтобы не выйти за экран). */
+        var maxW = window.innerWidth - 40;
+        var maxH = window.innerHeight - 100;
+        var dw = clientX - rInfo.startX;
+        var dh = clientY - rInfo.startY;
+        var w = Math.max(160, Math.min(maxW, rInfo.startW + dw));
+        var h = Math.max(100, Math.min(maxH, rInfo.startH + dh));
+        widget.style.width = w + 'px';
+        widget.style.height = h + 'px';
+    }
+
+    function endResize(){
+        if (!rInfo) return;
+        /* Сохранить размер */
+        try {
+            var sizes = JSON.parse(localStorage.getItem('win11_widget_sizes') || '{}');
+            sizes[id] = { w: widget.offsetWidth, h: widget.offsetHeight };
+            localStorage.setItem('win11_widget_sizes', JSON.stringify(sizes));
+        } catch(e) {}
+        rInfo = null;
+    }
+
+    /* Mouse */
+    resize.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        startResize(e.clientX, e.clientY, false);
+    });
+    document.addEventListener('mousemove', function(e){
+        if (rInfo && !rInfo.touch) doResize(e.clientX, e.clientY);
+    });
+    document.addEventListener('mouseup', function(){
+        if (rInfo && !rInfo.touch) endResize();
+    });
+
+    /* Touch */
+    resize.addEventListener('touchstart', function(e){
+        e.stopPropagation();
+        e.preventDefault();
+        var t = e.touches[0];
+        startResize(t.clientX, t.clientY, true);
+    }, { passive: false });
+    document.addEventListener('touchmove', function(e){
+        if (rInfo && rInfo.touch) {
+            e.preventDefault();
+            var t = e.touches[0];
+            doResize(t.clientX, t.clientY);
+        }
+    }, { passive: false });
+    document.addEventListener('touchend', function(){
+        if (rInfo && rInfo.touch) endResize();
+    });
+}
+
+/* Применить сохранённые размеры виджетов при создании */
+var origInitDefaultWidgets = initDefaultWidgets;
+initDefaultWidgets = function(){
+    origInitDefaultWidgets();
+    /* Применить сохранённые размеры */
+    try {
+        var sizes = JSON.parse(localStorage.getItem('win11_widget_sizes') || '{}');
+        Object.keys(sizes).forEach(function(id){
+            var widget = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
+            if (widget && sizes[id]) {
+                widget.style.width = sizes[id].w + 'px';
+                widget.style.height = sizes[id].h + 'px';
+            }
+        });
+    } catch(e) {}
+};
 window.win11CtxAddShortcut = function(){
     hideContextMenu();
     var name = prompt('Название ярлыка:');
@@ -39825,6 +40294,74 @@ window.win11CtxAddShortcut = function(){
     var action = prompt('Действие (' + actions.join(', ') + '):', 'planner');
     if (actions.indexOf(action) < 0) action = 'planner';
     window.__win11AddShortcut({ icon: icon, name: name, action: action });
+    /* На мобильном — добавить в текущую страницу */
+    if (isMobileLayout() || isTabletLayout()) {
+        var scId = desktopShortcuts.length > 0 ? desktopShortcuts[desktopShortcuts.length - 1].id : null;
+        if (scId) {
+            addDesktopItem('shortcut', scId, currentPage);
+            renderDesktopPages();
+        }
+    }
+};
+window.win11CtxAddFile = function(){
+    hideContextMenu();
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = function(e){
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        var ext = (file.name.split('.').pop() || '').toLowerCase();
+        var type = 'txt';
+        if (ext === 'pdf') type = 'pdf';
+        else if (ext === 'doc' || ext === 'docx') type = 'docx';
+        else if (ext === 'xls' || ext === 'xlsx') type = 'xlsx';
+        else if (['jpg','jpeg','png','gif','webp'].indexOf(ext) >= 0) type = 'image';
+        reader.onload = function(ev){
+            if (ev.target.result.length > 1500000) {
+                if (typeof showToast === 'function') showToast('⚠️ Файл слишком большой', 'error');
+                return;
+            }
+            var fileId = 'file_' + Date.now();
+            win11Files[fileId] = { type: type, name: file.name, content: ev.target.result, size: file.size };
+            saveFiles();
+            /* Создать ярлык-файл на рабочем столе */
+            window.__win11AddShortcut({ icon: type === 'pdf' ? '📕' : (type === 'image' ? '🖼️' : '📄'), name: file.name, action: 'openFile', fileId: fileId });
+            if (isMobileLayout() || isTabletLayout()) {
+                var scId = desktopShortcuts.length > 0 ? desktopShortcuts[desktopShortcuts.length - 1].id : null;
+                if (scId) {
+                    addDesktopItem('shortcut', scId, currentPage);
+                    renderDesktopPages();
+                }
+            }
+            if (typeof showToast === 'function') showToast('📄 Файл добавлен на рабочий стол', 'success');
+        };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+};
+window.win11CtxAddFolder = function(){
+    hideContextMenu();
+    var name = prompt('Имя папки:');
+    if (!name) return;
+    var folderId = 'folder_' + Date.now();
+    win11Files[folderId] = { type: 'folder', name: name, children: [] };
+    if (win11Files['documents'] && win11Files['documents'].children) win11Files['documents'].children.push(folderId);
+    saveFiles();
+    window.__win11AddShortcut({ icon: '📁', name: name, action: 'openFile', fileId: folderId });
+    if (isMobileLayout() || isTabletLayout()) {
+        var scId = desktopShortcuts.length > 0 ? desktopShortcuts[desktopShortcuts.length - 1].id : null;
+        if (scId) {
+            addDesktopItem('shortcut', scId, currentPage);
+            renderDesktopPages();
+        }
+    }
+    if (typeof showToast === 'function') showToast('📁 Папка создана на рабочем столе', 'success');
+};
+window.win11CtxNewPage = function(){
+    hideContextMenu();
+    addNewPage();
+    if (typeof showToast === 'function') showToast('➕ Новая страница рабочего стола', 'success');
 };
 window.win11CtxSavePlan = function(){
     hideContextMenu();
@@ -39879,6 +40416,27 @@ function loadPinned(){
 function savePinned(){
     try { localStorage.setItem('win11_pinned_widgets', JSON.stringify(widgetPinned)); } catch(e) {}
 }
+window.__win11CycleWidgetSize = function(id){
+    var widget = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
+    if (!widget) return;
+    var sizes = ['small', 'medium', 'large'];
+    var current = 'medium';
+    sizes.forEach(function(s){
+        if (widget.classList.contains(s)) current = s;
+    });
+    var idx = sizes.indexOf(current);
+    var next = sizes[(idx + 1) % sizes.length];
+    /* Убрать все классы размеров */
+    sizes.forEach(function(s){ widget.classList.remove(s); });
+    widget.classList.add(next);
+    /* Сохранить */
+    try {
+        var saved = JSON.parse(localStorage.getItem('win11_widget_size_class') || '{}');
+        saved[id] = next;
+        localStorage.setItem('win11_widget_size_class', JSON.stringify(saved));
+    } catch(e) {}
+    if (typeof showToast === 'function') showToast('Размер: ' + next, 'info');
+};
 window.__win11PinWidget = function(id){
     var widget = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
     if (!widget) return;
@@ -39900,7 +40458,7 @@ window.__win11PinWidget = function(id){
    ============================================================ */
 var win11Windows = {};  /* id → { el, title, minimized, maximized, prevRect } */
 var win11WindowCounter = 0;
-var activeWindowZ = 500;
+var activeWindowZ = 100000;
 
 function createWin11Window(opts){
     opts = opts || {};
@@ -39908,20 +40466,44 @@ function createWin11Window(opts){
     /* Если окно уже существует — фокусируем */
     if (win11Windows[id]) {
         focusWindow(id);
-        if (win11Windows[id].minimized) toggleMinimizeWindow(id);
+        if (win11Windows[id].minimized) window.__win11MinimizeWin(id);
         return id;
     }
 
     var win = document.createElement('div');
     win.className = 'win11-window';
     win.dataset.winId = id;
-    win.style.width = (opts.width || 700) + 'px';
-    win.style.height = (opts.height || 500) + 'px';
+
+    /* Адаптивный размер: на смартфоне — почти на весь экран,
+       на планшете — средний, на ПК — как указано */
+    var isMobile = document.body.classList.contains('layout-mobile');
+    var isTablet = document.body.classList.contains('layout-tablet');
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var defW = opts.width || 700;
+    var defH = opts.height || 500;
+    if (isMobile) {
+        defW = vw - 16;
+        defH = vh - 120;
+    } else if (isTablet) {
+        defW = Math.min(defW, vw - 40);
+        defH = Math.min(defH, vh - 100);
+    } else {
+        defW = Math.min(defW, vw - 40);
+        defH = Math.min(defH, vh - 100);
+    }
+    win.style.width = defW + 'px';
+    win.style.height = defH + 'px';
 
     var area = document.getElementById('win11DesktopArea') || document.body;
     var areaRect = area.getBoundingClientRect();
-    var x = opts.x !== undefined ? opts.x : Math.max(20, (areaRect.width - (opts.width || 700)) / 2 + win11WindowCounter * 24);
-    var y = opts.y !== undefined ? opts.y : Math.max(20, (areaRect.height - (opts.height || 500)) / 2 + win11WindowCounter * 24);
+    var x, y;
+    if (isMobile) {
+        x = 8;
+        y = 8;
+    } else {
+        x = opts.x !== undefined ? opts.x : Math.max(20, (areaRect.width - defW) / 2 + win11WindowCounter * 24);
+        y = opts.y !== undefined ? opts.y : Math.max(20, (areaRect.height - defH) / 2 + win11WindowCounter * 24);
+    }
     win.style.left = x + 'px';
     win.style.top = y + 'px';
     win.style.zIndex = ++activeWindowZ;
@@ -39931,14 +40513,20 @@ function createWin11Window(opts){
             '<span class="win11-window-icon">' + (opts.icon || '📄') + '</span>' +
             '<span class="win11-window-title">' + (opts.title || 'Окно') + '</span>' +
             '<div class="win11-window-controls">' +
-                '<button class="win11-window-btn minimize" title="Свернуть" onclick="window.__win11MinimizeWin(\'' + id + '\')">—</button>' +
-                '<button class="win11-window-btn maximize" title="Развернуть" onclick="window.__win11MaximizeWin(\'' + id + '\')">▢</button>' +
-                '<button class="win11-window-btn close" title="Закрыть" onclick="window.__win11CloseWin(\'' + id + '\')">✕</button>' +
+                '<button class="win11-window-btn minimize" title="Свернуть" data-action="minimize" data-id="' + id + '">—</button>' +
+                '<button class="win11-window-btn maximize" title="Развернуть" data-action="maximize" data-id="' + id + '">▢</button>' +
+                '<button class="win11-window-btn close" title="Закрыть" data-action="close" data-id="' + id + '">✕</button>' +
             '</div>' +
         '</div>' +
-        '<div class="win11-window-body"></div>';
+        '<div class="win11-window-body"></div>' +
+        '<div class="win11-window-resize-handle" data-id="' + id + '"></div>';
 
-    area.appendChild(win);
+    /* Окно добавляется в document.body — поверх всего, не обрезается */
+    document.body.appendChild(win);
+
+    /* Записать в реестр ДО content — чтобы content callback мог использовать
+       currentFolder и другие свойства */
+    win11Windows[id] = { el: win, title: opts.title || 'Окно', minimized: false, maximized: false, prevRect: null, currentFolder: null };
 
     /* Заполняем содержимое */
     var body = win.querySelector('.win11-window-body');
@@ -39949,11 +40537,73 @@ function createWin11Window(opts){
     /* Drag по titlebar */
     attachWindowDrag(win, id);
 
+    /* Event delegation для кнопок окна (надёжнее inline onclick) */
+    win.querySelector('.win11-window-titlebar').addEventListener('click', function(e){
+        var btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        e.stopPropagation();
+        var action = btn.dataset.action;
+        var bid = btn.dataset.id;
+        if (action === 'minimize') __win11MinimizeWin(bid);
+        else if (action === 'maximize') __win11MaximizeWin(bid);
+        else if (action === 'close') __win11CloseWin(bid);
+    });
     /* Focus по клику */
     win.addEventListener('mousedown', function(){ focusWindow(id); });
 
-    win11Windows[id] = { el: win, title: opts.title || 'Окно', minimized: false, maximized: false, prevRect: null };
+    /* Resize handle (как у окон Windows) */
+    attachWindowResize(win, id);
+
     return id;
+}
+
+/* Resize через угол-маркер */
+function attachWindowResize(win, id){
+    var handle = win.querySelector('.win11-window-resize-handle');
+    if (!handle) return;
+    var r = null;
+
+    function start(cx, cy, isTouch){
+        if (win11Windows[id] && win11Windows[id].maximized) return false;
+        var rect = win.getBoundingClientRect();
+        r = { sx: cx, sy: cy, sw: rect.width, sh: rect.height, touch: !!isTouch };
+        e_prevent = isTouch;
+        return true;
+    }
+    function doResize(cx, cy){
+        if (!r) return;
+        var dw = cx - r.sx;
+        var dh = cy - r.sy;
+        var w = Math.max(280, Math.min(window.innerWidth - 20, r.sw + dw));
+        var h = Math.max(180, Math.min(window.innerHeight - 60, r.sh + dh));
+        win.style.width = w + 'px';
+        win.style.height = h + 'px';
+    }
+    function end(){ r = null; }
+
+    handle.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        start(e.clientX, e.clientY, false);
+    });
+    document.addEventListener('mousemove', function(e){
+        if (r && !r.touch) doResize(e.clientX, e.clientY);
+    });
+    document.addEventListener('mouseup', end);
+
+    handle.addEventListener('touchstart', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var t = e.touches[0];
+        start(t.clientX, t.clientY, true);
+    }, { passive: false });
+    document.addEventListener('touchmove', function(e){
+        if (r && r.touch) {
+            var t = e.touches[0];
+            doResize(t.clientX, t.clientY);
+        }
+    }, { passive: false });
+    document.addEventListener('touchend', end);
 }
 
 function focusWindow(id){
@@ -40015,15 +40665,15 @@ function attachWindowDrag(win, id){
     });
 }
 
-window.__win11MinimizeWin = function(id){
+/* Глобальные функции управления окнами */
+function __win11MinimizeWin(id){
     var w = win11Windows[id];
     if (!w) return;
     w.minimized = !w.minimized;
     w.el.classList.toggle('minimized', w.minimized);
-    /* Добавить/удалить кнопку в taskbar */
     updateTaskbarWindowButtons();
-};
-window.__win11MaximizeWin = function(id){
+}
+function __win11MaximizeWin(id){
     var w = win11Windows[id];
     if (!w) return;
     if (w.maximized) {
@@ -40040,14 +40690,14 @@ window.__win11MaximizeWin = function(id){
         w.maximized = true;
         w.el.classList.add('maximized');
     }
-};
-window.__win11CloseWin = function(id){
+}
+function __win11CloseWin(id){
     var w = win11Windows[id];
     if (!w) return;
     w.el.remove();
     delete win11Windows[id];
     updateTaskbarWindowButtons();
-};
+}
 
 function updateTaskbarWindowButtons(){
     /* Удалить старые кнопки окон */
@@ -41088,9 +41738,183 @@ window.__win11OnLayoutChange = function(){
 /* ============================================================
    ИНИЦИАЛИЗАЦИЯ
    ============================================================ */
+/* ============================================================
+   ANDROID-ПОДОБНАЯ СИСТЕМА РАБОЧИХ СТОЛОВ
+   - Несколько страниц (рабочих столов)
+   - Snap-to-grid позиционирование
+   - Свайп влево/вправо для переключения
+   - Авто-добавление страницы при нехватке места
+   ============================================================ */
+var desktopPages = [];  /* [{ id, items: [{type, id, x, y}] }] */
+var currentPage = 0;
+var GRID_COLS_MOBILE = 4;
+var GRID_ROWS_MOBILE = 6;
+var GRID_COLS_TABLET = 6;
+var GRID_ROWS_TABLET = 6;
+
+function isMobileLayout(){
+    return document.body.classList.contains('layout-mobile');
+}
+function isTabletLayout(){
+    return document.body.classList.contains('layout-tablet');
+}
+function getGridCols(){
+    return isMobileLayout() ? GRID_COLS_MOBILE : (isTabletLayout() ? GRID_COLS_TABLET : 12);
+}
+function getGridRows(){
+    return isMobileLayout() ? GRID_ROWS_MOBILE : (isTabletLayout() ? GRID_ROWS_TABLET : 8);
+}
+
+function loadDesktopPages(){
+    try {
+        var saved = localStorage.getItem('win11_desktop_pages');
+        if (saved) desktopPages = JSON.parse(saved);
+    } catch(e) {}
+    if (!desktopPages.length) {
+        desktopPages = [{ id: 'page_0', items: [] }];
+        saveDesktopPages();
+    }
+}
+function saveDesktopPages(){
+    try { localStorage.setItem('win11_desktop_pages', JSON.stringify(desktopPages)); } catch(e) {}
+}
+
+function getCellSize(){
+    var area = document.getElementById('win11DesktopPages');
+    if (!area) return { w: 80, h: 80 };
+    var rect = area.getBoundingClientRect();
+    var cols = getGridCols();
+    var rows = getGridRows();
+    return { w: rect.width / cols, h: rect.height / rows };
+}
+
+function snapToGrid(x, y){
+    var cell = getCellSize();
+    var col = Math.round(x / cell.w);
+    var row = Math.round(y / cell.h);
+    col = Math.max(0, Math.min(col, getGridCols() - 1));
+    row = Math.max(0, Math.min(row, getGridRows() - 1));
+    return { col: col, row: row, x: col * cell.w, y: row * cell.h };
+}
+
+function findFreeCell(pageIdx){
+    var page = desktopPages[pageIdx];
+    if (!page) return null;
+    var occupied = {};
+    page.items.forEach(function(it){
+        occupied[it.col + '_' + it.row] = true;
+    });
+    var cols = getGridCols();
+    var rows = getGridRows();
+    for (var row = 0; row < rows; row++){
+        for (var col = 0; col < cols; col++){
+            if (!occupied[col + '_' + row]) return { col: col, row: row };
+        }
+    }
+    return null;  /* нет свободной ячейки */
+}
+
+function addDesktopItem(type, id, pageIdx, col, row){
+    if (pageIdx === undefined) pageIdx = currentPage;
+    /* Если позиция не указана — найти свободную */
+    if (col === undefined || row === undefined){
+        var free = findFreeCell(pageIdx);
+        if (!free) {
+            /* Создать новую страницу */
+            desktopPages.push({ id: 'page_' + desktopPages.length, items: [] });
+            pageIdx = desktopPages.length - 1;
+            free = findFreeCell(pageIdx);
+            if (!free) return null;
+        }
+        col = free.col;
+        row = free.row;
+    }
+    var item = { type: type, id: id, col: col, row: row, page: pageIdx };
+    desktopPages[pageIdx].items.push(item);
+    saveDesktopPages();
+    return item;
+}
+
+function renderDesktopPages(){
+    var container = document.getElementById('win11DesktopPages');
+    var indicators = document.getElementById('win11PageIndicators');
+    if (!container) return;
+    container.innerHTML = '';
+    if (indicators) indicators.innerHTML = '';
+
+    var cell = getCellSize();
+
+    desktopPages.forEach(function(page, idx){
+        var pageEl = document.createElement('div');
+        pageEl.className = 'win11-desktop-page';
+        pageEl.dataset.pageIdx = idx;
+
+        /* Рендер элементов страницы */
+        page.items.forEach(function(item){
+            var el = null;
+            if (item.type === 'widget') {
+                el = document.querySelector('.win11-widget[data-widget-id="' + item.id + '"]');
+                if (el) el.remove();  /* переместить из текущего родителя */
+            } else if (item.type === 'shortcut') {
+                el = document.querySelector('.win11-shortcut[data-sc-id="' + item.id + '"]');
+                if (el) el.remove();
+            }
+            if (el) {
+                el.style.position = 'absolute';
+                el.style.left = (item.col * cell.w) + 'px';
+                el.style.top = (item.row * cell.h) + 'px';
+                pageEl.appendChild(el);
+            }
+        });
+
+        container.appendChild(pageEl);
+
+        /* Индикатор-точка */
+        if (indicators) {
+            var dot = document.createElement('div');
+            dot.className = 'win11-page-dot' + (idx === currentPage ? ' active' : '');
+            dot.dataset.pageIdx = idx;
+            dot.onclick = function(){ goToPage(idx); };
+            indicators.appendChild(dot);
+        }
+    });
+
+    /* Прокрутить к текущей странице */
+    container.scrollLeft = currentPage * container.offsetWidth;
+
+    /* Обновить индикаторы при скролле */
+    container.onscroll = function(){
+        var idx = Math.round(container.scrollLeft / container.offsetWidth);
+        if (idx !== currentPage) {
+            currentPage = idx;
+            if (indicators) {
+                indicators.querySelectorAll('.win11-page-dot').forEach(function(d, i){
+                    d.classList.toggle('active', i === idx);
+                });
+            }
+        }
+    };
+}
+
+function goToPage(idx){
+    var container = document.getElementById('win11DesktopPages');
+    if (!container || idx < 0 || idx >= desktopPages.length) return;
+    currentPage = idx;
+    container.scrollTo({ left: idx * container.offsetWidth, behavior: 'smooth' });
+}
+
+function addNewPage(){
+    desktopPages.push({ id: 'page_' + desktopPages.length, items: [] });
+    saveDesktopPages();
+    renderDesktopPages();
+    goToPage(desktopPages.length - 1);
+}
+
+/* Инициализация */
 function init(){
     loadPositions();
     loadAlarms();
+    loadDesktopPages();
     /* Применить сохранённые обои */
     applySavedWallpaper();
     /* Дождаться пока DOM полностью готов */
@@ -41098,13 +41922,25 @@ function init(){
         initDefaultWidgets();
         window.__win11UpdateClock();
         applyLayoutToDesktop();
-        /* Рендер ярлыков рабочего стола */
+        /* Рендер ярлыков и страниц */
         loadShortcuts();
         renderShortcuts();
+        /* На мобильном/планшете — рендер страниц */
+        if (isMobileLayout() || isTabletLayout()) {
+            renderDesktopPages();
+        }
     }, 200);
     /* Слушать смену layout */
-    window.addEventListener('resize', function(){ applyLayoutToDesktop(); });
-    window.addEventListener('orientationchange', function(){ setTimeout(applyLayoutToDesktop, 300); });
+    window.addEventListener('resize', function(){
+        applyLayoutToDesktop();
+        if (isMobileLayout() || isTabletLayout()) renderDesktopPages();
+    });
+    window.addEventListener('orientationchange', function(){
+        setTimeout(function(){
+            applyLayoutToDesktop();
+            if (isMobileLayout() || isTabletLayout()) renderDesktopPages();
+        }, 300);
+    });
 }
 
 if (document.readyState === 'loading') {
@@ -41141,7 +41977,6 @@ window.__win11RefreshClients = function(){
     }
 };
 
-})();
 </script>
 </body>
 </html>
