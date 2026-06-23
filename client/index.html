@@ -9731,12 +9731,12 @@ setTimeout(function(){
         <div class="win11-taskbar" id="win11Taskbar">
             <div class="win11-taskbar-apps">
                 <button class="win11-taskbar-btn start-btn" id="win11StartBtn" data-tooltip="Пуск" onclick="win11ToggleStartMenu(event)">⊞</button>
-                <button class="win11-taskbar-btn" data-tooltip="Планировщик питания" onclick="win11OpenApp('planner')">🍽️</button>
-                <button class="win11-taskbar-btn" data-tooltip="Тренировки" onclick="win11OpenApp('workout')">🏋️</button>
+                
+                
                 <button class="win11-taskbar-btn" data-tooltip="Календарь" onclick="win11OpenApp('calendar')">📅</button>
                 <button class="win11-taskbar-btn" data-tooltip="Задачи" onclick="win11OpenApp('tasks')">✅</button>
-                <button class="win11-taskbar-btn" data-tooltip="Магазин" onclick="win11OpenApp('shop')">🛒</button>
-                <button class="win11-taskbar-btn" data-tooltip="Лиды" onclick="win11OpenApp('leads')">🌟</button>
+                
+                
                 <button class="win11-taskbar-btn" data-tooltip="Чат" onclick="win11OpenApp('chat')">💬</button>
                 <button class="win11-taskbar-btn" data-tooltip="Уведомления" onclick="openNotificationsApp()">🔔</button>
                 <button class="win11-taskbar-btn" data-tooltip="Файловый проводник" onclick="openFileExplorer('documents')">📁</button>
@@ -10407,7 +10407,7 @@ setTimeout(function(){
                 <div class="settings-section">
                     <h3 data-i18n="deviceSection">🖥️ Режим отображения</h3>
                     <div class="device-switcher">
-                        <div class="device-btn active" onclick="setLayout('desktop')" data-layout="desktop">
+                        <div class="device-btn active" style="display:none;" data-layout="desktop">
                             <div class="device-btn-icon">🖥️</div>
                             <div class="device-btn-name" data-i18n="deviceDesktop">Компьютер</div>
                             <div class="device-btn-desc" data-i18n="deviceDesktopDesc">Полный экран</div>
@@ -15600,7 +15600,7 @@ setTimeout(function(){
                         <div class="clients-empty">
                             <div class="clients-empty-icon">${search ? '🔍' : '👥'}</div>
                             <div>${escapeHtml(search ? (t('clientsNoMatch') || 'Никого не найдено по запросу') : (t('clientsEmpty') || 'Здесь будут все ваши клиенты'))}</div>
-                            ${!search ? `<button class="clients-add-btn" onclick="openAddUserModal()" style="margin-top:14px;">➕ ${escapeHtml(t('homeNewClient') || 'Добавить первого клиента')}</button>` : ''}
+                            ${!search ? `<button class="clients-add-btn" style="display:none;" style="margin-top:14px;">➕ ${escapeHtml(t('homeNewClient') || 'Добавить первого клиента')}</button>` : ''}
                         </div>`;
                     return;
                 }
@@ -15859,7 +15859,8 @@ setTimeout(function(){
             }).join('');
         }
 
-        function openAddUserModal() {
+        function openAddUserModal() { /* disabled in client app */ return; }
+        /* openAddUserModal body disabled
             editingUserId = null;
             const fields = ['newUserName','newUserLastName','newUserPhone','newUserEmail','newUserAddress',
                             'newUserPassport','newUserBirthday','newUserAge','newUserWeight','newUserHeight',
@@ -15889,6 +15890,7 @@ setTimeout(function(){
         }
 
         // ===== Работа с фото клиента =====
+        */
         function handleUserPhotoPick(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
@@ -16175,7 +16177,7 @@ setTimeout(function(){
                 applyLanguage();
             } else {
                 // Default layout
-                applyLayout('desktop');
+                applyLayout('tablet');
             }
         }
 
@@ -16263,7 +16265,9 @@ setTimeout(function(){
         }
 
         function applyLayout(layout) {
-            if (!layout) layout = 'desktop';
+            /* CLIENT: только планшет или смартфон — без ПК режима */
+            if (layout === 'desktop') layout = 'tablet';
+            if (!layout) layout = 'tablet';
             document.body.classList.remove('layout-desktop', 'layout-tablet', 'layout-mobile');
             document.body.classList.add('layout-' + layout);
 
@@ -26794,7 +26798,8 @@ setTimeout(function(){
             if (changed) saveTrainers(trainers);
         }
 
-        function openAddTrainerModal() {
+        function openAddTrainerModal() { /* disabled in client app */ return; }
+        /* original body disabled
             const name = prompt(t('trAddNamePrompt'));
             if (!name || !name.trim()) return;
             const password = prompt(t('trAddPassPrompt'));
@@ -26817,6 +26822,7 @@ setTimeout(function(){
                 showToast(t('trAdded') + ': ' + name.trim());
             });
         }
+        */
         function selectTrainer(trainerId) {
             const trainer = getTrainers().find(t => t.id === trainerId);
             if (!trainer) return;
@@ -26867,7 +26873,7 @@ setTimeout(function(){
             // Rebuild trainer list
             const trainers = getTrainers();
             if (trainers.length === 0) {
-                list.innerHTML = '<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">' + t('trNoTrainers') + '</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" onclick="openAddTrainerModal(); setTimeout(checkTrainerSession, 500)">' + t('trAddFirst') + '</button></div>';
+                list.innerHTML = '<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">' + t('trNoTrainers') + '</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" style="display:none;">' + t('trAddFirst') + '</button></div>';
             } else {
                 list.innerHTML = trainers.map(tr => '<div class="trainer-card" onclick="selectedTrainerForLogin = getTrainers().find(x=>x.id===' + "'" + tr.id + "'" + '); showTrainerLogin();" style="margin-bottom:8px; cursor:pointer;"><div style="display:flex; align-items:center; gap:12px;"><div class="trainer-avatar" style="margin:0; width:40px; height:40px; font-size:1.2em;">' + (tr.avatar || '👨‍🏫') + '</div><div style="flex:1; text-align:left;"><div style="font-weight:600;">' + escapeHtml(tr.name) + '</div><div style="font-size:0.8em; color:var(--text-secondary);">' + t('trClickToLogin') + '</div></div></div></div>').join('');
             }
@@ -26974,35 +26980,14 @@ setTimeout(function(){
             document.getElementById('trainerLoginOverlay').style.display = 'none';
         }
         function checkTrainerSession() {
-            const session = localStorage.getItem('currentTrainerSession');
-            if (session) {
-                try {
-                    const data = JSON.parse(session);
-                    /* Проверка срока действия сессии (8 часов) */
-                    if (data.loginTime && (Date.now() - data.loginTime > 8 * 3600000)) {
-                        /* Сессия истекла */
-                        localStorage.removeItem('currentTrainerSession');
-                    } else {
-                        const trainer = getTrainers().find(t => t.id === data.id);
-                        if (trainer) {
-                            currentTrainer = trainer;
-                            /* Принудительно снять блокировку и скрыть overlay */
-                            document.body.classList.remove('trainer-locked');
-                            var ov = document.getElementById('trainerLoginOverlay');
-                            if (ov) ov.style.display = 'none';
-                            /* Обновить имя тренера в Win11 меню Пуск */
-                            var nameEl = document.getElementById('win11StartUserName');
-                            if (nameEl) {
-                                nameEl.textContent = trainer.name + (trainer.lastName ? ' ' + trainer.lastName : '');
-                            }
-                            return true;
-                        }
-                    }
-                } catch(e) {}
+            /* CLIENT APP: проверяем клиентскую сессию, не тренерскую */
+            if (typeof checkClientSession === 'function' && checkClientSession()) {
+                return true;
             }
-            // Показать экран входа
+            /* Нет сессии — показываем клиентский вход */
             document.getElementById('trainerLoginOverlay').style.display = 'block';
             document.body.classList.add('trainer-locked');
+            if (typeof switchLoginTab === 'function') switchLoginTab('client');
             // Hide logged-in panel
             const loggedInPanel = document.getElementById('trainerLoggedInPanel');
             if (loggedInPanel) loggedInPanel.style.display = 'none';
@@ -27016,7 +27001,7 @@ setTimeout(function(){
             const trainers = getTrainers();
             const list = document.getElementById('trainerLoginList');
             if (trainers.length === 0) {
-                list.innerHTML = `<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">${t('trNoTrainers')}</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" onclick="openAddTrainerModal(); setTimeout(checkTrainerSession, 500)">${t('trAddFirst')}</button></div>`;
+                list.innerHTML = `<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">${t('trNoTrainers')}</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" style="display:none;">${t('trAddFirst')}</button></div>`;
             } else {
                 list.innerHTML = trainers.map(tr => `
                     <div class="trainer-card" onclick="selectedTrainerForLogin = getTrainers().find(x=>x.id==='${tr.id}'); showTrainerLogin();" style="margin-bottom:8px; cursor:pointer;">
@@ -27077,6 +27062,9 @@ setTimeout(function(){
             try { if (!localStorage.getItem('taskTemplates')) { localStorage.setItem('taskTemplates', JSON.stringify(getDefaultTaskTemplates())); } } catch(e) {}
             try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e) {}
             try { checkTrainerSession(); } catch(e) {}
+            /* CLIENT: hide home screen — only client space or login */
+            var hs = document.getElementById('homeScreen');
+            if (hs) hs.style.display = 'none';
             // восстановить режим (PWA-shortcut из manifest имеет приоритет)
             const savedMode = safeGetItem('appMode');
             try {
@@ -28362,12 +28350,16 @@ setTimeout(function(){
             __clientUser = null;
             localStorage.removeItem('clientSession');
             document.getElementById('clientSpace').style.display = 'none';
-            // === РАДИКАЛЬНАЯ ПОЧИНКА СКРОЛЛИНГА ===
             document.body.classList.remove('client-space-open');
             document.body.style.overflow = '';
             document.body.style.position = '';
             document.body.style.height = '';
             document.body.style.width = '';
+            /* Return to client login — not home screen */
+            var overlay = document.getElementById('trainerLoginOverlay');
+            if (overlay) overlay.style.display = 'block';
+            document.body.classList.add('trainer-locked');
+            switchLoginTab('client');
             document.body.style.top = '';
             document.body.style.left = '';
             // Stop any active timer
@@ -31461,7 +31453,7 @@ body.dark-theme .enc-tabs span.on { color: #7DD3FC; }
 /* режим стажёра: прячем разрушающие кнопки */
 body.role-viewer .control-btn.remove, body.role-viewer .row-delete,
 body.role-viewer .ex-row-delete, body.role-viewer .clear-btn,
-body.role-viewer #addTrainerBtn { display: none !important; }
+body.role-viewer #addTrainerBtn, #addTrainerBtn { display: none !important; }
 
 /* ===== NOTIFICATIONS (ntf) ===== */
 /* ntfBell скрыт — уведомления теперь как программа в Win11 taskbar */
@@ -39946,8 +39938,8 @@ var startMenuApps = [
     { id: 'leads',     icon: '🌟', name: 'Лиды', action: function(){ win11OpenApp('leads'); } },
     { id: 'chat',      icon: '💬', name: 'Чат', action: function(){ win11OpenApp('chat'); } },
     { id: 'trainer',   icon: '👨‍🏫', name: 'Профиль тренера', action: function(){ win11OpenApp('trainer'); } },
-    { id: 'addClient', icon: '➕👤', name: 'Новый клиент', action: function(){ if (typeof openAddUserModal === 'function') openAddUserModal(); } },
-    { id: 'addTrainer',icon: '➕👨‍🏫', name: 'Новый тренер', action: function(){ if (typeof openAddTrainerModal === 'function') openAddTrainerModal(); } },
+    
+    
     { id: 'clients',   icon: '👥', name: 'Виджет: Клиенты', action: function(){ win11AddWidget('clients'); } },
     { id: 'tasksWidget', icon: '📋', name: 'Виджет: Задачи', action: function(){ win11AddWidget('tasks'); } },
     { id: 'subsWidget', icon: '💰', name: 'Виджет: Абонементы', action: function(){ win11AddWidget('subscriptions'); } },
