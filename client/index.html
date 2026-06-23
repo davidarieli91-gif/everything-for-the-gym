@@ -2740,7 +2740,7 @@
             color: var(--text-secondary);
             margin-top: 4px;
         }
-        .trainer-login-overlay {
+        .trainer-login-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 99998; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px);
             position: fixed;
             inset: 0;
             background: rgba(15,23,42,0.95);
@@ -18393,7 +18393,7 @@ setTimeout(function(){
         }
 
         // ===== БАЗА УПРАЖНЕНИЙ (id + 3 языка + снаряд) =====
-        const EXERCISE_GIFS = {"db_side_bend":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/45_SIDE_BEND.gif","side_bend_roman":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/45_SIDE_BEND.gif","db_lateral_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","db_lateral_raise_seated":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","leaning_lateral_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","rdl_bb":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","romanian_deadlift":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","smith_rdl":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","good_morning":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/GOOD_MORN.gif","good_morning_h":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/GOOD_MORN.gif","crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_CRUNCH_MC-1.gif","bicycle_crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_AIR_BIKE.gif","hip_thrust":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","smith_hip_thrust":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","smith_hip_thrust_glute":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif"};
+        const EXERCISE_GIFS = {"db_side_bend":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/45_SIDE_BEND.gif","side_bend_roman":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/45_SIDE_BEND.gif","db_lateral_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","db_lateral_raise_seated":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","leaning_lateral_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_BO_LAT_RAISE.gif","rdl_bb":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","romanian_deadlift":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","smith_rdl":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/DB_RM_DL.gif","bb_front_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/EZB_FRONT_RAISE-1.gif","cable_front_raise":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/EZB_FRONT_RAISE-1.gif","good_morning":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/GOOD_MORN.gif","good_morning_h":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/GOOD_MORN.gif","hack_squat":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/V_SQT.gif","crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_CRUNCH_MC-1.gif","bench_crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_CRUNCH_MC-1.gif","cable_crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_CRUNCH_MC-1.gif","hip_thrust":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","smith_hip_thrust":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","smith_hip_thrust_glute":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","hip_thrust_barbell_mat":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/02/ABS_HIP_THRU.gif","bicycle_crunch":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ABS_AIR_BIKE.gif","arnold_press":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ARNOLD_DB_PRESS.gif","gravitron_wide":"https://burnfit.io/en/wp-content/uploads/sites/3/2026/01/ASS_PULLUP_MC.gif","bb_bench_press":"https://burnfit.io/wp-content/uploads/BB_BP-1.gif"};
         const EXERCISE_DB = [
             { id: 'chest', subgroups: [
                 { id: 'chest_upper', exercises: [
@@ -26988,9 +26988,11 @@ setTimeout(function(){
                 return true;
             }
             /* Нет сессии — показываем клиентский вход */
-            document.getElementById('trainerLoginOverlay').style.display = 'block';
+            var ov = document.getElementById('trainerLoginOverlay');
+            if (ov) ov.style.display = 'flex';
             document.body.classList.add('trainer-locked');
             if (typeof switchLoginTab === 'function') switchLoginTab('client');
+            /* DON'T hide homeScreen — overlay is inside it */
             // Hide logged-in panel
             const loggedInPanel = document.getElementById('trainerLoggedInPanel');
             if (loggedInPanel) loggedInPanel.style.display = 'none';
@@ -27066,9 +27068,7 @@ setTimeout(function(){
             try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e) {}
             try { checkTrainerSession(); } catch(e) {}
             try { switchLoginTab('client'); } catch(e) {}
-            /* CLIENT: hide home screen — only client space or login */
-            var hs = document.getElementById('homeScreen');
-            if (hs) hs.style.display = 'none';
+            /* CLIENT: homeScreen stays visible — trainerLoginOverlay is inside it */
             // восстановить режим (PWA-shortcut из manifest имеет приоритет)
             const savedMode = safeGetItem('appMode');
             try {
