@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fitness Client</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --radius: 14px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overscroll-behavior: none;
+        }
+        body.dark {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        /* LOGIN */
+        .login-screen {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px; z-index: 1000;
+        }
+        .login-box {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 32px 24px;
+            width: 100%; max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .login-logo { text-align: center; font-size: 3em; margin-bottom: 8px; }
+        .login-title { text-align: center; font-size: 1.4em; font-weight: 700; margin-bottom: 4px; }
+        .login-subtitle { text-align: center; color: var(--text-light); font-size: 0.88em; margin-bottom: 24px; }
+        .login-field { margin-bottom: 14px; }
+        .login-field label { display: block; font-size: 0.82em; font-weight: 600; margin-bottom: 5px; color: var(--text-light); }
+        .login-field input {
+            width: 100%; padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1em;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .login-field input:focus { border-color: var(--primary-light); }
+        .login-error {
+            display: none;
+            background: rgba(239,68,68,0.1);
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            margin-bottom: 12px;
+        }
+        .login-btn {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .login-btn:active { transform: scale(0.97); }
+
+        /* APP LAYOUT */
+        .app { display: none; min-height: 100vh; padding-bottom: 70px; }
+        .app.active { display: block; }
+
+        /* HEADER */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 16px 18px;
+            padding-top: calc(16px + env(safe-area-inset-top, 0px));
+            position: sticky; top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .app-header-row { display: flex; align-items: center; justify-content: space-between; }
+        .app-header-name { font-size: 1.15em; font-weight: 700; }
+        .app-header-date { font-size: 0.78em; opacity: 0.85; margin-top: 2px; }
+        .app-header-icons { display: flex; gap: 12px; }
+        .app-header-icon {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .app-header-icon:active { transform: scale(0.92); }
+        .app-header-badge {
+            position: absolute;
+            top: -2px; right: -2px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.6em;
+            font-weight: 700;
+            min-width: 16px; height: 16px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+        }
+
+        /* SCREENS */
+        .screen { display: none; padding: 16px; }
+        .screen.active { display: block; }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+        }
+        .card-title { font-size: 1.05em; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .card-title .icon { font-size: 1.2em; }
+
+        /* TODAY CARDS */
+        .today-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .today-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 16px 14px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .today-card:active { transform: scale(0.96); }
+        .today-card-icon { font-size: 2em; margin-bottom: 8px; }
+        .today-card-value { font-size: 1.3em; font-weight: 800; }
+        .today-card-label { font-size: 0.78em; color: var(--text-light); margin-top: 2px; }
+        .today-card.nutrition { border-top: 3px solid var(--success); }
+        .today-card.workout { border-top: 3px solid var(--danger); }
+
+        /* PROGRESS BAR */
+        .progress-bar {
+            width: 100%; height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), #34d399);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* MEAL ITEM */
+        .meal-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .meal-item:last-child { border-bottom: none; }
+        .meal-name { font-weight: 600; font-size: 0.95em; margin-bottom: 4px; }
+        .meal-products { font-size: 0.82em; color: var(--text-light); }
+        .meal-calories { font-size: 0.85em; font-weight: 600; color: var(--primary); }
+        .meal-check {
+            width: 24px; height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .meal-check.done {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        /* EXERCISE ITEM */
+        .ex-item {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .ex-item:last-child { border-bottom: none; }
+        .ex-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .ex-number {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: rgba(239,68,68,0.1);
+            color: var(--danger);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85em;
+            flex-shrink: 0;
+        }
+        .ex-name { flex: 1; font-weight: 600; font-size: 0.95em; }
+        .ex-params { font-size: 0.8em; color: var(--text-light); margin-left: 38px; }
+        .ex-sets { margin-left: 38px; margin-top: 8px; }
+        .ex-set-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.82em; }
+        .ex-set-num { width: 20px; font-weight: 600; color: var(--text-light); }
+        .ex-set-input {
+            width: 60px; padding: 4px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9em;
+            text-align: center;
+        }
+        .ex-set-check {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7em;
+            color: transparent;
+            transition: all 0.15s;
+        }
+        .ex-set-check.done {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+            z-index: 100;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+        }
+        .nav-item {
+            background: none; border: none;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 3px;
+            cursor: pointer;
+            color: var(--text-light);
+            font-size: 0.65em;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 10px;
+            transition: color 0.15s;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-item:active { transform: scale(0.92); }
+        .nav-icon { font-size: 1.6em; line-height: 1; }
+
+        /* CHAT */
+        .chat-messages {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-bottom: 16px;
+        }
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .chat-msg.from-me {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-msg.from-trainer {
+            align-self: flex-start;
+            background: var(--border);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-time { font-size: 0.68em; opacity: 0.6; margin-top: 3px; }
+        .chat-input-bar {
+            display: flex; gap: 8px;
+            position: sticky; bottom: 0;
+            background: var(--surface);
+            padding: 12px 0;
+            border-top: 1px solid var(--border);
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9em;
+            outline: none;
+        }
+        .chat-send {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* PROFILE */
+        .profile-avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2em; font-weight: 700;
+            margin: 0 auto 12px;
+            overflow: hidden;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-name { text-align: center; font-size: 1.2em; font-weight: 700; margin-bottom: 4px; }
+        .profile-info { text-align: center; color: var(--text-light); font-size: 0.85em; margin-bottom: 20px; }
+        .profile-row {
+            display: flex; justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92em;
+        }
+        .profile-row:last-child { border-bottom: none; }
+        .profile-row .label { color: var(--text-light); }
+        .profile-row .value { font-weight: 600; }
+
+        /* SUBSCRIPTION */
+        .sub-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-top: 16px;
+        }
+        .sub-title { font-size: 0.85em; opacity: 0.7; margin-bottom: 8px; }
+        .sub-value { font-size: 2em; font-weight: 800; }
+        .sub-label { font-size: 0.82em; opacity: 0.7; }
+        .sub-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; margin-top: 10px; }
+        .sub-bar-fill { height: 100%; background: var(--success); border-radius: 3px; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        .empty-state-icon { font-size: 3em; margin-bottom: 12px; opacity: 0.5; }
+        .empty-state-text { font-size: 0.9em; }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 80px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            z-index: 9999;
+            transition: transform 0.3s;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* CHART */
+        .chart-container { position: relative; height: 160px; margin: 10px 0; }
+        .chart-svg { width: 100%; height: 100%; }
+
+        /* RESPONSIVE */
+        @media (min-width: 768px) {
+            .app { max-width: 600px; margin: 0 auto; }
+            .bottom-nav { max-width: 600px; left: 50%; transform: translateX(-50%); border-radius: 14px 14px 0 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <div class="login-logo">💪</div>
+        <div class="login-title">Fitness Client</div>
+        <div class="login-subtitle">Войдите чтобы увидеть свои программы</div>
+        <div class="login-field">
+            <label>👤 Имя или телефон</label>
+            <input type="text" id="loginInput" placeholder="Введите имя">
+        </div>
+        <div class="login-field">
+            <label>🔑 Пароль</label>
+            <input type="password" id="passwordInput" placeholder="••••••" onkeypress="if(event.key==='Enter') doLogin()">
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <button class="login-btn" onclick="doLogin()">Войти</button>
+    </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+    <!-- HEADER -->
+    <div class="app-header">
+        <div class="app-header-row">
+            <div>
+                <div class="app-header-name" id="headerName">Клиент</div>
+                <div class="app-header-date" id="headerDate">--</div>
+            </div>
+            <div class="app-header-icons">
+                <button class="app-header-icon" onclick="showScreen('chat')" title="Чат">
+                    💬
+                    <span class="app-header-badge" id="chatBadge" style="display:none;">0</span>
+                </button>
+                <button class="app-header-icon" onclick="doLogout()" title="Выйти">⏻</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOME SCREEN -->
+    <div class="screen active" id="screen-home">
+        <div class="today-grid">
+            <div class="today-card nutrition" onclick="showScreen('nutrition')">
+                <div class="today-card-icon">🍽️</div>
+                <div class="today-card-value" id="todayKcal">—</div>
+                <div class="today-card-label">ккал из плана</div>
+                <div class="progress-bar"><div class="progress-fill" id="kcalProgress" style="width:0%"></div></div>
+            </div>
+            <div class="today-card workout" onclick="showScreen('workout')">
+                <div class="today-card-icon">🏋️</div>
+                <div class="today-card-value" id="todayExercises">—</div>
+                <div class="today-card-label">упражнений</div>
+                <div class="progress-bar"><div class="progress-fill" id="exProgress" style="width:0%; background:linear-gradient(90deg,#ef4444,#f87171);"></div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="icon">📋</span> Сегодня</div>
+            <div id="todaySummary">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-text">Нет назначенных программ на сегодня</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="icon">📈</span> Прогресс</div>
+            <div id="progressPreview">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <div class="empty-state-text">Нет данных о прогрессе</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUTRITION SCREEN -->
+    <div class="screen" id="screen-nutrition">
+        <div class="card">
+            <div class="card-title"><span class="icon">🍽️</span> План питания</div>
+            <div id="mealsList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🍽️</div>
+                    <div class="empty-state-text">Тренер ещё не составил план питания</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WORKOUT SCREEN -->
+    <div class="screen" id="screen-workout">
+        <div class="card">
+            <div class="card-title"><span class="icon">🏋️</span> Программа тренировок</div>
+            <div id="exercisesList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🏋️</div>
+                    <div class="empty-state-text">Тренер ещё не составил программу тренировок</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROGRESS SCREEN -->
+    <div class="screen" id="screen-progress">
+        <div class="card">
+            <div class="card-title"><span class="icon">📈</span> Мой прогресс</div>
+            <div id="progressChart">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <div class="empty-state-text">Запишите свой вес, чтобы увидеть график</div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title"><span class="icon">⚖️</span> Записать вес</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="number" id="weightInput" placeholder="Вес (кг)" step="0.1" style="flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); font-size:1em; outline:none;">
+                <button onclick="saveWeight()" style="padding:10px 18px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer;">💾</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div class="screen" id="screen-chat">
+        <div class="card" style="padding-bottom:0;">
+            <div class="card-title"><span class="icon">💬</span> Чат с тренером</div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-bar">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendChat()">
+                <button class="chat-send" onclick="sendChat()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE SCREEN -->
+    <div class="screen" id="screen-profile">
+        <div class="card">
+            <div class="profile-avatar" id="profileAvatar">👤</div>
+            <div class="profile-name" id="profileName">Клиент</div>
+            <div class="profile-info" id="profileInfo">—</div>
+            <div id="profileDetails"></div>
+        </div>
+        <div class="sub-card" id="subCard" style="display:none;">
+            <div class="sub-title">💰 Абонемент</div>
+            <div class="sub-value" id="subValue">—</div>
+            <div class="sub-label" id="subLabel">—</div>
+            <div class="sub-bar"><div class="sub-bar-fill" id="subBar" style="width:0%"></div></div>
+        </div>
+        <div class="card">
+            <div class="profile-row">
+                <span class="label">🎨 Тема</span>
+                <span class="value">
+                    <button onclick="toggleTheme()" style="background:none;border:none;font-size:1.3em;cursor:pointer;" id="themeBtn">☀️</button>
+                </span>
+            </div>
+            <div class="profile-row">
+                <span class="label">⏻ Выйти</span>
+                <span class="value"><button onclick="doLogout()" style="background:none;border:none;color:var(--danger);font-size:1.1em;cursor:pointer;">Выйти</button></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <button class="nav-item active" data-screen="home" onclick="showScreen('home')">
+            <span class="nav-icon">🏠</span> Главная
+        </button>
+        <button class="nav-item" data-screen="nutrition" onclick="showScreen('nutrition')">
+            <span class="nav-icon">🍽️</span> Питание
+        </button>
+        <button class="nav-item" data-screen="workout" onclick="showScreen('workout')">
+            <span class="nav-icon">🏋️</span> Тренировка
+        </button>
+        <button class="nav-item" data-screen="progress" onclick="showScreen('progress')">
+            <span class="nav-icon">📈</span> Прогресс
+        </button>
+        <button class="nav-item" data-screen="profile" onclick="showScreen('profile')">
+            <span class="nav-icon">👤</span> Профиль
+        </button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   FITNESS CLIENT — минималистичное приложение для клиента
+   Читает данные из того же localStorage что и тренерское приложение
+   ============================================================ */
+
+var __clientUser = null;
+var __clientProgress = {};  /* { meals: {}, exercises: {} } */
+
+/* ========== UTILS ========== */
+function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+function formatDate(date) {
+    var days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    var months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    return days[date.getDay()] + ', ' + date.getDate() + ' ' + months[date.getMonth()];
+}
+
+/* ========== LOGIN ========== */
+async function doLogin() {
+    var name = document.getElementById('loginInput').value.trim();
+    var pwd = document.getElementById('passwordInput').value;
+    var errEl = document.getElementById('loginError');
+    
+    if (!name || !pwd) {
+        errEl.textContent = 'Введите имя и пароль';
+        errEl.style.display = 'block';
+        return;
+    }
+    if (pwd.length < 4) {
+        errEl.textContent = 'Минимум 4 символа';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    var users = [];
+    try { users = JSON.parse(localStorage.getItem('nutritionUsers') || '[]'); } catch(e) {}
+    
+    var input = name.toLowerCase();
+    var user = users.find(function(u) {
+        return (u.clientPassword || u.password) &&
+               (u.name && u.name.toLowerCase().includes(input) ||
+                u.phone && u.phone.includes(input) ||
+                (u.lastName && (u.name + ' ' + u.lastName).toLowerCase().includes(input)));
+    });
+
+    if (!user || !user.clientPassword) {
+        errEl.textContent = 'Клиент не найден или пароль не задан';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    if (user.clientPassword === 'google') {
+        errEl.textContent = 'Этот пользователь входит только через Google';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    /* Hash password (SHA-256) */
+    var encoder = new TextEncoder();
+    var data = encoder.encode(pwd);
+    var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    var hashArray = Array.from(new Uint8Array(hashBuffer));
+    var hashHex = hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+
+    if (hashHex !== user.clientPassword) {
+        errEl.textContent = 'Неверный пароль';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    /* Success */
+    errEl.style.display = 'none';
+    __clientUser = user;
+    localStorage.setItem('clientSession', JSON.stringify({ userId: user.id, ts: Date.now() }));
+    
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').classList.add('active');
+    
+    initApp();
+}
+
+function doLogout() {
+    __clientUser = null;
+    localStorage.removeItem('clientSession');
+    document.getElementById('app').classList.remove('active');
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginInput').value = '';
+    document.getElementById('passwordInput').value = '';
+}
+
+function checkSession() {
+    try {
+        var session = JSON.parse(localStorage.getItem('clientSession') || 'null');
+        if (session && session.userId) {
+            var users = JSON.parse(localStorage.getItem('nutritionUsers') || '[]');
+            var user = users.find(function(u) { return u.id === session.userId; });
+            if (user) {
+                __clientUser = user;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('app').classList.add('active');
+                initApp();
+                return true;
+            }
+        }
+    } catch(e) {}
+    return false;
+}
+
+/* ========== APP INIT ========== */
+function initApp() {
+    if (!__clientUser) return;
+    
+    /* Header */
+    var name = __clientUser.name || 'Клиент';
+    if (__clientUser.lastName) name += ' ' + __clientUser.lastName;
+    document.getElementById('headerName').textContent = name;
+    document.getElementById('headerDate').textContent = formatDate(new Date());
+    
+    /* Profile */
+    document.getElementById('profileName').textContent = name;
+    var info = [];
+    if (__clientUser.age) info.push(__clientUser.age + ' лет');
+    if (__clientUser.weight) info.push(__clientUser.weight + ' кг');
+    if (__clientUser.phone) info.push('📞 ' + __clientUser.phone);
+    document.getElementById('profileInfo').textContent = info.join(' · ') || '—';
+    
+    /* Avatar */
+    var avatarEl = document.getElementById('profileAvatar');
+    if (__clientUser.photo) {
+        avatarEl.innerHTML = '<img src="' + __clientUser.photo + '" alt="" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">';
+    } else {
+        avatarEl.textContent = (__clientUser.name || '?').charAt(0).toUpperCase();
+    }
+
+    /* Profile details */
+    var details = '';
+    if (__clientUser.email) details += '<div class="profile-row"><span class="label">📧 Email</span><span class="value">' + escapeHtml(__clientUser.email) + '</span></div>';
+    if (__clientUser.goal) details += '<div class="profile-row"><span class="label">🎯 Цель</span><span class="value">' + escapeHtml(__clientUser.goal) + '</span></div>';
+    if (__clientUser.height) details += '<div class="profile-row"><span class="label">📏 Рост</span><span class="value">' + __clientUser.height + ' см</span></div>';
+    if (__clientUser.notes) details += '<div class="profile-row"><span class="label">📝 Заметки</span><span class="value">' + escapeHtml(__clientUser.notes) + '</span></div>';
+    document.getElementById('profileDetails').innerHTML = details;
+
+    /* Load progress */
+    loadProgress();
+    
+    /* Render screens */
+    renderHome();
+    renderNutrition();
+    renderWorkout();
+    renderProgress();
+    renderChat();
+    renderSubscription();
+    
+    /* Theme */
+    if (localStorage.getItem('client_theme') === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('themeBtn').textContent = '🌙';
+    }
+}
+
+/* ========== NAVIGATION ========== */
+function showScreen(screen) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('screen-' + screen).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    document.querySelector('[data-screen="' + screen + '"]').classList.add('active');
+    if (screen === 'chat') {
+        document.getElementById('chatBadge').style.display = 'none';
+        var c = document.getElementById('chatMessages');
+        if (c) c.scrollTop = c.scrollHeight;
+    }
+}
+
+/* ========== DATA ========== */
+function getNutritionPlan() {
+    try {
+        return JSON.parse(localStorage.getItem('nutritionPlan_' + __clientUser.id) || 'null');
+    } catch(e) { return null; }
+}
+
+function getWorkoutPlan() {
+    try {
+        return JSON.parse(localStorage.getItem('workoutPlan_' + __clientUser.id) || '[]');
+    } catch(e) { return []; }
+}
+
+function loadProgress() {
+    try {
+        __clientProgress = JSON.parse(localStorage.getItem('clientProgress_' + __clientUser.id) || '{}');
+    } catch(e) { __clientProgress = {}; }
+    if (!__clientProgress.meals) __clientProgress.meals = {};
+    if (!__clientProgress.exercises) __clientProgress.exercises = {};
+}
+
+function saveProgress() {
+    try {
+        localStorage.setItem('clientProgress_' + __clientUser.id, JSON.stringify(__clientProgress));
+    } catch(e) {}
+}
+
+function getWeightHistory() {
+    try {
+        return JSON.parse(localStorage.getItem('bodyMeasures_' + __clientUser.id) || '[]');
+    } catch(e) { return []; }
+}
+
+/* ========== HOME ========== */
+function renderHome() {
+    var plan = getNutritionPlan();
+    var workouts = getWorkoutPlan();
+    
+    /* Calorie summary */
+    var targetKcal = 0, eatenKcal = 0;
+    if (plan && plan.meals) {
+        plan.meals.forEach(function(m) {
+            if (m.products) {
+                m.products.forEach(function(p) {
+                    targetKcal += (p.calories || 0) * (p.amount || 0) / 100;
+                });
+            }
+        });
+        targetKcal = Math.round(targetKcal);
+    }
+    
+    /* Exercise count */
+    var totalEx = 0, doneEx = 0;
+    if (workouts.length) {
+        workouts.forEach(function(w) {
+            (w.exercises || []).forEach(function(e, i) {
+                totalEx++;
+                var key = w.title + '_' + i;
+                if (__clientProgress.exercises[key] && __clientProgress.exercises[key].done) doneEx++;
+            });
+        });
+    }
+    
+    document.getElementById('todayKcal').textContent = targetKcal > 0 ? targetKcal : '—';
+    document.getElementById('todayExercises').textContent = totalEx > 0 ? doneEx + '/' + totalEx : '—';
+    
+    if (targetKcal > 0) {
+        var pct = Math.min(100, Math.round(eatenKcal / targetKcal * 100));
+        document.getElementById('kcalProgress').style.width = pct + '%';
+    }
+    if (totalEx > 0) {
+        document.getElementById('exProgress').style.width = Math.round(doneEx / totalEx * 100) + '%';
+    }
+    
+    /* Today summary */
+    var summary = '';
+    if (plan && plan.meals && plan.meals.length) {
+        summary += '<div style="padding:8px 0; border-bottom:1px solid var(--border);"><strong>🍽️ Питание</strong><br><span style="font-size:0.85em; color:var(--text-light);">' + plan.meals.length + ' приёмов пищи · ' + targetKcal + ' ккал</span></div>';
+    }
+    if (workouts.length) {
+        var w = workouts[0];
+        summary += '<div style="padding:8px 0;"><strong>🏋️ ' + escapeHtml(w.title || 'Тренировка') + '</strong><br><span style="font-size:0.85em; color:var(--text-light);">' + (w.exercises || []).length + ' упражнений · ' + (w.duration || '') + ' мин</span></div>';
+    }
+    if (!summary) {
+        summary = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Нет назначенных программ</div></div>';
+    }
+    document.getElementById('todaySummary').innerHTML = summary;
+    
+    /* Progress preview */
+    var weights = getWeightHistory();
+    if (weights.length >= 2) {
+        var latest = weights[weights.length - 1];
+        var first = weights[0];
+        var diff = latest.weight - first.weight;
+        document.getElementById('progressPreview').innerHTML = 
+            '<div style="display:flex; justify-content:space-around; text-align:center;">' +
+                '<div><div style="font-size:1.5em; font-weight:700;">' + latest.weight + '</div><div style="font-size:0.78em; color:var(--text-light);">кг сейчас</div></div>' +
+                '<div><div style="font-size:1.5em; font-weight:700; color:' + (diff < 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (diff > 0 ? '+' : '') + diff.toFixed(1) + '</div><div style="font-size:0.78em; color:var(--text-light);">кг изменение</div></div>' +
+            '</div>';
+    }
+}
+
+/* ========== NUTRITION ========== */
+function renderNutrition() {
+    var plan = getNutritionPlan();
+    var list = document.getElementById('mealsList');
+    
+    if (!plan || !plan.meals || !plan.meals.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍽️</div><div class="empty-state-text">Тренер ещё не составил план питания</div></div>';
+        return;
+    }
+    
+    var html = '';
+    plan.meals.forEach(function(meal, idx) {
+        var mealKey = 'meal_' + idx;
+        var isDone = __clientProgress.meals[mealKey] && __clientProgress.meals[mealKey].done;
+        var kcal = 0;
+        var products = '';
+        if (meal.products) {
+            meal.products.forEach(function(p) {
+                kcal += (p.calories || 0) * (p.amount || 0) / 100;
+                products += (p.productName || p.name || '?') + ' ' + (p.amount || '') + 'г; ';
+            });
+        }
+        html += '<div class="meal-item">' +
+            '<div style="display:flex; align-items:flex-start; gap:10px;">' +
+                '<div class="meal-check' + (isDone ? ' done' : '') + '" onclick="toggleMeal(' + idx + ')">✓</div>' +
+                '<div style="flex:1;">' +
+                    '<div class="meal-name">' + escapeHtml(meal.title || ('Приём ' + (idx + 1))) + '</div>' +
+                    '<div class="meal-products">' + escapeHtml(products.slice(0, 100)) + '</div>' +
+                    '<div class="meal-calories">' + Math.round(kcal) + ' ккал</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    });
+    list.innerHTML = html;
+}
+
+function toggleMeal(idx) {
+    var key = 'meal_' + idx;
+    if (!__clientProgress.meals[key]) __clientProgress.meals[key] = {};
+    __clientProgress.meals[key].done = !__clientProgress.meals[key].done;
+    saveProgress();
+    renderNutrition();
+    renderHome();
+    showToast(__clientProgress.meals[key].done ? '✅ Отмечено' : '↩️ Снято');
+}
+
+/* ========== WORKOUT ========== */
+function renderWorkout() {
+    var workouts = getWorkoutPlan();
+    var list = document.getElementById('exercisesList');
+    
+    if (!workouts.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏋️</div><div class="empty-state-text">Тренер ещё не составил программу</div></div>';
+        return;
+    }
+    
+    var html = '';
+    workouts.forEach(function(w, wi) {
+        html += '<div style="font-weight:700; font-size:1.05em; margin-bottom:10px;">' + escapeHtml(w.title || 'Тренировка') + '</div>';
+        if (w.date) html += '<div style="font-size:0.8em; color:var(--text-light); margin-bottom:8px;">📅 ' + escapeHtml(w.date) + '</div>';
+        
+        (w.exercises || []).forEach(function(ex, ei) {
+            var key = wi + '_' + ei;
+            var isDone = __clientProgress.exercises[key] && __clientProgress.exercises[key].done;
+            var sets = parseInt(ex.sets) || 1;
+            
+            html += '<div class="ex-item">' +
+                '<div class="ex-header">' +
+                    '<div class="ex-number">' + (ei + 1) + '</div>' +
+                    '<div class="ex-name">' + escapeHtml(ex.name || 'Упражнение') + '</div>' +
+                    '<div class="meal-check' + (isDone ? ' done' : '') + '" onclick="toggleEx(' + wi + ',' + ei + ')">✓</div>' +
+                '</div>' +
+                '<div class="ex-params">' + (ex.sets || '') + '×' + (ex.reps || '') + (ex.weight ? ' · ' + ex.weight + ' кг' : '') + (ex.rest ? ' · ⏱ ' + ex.rest + 'с' : '') + '</div>';
+            
+            /* Sets */
+            if (sets > 0) {
+                html += '<div class="ex-sets">';
+                for (var s = 0; s < sets; s++) {
+                    var setKey = key + '_set_' + s;
+                    var setDone = __clientProgress.exercises[setKey];
+                    html += '<div class="ex-set-row">' +
+                        '<span class="ex-set-num">' + (s + 1) + '</span>' +
+                        '<input type="number" class="ex-set-input" placeholder="кг" value="' + (setDone && setDone.weight || '') + '" onchange="saveSet(' + wi + ',' + ei + ',' + s + ',\'weight\',this.value)">' +
+                        '<input type="number" class="ex-set-input" placeholder="повт" value="' + (setDone && setDone.reps || '') + '" onchange="saveSet(' + wi + ',' + ei + ',' + s + ',\'reps\',this.value)">' +
+                        '<div class="ex-set-check' + (setDone && setDone.done ? ' done' : '') + '" onclick="toggleSet(' + wi + ',' + ei + ',' + s + ')">✓</div>' +
+                    '</div>';
+                }
+                html += '</div>';
+            }
+            
+            if (ex.note) html += '<div style="margin-left:38px; margin-top:6px; font-size:0.8em; padding:6px 8px; background:rgba(0,0,0,0.04); border-radius:6px;">💡 ' + escapeHtml(ex.note) + '</div>';
+            html += '</div>';
+        });
+    });
+    list.innerHTML = html;
+}
+
+function toggleEx(wi, ei) {
+    var key = wi + '_' + ei;
+    if (!__clientProgress.exercises[key]) __clientProgress.exercises[key] = {};
+    __clientProgress.exercises[key].done = !__clientProgress.exercises[key].done;
+    saveProgress();
+    renderWorkout();
+    renderHome();
+}
+
+function toggleSet(wi, ei, si) {
+    var key = wi + '_' + ei + '_set_' + si;
+    if (!__clientProgress.exercises[key]) __clientProgress.exercises[key] = {};
+    __clientProgress.exercises[key].done = !__clientProgress.exercises[key].done;
+    saveProgress();
+    renderWorkout();
+}
+
+function saveSet(wi, ei, si, field, value) {
+    var key = wi + '_' + ei + '_set_' + si;
+    if (!__clientProgress.exercises[key]) __clientProgress.exercises[key] = {};
+    __clientProgress.exercises[key][field] = value;
+    saveProgress();
+}
+
+/* ========== PROGRESS ========== */
+function renderProgress() {
+    var weights = getWeightHistory();
+    var container = document.getElementById('progressChart');
+    
+    if (weights.length < 2) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">Запишите вес несколько раз, чтобы увидеть график</div></div>';
+        return;
+    }
+    
+    /* Simple SVG chart */
+    var w = 300, h = 140;
+    var maxW = Math.max.apply(null, weights.map(function(x) { return x.weight; }));
+    var minW = Math.min.apply(null, weights.map(function(x) { return x.weight; }));
+    var range = Math.max(1, maxW - minW);
+    var padding = 20;
+    
+    var points = weights.map(function(item, i) {
+        var x = padding + (i / (weights.length - 1)) * (w - 2 * padding);
+        var y = h - padding - ((item.weight - minW) / range) * (h - 2 * padding);
+        return x + ',' + y;
+    }).join(' ');
+    
+    var html = '<div class="chart-container"><svg class="chart-svg" viewBox="0 0 ' + w + ' ' + h + '">' +
+        '<polyline points="' + points + '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>';
+    
+    weights.forEach(function(item, i) {
+        var x = padding + (i / (weights.length - 1)) * (w - 2 * padding);
+        var y = h - padding - ((item.weight - minW) / range) * (h - 2 * padding);
+        html += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#3b82f6"/>';
+    });
+    
+    html += '<text x="' + padding + '" y="' + (h - 5) + '" font-size="10" fill="#64748b">' + minW + ' кг</text>';
+    html += '<text x="' + (w - padding - 30) + '" y="15" font-size="10" fill="#64748b">' + maxW + ' кг</text>';
+    html += '</svg></div>';
+    
+    html += '<div style="display:flex; justify-content:space-around; margin-top:12px;">';
+    html += '<div style="text-align:center;"><div style="font-weight:700;">' + weights[0].weight + '</div><div style="font-size:0.72em; color:var(--text-light);">Начало</div></div>';
+    html += '<div style="text-align:center;"><div style="font-weight:700;">' + weights[weights.length - 1].weight + '</div><div style="font-size:0.72em; color:var(--text-light);">Сейчас</div></div>';
+    var diff = weights[weights.length - 1].weight - weights[0].weight;
+    html += '<div style="text-align:center;"><div style="font-weight:700; color:' + (diff < 0 ? 'var(--success)' : 'var(--danger)') + ';">' + (diff > 0 ? '+' : '') + diff.toFixed(1) + '</div><div style="font-size:0.72em; color:var(--text-light);">Изменение</div></div>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+function saveWeight() {
+    var val = parseFloat(document.getElementById('weightInput').value);
+    if (!val || val < 20 || val > 500) {
+        showToast('⚠️ Введите корректный вес');
+        return;
+    }
+    var history = getWeightHistory();
+    history.push({ weight: val, date: new Date().toISOString() });
+    try { localStorage.setItem('bodyMeasures_' + __clientUser.id, JSON.stringify(history)); } catch(e) {}
+    document.getElementById('weightInput').value = '';
+    renderProgress();
+    renderHome();
+    showToast('⚖️ Вес сохранён: ' + val + ' кг');
+}
+
+/* ========== CHAT ========== */
+function renderChat() {
+    var messages = [];
+    try { messages = JSON.parse(localStorage.getItem('chatMessages_' + __clientUser.id) || '[]'); } catch(e) {}
+    var container = document.getElementById('chatMessages');
+    
+    if (!messages.length) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-text">Нет сообщений. Напишите тренеру!</div></div>';
+        return;
+    }
+    
+    var html = '';
+    messages.forEach(function(m) {
+        var fromMe = m.from === 'client' || m.from === __clientUser.id;
+        html += '<div class="chat-msg ' + (fromMe ? 'from-me' : 'from-trainer') + '">' +
+            escapeHtml(m.text || '') +
+            '<div class="chat-time">' + (m.ts ? new Date(m.ts).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) : '') + '</div>' +
+        '</div>';
+    });
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+
+function sendChat() {
+    var input = document.getElementById('chatInput');
+    var text = input.value.trim();
+    if (!text) return;
+    
+    var messages = [];
+    try { messages = JSON.parse(localStorage.getItem('chatMessages_' + __clientUser.id) || '[]'); } catch(e) {}
+    messages.push({ from: 'client', text: text, ts: Date.now() });
+    try { localStorage.setItem('chatMessages_' + __clientUser.id, JSON.stringify(messages)); } catch(e) {}
+    
+    input.value = '';
+    renderChat();
+}
+
+/* ========== SUBSCRIPTION ========== */
+function renderSubscription() {
+    try {
+        var data = JSON.parse(localStorage.getItem('subscriptions_' + __clientUser.id) || 'null');
+        if (!data || !data.plans || !data.plans.length) return;
+        
+        var active = data.plans.find(function(p) { return !p.closed; });
+        if (!active) return;
+        
+        document.getElementById('subCard').style.display = 'block';
+        
+        if (active.type === 'count') {
+            var left = (active.total || 0) - (active.used || 0);
+            var total = active.total || 1;
+            document.getElementById('subValue').textContent = left + '/' + total;
+            document.getElementById('subLabel').textContent = 'занятий осталось';
+            document.getElementById('subBar').style.width = Math.round(left / total * 100) + '%';
+        } else if (active.type === 'period' && active.validTo) {
+            var days = Math.ceil((new Date(active.validTo) - new Date()) / 86400000);
+            document.getElementById('subValue').textContent = days > 0 ? days : 0;
+            document.getElementById('subLabel').textContent = 'дней осталось (до ' + new Date(active.validTo).toLocaleDateString('ru-RU') + ')';
+            document.getElementById('subBar').style.width = Math.min(100, Math.max(0, days / 30 * 100)) + '%';
+        }
+    } catch(e) {}
+}
+
+/* ========== THEME ========== */
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+    var isDark = document.body.classList.contains('dark');
+    localStorage.setItem('client_theme', isDark ? 'dark' : 'light');
+    document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+}
+
+/* ========== INIT ========== */
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(checkSession, 200); });
+} else {
+    setTimeout(checkSession, 200);
+}
+
+/* Update date every minute */
+setInterval(function() {
+    if (__clientUser) {
+        document.getElementById('headerDate').textContent = formatDate(new Date());
+    }
+}, 60000);
+</script>
+</body>
+</html>
