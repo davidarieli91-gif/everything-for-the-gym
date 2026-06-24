@@ -8456,50 +8456,48 @@
         /* ============================================================
            РАЗМЕРЫ ВИДЖЕТОВ (как на Android — 3 размера)
            ============================================================ */
-        .win11-widget.small {
-            width: 140px !important;
-            min-width: 140px;
+        /* Android-style widget sizes: 1x1, 2x1, 2x2, 4x2 */
+        .win11-widget.size-1x1 {
+            width: 80px !important; min-width: 80px;
         }
-        .win11-widget.small .win11-widget-header {
-            padding: 6px 8px;
-            font-size: 0.78em;
-        }
-        .win11-widget.small .win11-widget-body {
-            padding: 6px 8px;
-            font-size: 0.78em;
-            max-height: 100px;
-            overflow: auto;
-        }
-        .win11-widget.small .win11-widget-title { font-size: 0.85em; }
-        .win11-widget.small .win11-clients-list { max-height: 80px; }
+        .win11-widget.size-1x1 .win11-widget-header { padding: 4px 6px; font-size: 0.65em; }
+        .win11-widget.size-1x1 .win11-widget-body { padding: 4px 6px; font-size: 0.65em; max-height: 50px; overflow: hidden; }
+        .win11-widget.size-1x1 .win11-widget-title { font-size: 0.8em; }
+        .win11-widget.size-1x1 .win11-clients-list { max-height: 40px; }
+        .win11-widget.size-1x1 .win11-clients-search { display: none; }
 
-        .win11-widget.medium {
-            width: 240px !important;
-            min-width: 240px;
+        .win11-widget.size-2x1 {
+            width: 170px !important; min-width: 170px;
         }
-        .win11-widget.medium .win11-widget-body { max-height: 200px; }
+        .win11-widget.size-2x1 .win11-widget-header { padding: 5px 8px; font-size: 0.72em; }
+        .win11-widget.size-2x1 .win11-widget-body { padding: 6px 8px; font-size: 0.75em; max-height: 120px; overflow: auto; }
 
-        .win11-widget.large {
-            width: 360px !important;
-            min-width: 360px;
+        .win11-widget.size-2x2 {
+            width: 170px !important; min-width: 170px;
         }
-        .win11-widget.large .win11-widget-body { max-height: 350px; }
+        .win11-widget.size-2x2 .win11-widget-header { padding: 6px 8px; font-size: 0.78em; }
+        .win11-widget.size-2x2 .win11-widget-body { padding: 8px; font-size: 0.78em; max-height: 220px; overflow: auto; }
 
-        /* На смартфоне — компактные размеры по умолчанию */
-        body.layout-mobile .win11-widget {
-            width: calc(50vw - 12px) !important;
-            max-width: 180px;
-            min-width: 140px;
+        .win11-widget.size-4x2 {
+            width: 350px !important; min-width: 350px;
         }
-        body.layout-mobile .win11-widget.small {
-            width: calc(33vw - 8px) !important;
-            min-width: 100px;
-            max-width: 120px;
-        }
-        body.layout-mobile .win11-widget.large {
-            width: calc(100vw - 24px) !important;
-            max-width: 360px;
-        }
+        .win11-widget.size-4x2 .win11-widget-header { padding: 8px 12px; font-size: 0.88em; }
+        .win11-widget.size-4x2 .win11-widget-body { padding: 10px 12px; font-size: 0.88em; max-height: 300px; overflow: auto; }
+
+        /* Keep old classes for backward compatibility */
+        .win11-widget.small { width: 80px !important; min-width: 80px; }
+        .win11-widget.medium { width: 170px !important; min-width: 170px; }
+        .win11-widget.large { width: 350px !important; min-width: 350px; }
+
+        /* Mobile: smart sizes based on grid */
+        body.layout-mobile .win11-widget.size-1x1 { width: calc(25vw - 8px) !important; min-width: 70px; max-width: 90px; }
+        body.layout-mobile .win11-widget.size-2x1 { width: calc(50vw - 12px) !important; min-width: 140px; max-width: 180px; }
+        body.layout-mobile .win11-widget.size-2x2 { width: calc(50vw - 12px) !important; min-width: 140px; max-width: 180px; }
+        body.layout-mobile .win11-widget.size-4x2 { width: calc(100vw - 24px) !important; min-width: 280px; max-width: 360px; }
+        body.layout-mobile .win11-widget.small { width: calc(25vw - 8px) !important; min-width: 70px; max-width: 90px; }
+        body.layout-mobile .win11-widget.medium { width: calc(50vw - 12px) !important; min-width: 140px; max-width: 180px; }
+        body.layout-mobile .win11-widget.large { width: calc(100vw - 24px) !important; min-width: 280px; max-width: 360px; }
+        body.layout-mobile .win11-widget { width: calc(50vw - 12px) !important; min-width: 140px; max-width: 180px; }
 
         /* Кнопка размера виджета */
         .win11-widget-size-btn {
@@ -10249,9 +10247,9 @@ setTimeout(function(){
                 <span class="mobile-nav-icon">➕</span>
                 <span data-i18n="navAddMeal">Добавить</span>
             </button>
-            <button class="mobile-nav-item" onclick="savePlan(); showToast(t('toastSaved'))">
+            <button class="mobile-nav-item" onclick="openSaveAsDialog('nutrition')">
                 <span class="mobile-nav-icon">💾</span>
-                <span data-i18n="navSave">Сохранить</span>
+                <span data-i18n="navSaveAs">Сохранить как</span>
             </button>
             <button class="mobile-nav-item" onclick="openSettingsModal()">
                 <span class="mobile-nav-icon">⚙️</span>
@@ -12842,6 +12840,7 @@ setTimeout(function(){
                 // Main header
                 appTitle: '🍽️ Планировщик питания',
                 btnPrint: '🖨️ Печать', btnSave: '💾 Сохранить',
+                btnSaveAs: '💾 Сохранить как...',
                 // Params
                 labelAge: 'Возраст', labelWeight: 'Вес (кг)', labelHeight: 'Рост (см)', labelGender: 'Пол',
                 labelActivity: 'Активность', labelGoal: 'Цель',
@@ -13668,6 +13667,7 @@ setTimeout(function(){
                 noProductsFound: 'No products found',
                 appTitle: '🍽️ Meal Planner',
                 btnPrint: '🖨️ Print', btnSave: '💾 Save',
+                btnSaveAs: '💾 Save as...',
                 labelAge: 'Age', labelWeight: 'Weight (kg)', labelHeight: 'Height (cm)', labelGender: 'Gender',
                 labelActivity: 'Activity', labelGoal: 'Goal',
                 genderMale: 'Male', genderFemale: 'Female',
@@ -14370,6 +14370,7 @@ setTimeout(function(){
                 noProductsFound: 'לא נמצאו מוצרים',
                 appTitle: '🍽️ מתכנן תזונה',
                 btnPrint: '🖨️ הדפס', btnSave: '💾 שמור',
+                btnSaveAs: '💾 שמור כ...',
                 labelAge: 'גיל', labelWeight: 'משקל (ק\"ג)', labelHeight: 'גובה (ס\"מ)', labelGender: 'מין',
                 labelActivity: 'פעילות', labelGoal: 'מטרה',
                 genderMale: 'זכר', genderFemale: 'נקבה',
@@ -31824,6 +31825,7 @@ var MP_T = {
     nutrition:  { ru:'Питание',     en:'Nutrition', he:'תזונה' },
     workouts:   { ru:'Тренировки',  en:'Workouts',  he:'אימונים' },
     save:       { ru:'Сохранить',   en:'Save',      he:'שמירה' },
+    saveAs:     { ru:'Сохранить как', en:'Save as', he:'שמור כ' },
     more:       { ru:'Ещё',         en:'More',      he:'עוד' },
     addMeal:    { ru:'Добавить приём пищи', en:'Add meal',     he:'הוסף ארוחה' },
     addProduct: { ru:'Добавить продукт',    en:'Add product',  he:'הוסף מוצר' },
@@ -32008,8 +32010,8 @@ function mpRenderNav(){
             '<span class="mp-nav-ico">🍽️</span><span>' + mt('nutrition') + '</span></button>' +
         '<button class="mp-nav-item' + (wk ? ' active' : '') + '" onclick="mpSwitchTab(\'workout\')">' +
             '<span class="mp-nav-ico">🏋️</span><span>' + mt('workouts') + '</span></button>' +
-        '<button class="mp-nav-item" onclick="mpSaveCurrent()">' +
-            '<span class="mp-nav-ico">💾</span><span>' + mt('save') + '</span></button>' +
+        '<button class="mp-nav-item" onclick="mpSaveAsCurrent()">' +
+            '<span class="mp-nav-ico">💾</span><span>' + mt('saveAs') + '</span></button>' +
         '<button class="mp-nav-item" onclick="mpOpenActions()">' +
             '<span class="mp-nav-ico">☰</span><span>' + mt('more') + '</span></button>';
 }
@@ -32019,6 +32021,11 @@ window.mpSwitchTab = function(mode){
     mpRenderAll();
 };
 
+window.mpSaveAsCurrent = function(){
+    try { openSaveAsDialog(mpIsWorkout() ? 'workout' : 'nutrition'); } catch(e) {
+        if (typeof mpSaveCurrent === 'function') mpSaveCurrent();
+    }
+};
 window.mpSaveCurrent = function(){
     try {
         if (mpIsWorkout()){ if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan(); }
@@ -37790,7 +37797,7 @@ if (document.readyState === 'loading'){
 (function(){
 'use strict';
 var HE_T={
-    editBtn:{ru:'✏️ Экран',en:'✏️ Layout',he:'✏️ עריכה'},
+    editBtn:{ru:'',en:'',he:''},
     hint:{ru:'Тяните за цветную полосу · края = размер',en:'Drag colored bar · edges = resize',he:'גררו · קצוות = גודל'},
     addWidget:{ru:'➕ Виджет',en:'➕ Widget',he:'➕ ווידג׳ט'},
     reset:{ru:'↺ Сброс',en:'↺ Reset',he:'↺ אפס'},
@@ -38182,7 +38189,7 @@ function init(){
         }
         applyAll();
     },1200);
-    var o=window.applyLanguage;if(typeof o==='function'&&!window.__heL5H){window.__heL5H=true;window.applyLanguage=function(){var r=o.apply(this,arguments);try{var b=document.getElementById('heToolBtn');if(b){var l=b.querySelector('.home-tool-card-lbl');if(l)l.textContent=ht('editBtn');}var bar=document.getElementById('heBar');if(bar){bar.querySelector('.he-i').textContent=ht('hint');bar.querySelector('.he-b-a').textContent=ht('addWidget');bar.querySelector('.he-b-r').textContent=ht('reset');bar.querySelector('.he-b-d').textContent=ht('done');}}catch(e){}return r;};}
+    var o=window.applyLanguage;if(typeof o==='function'&&!window.__heL5H){window.__heL5H=true;window.applyLanguage=function(){var r=o.apply(this,arguments);try{var b=document.getElementById('heToolBtn');if(b){b.style.display='none';}var bar=document.getElementById('heBar');if(bar){bar.querySelector('.he-i').textContent=ht('hint');bar.querySelector('.he-b-a').textContent=ht('addWidget');bar.querySelector('.he-b-r').textContent=ht('reset');bar.querySelector('.he-b-d').textContent=ht('done');}}catch(e){}return r;};}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1300);});
 else setTimeout(init,1300);
@@ -38340,7 +38347,7 @@ function executeCtx(act){
         case 'newCalendar':if(W.heAddW)W.heAddW('calendarWidget');break;
         case 'newClock':if(W.heAddW)W.heAddW('clock');break;
         case 'newCalculator':if(W.heAddW)W.heAddW('calc');break;
-        case 'addWidget':if(W.heShowW)W.heShowW();break;
+        case 'addWidget':if(typeof win11CtxAddWidget==='function'){try{win11CtxAddWidget('summary')}catch(e){}break;}
         case 'editScreen':if(W.heToggle)W.heToggle();break;
         case 'goClients':if(W.renderUsers)W.renderUsers();if(W.openUser)W.openUser();break;
         case 'goCalendar':if(W.openCalendarModal)W.openCalendarModal();break;
@@ -39868,29 +39875,48 @@ window.__win11CloseWidget = function(id){
     if (widget) widget.remove();
     var idx = activeWidgets.indexOf(id);
     if (idx >= 0) activeWidgets.splice(idx, 1);
+    /* Удалить виджет из всех страниц рабочего стола */
+    if (typeof desktopPages !== 'undefined') {
+        desktopPages.forEach(function(p){
+            p.items = p.items.filter(function(it){ return !(it.type === 'widget' && it.id === id); });
+        });
+        if (typeof saveDesktopPages === 'function') saveDesktopPages();
+    }
     /* Сохранить активные виджеты */
     try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){}
 };
 
 window.__win11AddWidget = function(id, x, y){
-    if (activeWidgets.indexOf(id) >= 0) {
+    /* Найти свободную позицию без коллизий */
+    if (x === undefined || y === undefined) {
+        var free = findFreeCell(currentPage);
+        if (free) {
+            var cellSize = getCellSize();
+            x = free.col * cellSize.w;
+            y = free.row * cellSize.h;
+        }
+        else { x = 20; y = 20; }
+    }
+    /* Если виджет ещё не существует в DOM — создать */
+    if (activeWidgets.indexOf(id) < 0) {
+        createWidget(id, x, y);
+    } else {
+        /* Уже существует — "встряхнём" для фидбэка */
         var existing = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
         if (existing) {
             existing.style.transition = 'transform 0.2s';
             existing.style.transform = 'scale(1.05)';
             setTimeout(function(){ existing.style.transform = ''; }, 200);
         }
-        return;
     }
-    /* Найти свободную позицию без коллизий */
-    if (x === undefined || y === undefined) {
-        var free = findFreeDesktopPosition();
-        x = free.x;
-        y = free.y;
-    }
-    createWidget(id, x, y);
+    /* ВСЕГДА добавлять на текущую страницу (переместить если было на другой) */
+    var snapped = snapToGrid(x, y);
+    addDesktopItem('widget', id, currentPage, snapped.col, snapped.row);
+    showDesktopPage(currentPage);
     try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){}
 };
+/* Алиас для обратной совместимости (старое имя без подчёркиваний) */
+window.win11AddWidget = function(id, x, y){ return window.__win11AddWidget(id, x, y); };
 
 /* Найти свободную позицию для нового виджета/иконки */
 function findFreeDesktopPosition(){
@@ -39938,25 +39964,45 @@ window.__win11ResetLayout = function(){
     /* Удалить все виджеты */
     var area = document.getElementById('win11DesktopArea');
     if (area) area.innerHTML = '';
+    /* Очистить desktopPages — начать с чистого листа */
+    if (typeof desktopPages !== 'undefined') {
+        desktopPages = [{ id: 'page_0', items: [] }, { id: 'page_1', items: [] }, { id: 'page_2', items: [] }];
+        if (typeof saveDesktopPages === 'function') saveDesktopPages();
+        currentPage = 0;
+    }
     /* Создать дефолтные */
     initDefaultWidgets();
+    /* Перерисовать ярлыки (innerHTML='' выше их удалил из DOM) */
+    if (typeof renderShortcuts === 'function') renderShortcuts();
+    if (typeof showDesktopPage === 'function') showDesktopPage(0);
 };
 
 function initDefaultWidgets(){
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem('win11_active_widgets')); } catch(e){}
+    var widgetsToLoad = [];
     if (saved && Array.isArray(saved) && saved.length > 0) {
-        saved.forEach(function(id){
-            var pos = widgetPositions[id] || { x: 60, y: 60 };
-            createWidget(id, pos.x, pos.y);
-        });
+        widgetsToLoad = saved.map(function(id){ return { id: id }; });
     } else {
-        /* Дефолтная раскладка */
-        DEFAULT_LAYOUT.forEach(function(item){
-            var pos = widgetPositions[item.id] || { x: item.x, y: item.y };
-            createWidget(item.id, pos.x, pos.y);
-        });
+        widgetsToLoad = DEFAULT_LAYOUT.slice();
     }
+    widgetsToLoad.forEach(function(item){
+        var pos = widgetPositions[item.id] || { x: item.x || 60, y: item.y || 60 };
+        createWidget(item.id, pos.x, pos.y);
+        /* Регистрируем виджет на странице — если он уже в desktopPages, оставляем как есть;
+           иначе добавляем на страницу 0 в свободную ячейку */
+        var alreadyAssigned = false;
+        if (typeof desktopPages !== 'undefined') {
+            desktopPages.forEach(function(p){
+                if (p.items.some(function(it){ return it.type === 'widget' && it.id === item.id; })) {
+                    alreadyAssigned = true;
+                }
+            });
+        }
+        if (!alreadyAssigned && typeof addDesktopItem === 'function') {
+            addDesktopItem('widget', item.id, 0);
+        }
+    });
 }
 
 /* ============================================================
@@ -40107,12 +40153,12 @@ var startMenuApps = [
     { id: 'trainer',   icon: '👨‍🏫', name: 'Профиль тренера', action: function(){ win11OpenApp('trainer'); } },
     { id: 'addClient', icon: '➕👤', name: 'Новый клиент', action: function(){ if (typeof openAddUserModal === 'function') openAddUserModal(); } },
     { id: 'addTrainer',icon: '➕👨‍🏫', name: 'Новый тренер', action: function(){ if (typeof openAddTrainerModal === 'function') openAddTrainerModal(); } },
-    { id: 'clients',   icon: '👥', name: 'Виджет: Клиенты', action: function(){ win11AddWidget('clients'); } },
-    { id: 'tasksWidget', icon: '📋', name: 'Виджет: Задачи', action: function(){ win11AddWidget('tasks'); } },
-    { id: 'subsWidget', icon: '💰', name: 'Виджет: Абонементы', action: function(){ win11AddWidget('subscriptions'); } },
-    { id: 'msgWidget', icon: '📨', name: 'Виджет: Сообщения', action: function(){ win11AddWidget('messages'); } },
-    { id: 'summaryWidget', icon: '📊', name: 'Виджет: Сводка', action: function(){ win11AddWidget('summary'); } },
-    { id: 'clockWidget', icon: '🕐', name: 'Виджет: Часы', action: function(){ win11AddWidget('clock'); } },
+    { id: 'clients',   icon: '👥', name: 'Виджет: Клиенты', action: function(){ window.__win11AddWidget('clients'); } },
+    { id: 'tasksWidget', icon: '📋', name: 'Виджет: Задачи', action: function(){ window.__win11AddWidget('tasks'); } },
+    { id: 'subsWidget', icon: '💰', name: 'Виджет: Абонементы', action: function(){ window.__win11AddWidget('subscriptions'); } },
+    { id: 'msgWidget', icon: '📨', name: 'Виджет: Сообщения', action: function(){ window.__win11AddWidget('messages'); } },
+    { id: 'summaryWidget', icon: '📊', name: 'Виджет: Сводка', action: function(){ window.__win11AddWidget('summary'); } },
+    { id: 'clockWidget', icon: '🕐', name: 'Виджет: Часы', action: function(){ window.__win11AddWidget('clock'); } },
     { id: 'settings',  icon: '⚙️', name: 'Настройки', action: function(){ if (typeof openSettingsModal === 'function') openSettingsModal(); } },
     { id: 'wallpaper', icon: '🖼️', name: 'Сменить обои', action: function(){ var el = document.getElementById('win11WallpaperInput'); if (el) el.click(); } },
     { id: 'backup',    icon: '💾', name: 'Резервная копия', action: function(){ if (typeof backupAllData === 'function') backupAllData(); } },
@@ -40800,7 +40846,7 @@ window.win11CtxAddShortcut = function(){
         var scId = desktopShortcuts.length > 0 ? desktopShortcuts[desktopShortcuts.length - 1].id : null;
         if (scId) {
             addDesktopItem('shortcut', scId, currentPage);
-            renderDesktopPages();
+            showDesktopPage(currentPage);
         }
     }
 };
@@ -40832,7 +40878,7 @@ window.win11CtxAddFile = function(){
                 var scId = desktopShortcuts.length > 0 ? desktopShortcuts[desktopShortcuts.length - 1].id : null;
                 if (scId) {
                     addDesktopItem('shortcut', scId, currentPage);
-                    renderDesktopPages();
+                    showDesktopPage(currentPage);
                 }
             }
             if (typeof showToast === 'function') showToast('📄 Файл добавлен на рабочий стол', 'success');
@@ -40854,7 +40900,7 @@ window.win11CtxAddFolder = function(){
         var scId = desktopShortcuts.length > 0 ? desktopShortcuts[desktopShortcuts.length - 1].id : null;
         if (scId) {
             addDesktopItem('shortcut', scId, currentPage);
-            renderDesktopPages();
+            showDesktopPage(currentPage);
         }
     }
     if (typeof showToast === 'function') showToast('📁 Папка создана на рабочем столе', 'success');
@@ -40965,7 +41011,7 @@ function alignDesktop(){
 
     /* Если на мобильном — перерендерить страницы */
     if (isMobileLayout() || isTabletLayout()) {
-        renderDesktopPages();
+        showDesktopPage(currentPage);
     }
 
     if (typeof showToast === 'function') showToast('📐 Рабочий стол выровнен', 'success');
@@ -40984,7 +41030,7 @@ function savePinned(){
 window.__win11CycleWidgetSize = function(id){
     var widget = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
     if (!widget) return;
-    var sizes = ['small', 'medium', 'large'];
+    var sizes = ['size-1x1', 'size-2x1', 'size-2x2', 'size-4x2'];
     var current = 'medium';
     sizes.forEach(function(s){
         if (widget.classList.contains(s)) current = s;
@@ -40992,7 +41038,7 @@ window.__win11CycleWidgetSize = function(id){
     var idx = sizes.indexOf(current);
     var next = sizes[(idx + 1) % sizes.length];
     /* Убрать все классы размеров */
-    sizes.forEach(function(s){ widget.classList.remove(s); });
+    ['size-1x1','size-2x1','size-2x2','size-4x2','small','medium','large'].forEach(function(s){ widget.classList.remove(s); });
     widget.classList.add(next);
     /* Сохранить */
     try {
@@ -41749,6 +41795,19 @@ function renderShortcuts(){
         /* Drag */
         attachShortcutDrag(el, sc);
         area.appendChild(el);
+        /* Регистрируем ярлык на странице — если уже в desktopPages, оставляем;
+           иначе добавляем на страницу 0 */
+        var alreadyAssigned = false;
+        if (typeof desktopPages !== 'undefined') {
+            desktopPages.forEach(function(p){
+                if (p.items.some(function(it){ return it.type === 'shortcut' && it.id === sc.id; })) {
+                    alreadyAssigned = true;
+                }
+            });
+        }
+        if (!alreadyAssigned && typeof addDesktopItem === 'function') {
+            addDesktopItem('shortcut', sc.id, 0);
+        }
     });
 }
 function attachShortcutDrag(el, sc){
@@ -41851,7 +41910,15 @@ window.__win11RunShortcut = function(id){
 window.__win11DeleteShortcut = function(id){
     desktopShortcuts = desktopShortcuts.filter(function(s){ return s.id !== id; });
     saveShortcuts();
+    /* Удалить из всех страниц рабочего стола */
+    if (typeof desktopPages !== 'undefined') {
+        desktopPages.forEach(function(p){
+            p.items = p.items.filter(function(it){ return !(it.type === 'shortcut' && it.id === id); });
+        });
+        if (typeof saveDesktopPages === 'function') saveDesktopPages();
+    }
     renderShortcuts();
+    if (typeof showDesktopPage === 'function') showDesktopPage(currentPage);
 };
 window.__win11AddShortcut = function(opts){
     var sc = {
@@ -42478,175 +42545,170 @@ window.__win11OnLayoutChange = function(){
    - Свайп влево/вправо для переключения
    - Авто-добавление страницы при нехватке места
    ============================================================ */
-var desktopPages = [];  /* [{ id, items: [{type, id, x, y}] }] */
+/* ============================================================
+   РАБОЧИЙ СТОЛ — правильная логика как на Android/Windows
+   - Виджеты/иконки/файлы создаются ОДИН РАЗ и живут в DOM
+   - Каждому элементу присвоен номер страницы (data-page)
+   - Страницы просто показывают/скрывают элементы через display
+   - Ничего не удаляется при рендере
+   ============================================================ */
+var desktopPages = [];
 var currentPage = 0;
 var GRID_COLS_MOBILE = 4;
 var GRID_ROWS_MOBILE = 6;
 var GRID_COLS_TABLET = 6;
 var GRID_ROWS_TABLET = 6;
 
-function isMobileLayout(){
-    return document.body.classList.contains('layout-mobile');
-}
-function isTabletLayout(){
-    return document.body.classList.contains('layout-tablet');
-}
-function getGridCols(){
-    return isMobileLayout() ? GRID_COLS_MOBILE : (isTabletLayout() ? GRID_COLS_TABLET : 12);
-}
-function getGridRows(){
-    return isMobileLayout() ? GRID_ROWS_MOBILE : (isTabletLayout() ? GRID_ROWS_TABLET : 8);
-}
+function isMobileLayout(){ return document.body.classList.contains('layout-mobile'); }
+function isTabletLayout(){ return document.body.classList.contains('layout-tablet'); }
+function getGridCols(){ return isMobileLayout() ? GRID_COLS_MOBILE : (isTabletLayout() ? GRID_COLS_TABLET : 12); }
+function getGridRows(){ return isMobileLayout() ? GRID_ROWS_MOBILE : (isTabletLayout() ? GRID_ROWS_TABLET : 8); }
 
 function loadDesktopPages(){
-    try {
-        var saved = localStorage.getItem('win11_desktop_pages');
-        if (saved) desktopPages = JSON.parse(saved);
-    } catch(e) {}
+    try { var saved = localStorage.getItem('win11_desktop_pages'); if (saved) desktopPages = JSON.parse(saved); } catch(e) {}
     if (!desktopPages.length) {
-        desktopPages = [
-            { id: 'page_0', items: [] },
-            { id: 'page_1', items: [] },
-            { id: 'page_2', items: [] }
-        ];
+        desktopPages = [{ id: 'page_0', items: [] }, { id: 'page_1', items: [] }, { id: 'page_2', items: [] }];
         saveDesktopPages();
     }
 }
-function saveDesktopPages(){
-    try { localStorage.setItem('win11_desktop_pages', JSON.stringify(desktopPages)); } catch(e) {}
-}
+function saveDesktopPages(){ try { localStorage.setItem('win11_desktop_pages', JSON.stringify(desktopPages)); } catch(e) {} }
 
 function getCellSize(){
-    var area = document.getElementById('win11DesktopPages');
+    var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
     if (!area) return { w: 80, h: 80 };
     var rect = area.getBoundingClientRect();
-    var cols = getGridCols();
-    var rows = getGridRows();
-    return { w: rect.width / cols, h: rect.height / rows };
+    return { w: rect.width / getGridCols(), h: rect.height / getGridRows() };
 }
 
 function snapToGrid(x, y){
     var cell = getCellSize();
-    var col = Math.round(x / cell.w);
-    var row = Math.round(y / cell.h);
-    col = Math.max(0, Math.min(col, getGridCols() - 1));
-    row = Math.max(0, Math.min(row, getGridRows() - 1));
+    var col = Math.max(0, Math.min(Math.round(x / cell.w), getGridCols() - 1));
+    var row = Math.max(0, Math.min(Math.round(y / cell.h), getGridRows() - 1));
     return { col: col, row: row, x: col * cell.w, y: row * cell.h };
 }
 
 function findFreeCell(pageIdx){
-    var page = desktopPages[pageIdx];
-    if (!page) return null;
+    var page = desktopPages[pageIdx]; if (!page) return null;
     var occupied = {};
-    page.items.forEach(function(it){
-        occupied[it.col + '_' + it.row] = true;
-    });
-    var cols = getGridCols();
-    var rows = getGridRows();
-    for (var row = 0; row < rows; row++){
-        for (var col = 0; col < cols; col++){
+    page.items.forEach(function(it){ occupied[it.col + '_' + it.row] = true; });
+    for (var row = 0; row < getGridRows(); row++){
+        for (var col = 0; col < getGridCols(); col++){
             if (!occupied[col + '_' + row]) return { col: col, row: row };
         }
     }
-    return null;  /* нет свободной ячейки */
+    return null;
 }
 
 function addDesktopItem(type, id, pageIdx, col, row){
     if (pageIdx === undefined) pageIdx = currentPage;
-    /* Если позиция не указана — найти свободную */
+    /* ВАЖНО: каждый элемент (виджет/ярлык) живёт ТОЛЬКО на одной странице.
+       Удалим его со всех остальных страниц — это предотвращает дубликаты. */
+    desktopPages.forEach(function(p, idx){
+        if (idx === pageIdx) return;
+        var beforeLen = p.items.length;
+        p.items = p.items.filter(function(it){ return !(it.type === type && it.id === id); });
+        if (p.items.length !== beforeLen) {
+            /* было удаление — сохраним */
+        }
+    });
     if (col === undefined || row === undefined){
         var free = findFreeCell(pageIdx);
         if (!free) {
-            /* Создать новую страницу */
+            /* Страница заполнена — создать новую */
             desktopPages.push({ id: 'page_' + desktopPages.length, items: [] });
             pageIdx = desktopPages.length - 1;
             free = findFreeCell(pageIdx);
             if (!free) return null;
         }
-        col = free.col;
-        row = free.row;
+        col = free.col; row = free.row;
     }
-    var item = { type: type, id: id, col: col, row: row, page: pageIdx };
-    desktopPages[pageIdx].items.push(item);
+    /* Проверить — не существует ли уже этот элемент на этой странице */
+    var existing = desktopPages[pageIdx].items.find(function(it){ return it.type === type && it.id === id; });
+    if (existing) {
+        existing.col = col; existing.row = row;
+    } else {
+        desktopPages[pageIdx].items.push({ type: type, id: id, col: col, row: row, page: pageIdx });
+    }
     saveDesktopPages();
-    return item;
+    /* Присвоить data-page элементу */
+    var el = null;
+    if (type === 'widget') el = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
+    else if (type === 'shortcut') el = document.querySelector('.win11-shortcut[data-sc-id="' + id + '"]');
+    if (el) el.dataset.desktopPage = String(pageIdx);
+    return { type: type, id: id, col: col, row: row, page: pageIdx };
 }
 
-function renderDesktopPages(){
-    var container = document.getElementById('win11DesktopPages');
-    var indicators = document.getElementById('win11PageIndicators');
-    if (!container) return;
-    container.innerHTML = '';
-    if (indicators) indicators.innerHTML = '';
-
+/* Главная функция: показывает элементы текущей страницы, скрывает остальные */
+function showDesktopPage(pageIdx){
+    if (pageIdx < 0 || pageIdx >= desktopPages.length) return;
+    currentPage = pageIdx;
+    var page = desktopPages[pageIdx];
+    if (!page) return;
     var cell = getCellSize();
+    var useGrid = (typeof isMobileLayout === 'function' && (isMobileLayout() || isTabletLayout()));
 
-    desktopPages.forEach(function(page, idx){
-        var pageEl = document.createElement('div');
-        pageEl.className = 'win11-desktop-page';
-        pageEl.dataset.pageIdx = idx;
+    /* Получить все элементы рабочего стола */
+    var allItems = document.querySelectorAll('.win11-widget, .win11-shortcut');
+    var pageItemIds = {};
+    page.items.forEach(function(it){
+        pageItemIds[it.type + '_' + it.id] = it;
+    });
 
-        /* Рендер элементов страницы */
-        page.items.forEach(function(item){
-            var el = null;
-            if (item.type === 'widget') {
-                el = document.querySelector('.win11-widget[data-widget-id="' + item.id + '"]');
-                if (el) el.remove();  /* переместить из текущего родителя */
-            } else if (item.type === 'shortcut') {
-                el = document.querySelector('.win11-shortcut[data-sc-id="' + item.id + '"]');
-                if (el) el.remove();
-            }
-            if (el) {
-                el.style.position = 'absolute';
+    allItems.forEach(function(el){
+        var itemType = el.classList.contains('win11-widget') ? 'widget' : 'shortcut';
+        var itemId = el.dataset.widgetId || el.dataset.scId || '';
+        var key = itemType + '_' + itemId;
+
+        if (pageItemIds[key]) {
+            /* Этот элемент принадлежит текущей странице — показать */
+            var item = pageItemIds[key];
+            el.style.display = '';
+            el.style.position = 'absolute';
+            if (useGrid) {
+                /* На мобильном/планшете — позиция из сетки */
                 el.style.left = (item.col * cell.w) + 'px';
                 el.style.top = (item.row * cell.h) + 'px';
-                pageEl.appendChild(el);
+            } else {
+                /* На десктопе — сохранённая пиксельная позиция (не трогаем если уже задана) */
+                if (itemType === 'widget' && typeof widgetPositions !== 'undefined' && widgetPositions[itemId]) {
+                    el.style.left = widgetPositions[itemId].x + 'px';
+                    el.style.top = widgetPositions[itemId].y + 'px';
+                } else if (!el.style.left) {
+                    /* Фолбэк — сетка */
+                    el.style.left = (item.col * cell.w) + 'px';
+                    el.style.top = (item.row * cell.h) + 'px';
+                }
             }
-        });
-
-        container.appendChild(pageEl);
-
-        /* Индикатор-точка */
-        if (indicators) {
-            var dot = document.createElement('div');
-            dot.className = 'win11-page-dot' + (idx === currentPage ? ' active' : '');
-            dot.dataset.pageIdx = idx;
-            dot.onclick = function(){ goToPage(idx); };
-            indicators.appendChild(dot);
+        } else {
+            /* Не принадлежит — скрыть */
+            el.style.display = 'none';
         }
     });
 
-    /* Прокрутить к текущей странице */
-    container.scrollLeft = currentPage * container.offsetWidth;
-
-    /* Обновить индикаторы при скролле */
-    container.onscroll = function(){
-        var idx = Math.round(container.scrollLeft / container.offsetWidth);
-        if (idx !== currentPage) {
-            currentPage = idx;
-            if (indicators) {
-                indicators.querySelectorAll('.win11-page-dot').forEach(function(d, i){
-                    d.classList.toggle('active', i === idx);
-                });
-            }
-        }
-    };
+    /* Обновить индикаторы */
+    var indicators = document.getElementById('win11PageIndicators');
+    if (indicators) {
+        indicators.innerHTML = '';
+        desktopPages.forEach(function(p, i){
+            var dot = document.createElement('div');
+            dot.className = 'win11-page-dot' + (i === currentPage ? ' active' : '');
+            dot.onclick = function(){ showDesktopPage(i); };
+            indicators.appendChild(dot);
+        });
+    }
 }
 
-function goToPage(idx){
-    var container = document.getElementById('win11DesktopPages');
-    if (!container || idx < 0 || idx >= desktopPages.length) return;
-    currentPage = idx;
-    container.scrollTo({ left: idx * container.offsetWidth, behavior: 'smooth' });
-}
-window.win11PrevPage = function(){ if (currentPage > 0) goToPage(currentPage - 1); };
-window.win11NextPage = function(){ if (currentPage < desktopPages.length - 1) goToPage(currentPage + 1); else addNewPage(); };
+function goToPage(idx){ showDesktopPage(idx); }
+window.win11PrevPage = function(){ if (currentPage > 0) showDesktopPage(currentPage - 1); };
+window.win11NextPage = function(){
+    if (currentPage < desktopPages.length - 1) showDesktopPage(currentPage + 1);
+    else { addNewPage(); }
+};
 
 function addNewPage(){
     desktopPages.push({ id: 'page_' + desktopPages.length, items: [] });
     saveDesktopPages();
-    renderDesktopPages();
-    goToPage(desktopPages.length - 1);
+    showDesktopPage(desktopPages.length - 1);
 }
 
 /* Инициализация */
@@ -42654,32 +42716,18 @@ function init(){
     loadPositions();
     loadAlarms();
     loadDesktopPages();
-    /* Применить сохранённые обои */
     applySavedWallpaper();
-    /* Дождаться пока DOM полностью готов */
     setTimeout(function(){
         initDefaultWidgets();
         window.__win11UpdateClock();
         applyLayoutToDesktop();
-        /* Рендер ярлыков и страниц */
         loadShortcuts();
         renderShortcuts();
-        /* На мобильном/планшете — рендер страниц */
-        if (isMobileLayout() || isTabletLayout()) {
-            renderDesktopPages();
-        }
+        /* Показать первую страницу */
+        showDesktopPage(0);
     }, 200);
-    /* Слушать смену layout */
-    window.addEventListener('resize', function(){
-        applyLayoutToDesktop();
-        if (isMobileLayout() || isTabletLayout()) renderDesktopPages();
-    });
-    window.addEventListener('orientationchange', function(){
-        setTimeout(function(){
-            applyLayoutToDesktop();
-            if (isMobileLayout() || isTabletLayout()) renderDesktopPages();
-        }, 300);
-    });
+    window.addEventListener('resize', function(){ applyLayoutToDesktop(); showDesktopPage(currentPage); });
+    window.addEventListener('orientationchange', function(){ setTimeout(function(){ applyLayoutToDesktop(); showDesktopPage(currentPage); }, 300); });
 }
 
 if (document.readyState === 'loading') {
