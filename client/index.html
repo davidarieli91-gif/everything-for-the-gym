@@ -136,7 +136,6 @@
     <title>Fitness Client</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e40af">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3B82F6">
     <meta name="mobile-web-app-capable" content="yes">
@@ -2740,7 +2739,7 @@
             color: var(--text-secondary);
             margin-top: 4px;
         }
-        .trainer-login-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 99998; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px);
+        .trainer-login-overlay {
             position: fixed;
             inset: 0;
             background: rgba(15,23,42,0.95);
@@ -9671,7 +9670,8 @@ setTimeout(function(){
             <div class="trainer-login-box">
                 <div style="font-size:3em; margin-bottom:12px;">🔐</div>
                 <div style="display:flex; margin-bottom:16px; border-radius:12px; overflow:hidden; border:2px solid var(--border-color);">
-                    <button id="loginTabClient" onclick="switchLoginTab('client')" style="flex:1; padding:10px; border:none; font-weight:700; font-size:0.95em; cursor:pointer; transition:all 0.2s; background:var(--primary-color); color:white;">👤 <span data-i18n="loginTabClient">Клиент</span></button>
+                    <button id="loginTabTrainer" onclick="switchLoginTab('trainer')" style="flex:1; padding:10px; border:none; font-weight:700; font-size:0.95em; cursor:pointer; transition:all 0.2s; background:var(--primary-color); color:white;">👨‍🏫 <span data-i18n="loginTabTrainer">Тренер</span></button>
+                    <!-- Клиентский вход убран — тренер только для тренеров -->
                 </div>
                 <div id="loginSectionTrainer" style="display:none;">
                     <h2 id="trainerLoginTitle" data-i18n="trLoginTitle">Вход для тренера</h2>
@@ -9729,12 +9729,12 @@ setTimeout(function(){
         <div class="win11-taskbar" id="win11Taskbar">
             <div class="win11-taskbar-apps">
                 <button class="win11-taskbar-btn start-btn" id="win11StartBtn" data-tooltip="Пуск" onclick="win11ToggleStartMenu(event)">⊞</button>
-                
-                
+                <button class="win11-taskbar-btn" data-tooltip="Планировщик питания" onclick="win11OpenApp('planner')">🍽️</button>
+                <button class="win11-taskbar-btn" data-tooltip="Тренировки" onclick="win11OpenApp('workout')">🏋️</button>
                 <button class="win11-taskbar-btn" data-tooltip="Календарь" onclick="win11OpenApp('calendar')">📅</button>
                 <button class="win11-taskbar-btn" data-tooltip="Задачи" onclick="win11OpenApp('tasks')">✅</button>
-                
-                
+                <button class="win11-taskbar-btn" data-tooltip="Магазин" onclick="win11OpenApp('shop')">🛒</button>
+                <button class="win11-taskbar-btn" data-tooltip="Лиды" onclick="win11OpenApp('leads')">🌟</button>
                 <button class="win11-taskbar-btn" data-tooltip="Чат" onclick="win11OpenApp('chat')">💬</button>
                 <button class="win11-taskbar-btn" data-tooltip="Уведомления" onclick="openNotificationsApp()">🔔</button>
                 <button class="win11-taskbar-btn" data-tooltip="Файловый проводник" onclick="openFileExplorer('documents')">📁</button>
@@ -9868,6 +9868,39 @@ setTimeout(function(){
                 </div>
             </div>
 
+            <!-- Сохранить программу → раскрывающееся подменю -->
+            <div class="win11-context-item has-submenu" onclick="win11CtxToggleSubmenu(this)">
+                <span class="win11-context-item-icon">💾</span> <span>Сохранить программу</span>
+                <span class="win11-submenu-arrow">▸</span>
+            </div>
+            <div class="win11-submenu">
+                <div class="win11-context-item" onclick="win11CtxSavePlanToExplorer()">
+                    <span class="win11-context-item-icon">🍽️</span> <span>Питание → в проводник</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSaveWorkoutToExplorer()">
+                    <span class="win11-context-item-icon">🏋️</span> <span>Тренировка → в проводник</span>
+                </div>
+                <div class="win11-context-separator"></div>
+                <div class="win11-context-item" onclick="win11CtxSavePlanPDF()">
+                    <span class="win11-context-item-icon">📄</span> <span>Питание → PDF</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSaveWorkoutPDF()">
+                    <span class="win11-context-item-icon">📄</span> <span>Тренировка → PDF</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSavePlanExcel()">
+                    <span class="win11-context-item-icon">📗</span> <span>Питание → Excel</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSaveWorkoutExcel()">
+                    <span class="win11-context-item-icon">📗</span> <span>Тренировка → Excel</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSavePlanImage()">
+                    <span class="win11-context-item-icon">🖼️</span> <span>Питание → изображение</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxSaveWorkoutImage()">
+                    <span class="win11-context-item-icon">🖼️</span> <span>Тренировка → изображение</span>
+                </div>
+            </div>
+
             <!-- Настройки → раскрывающееся подменю -->
             <div class="win11-context-item has-submenu" onclick="win11CtxToggleSubmenu(this)">
                 <span class="win11-context-item-icon">⚙️</span> <span>Настройки</span>
@@ -9882,6 +9915,9 @@ setTimeout(function(){
                 </div>
                 <div class="win11-context-item" onclick="win11CtxResetWallpaper()">
                     <span class="win11-context-item-icon">🔄</span> <span>Сбросить обои</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAlignDesktop()">
+                    <span class="win11-context-item-icon">📐</span> <span>Выровнять рабочий стол</span>
                 </div>
                 <div class="win11-context-item" onclick="win11CtxResetLayout()">
                     <span class="win11-context-item-icon">🔲</span> <span>Сбросить раскладку</span>
@@ -9923,7 +9959,7 @@ setTimeout(function(){
     </div>
 
     <!-- ===== ЭКРАН 2: ПЛАНИРОВЩИК ===== -->
-    <div class="app-container hidden" id="appContainer" style="display:none !important;">
+    <div class="app-container hidden" id="appContainer">
         <!-- ===== ЛЕВАЯ ПАНЕЛЬ - БАЗА ПРОДУКТОВ ===== -->
         <div class="products-sidebar" id="productsSidebar">
             <div class="sidebar-resizer" id="sidebarResizer" title="↔️"></div>
@@ -15598,7 +15634,7 @@ setTimeout(function(){
                         <div class="clients-empty">
                             <div class="clients-empty-icon">${search ? '🔍' : '👥'}</div>
                             <div>${escapeHtml(search ? (t('clientsNoMatch') || 'Никого не найдено по запросу') : (t('clientsEmpty') || 'Здесь будут все ваши клиенты'))}</div>
-                            ${!search ? `<button class="clients-add-btn" style="display:none;" style="margin-top:14px;">➕ ${escapeHtml(t('homeNewClient') || 'Добавить первого клиента')}</button>` : ''}
+                            ${!search ? `<button class="clients-add-btn" onclick="openAddUserModal()" style="margin-top:14px;">➕ ${escapeHtml(t('homeNewClient') || 'Добавить первого клиента')}</button>` : ''}
                         </div>`;
                     return;
                 }
@@ -15857,8 +15893,7 @@ setTimeout(function(){
             }).join('');
         }
 
-        function openAddUserModal() { /* disabled in client app */ return; }
-        /* openAddUserModal body disabled
+        function openAddUserModal() {
             editingUserId = null;
             const fields = ['newUserName','newUserLastName','newUserPhone','newUserEmail','newUserAddress',
                             'newUserPassport','newUserBirthday','newUserAge','newUserWeight','newUserHeight',
@@ -15888,7 +15923,6 @@ setTimeout(function(){
         }
 
         // ===== Работа с фото клиента =====
-        */
         function handleUserPhotoPick(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
@@ -16263,7 +16297,6 @@ setTimeout(function(){
         }
 
         function applyLayout(layout) {
-            /* CLIENT: только планшет или смартфон — без ПК режима */
             if (layout === 'desktop') layout = 'tablet';
             if (!layout) layout = 'tablet';
             document.body.classList.remove('layout-desktop', 'layout-tablet', 'layout-mobile');
@@ -26801,8 +26834,7 @@ setTimeout(function(){
             if (changed) saveTrainers(trainers);
         }
 
-        function openAddTrainerModal() { /* disabled in client app */ return; }
-        /* original body disabled
+        function openAddTrainerModal() {
             const name = prompt(t('trAddNamePrompt'));
             if (!name || !name.trim()) return;
             const password = prompt(t('trAddPassPrompt'));
@@ -26825,7 +26857,6 @@ setTimeout(function(){
                 showToast(t('trAdded') + ': ' + name.trim());
             });
         }
-        */
         function selectTrainer(trainerId) {
             const trainer = getTrainers().find(t => t.id === trainerId);
             if (!trainer) return;
@@ -26876,7 +26907,7 @@ setTimeout(function(){
             // Rebuild trainer list
             const trainers = getTrainers();
             if (trainers.length === 0) {
-                list.innerHTML = '<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">' + t('trNoTrainers') + '</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" style="display:none;">' + t('trAddFirst') + '</button></div>';
+                list.innerHTML = '<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">' + t('trNoTrainers') + '</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" onclick="openAddTrainerModal(); setTimeout(checkTrainerSession, 500)">' + t('trAddFirst') + '</button></div>';
             } else {
                 list.innerHTML = trainers.map(tr => '<div class="trainer-card" onclick="selectedTrainerForLogin = getTrainers().find(x=>x.id===' + "'" + tr.id + "'" + '); showTrainerLogin();" style="margin-bottom:8px; cursor:pointer;"><div style="display:flex; align-items:center; gap:12px;"><div class="trainer-avatar" style="margin:0; width:40px; height:40px; font-size:1.2em;">' + (tr.avatar || '👨‍🏫') + '</div><div style="flex:1; text-align:left;"><div style="font-weight:600;">' + escapeHtml(tr.name) + '</div><div style="font-size:0.8em; color:var(--text-secondary);">' + t('trClickToLogin') + '</div></div></div></div>').join('');
             }
@@ -26983,16 +27014,42 @@ setTimeout(function(){
             document.getElementById('trainerLoginOverlay').style.display = 'none';
         }
         function checkTrainerSession() {
-            /* CLIENT APP: проверяем клиентскую сессию, не тренерскую */
-            if (typeof checkClientSession === 'function' && checkClientSession()) {
-                return true;
-            }
-            /* Нет сессии — показываем клиентский вход */
-            var ov = document.getElementById('trainerLoginOverlay');
-            if (ov) ov.style.display = 'flex';
+            if (typeof checkClientSession === 'function' && checkClientSession()) return true;
+            var _ov = document.getElementById('trainerLoginOverlay');
+            if (_ov) _ov.style.display = 'flex';
             document.body.classList.add('trainer-locked');
             if (typeof switchLoginTab === 'function') switchLoginTab('client');
-            /* DON'T hide homeScreen — overlay is inside it */
+            return false;
+            /* trainer session check disabled */
+            var _disabled = localStorage.getItem('currentTrainerSession');
+            if (session) {
+                try {
+                    const data = JSON.parse(session);
+                    /* Проверка срока действия сессии (8 часов) */
+                    if (data.loginTime && (Date.now() - data.loginTime > 8 * 3600000)) {
+                        /* Сессия истекла */
+                        localStorage.removeItem('currentTrainerSession');
+                    } else {
+                        const trainer = getTrainers().find(t => t.id === data.id);
+                        if (trainer) {
+                            currentTrainer = trainer;
+                            /* Принудительно снять блокировку и скрыть overlay */
+                            document.body.classList.remove('trainer-locked');
+                            var ov = document.getElementById('trainerLoginOverlay');
+                            if (ov) ov.style.display = 'none';
+                            /* Обновить имя тренера в Win11 меню Пуск */
+                            var nameEl = document.getElementById('win11StartUserName');
+                            if (nameEl) {
+                                nameEl.textContent = trainer.name + (trainer.lastName ? ' ' + trainer.lastName : '');
+                            }
+                            return true;
+                        }
+                    }
+                } catch(e) {}
+            }
+            // Показать экран входа
+            document.getElementById('trainerLoginOverlay').style.display = 'block';
+            document.body.classList.add('trainer-locked');
             // Hide logged-in panel
             const loggedInPanel = document.getElementById('trainerLoggedInPanel');
             if (loggedInPanel) loggedInPanel.style.display = 'none';
@@ -27006,7 +27063,7 @@ setTimeout(function(){
             const trainers = getTrainers();
             const list = document.getElementById('trainerLoginList');
             if (trainers.length === 0) {
-                list.innerHTML = `<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">${t('trNoTrainers')}</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" style="display:none;">${t('trAddFirst')}</button></div>`;
+                list.innerHTML = `<div style="padding:20px; text-align:center;"><p style="margin-bottom:16px;">${t('trNoTrainers')}</p><button class="custom-logo-btn" style="background:linear-gradient(135deg, #10B981, #047857); color:white; border:none;" onclick="openAddTrainerModal(); setTimeout(checkTrainerSession, 500)">${t('trAddFirst')}</button></div>`;
             } else {
                 list.innerHTML = trainers.map(tr => `
                     <div class="trainer-card" onclick="selectedTrainerForLogin = getTrainers().find(x=>x.id==='${tr.id}'); showTrainerLogin();" style="margin-bottom:8px; cursor:pointer;">
@@ -27068,7 +27125,6 @@ setTimeout(function(){
             try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e) {}
             try { checkTrainerSession(); } catch(e) {}
             try { switchLoginTab('client'); } catch(e) {}
-            /* CLIENT: homeScreen stays visible — trainerLoginOverlay is inside it */
             // восстановить режим (PWA-shortcut из manifest имеет приоритет)
             const savedMode = safeGetItem('appMode');
             try {
@@ -28184,7 +28240,6 @@ setTimeout(function(){
 
         // ===== CLIENT LOGIN SYSTEM =====
         function switchLoginTab(tab) {
-            /* CLIENT APP: only client tab */
             const clTab = document.getElementById('loginTabClient');
             const trSec = document.getElementById('loginSectionTrainer');
             const clSec = document.getElementById('loginSectionClient');
@@ -28348,16 +28403,12 @@ setTimeout(function(){
             __clientUser = null;
             localStorage.removeItem('clientSession');
             document.getElementById('clientSpace').style.display = 'none';
+            // === РАДИКАЛЬНАЯ ПОЧИНКА СКРОЛЛИНГА ===
             document.body.classList.remove('client-space-open');
             document.body.style.overflow = '';
             document.body.style.position = '';
             document.body.style.height = '';
             document.body.style.width = '';
-            /* Return to client login — not home screen */
-            var overlay = document.getElementById('trainerLoginOverlay');
-            if (overlay) overlay.style.display = 'block';
-            document.body.classList.add('trainer-locked');
-            switchLoginTab('client');
             document.body.style.top = '';
             document.body.style.left = '';
             // Stop any active timer
@@ -39710,11 +39761,59 @@ function onDragEnd(){
     var id = dragState.id;
     widget.classList.remove('dragging');
 
+    var x = parseInt(widget.style.left, 10) || 0;
+    var y = parseInt(widget.style.top, 10) || 0;
+    var w = widget.offsetWidth;
+    var h = widget.offsetHeight;
+
+    /* Collision detection — не дать виджету накладываться на другие */
+    var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
+    if (area) {
+        var areaRect = area.getBoundingClientRect();
+        /* Не выходить за пределы */
+        x = Math.max(0, Math.min(x, areaRect.width - w - 4));
+        y = Math.max(0, Math.min(y, areaRect.height - h - 4));
+        /* Проверить коллизии с другими виджетами */
+        var others = document.querySelectorAll('.win11-widget:not(.dragging)');
+        var attempts = 0;
+        while (attempts < 50) {
+            var collision = false;
+            for (var i = 0; i < others.length; i++) {
+                var o = others[i];
+                var ox = parseInt(o.style.left, 10) || 0;
+                var oy = parseInt(o.style.top, 10) || 0;
+                var ow = o.offsetWidth;
+                var oh = o.offsetHeight;
+                /* Прямоугольная коллизия */
+                if (x < ox + ow + 8 && x + w + 8 > ox && y < oy + oh + 8 && y + h + 8 > oy) {
+                    collision = true;
+                    /* Сдвинуть вниз */
+                    y = oy + oh + 10;
+                    /* Если вышли за низ — сдвинуть вправо */
+                    if (y + h > areaRect.height) {
+                        y = 10;
+                        x = ox + ow + 10;
+                    }
+                    /* Если вышли за право — расширить область (ПК) */
+                    if (x + w > areaRect.width) {
+                        if (!isMobileLayout() && !isTabletLayout()) {
+                            /* ПК — расширить рабочую область */
+                            area.style.minHeight = (parseInt(area.style.minHeight || 0) + h + 20) + 'px';
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!collision) break;
+            attempts++;
+        }
+    }
+
+    widget.style.left = x + 'px';
+    widget.style.top = y + 'px';
+
     /* Сохранить позицию */
-    widgetPositions[id] = {
-        x: parseInt(widget.style.left, 10) || 0,
-        y: parseInt(widget.style.top, 10) || 0
-    };
+    widgetPositions[id] = { x: x, y: y };
     savePositions();
 
     /* На мобильном/планшете — snap-to-grid */
@@ -39741,22 +39840,58 @@ window.__win11CloseWidget = function(id){
 
 window.__win11AddWidget = function(id, x, y){
     if (activeWidgets.indexOf(id) >= 0) {
-        /* Уже открыт — подсветить */
         var existing = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
         if (existing) {
             existing.style.transition = 'transform 0.2s';
             existing.style.transform = 'scale(1.05)';
-            setTimeout(function(){
-                existing.style.transform = '';
-            }, 200);
+            setTimeout(function(){ existing.style.transform = ''; }, 200);
         }
         return;
     }
-    if (x === undefined) x = 60 + activeWidgets.length * 30;
-    if (y === undefined) y = 60 + activeWidgets.length * 30;
+    /* Найти свободную позицию без коллизий */
+    if (x === undefined || y === undefined) {
+        var free = findFreeDesktopPosition();
+        x = free.x;
+        y = free.y;
+    }
     createWidget(id, x, y);
     try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){}
 };
+
+/* Найти свободную позицию для нового виджета/иконки */
+function findFreeDesktopPosition(){
+    var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
+    if (!area) return { x: 40, y: 40 };
+    var areaRect = area.getBoundingClientRect();
+    var startX = 40, startY = 40;
+    var stepX = 30, stepY = 30;
+    var existing = document.querySelectorAll('.win11-widget, .win11-shortcut');
+    for (var y = startY; y < areaRect.height - 100; y += stepY) {
+        for (var x = startX; x < areaRect.width - 200; x += stepX) {
+            var collision = false;
+            for (var i = 0; i < existing.length; i++) {
+                var el = existing[i];
+                if (el.style.display === 'none') continue;
+                var ex = parseInt(el.style.left, 10) || 0;
+                var ey = parseInt(el.style.top, 10) || 0;
+                var ew = el.offsetWidth || 200;
+                var eh = el.offsetHeight || 200;
+                if (x < ex + ew + 10 && x + 200 > ex && y < ey + eh + 10 && y + 200 > ey) {
+                    collision = true; break;
+                }
+            }
+            if (!collision) return { x: x, y: y };
+        }
+    }
+    /* Не нашли — расширить область (ПК) или новая страница (мобайл) */
+    if (isMobileLayout() || isTabletLayout()) {
+        addNewPage();
+        return { x: 20, y: 20 };
+    } else {
+        area.style.minHeight = (areaRect.height + 300) + 'px';
+        return { x: 40, y: areaRect.height - 100 };
+    }
+}
 
 window.__win11ResetLayout = function(){
     if (!confirm('Сбросить раскладку виджетов к стандартной?')) return;
@@ -39936,8 +40071,8 @@ var startMenuApps = [
     { id: 'leads',     icon: '🌟', name: 'Лиды', action: function(){ win11OpenApp('leads'); } },
     { id: 'chat',      icon: '💬', name: 'Чат', action: function(){ win11OpenApp('chat'); } },
     { id: 'trainer',   icon: '👨‍🏫', name: 'Профиль тренера', action: function(){ win11OpenApp('trainer'); } },
-    
-    
+    { id: 'addClient', icon: '➕👤', name: 'Новый клиент', action: function(){ if (typeof openAddUserModal === 'function') openAddUserModal(); } },
+    { id: 'addTrainer',icon: '➕👨‍🏫', name: 'Новый тренер', action: function(){ if (typeof openAddTrainerModal === 'function') openAddTrainerModal(); } },
     { id: 'clients',   icon: '👥', name: 'Виджет: Клиенты', action: function(){ win11AddWidget('clients'); } },
     { id: 'tasksWidget', icon: '📋', name: 'Виджет: Задачи', action: function(){ win11AddWidget('tasks'); } },
     { id: 'subsWidget', icon: '💰', name: 'Виджет: Абонементы', action: function(){ win11AddWidget('subscriptions'); } },
@@ -40192,6 +40327,261 @@ window.win11CtxOpenScanner = function(){
     hideContextMenu();
     if (typeof openBarcodeScanner === 'function') openBarcodeScanner();
 };
+/* Сохранение программ в проводник */
+function savePlanToExplorerFile(name, format){
+    var data = null;
+    try {
+        if (typeof currentUserId !== 'undefined' && currentUserId) {
+            data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null');
+        }
+    } catch(e) {}
+    if (!data) {
+        if (typeof showToast === 'function') showToast('⚠️ Нет активного плана питания', 'error');
+        return;
+    }
+    var fileId = 'file_' + Date.now();
+    var content = '';
+    var type = 'txt';
+
+    if (format === 'json') {
+        content = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify({type:'nutrition', name:name, data:data}, null, 2))));
+        type = 'txt';
+    } else if (format === 'pdf') {
+        /* Простой HTML → откроется как PDF в браузере */
+        var html = generatePlanHTML(data, name);
+        content = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
+        type = 'pdf';
+    } else if (format === 'excel') {
+        var csv = generatePlanCSV(data);
+        content = 'data:text/csv;base64,' + btoa(unescape(encodeURIComponent(csv)));
+        type = 'xls';
+    } else if (format === 'image') {
+        var html = generatePlanHTML(data, name);
+        content = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
+        type = 'image';
+    }
+
+    win11Files[fileId] = { type: type, name: name + '.' + (format === 'json' ? 'json' : (format === 'pdf' ? 'pdf' : (format === 'excel' ? 'xls' : 'html'))), content: content, _created: Date.now() };
+    if (win11Files['documents'] && win11Files['documents'].children) win11Files['documents'].children.push(fileId);
+    saveFiles();
+    if (typeof showToast === 'function') showToast('✅ «' + name + '» сохранено в проводник', 'success');
+}
+
+function saveWorkoutToExplorerFile(name, format){
+    var data = null;
+    try {
+        data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);
+    } catch(e) {}
+    if (!data || !data.length) {
+        if (typeof showToast === 'function') showToast('⚠️ Нет данных тренировки', 'error');
+        return;
+    }
+    var fileId = 'file_' + Date.now();
+    var content = '';
+    var type = 'txt';
+
+    if (format === 'json') {
+        content = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(JSON.stringify({type:'workout', name:name, data:data}, null, 2))));
+    } else if (format === 'pdf') {
+        var html = generateWorkoutHTML(data, name);
+        content = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
+        type = 'pdf';
+    } else if (format === 'excel') {
+        var csv = generateWorkoutCSV(data);
+        content = 'data:text/csv;base64,' + btoa(unescape(encodeURIComponent(csv)));
+        type = 'xls';
+    } else if (format === 'image') {
+        var html = generateWorkoutHTML(data, name);
+        content = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
+        type = 'image';
+    }
+
+    win11Files[fileId] = { type: type, name: name + '.' + (format === 'json' ? 'json' : (format === 'pdf' ? 'pdf' : (format === 'excel' ? 'xls' : 'html'))), content: content, _created: Date.now() };
+    if (win11Files['workouts'] && win11Files['workouts'].children) win11Files['workouts'].children.push(fileId);
+    else if (win11Files['documents'] && win11Files['documents'].children) win11Files['documents'].children.push(fileId);
+    saveFiles();
+    if (typeof showToast === 'function') showToast('✅ «' + name + '» сохранено в проводник', 'success');
+}
+
+function generatePlanHTML(plan, name){
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(name) + '</title>';
+    html += '<style>body{font-family:Arial,sans-serif;padding:20px;color:#1e293b}h1{color:#10b981}table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f0fdf4}.meal{margin-bottom:20px;border:1px solid #e2e8f0;border-radius:10px;padding:14px}.meal-title{font-weight:700;font-size:1.1em;margin-bottom:8px}</style>';
+    html += '</head><body><h1>🍽️ ' + escapeHtml(name) + '</h1>';
+    html += '<p>Дата: ' + new Date().toLocaleDateString('ru-RU') + '</p>';
+    if (plan.meals) {
+        plan.meals.forEach(function(m){
+            html += '<div class="meal"><div class="meal-title">' + escapeHtml(m.title || 'Приём пищи') + '</div>';
+            html += '<table><tr><th>Продукт</th><th>Кол-во</th><th>Ед.</th><th>ккал</th><th>Б</th><th>Ж</th><th>У</th></tr>';
+            if (m.products) {
+                m.products.forEach(function(p){
+                    html += '<tr><td>' + escapeHtml(p.productName || p.name || '') + '</td>';
+                    html += '<td>' + (p.amount || '') + '</td><td>' + (p.unitLabel || 'г') + '</td>';
+                    html += '<td>' + Math.round((p.calories||0)*(p.amount||0)/100) + '</td>';
+                    html += '<td>' + ((p.protein||0)*(p.amount||0)/100).toFixed(1) + '</td>';
+                    html += '<td>' + ((p.fat||0)*(p.amount||0)/100).toFixed(1) + '</td>';
+                    html += '<td>' + ((p.carbs||0)*(p.amount||0)/100).toFixed(1) + '</td></tr>';
+                });
+            }
+            html += '</table></div>';
+        });
+    }
+    html += '</body></html>';
+    return html;
+}
+
+function generateWorkoutHTML(workouts, name){
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(name) + '</title>';
+    html += '<style>body{font-family:Arial,sans-serif;padding:20px;color:#1e293b}h1{color:#ef4444}table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#fef2f2}.workout{margin-bottom:24px;border:1px solid #e2e8f0;border-radius:10px;padding:14px}</style>';
+    html += '</head><body><h1>🏋️ ' + escapeHtml(name) + '</h1>';
+    workouts.forEach(function(w){
+        html += '<div class="workout"><h2>' + escapeHtml(w.title || 'Тренировка') + '</h2>';
+        if (w.date) html += '<p>📅 ' + escapeHtml(w.date) + '</p>';
+        html += '<table><tr><th>#</th><th>Упражнение</th><th>Сеты</th><th>Повт.</th><th>Вес</th><th>Отдых</th><th>Заметка</th></tr>';
+        (w.exercises || []).forEach(function(e, i){
+            html += '<tr><td>' + (i+1) + '</td><td>' + escapeHtml(e.name || '') + '</td>';
+            html += '<td>' + (e.sets || '') + '</td><td>' + (e.reps || '') + '</td>';
+            html += '<td>' + (e.weight || '') + '</td><td>' + (e.rest || '') + '</td>';
+            html += '<td>' + escapeHtml(e.note || '') + '</td></tr>';
+        });
+        html += '</table></div>';
+    });
+    html += '</body></html>';
+    return html;
+}
+
+function generatePlanCSV(plan){
+    var rows = [['Приём пищи', 'Продукт', 'Количество', 'Единица', 'ккал', 'Белки', 'Жиры', 'Углеводы']];
+    if (plan.meals) {
+        plan.meals.forEach(function(m){
+            if (m.products) {
+                m.products.forEach(function(p){
+                    rows.push([
+                        m.title || '',
+                        p.productName || p.name || '',
+                        p.amount || '',
+                        p.unitLabel || 'г',
+                        Math.round((p.calories||0)*(p.amount||0)/100),
+                        ((p.protein||0)*(p.amount||0)/100).toFixed(1),
+                        ((p.fat||0)*(p.amount||0)/100).toFixed(1),
+                        ((p.carbs||0)*(p.amount||0)/100).toFixed(1)
+                    ]);
+                });
+            }
+        });
+    }
+    return rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+}
+
+function generateWorkoutCSV(workouts){
+    var rows = [['Тренировка', 'Дата', '#', 'Упражнение', 'Сеты', 'Повт', 'Вес', 'Отдых', 'Заметка']];
+    workouts.forEach(function(w){
+        (w.exercises || []).forEach(function(e, i){
+            rows.push([w.title||'', w.date||'', i+1, e.name||'', e.sets||'', e.reps||'', e.weight||'', e.rest||'', e.note||'']);
+        });
+    });
+    return rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
+}
+
+window.win11CtxSavePlanToExplorer = function(){
+    hideContextMenu();
+    var name = prompt('Название:', 'Программа питания ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    savePlanToExplorerFile(name, 'json');
+};
+window.win11CtxSaveWorkoutToExplorer = function(){
+    hideContextMenu();
+    var name = prompt('Название:', 'Программа тренировок ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    saveWorkoutToExplorerFile(name, 'json');
+};
+window.win11CtxSavePlanPDF = function(){
+    hideContextMenu();
+    var name = prompt('Название PDF:', 'Программа питания ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    savePlanToExplorerFile(name, 'pdf');
+    /* Также открыть для печати */
+    var data = null;
+    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e) {}
+    if (data) {
+        var html = generatePlanHTML(data, name);
+        var win = window.open('', '_blank');
+        if (win) { win.document.write(html); win.document.close(); setTimeout(function(){ win.print(); }, 300); }
+    }
+};
+window.win11CtxSaveWorkoutPDF = function(){
+    hideContextMenu();
+    var name = prompt('Название PDF:', 'Программа тренировок ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    saveWorkoutToExplorerFile(name, 'pdf');
+    var data = null;
+    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e) {}
+    if (data && data.length) {
+        var html = generateWorkoutHTML(data, name);
+        var win = window.open('', '_blank');
+        if (win) { win.document.write(html); win.document.close(); setTimeout(function(){ win.print(); }, 300); }
+    }
+};
+window.win11CtxSavePlanExcel = function(){
+    hideContextMenu();
+    var name = prompt('Название Excel:', 'Питание ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    savePlanToExplorerFile(name, 'excel');
+    /* Скачать CSV */
+    var data = null;
+    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e) {}
+    if (data) {
+        var csv = generatePlanCSV(data);
+        var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = name + '.csv'; a.click();
+        URL.revokeObjectURL(url);
+    }
+};
+window.win11CtxSaveWorkoutExcel = function(){
+    hideContextMenu();
+    var name = prompt('Название Excel:', 'Тренировки ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    saveWorkoutToExplorerFile(name, 'excel');
+    var data = null;
+    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e) {}
+    if (data && data.length) {
+        var csv = generateWorkoutCSV(data);
+        var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = name + '.csv'; a.click();
+        URL.revokeObjectURL(url);
+    }
+};
+window.win11CtxSavePlanImage = function(){
+    hideContextMenu();
+    var name = prompt('Название изображения:', 'Питание ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    savePlanToExplorerFile(name, 'image');
+    /* Открыть HTML для скриншота */
+    var data = null;
+    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e) {}
+    if (data) {
+        var html = generatePlanHTML(data, name);
+        var win = window.open('', '_blank');
+        if (win) { win.document.write(html); win.document.close(); }
+    }
+    if (typeof showToast === 'function') showToast('🖼️ Откроется окно — нажмите Ctrl+P → Сохранить как PDF/изображение', 'info');
+};
+window.win11CtxSaveWorkoutImage = function(){
+    hideContextMenu();
+    var name = prompt('Название изображения:', 'Тренировка ' + new Date().toLocaleDateString(__uiLocale()));
+    if (!name) return;
+    saveWorkoutToExplorerFile(name, 'image');
+    var data = null;
+    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e) {}
+    if (data && data.length) {
+        var html = generateWorkoutHTML(data, name);
+        var win = window.open('', '_blank');
+        if (win) { win.document.write(html); win.document.close(); }
+    }
+    if (typeof showToast === 'function') showToast('🖼️ Откроется окно — нажмите Ctrl+P → Сохранить как PDF/изображение', 'info');
+};
+
 window.win11CtxOpenFiles = function(){
     hideContextMenu();
     openFileExplorer('documents');
@@ -40443,6 +40833,70 @@ window.win11CtxRefresh = function(){
     hideContextMenu();
     location.reload();
 };
+
+/* Выровнять рабочий стол — автоматически расставить виджеты и иконки */
+window.win11CtxAlignDesktop = function(){
+    hideContextMenu();
+    alignDesktop();
+};
+
+function alignDesktop(){
+    var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
+    if (!area) return;
+    var areaRect = area.getBoundingClientRect();
+
+    /* Собрать все виджеты */
+    var widgets = Array.prototype.slice.call(document.querySelectorAll('.win11-widget'));
+    var shortcuts = Array.prototype.slice.call(document.querySelectorAll('.win11-shortcut'));
+
+    /* Иконки — в левую колонку сверху вниз */
+    var scX = 20, scY = 20;
+    shortcuts.forEach(function(sc){
+        sc.style.left = scX + 'px';
+        sc.style.top = scY + 'px';
+        scY += 100;
+        if (scY > areaRect.height - 100) {
+            scY = 20;
+            scX += 100;
+        }
+        /* Сохранить */
+        var scId = sc.dataset.scId;
+        var found = desktopShortcuts.find(function(s){ return s.id === scId; });
+        if (found) { found.x = parseInt(sc.style.left); found.y = parseInt(sc.style.top); }
+    });
+    saveShortcuts();
+
+    /* Виджеты — расставить змейкой слева направо, сверху вниз */
+    var wX = 140, wY = 20;
+    var colWidth = 260, rowHeight = 50;
+    widgets.forEach(function(w){
+        var wW = w.offsetWidth || 240;
+        var wH = w.offsetHeight || 200;
+        /* Проверить — помещается ли в текущий ряд */
+        if (wX + wW > areaRect.width - 20) {
+            wX = 140;
+            wY += rowHeight;
+            rowHeight = 50;
+        }
+        w.style.left = wX + 'px';
+        w.style.top = wY + 'px';
+        wX += wW + 15;
+        rowHeight = Math.max(rowHeight, wH + 15);
+        /* Сохранить */
+        var wId = w.dataset.widgetId;
+        if (wId) {
+            widgetPositions[wId] = { x: parseInt(w.style.left), y: parseInt(w.style.top) };
+        }
+    });
+    savePositions();
+
+    /* Если на мобильном — перерендерить страницы */
+    if (isMobileLayout() || isTabletLayout()) {
+        renderDesktopPages();
+    }
+
+    if (typeof showToast === 'function') showToast('📐 Рабочий стол выровнен', 'success');
+}
 
 /* ============================================================
    ЗАКРЕПЛЕНИЕ ВИДЖЕТОВ (PIN)
@@ -41245,10 +41699,31 @@ function attachShortcutDrag(el, sc){
     });
     document.addEventListener('mouseup', function(){
         if (drag) {
+            var x = parseInt(el.style.left, 10);
+            var y = parseInt(el.style.top, 10);
+            /* Collision detection для иконок */
+            var others = document.querySelectorAll('.win11-shortcut:not([data-sc-id="' + sc.id + '"])');
+            var attempts = 0;
+            while (attempts < 30) {
+                var col = false;
+                for (var i = 0; i < others.length; i++) {
+                    var o = others[i];
+                    var ox = parseInt(o.style.left, 10) || 0;
+                    var oy = parseInt(o.style.top, 10) || 0;
+                    if (x < ox + 95 && x + 95 > ox && y < oy + 85 && y + 85 > oy) {
+                        col = true;
+                        y = oy + 100;
+                        if (y > 600) { y = 20; x = ox + 100; }
+                        break;
+                    }
+                }
+                if (!col) break;
+                attempts++;
+            }
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            sc.x = x; sc.y = y;
             drag = null;
-            /* Сохранить позицию */
-            sc.x = parseInt(el.style.left, 10);
-            sc.y = parseInt(el.style.top, 10);
             saveShortcuts();
         }
     });
