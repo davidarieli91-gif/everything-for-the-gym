@@ -28894,6 +28894,10 @@ setTimeout(function(){
             document.body.style.overflow = '';
             document.body.style.position = '';
             document.body.style.height = '';
+            /* Explicitly hide mobile desktop & any win11 widgets */
+            var mpdRoot = document.getElementById('mpDesktopRoot');
+            if (mpdRoot) mpdRoot.style.display = 'none !important';
+            document.querySelectorAll('.win11-widget, .win11-shortcut, .win11-window').forEach(function(el){ el.style.display = 'none'; });
             var csEl = document.getElementById('clientSpace');
             if (csEl) {
                 csEl.style.overflowY = 'auto';
@@ -31489,6 +31493,45 @@ body.layout-tablet.client-space-open {
     height: 100% !important;
     top: 0 !important;
     left: 0 !important;
+}
+
+/* === CLIENT-ONLY MODE: hide ALL trainer/creator UI === */
+body.client-space-open #homeScreen,
+body.client-space-open #appContainer,
+body.client-space-open #win11DesktopArea,
+body.client-space-open #win11Taskbar,
+body.client-space-open #win11StartMenu,
+body.client-space-open #win11ContextMenu,
+body.client-space-open #mpDesktopRoot,
+body.client-space-open .win11-window,
+body.client-space-open .win11-widget,
+body.client-space-open .win11-shortcut,
+body.client-space-open .win11-context-menu,
+body.client-space-open .win11-file-context-menu,
+body.client-space-open .win11-start-menu,
+body.client-space-open .win11-taskbar,
+body.client-space-open #trainerLoginOverlay,
+body.client-space-open #mpdAppFullscreen,
+body.client-space-open #mpdSearchOverlay,
+body.client-space-open #mpdSheet,
+body.client-space-open .mp-edit-bar,
+body.client-space-open .ui-scale-widget,
+body.client-space-open .home-tools-grid,
+body.client-space-open .fab-add-meal,
+body.client-space-open .mobile-nav,
+body.client-space-open .sidebar-toggle,
+body.client-space-open .side-panel,
+body.client-space-open .side-panel-backdrop,
+body.client-space-open .bottom-drawer,
+body.client-space-open .sidebar-resizer,
+body.client-space-open #uiScaleWidget {
+    display: none !important;
+}
+
+/* Force-show clientSpace when client is logged in */
+body.client-space-open #clientSpace {
+    display: block !important;
+    z-index: 99999 !important;
 }
 body.layout-mobile.client-space-open #clientSpace,
 body.layout-tablet.client-space-open #clientSpace {
@@ -44720,6 +44763,8 @@ function mpdAttachPullDown(){
 
 /* ---- Init ---- */
 function mpdInit(){
+    /* Don't init mobile desktop for client-only mode */
+    if (D.body.classList.contains('client-space-open')) return;
     loadMpdState();
     mpdRender();
     mpdAttachLongPress();
@@ -44729,12 +44774,13 @@ function mpdInit(){
     var origApply = W.applyLanguage;
     if (typeof origApply==='function' && !W.__mpdLangPatched){
         W.__mpdLangPatched = true;
-        W.applyLanguage = function(){ var r = origApply.apply(this, arguments); try { mpdRender(); } catch(e){} return r; };
+        W.applyLanguage = function(){ var r = origApply.apply(this, arguments); try { if (!D.body.classList.contains('client-space-open')) mpdRender(); } catch(e){} return r; };
     }
 }
 
 /* Auto-init on mobile/tablet */
 function mpdAutoInit(){
+    if (D.body.classList.contains('client-space-open')) return;  /* skip for client mode */
     if (D.body.classList.contains('layout-mobile') || D.body.classList.contains('layout-tablet')){
         mpdInit();
     }
