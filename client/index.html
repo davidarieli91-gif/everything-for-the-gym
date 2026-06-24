@@ -9647,7 +9647,40 @@
 body.layout-mobile #homeScreen,
 body.layout-tablet #homeScreen { display: none !important; }
 
+/* CLIENT APP: homeScreen MUST stay visible when login overlay is showing
+   (trainerLoginOverlay is inside homeScreen). Only hide when client is logged in. */
+body.layout-mobile:not(.client-space-open) #homeScreen,
+body.layout-tablet:not(.client-space-open) #homeScreen { display: block !important; }
+body.client-space-open #homeScreen { display: none !important; }
+
 body:not(.layout-mobile):not(.layout-tablet) #mpDesktopRoot { display: none !important; }
+
+/* CLIENT APP: mobile desktop is NEVER shown — client only sees login + clientSpace */
+#mpDesktopRoot { display: none !important; }
+
+/* CLIENT APP: when login is showing (trainer-locked), hide ALL desktop UI */
+body.trainer-locked #win11DesktopArea,
+body.trainer-locked #win11Taskbar,
+body.trainer-locked #win11StartMenu,
+body.trainer-locked #win11ContextMenu,
+body.trainer-locked .win11-widget,
+body.trainer-locked .win11-shortcut,
+body.trainer-locked .win11-window,
+body.trainer-locked .win11-page-indicators,
+body.trainer-locked .win11-desktop-pages,
+body.trainer-locked .win11-desktop-area,
+body.trainer-locked .mpd-edit-bar,
+body.trainer-locked #mpdAppFullscreen,
+body.trainer-locked #mpdSearchOverlay,
+body.trainer-locked #mpdSheet,
+body.trainer-locked .app-container,
+body.trainer-locked .side-panel,
+body.trainer-locked .bottom-drawer,
+body.trainer-locked .fab-add-meal,
+body.trainer-locked .mobile-nav,
+body.trainer-locked .sidebar-toggle {
+    display: none !important;
+}
 
 /* Hide mp-desktop when mobile planner/workout is active */
 body.mp-active #mpDesktopRoot { display: none !important; }
@@ -28796,13 +28829,22 @@ setTimeout(function(){
 
             const allUsers = getUsers();
             const input = nameOrPhone.toLowerCase();
+            /* Find user by name or phone — even if they don't have clientPassword yet */
             const user = allUsers.find(u =>
-                (u.clientPassword || u.password) &&
-                (u.name?.toLowerCase().includes(input) || u.phone?.includes(input) || (u.lastName && (u.name + ' ' + u.lastName).toLowerCase().includes(input)))
+                u.name?.toLowerCase().includes(input) || 
+                u.phone?.includes(input) || 
+                (u.lastName && (u.name + ' ' + u.lastName).toLowerCase().includes(input))
             );
 
-            if (!user || !user.clientPassword) {
-                errEl.textContent = t('clientNotFound') || 'Клиент не найден или пароль не задан';
+            if (!user) {
+                errEl.textContent = t('clientNotFound') || 'Клиент не найден. Проверьте имя или обратитесь к тренеру.';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            /* Check if user has a client password set */
+            if (!user.clientPassword) {
+                errEl.textContent = 'Пароль не задан. Обратитесь к тренеру, чтобы он установил пароль для вашего аккаунта.';
                 errEl.style.display = 'block';
                 return;
             }
