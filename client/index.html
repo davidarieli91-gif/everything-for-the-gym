@@ -9811,13 +9811,7 @@ setTimeout(function(){
             </div>
             <div class="win11-submenu">
                 <div class="win11-context-item" onclick="win11CtxAddWidget('clients')">
-                    <span class="win11-context-item-icon">👥</span> <span>Клиенты</span>
-                </div>
-                <div class="win11-context-item" onclick="win11CtxAddWidget('addClient')">
-                    <span class="win11-context-item-icon">➕👤</span> <span>Быстрый клиент</span>
-                </div>
-                <div class="win11-context-item" onclick="win11CtxAddWidget('addTrainer')">
-                    <span class="win11-context-item-icon">➕👨‍🏫</span> <span>Быстрый тренер</span>
+                    <span class="win11-context-item-icon">👥</span> <span>Клиенты (полный)</span>
                 </div>
                 <div class="win11-context-item" onclick="win11CtxAddWidget('tasks')">
                     <span class="win11-context-item-icon">✅</span> <span>Задачи сегодня</span>
@@ -9833,6 +9827,42 @@ setTimeout(function(){
                 </div>
                 <div class="win11-context-item" onclick="win11CtxAddWidget('summary')">
                     <span class="win11-context-item-icon">📊</span> <span>Сводка дня</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('calendar')">
+                    <span class="win11-context-item-icon">📅</span> <span>Календарь</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('weather')">
+                    <span class="win11-context-item-icon">🌤️</span> <span>Погода</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('calculator')">
+                    <span class="win11-context-item-icon">🧮</span> <span>Калькулятор</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('bmr')">
+                    <span class="win11-context-item-icon">⚖️</span> <span>BMR Калькулятор</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('stopwatch')">
+                    <span class="win11-context-item-icon">⏱</span> <span>Секундомер</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('timer')">
+                    <span class="win11-context-item-icon">⏲</span> <span>Таймер</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('keyboard')">
+                    <span class="win11-context-item-icon">🎹</span> <span>Клавиатура (пианино)</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('notes')">
+                    <span class="win11-context-item-icon">📝</span> <span>Заметки</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('hydration')">
+                    <span class="win11-context-item-icon">💧</span> <span>Вода (гидратация)</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('measurements')">
+                    <span class="win11-context-item-icon">📏</span> <span>Замеры тела</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('heartrate')">
+                    <span class="win11-context-item-icon">❤️</span> <span>Пульс</span>
+                </div>
+                <div class="win11-context-item" onclick="win11CtxAddWidget('pedometer')">
+                    <span class="win11-context-item-icon">👣</span> <span>Шагомер</span>
                 </div>
             </div>
 
@@ -12474,7 +12504,7 @@ setTimeout(function(){
 
         // ====== URL КАРТИНОК ПРОДУКТОВ (реальные фото из сети) ======
         // Заполняется по результатам image-search; пустая строка = использовать emoji fallback
-        const PRODUCT_IMAGES = {"Пита тонкая":"https://sfile.chatglm.cn/images-ppt/f292f93bab67.jpg","Пита толстая":"https://sfile.chatglm.cn/images-ppt/6c8ef9a26a0f.jpeg","Лаваш армянский":"https://sfile.chatglm.cn/images-ppt/a965748eb90d.jpg","Хлеб белый":"https://sfile.chatglm.cn/images-ppt/6071684572e7.jpg","Хлеб цельнозерновой":"https://sfile.chatglm.cn/images-ppt/a880016b5dae.jpeg","Хала":"https://sfile.chatglm.cn/images-ppt/2a16292f923e.jpg","Маца":"https://sfile.chatglm.cn/images-ppt/385c98accd75.jpg","Блины":"https://sfile.chatglm.cn/images-ppt/1e918d594473.jpg","Круассан":"","Багет":"","Молоко 3%":"","Молоко 1%":"","Творог 5%":"","Творог 0%":"","Йогурт греческий":"","Сыр белый":"","Сыр моцарелла":"","Масло сливочное":"","Шоколадное молоко":"","Яйцо куриное (варёное)":"","Яйцо куриное (сырое)":"","Брынза (фетa)":"","Сливки 10%":"","Ряженка":"","Куриная грудка":"","Куриное филе":"","Говядина":"","Говяжий фарш 5%":"","Баранина":"","Индюшатина":""};
+        const PRODUCT_IMAGES = {"Пита тонкая":"https://sfile.chatglm.cn/images-ppt/f292f93bab67.jpg","Пита толстая":"https://sfile.chatglm.cn/images-ppt/6c8ef9a26a0f.jpeg","Лаваш армянский":"https://sfile.chatglm.cn/images-ppt/a965748eb90d.jpg","Хлеб белый":"https://sfile.chatglm.cn/images-ppt/6071684572e7.jpg","Хлеб цельнозерновой":"https://sfile.chatglm.cn/images-ppt/a880016b5dae.jpeg","Хала":"https://sfile.chatglm.cn/images-ppt/2a16292f923e.jpg","Маца":"https://sfile.chatglm.cn/images-ppt/385c98accd75.jpg","Блины":"https://sfile.chatglm.cn/images-ppt/1e918d594473.jpg","Круассан":"https://sfile.chatglm.cn/images-ppt/a779f5209616.jpg","Багет":"https://sfile.chatglm.cn/images-ppt/b492ca0d9b16.jpg","Молоко 3%":"https://sfile.chatglm.cn/images-ppt/cfeb775fa917.jpg","Молоко 1%":"https://sfile.chatglm.cn/images-ppt/a0c2d7d636df.jpg","Творог 5%":"https://sfile.chatglm.cn/images-ppt/b674c78c79d1.jpg","Творог 0%":"https://sfile.chatglm.cn/images-ppt/df026284708b.jpg","Йогурт греческий":"https://sfile.chatglm.cn/images-ppt/970db0346e23.jpg","Сыр белый":"https://sfile.chatglm.cn/images-ppt/d0dcfb3e4513.jpeg","Сыр моцарелла":"https://sfile.chatglm.cn/images-ppt/e1be75f6586b.jpg","Масло сливочное":"https://sfile.chatglm.cn/images-ppt/86f3413188ae.jpg","Шоколадное молоко":"https://sfile.chatglm.cn/images-ppt/5478cb9eb24e.jpg","Яйцо куриное (варёное)":"https://sfile.chatglm.cn/images-ppt/7286368206a1.jpg","Яйцо куриное (сырое)":"https://sfile.chatglm.cn/images-ppt/a6d1651e3db5.jpg","Брынза (фетa)":"https://sfile.chatglm.cn/images-ppt/6b64cf16e268.png","Сливки 10%":"https://sfile.chatglm.cn/images-ppt/4f5a92ab05be.jpg","Ряженка":"https://sfile.chatglm.cn/images-ppt/564670dfc089.jpg","Куриная грудка":"https://sfile.chatglm.cn/images-ppt/46c8098f3f0c.jpg","Куриное филе":"https://sfile.chatglm.cn/images-ppt/f8db77adca8e.jpg","Говядина":"https://sfile.chatglm.cn/images-ppt/0cd3c7dcf48f.jpg","Говяжий фарш 5%":"https://sfile.chatglm.cn/images-ppt/c7b85092e1c7.jpg","Баранина":"https://sfile.chatglm.cn/images-ppt/cebd31fe6e19.jpeg","Индюшатина":"https://sfile.chatglm.cn/images-ppt/5bdd5b3e50ba.jpg","Лосось":"https://sfile.chatglm.cn/images-ppt/13c817f2c9c9.jpg","Тунец":"https://sfile.chatglm.cn/images-ppt/4aa7f14fef39.jpg","Сардина":"https://sfile.chatglm.cn/images-ppt/59dbcfc0bc76.jpg","Креветки":"https://sfile.chatglm.cn/images-ppt/3ed3abceaf0f.jpg","Яблоко":"https://sfile.chatglm.cn/images-ppt/d2204df30f67.jpeg","Банан":"https://sfile.chatglm.cn/images-ppt/424e414450a1.png","Апельсин":"https://sfile.chatglm.cn/images-ppt/322d3b8d0fb2.jpg","Авокадо":"https://sfile.chatglm.cn/images-ppt/a2703be82bb3.jpg","Гранат":"https://sfile.chatglm.cn/images-ppt/671895420a9c.jpg","Финики":"https://sfile.chatglm.cn/images-ppt/cad273b29022.jpg","Арбуз":"https://sfile.chatglm.cn/images-ppt/57335c7fa9a3.jpg","Груша":"https://sfile.chatglm.cn/images-ppt/ddf1249cbd35.jpg","Ананас":"https://sfile.chatglm.cn/images-ppt/446c769c4ebe.jpg","Виноград":"https://sfile.chatglm.cn/images-ppt/8bf06a16a910.jpg","Клубника":"https://sfile.chatglm.cn/images-ppt/d91ee2865660.jpg","Киви":"https://sfile.chatglm.cn/images-ppt/0cb77808451d.jpg","Манго":"https://sfile.chatglm.cn/images-ppt/df56fda5d483.jpg","Персик":"https://sfile.chatglm.cn/images-ppt/e6aad1850ed2.jpg","Вишня":"https://sfile.chatglm.cn/images-ppt/b33a7df6da1f.png","Лимон":"https://sfile.chatglm.cn/images-ppt/af91b9347861.jpg","Огурец":"https://sfile.chatglm.cn/images-ppt/c4e530245be8.jpg","Помидор":"https://sfile.chatglm.cn/images-ppt/49c0b20f4431.jpeg","Перец сладкий":"https://sfile.chatglm.cn/images-ppt/620a4a57304a.jpg","Баклажан":"https://sfile.chatglm.cn/images-ppt/fb2762251078.jpg","Цукини":"https://sfile.chatglm.cn/images-ppt/3487152e208b.jpg","Морковь":"https://sfile.chatglm.cn/images-ppt/775addc3e7d7.jpg","Батата (сладкий картофель)":"https://sfile.chatglm.cn/images-ppt/1fa68ebf4e0b.jpg","Картофель (варёный)":"https://sfile.chatglm.cn/images-ppt/53ce50ba6a41.jpg","Лук репчатый":"https://sfile.chatglm.cn/images-ppt/5e0d1d3a3fa8.jpg","Чеснок":"https://sfile.chatglm.cn/images-ppt/b15de776f760.jpg","Капуста белая":"https://sfile.chatglm.cn/images-ppt/f53493e6aa3f.png","Брокколи":"https://sfile.chatglm.cn/images-ppt/a2160622c128.jpg","Цветная капуста":"https://sfile.chatglm.cn/images-ppt/5a3c192239cf.jpg","Свекла":"https://sfile.chatglm.cn/images-ppt/27fa6c782b06.jpg","Тыква":"https://sfile.chatglm.cn/images-ppt/5d7fff03b4e7.jpg","Грибы (шампиньоны)":"https://sfile.chatglm.cn/images-ppt/7ac55c0eb2bc.jpg","Помидоры черри":"https://sfile.chatglm.cn/images-ppt/e6298ad03c06.jpg","Редис":"https://sfile.chatglm.cn/images-ppt/8e305a67912d.jpg","Сельдерей":"https://sfile.chatglm.cn/images-ppt/70f625987228.png","Нут":"https://sfile.chatglm.cn/images-ppt/d9d56ff4bf4d.jpg","Чечевица":"https://sfile.chatglm.cn/images-ppt/1df0d7382e68.jpg","Фасоль белая":"https://sfile.chatglm.cn/images-ppt/a5b0fc0d22ed.jpg","Тофу":"https://sfile.chatglm.cn/images-ppt/7164652abeca.jpg","Хумус":"https://sfile.chatglm.cn/images-ppt/6bb6fd720766.jpg","Фасоль красная":"https://sfile.chatglm.cn/images-ppt/9bb29bd15811.jpg","Горох (варёный)":"https://sfile.chatglm.cn/images-ppt/d7cd9b8e856d.jpg","Эдамаме":"https://sfile.chatglm.cn/images-ppt/26bceb8d6664.png","Рис белый":"https://sfile.chatglm.cn/images-ppt/41c7102b765a.jpg","Рис бурый":"https://sfile.chatglm.cn/images-ppt/44d245ed089b.jpg","Булгур":"https://sfile.chatglm.cn/images-ppt/ee4e207135f9.jpg","Овсянка":"https://sfile.chatglm.cn/images-ppt/c15af168ff1d.jpg","Гречка":"https://sfile.chatglm.cn/images-ppt/2527e505fb99.jpg","Макароны":"https://sfile.chatglm.cn/images-ppt/20b5c0fbdda2.jpg","Киноа (варёная)":"https://sfile.chatglm.cn/images-ppt/3ab28a438842.jpg","Кускус (варёный)":"https://sfile.chatglm.cn/images-ppt/70ae72e2d3d4.jpg","Кускус (сухой)":"https://sfile.chatglm.cn/images-ppt/a36ffeb7d2fd.jpg","Мюсли":"https://sfile.chatglm.cn/images-ppt/df4d9a9b643e.jpeg","Миндаль":"https://sfile.chatglm.cn/images-ppt/4f778ee118c6.jpeg","Фисташки":"https://sfile.chatglm.cn/images-ppt/5f0c264e44b5.png","Грецкий орех":"https://sfile.chatglm.cn/images-ppt/e7096901942e.jpg","Арахис":"https://sfile.chatglm.cn/images-ppt/4047c8e4118c.jpg","Семечки подсолнечника":"https://sfile.chatglm.cn/images-ppt/5e7ac8ac8985.jpg","Кешью":"https://sfile.chatglm.cn/images-ppt/bc7a6ffc32ef.jpg","Фундук":"https://sfile.chatglm.cn/images-ppt/1b71168383ac.jpg","Арахисовая паста":"https://sfile.chatglm.cn/images-ppt/f2099c9c3c63.jpg","Семена чиа":"https://sfile.chatglm.cn/images-ppt/3a0ee418ef40.jpg","Семена льна":"https://sfile.chatglm.cn/images-ppt/1c592707861d.jpg","Тыквенные семечки":"https://sfile.chatglm.cn/images-ppt/6287fa38d8fe.jpg","Петрушка":"https://sfile.chatglm.cn/images-ppt/9388b89d61f3.jpg","Укроп":"https://sfile.chatglm.cn/images-ppt/7fb3921f1490.jpg","Шпинат":"https://sfile.chatglm.cn/images-ppt/79797a0340dc.jpg","Зеленый лук":"https://sfile.chatglm.cn/images-ppt/98c83cf22ec0.jpg","Темпе":"https://sfile.chatglm.cn/images-ppt/b1fe4923dbb4.jpg","Веганский сыр":"https://sfile.chatglm.cn/images-ppt/26f9e4daea21.jpeg","Тахина":"https://sfile.chatglm.cn/images-ppt/01aa253752c4.jpg","Оливковое масло":"https://sfile.chatglm.cn/images-ppt/637f82f16a37.jpg","Кетчуп":"https://sfile.chatglm.cn/images-ppt/2a993f486fb4.jpg","Майонез":"https://sfile.chatglm.cn/images-ppt/d0135c1e8c40.jpeg","Мёд":"https://sfile.chatglm.cn/images-ppt/9ee513e77860.jpg","Сахар":"https://sfile.chatglm.cn/images-ppt/3d7a3ebf7e08.jpg","Сметана 15%":"https://sfile.chatglm.cn/images-ppt/04af4b6adbac.jpg","Соевый соус":"https://sfile.chatglm.cn/images-ppt/ea8972e83e04.png","Бальзамический уксус":"https://sfile.chatglm.cn/images-ppt/2d40a80dae12.jpg","Лимонный сок":"https://sfile.chatglm.cn/images-ppt/5f21d74c9e43.jpg","Техина (готовая)":"https://sfile.chatglm.cn/images-ppt/91d59ca64d9d.jpg","Халава":"https://sfile.chatglm.cn/images-ppt/29d4b38d9bb5.jpeg","Шоколад молочный":"https://sfile.chatglm.cn/images-ppt/2c49160ee6b2.jpeg","Мороженое":"https://sfile.chatglm.cn/images-ppt/4331b1349c83.jpg","Печенье":"https://sfile.chatglm.cn/images-ppt/4f95e57b6485.jpg","Вода":"https://sfile.chatglm.cn/images-ppt/8f921268a311.jpg","Чай черный":"https://sfile.chatglm.cn/images-ppt/eeb185398be7.jpeg","Кофе":"https://sfile.chatglm.cn/images-ppt/9d29f9ab18b8.jpg","Сок апельсиновый":"https://sfile.chatglm.cn/images-ppt/1557bba162ed.jpg","Кола":"https://sfile.chatglm.cn/images-ppt/c8a727a78a08.jpg","Фалафель":"https://sfile.chatglm.cn/images-ppt/28b61035a569.png","Шакшука":"https://sfile.chatglm.cn/images-ppt/e2afdb460f3e.jpg","Бурекас (сырный)":"https://sfile.chatglm.cn/images-ppt/5b53edd3cbaf.jpg","Сабич":"https://sfile.chatglm.cn/images-ppt/a7dbbd37956b.jpg","Бабагануш":"https://sfile.chatglm.cn/images-ppt/0382e66fd419.jpg","Матука (маринованные овощи)":"https://sfile.chatglm.cn/images-ppt/27667b4ccd0a.jpg","Зхуг":"https://sfile.chatglm.cn/images-ppt/765cc499aa30.jpg","Амба (манговый соус)":"https://sfile.chatglm.cn/images-ppt/cecc7062b862.jpg","Печень куриная":"https://sfile.chatglm.cn/images-ppt/79df36a1bee2.png","Сосиски куриные":"https://sfile.chatglm.cn/images-ppt/5c4449b03dd1.jpg","Паштет из индейки":"https://sfile.chatglm.cn/images-ppt/087f46129cd0.jpg","Тунец (консервы в масле)":"https://sfile.chatglm.cn/images-ppt/9351f31f0eb5.jpg","Тунец (консервы в воде)":"https://sfile.chatglm.cn/images-ppt/b6a06c2710f9.jpg"};
 
         // Единицы измерения
         const unitConversions = {
@@ -22923,6 +22953,14 @@ setTimeout(function(){
         function addProductFromModal() {
             const product = window.__lastInfoProduct;
             if (!product) return;
+            // If we have an override (mobile picker), call it instead
+            if (window.__infoAddOverride) {
+                const f = window.__infoAddOverride;
+                window.__infoAddOverride = null;
+                closeInfoModal();
+                f();
+                return;
+            }
             // порция и количество из карточки
             const unitSel = document.getElementById('pinfoUnitSel');
             const qtyEl = document.getElementById('pinfoQtyInput');
@@ -32198,14 +32236,15 @@ function mpProductCardHtml(p, i){
         if (p.nutriScore && typeof NUTRI_COLORS !== 'undefined' && NUTRI_COLORS[p.nutriScore])
             nutriTag = '<span style="display:inline-block; background:' + NUTRI_COLORS[p.nutriScore] + '; color:#fff; font-weight:800; font-size:.72em; padding:1px 6px; border-radius:5px; margin-inline-start:5px;">' + p.nutriScore + '</span>';
     } catch(e){}
-    return '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpPickAdd(' + i + ')">' +
+    /* Clicking card opens preview; + button adds directly */
+    return '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpProductInfo(' + i + ')">' +
         (thumb ? '<div class="mp-pick-thumb">' + thumb + '</div>' : '') +
         '<div class="mp-pick-main">' +
             '<div class="mp-pick-name">' + esc(name) + nutriTag + '</div>' +
             '<div class="mp-pick-sub">' + mt('pS') + ' ' + r1(p.protein) + ' · ' + mt('fS') + ' ' + r1(p.fat) + ' · ' + mt('cS') + ' ' + r1(p.carbs) + ' · ' + mt('perHundred') + esc(brandTxt) + '</div>' +
         '</div>' +
         '<div class="mp-pick-kcal">' + Math.round(p.calories || 0) + ' ' + mt('kcal') + '</div>' +
-        '<div class="mp-pick-plus">+</div>' +
+        '<button class="mp-pick-plus" style="cursor:pointer; background:none; border:none;" onclick="event.stopPropagation(); mpPickAdd(' + i + ')" title="Добавить">+</button>' +
     '</div>';
 }
 var MP_CAT_COLORS_FALLBACK = '#10B981';
@@ -32272,6 +32311,14 @@ window.mpPickAdd = function(i){
     var it = document.getElementById('mpPickItem' + i);
     if (it){ it.classList.add('justadded'); setTimeout(function(){ it.classList.remove('justadded'); }, 700); }
     if (typeof showToast === 'function') showToast(mt('added'));
+};
+
+/* Открыть превью продукта перед добавлением */
+window.mpProductInfo = function(i){
+    var p = __mpPickArr[i]; if (!p) return;
+    if (typeof openProductInfo !== 'function') { mpPickAdd(i); return; }
+    window.__infoAddOverride = function(){ mpPickAdd(i); };
+    openProductInfo(p);
 };
 
 /* --- редактор строки продукта --- */
@@ -39442,44 +39489,27 @@ else setTimeout(init,1200);
    ============================================================ */
 var WIDGET_REGISTRY = {
     clients: {
-        title: '👥 Клиенты',
-        width: 320,
-        height: 380,
+        title: '👥 Клиенты (полный)',
+        width: 360,
+        height: 460,
         render: function(body){
             body.innerHTML = '' +
                 '<div class="win11-clients-search">' +
                     '<input type="text" placeholder="🔍 Поиск клиента..." oninput="window.__win11FilterClients(this.value)">' +
                 '</div>' +
+                '<div style="display:flex; gap:6px; padding:6px 8px;">' +
+                    '<button class="win11-quickadd-btn" style="flex:1; padding:8px; min-height:auto;" onclick="window.__win11AddClient()">' +
+                        '<span class="ico">👤</span> <span>Новый</span>' +
+                    '</button>' +
+                    '<button class="win11-quickadd-btn" style="flex:1; padding:8px; min-height:auto;" onclick="window.__win11OpenClientsList()">' +
+                        '<span class="ico">📋</span> <span>Список</span>' +
+                    '</button>' +
+                    '<button class="win11-quickadd-btn trainer" style="flex:1; padding:8px; min-height:auto;" onclick="window.__win11AddTrainer()">' +
+                        '<span class="ico">👨‍🏫</span> <span>Тренер</span>' +
+                    '</button>' +
+                '</div>' +
                 '<div class="win11-clients-list" id="win11ClientsList"></div>';
             window.__win11RenderClients('');
-        }
-    },
-    addClient: {
-        title: '➕ Быстрый клиент',
-        width: 240,
-        height: 180,
-        render: function(body){
-            body.innerHTML = '' +
-                '<button class="win11-quickadd-btn" onclick="window.__win11AddClient()">' +
-                    '<span class="ico">👤</span> <span>Новый клиент</span>' +
-                '</button>' +
-                '<button class="win11-quickadd-btn" onclick="window.__win11OpenClientsList()">' +
-                    '<span class="ico">📋</span> <span>Список клиентов</span>' +
-                '</button>';
-        }
-    },
-    addTrainer: {
-        title: '➕ Быстрый тренер',
-        width: 240,
-        height: 180,
-        render: function(body){
-            body.innerHTML = '' +
-                '<button class="win11-quickadd-btn trainer" onclick="window.__win11AddTrainer()">' +
-                    '<span class="ico">👨‍🏫</span> <span>Новый тренер</span>' +
-                '</button>' +
-                '<button class="win11-quickadd-btn trainer" onclick="window.__win11OpenTrainerProfile()">' +
-                    '<span class="ico">👤</span> <span>Мой профиль</span>' +
-                '</button>';
         }
     },
     tasks: {
@@ -39524,6 +39554,78 @@ var WIDGET_REGISTRY = {
         render: function(body){
             window.__win11RenderSummary(body);
         }
+    },
+    calendar: {
+        title: '📅 Календарь',
+        width: 280,
+        height: 320,
+        render: function(body){ window.__win11RenderCalendar(body); }
+    },
+    weather: {
+        title: '🌤️ Погода',
+        width: 240,
+        height: 280,
+        render: function(body){ window.__win11RenderWeather(body); }
+    },
+    calculator: {
+        title: '🧮 Калькулятор',
+        width: 240,
+        height: 320,
+        render: function(body){ window.__win11RenderCalculator(body); }
+    },
+    bmr: {
+        title: '⚖️ BMR Калькулятор',
+        width: 280,
+        height: 380,
+        render: function(body){ window.__win11RenderBMR(body); }
+    },
+    stopwatch: {
+        title: '⏱ Секундомер',
+        width: 220,
+        height: 240,
+        render: function(body){ window.__win11RenderStopwatch(body); }
+    },
+    timer: {
+        title: '⏲ Таймер',
+        width: 220,
+        height: 280,
+        render: function(body){ window.__win11RenderTimer(body); }
+    },
+    keyboard: {
+        title: '🎹 Клавиатура',
+        width: 360,
+        height: 200,
+        render: function(body){ window.__win11RenderKeyboard(body); }
+    },
+    notes: {
+        title: '📝 Заметки',
+        width: 260,
+        height: 320,
+        render: function(body){ window.__win11RenderNotes(body); }
+    },
+    hydration: {
+        title: '💧 Вода',
+        width: 220,
+        height: 280,
+        render: function(body){ window.__win11RenderHydration(body); }
+    },
+    measurements: {
+        title: '📏 Замеры тела',
+        width: 260,
+        height: 360,
+        render: function(body){ window.__win11RenderMeasurements(body); }
+    },
+    heartrate: {
+        title: '❤️ Пульс',
+        width: 220,
+        height: 200,
+        render: function(body){ window.__win11RenderHeartRate(body); }
+    },
+    pedometer: {
+        title: '👣 Шагомер',
+        width: 220,
+        height: 240,
+        render: function(body){ window.__win11RenderPedometer(body); }
     }
 };
 
@@ -39533,8 +39635,8 @@ var DEFAULT_LAYOUT = [
     { id: 'summary', x: 270, y: 30 },
     { id: 'tasks', x: 540, y: 30 },
     { id: 'clients', x: 40, y: 200 },
-    { id: 'addClient', x: 400, y: 280 },
-    { id: 'addTrainer', x: 680, y: 280 }
+    { id: 'calendar', x: 420, y: 200 },
+    { id: 'weather', x: 740, y: 200 }
 ];
 
 /* ============================================================
@@ -39922,6 +40024,640 @@ window.__win11RenderSummary = function(body){
             '<span class="label">⚠️ Просрочено</span>' +
             '<span class="value" style="color:' + (overdueTasks.length > 0 ? '#dc2626' : 'inherit') + ';">' + overdueTasks.length + '</span>' +
         '</div>';
+};
+
+/* ============================================================
+   ВИДЖЕТ: КАЛЕНДАРЬ
+   ============================================================ */
+window.__win11RenderCalendar = function(body){
+    var state = { month: new Date().getMonth(), year: new Date().getFullYear() };
+    function draw(){
+        var months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        var days = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+        var first = new Date(state.year, state.month, 1);
+        var firstDay = (first.getDay() + 6) % 7;
+        var daysInMonth = new Date(state.year, state.month + 1, 0).getDate();
+        var today = new Date();
+        var isThisMonth = (today.getMonth() === state.month && today.getFullYear() === state.year);
+        var h = '<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px;">';
+        h += '<button style="background:rgba(0,0,0,.05); border:none; cursor:pointer; padding:4px 10px; border-radius:6px; font-size:16px;" onclick="window.__win11CalNav(-1)">‹</button>';
+        h += '<span style="font-weight:600;">' + months[state.month] + ' ' + state.year + '</span>';
+        h += '<button style="background:rgba(0,0,0,.05); border:none; cursor:pointer; padding:4px 10px; border-radius:6px; font-size:16px;" onclick="window.__win11CalNav(1)">›</button>';
+        h += '</div>';
+        h += '<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:4px 8px;">';
+        days.forEach(function(d){ h += '<div style="text-align:center; font-size:.7em; font-weight:700; opacity:.6; padding:4px 0;">' + d + '</div>'; });
+        for (var i = 0; i < firstDay; i++) h += '<div></div>';
+        for (var d = 1; d <= daysInMonth; d++){
+            var isToday = isThisMonth && d === today.getDate();
+            h += '<div style="text-align:center; padding:6px 0; border-radius:6px; font-size:.85em; cursor:pointer; ' +
+                 (isToday ? 'background:var(--primary-color,#3B82F6); color:white; font-weight:700;' : 'background:rgba(0,0,0,.03);') +
+                 '" onclick="window.__win11CalPick(' + d + ')">' + d + '</div>';
+        }
+        h += '</div>';
+        body.innerHTML = h;
+    }
+    window.__win11CalNav = function(delta){
+        state.month += delta;
+        if (state.month < 0){ state.month = 11; state.year--; }
+        if (state.month > 11){ state.month = 0; state.year++; }
+        draw();
+    };
+    window.__win11CalPick = function(d){
+        if (typeof openCalendarModal === 'function') openCalendarModal();
+    };
+    draw();
+};
+
+/* ============================================================
+   ВИДЖЕТ: ПОГОДА
+   ============================================================ */
+window.__win11RenderWeather = function(body){
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('win11_weather_cache')); } catch(e){}
+    var city = (saved && saved.city) || 'Tel Aviv';
+    body.innerHTML =
+        '<div style="padding:10px;">' +
+            '<div style="display:flex; gap:6px; margin-bottom:8px;">' +
+                '<input id="win11WeatherCity" type="text" placeholder="Город" value="' + (typeof escapeHtml === 'function' ? escapeHtml(city) : city) + '" ' +
+                    'style="flex:1; padding:6px 8px; border:1px solid rgba(0,0,0,.15); border-radius:6px; font-size:.85em;">' +
+                '<button onclick="window.__win11WeatherLoad()" style="padding:6px 10px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer; font-size:.85em;">OK</button>' +
+            '</div>' +
+            '<div id="win11WeatherInfo" style="text-align:center; padding:10px 0;">' +
+                '<div style="font-size:.85em; opacity:.7;">' + (typeof escapeHtml === 'function' ? escapeHtml(city) : city) + '</div>' +
+                '<div style="font-size:2.4em; margin:4px 0;">' + (saved && saved.temp != null ? Math.round(saved.temp) + '°C' : '—') + '</div>' +
+                '<div style="font-size:.85em; opacity:.8;">' + (saved && saved.desc ? saved.desc : 'Нажмите OK для загрузки') + '</div>' +
+            '</div>' +
+        '</div>';
+};
+window.__win11WeatherLoad = function(){
+    var input = document.getElementById('win11WeatherCity');
+    if (!input) return;
+    var city = (input.value || '').trim();
+    if (!city) return;
+    var info = document.getElementById('win11WeatherInfo');
+    if (info) info.innerHTML = '<div style="padding:20px; opacity:.6;">Загрузка...</div>';
+    fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=ru&format=json')
+        .then(function(r){ return r.json(); })
+        .then(function(geo){
+            if (!geo.results || !geo.results.length){
+                if (info) info.innerHTML = '<div style="padding:10px; color:#dc2626;">Город не найден</div>';
+                return;
+            }
+            var g = geo.results[0];
+            var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + g.latitude + '&longitude=' + g.longitude +
+                      '&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto';
+            return fetch(url).then(function(r){ return r.json(); }).then(function(w){
+                var codeMap = {0:'Ясно',1:'Преим. ясно',2:'Переменная облачность',3:'Пасмурно',45:'Туман',48:'Изморозь',51:'Морось',53:'Морось',55:'Сильная морось',61:'Небольшой дождь',63:'Дождь',65:'Сильный дождь',71:'Небольшой снег',73:'Снег',75:'Сильный снег',80:'Ливень',81:'Ливень',82:'Сильный ливень',95:'Гроза',96:'Гроза с градом',99:'Сильная гроза'};
+                var desc = codeMap[w.current.weather_code] || '—';
+                var data = { city: g.name, temp: w.current.temperature_2m, desc: desc, wind: w.current.wind_speed_10m };
+                try { localStorage.setItem('win11_weather_cache', JSON.stringify(data)); } catch(e){}
+                if (info) info.innerHTML =
+                    '<div style="font-size:.85em; opacity:.7;">' + g.name + '</div>' +
+                    '<div style="font-size:2.4em; margin:4px 0;">' + Math.round(data.temp) + '°C</div>' +
+                    '<div style="font-size:.85em; opacity:.8;">' + desc + '</div>' +
+                    '<div style="font-size:.75em; opacity:.6; margin-top:4px;">💨 ' + Math.round(data.wind) + ' км/ч</div>';
+            });
+        })
+        .catch(function(){
+            if (info) info.innerHTML = '<div style="padding:10px; color:#dc2626;">Ошибка сети</div>';
+        });
+};
+
+/* ============================================================
+   ВИДЖЕТ: КАЛЬКУЛЯТОР
+   ============================================================ */
+window.__win11RenderCalculator = function(body){
+    body.innerHTML =
+        '<div style="padding:8px;">' +
+            '<input id="win11CalcDisplay" type="text" readonly value="0" ' +
+                'style="width:100%; box-sizing:border-box; padding:10px; font-size:1.6em; text-align:right; ' +
+                'border:1px solid rgba(0,0,0,.1); border-radius:8px; background:rgba(0,0,0,.03); margin-bottom:8px;">' +
+            '<div id="win11CalcKeys" style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px;">' +
+                ['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','±','0','.','='].map(function(k){
+                    return '<button data-k="' + k + '" ' +
+                        'style="padding:12px 0; font-size:1.1em; border:none; border-radius:8px; cursor:pointer; ' +
+                        'background:' + (k === '=' ? 'var(--primary-color,#3B82F6)' : 'rgba(0,0,0,.05)') + '; ' +
+                        'color:' + (k === '=' ? 'white' : 'inherit') + ';" ' +
+                        'onclick="window.__win11CalcKey(\'' + k + '\')">' + k + '</button>';
+                }).join('') +
+            '</div>' +
+        '</div>';
+};
+window.__win11CalcKey = function(k){
+    var d = document.getElementById('win11CalcDisplay');
+    if (!d) return;
+    var v = d.value;
+    if (k === 'C'){ d.value = '0'; return; }
+    if (k === '⌫'){ d.value = v.length > 1 ? v.slice(0, -1) : '0'; return; }
+    if (k === '±'){ d.value = v.startsWith('-') ? v.slice(1) : (v === '0' ? '0' : '-' + v); return; }
+    if (k === '.'){ if (v.indexOf('.') < 0) d.value = v + '.'; return; }
+    if (k === '%'){ d.value = String(parseFloat(v) / 100); return; }
+    if (['÷','×','−','+'].indexOf(k) >= 0){
+        if (window.__win11CalcOp != null) window.__win11CalcKey('=');
+        window.__win11CalcOp = k;
+        window.__win11CalcFirst = parseFloat(d.value);
+        d.value = '0';
+        return;
+    }
+    if (k === '='){
+        if (window.__win11CalcOp != null && window.__win11CalcFirst != null){
+            var a = window.__win11CalcFirst, b = parseFloat(d.value), r = 0;
+            if (window.__win11CalcOp === '÷') r = a / b;
+            else if (window.__win11CalcOp === '×') r = a * b;
+            else if (window.__win11CalcOp === '−') r = a - b;
+            else if (window.__win11CalcOp === '+') r = a + b;
+            d.value = String(Math.round(r * 1e10) / 1e10);
+            window.__win11CalcOp = null;
+            window.__win11CalcFirst = null;
+        }
+        return;
+    }
+    if (v === '0' || v === '-0') d.value = (v.startsWith('-') ? '-' : '') + k;
+    else d.value = v + k;
+};
+
+/* ============================================================
+   ВИДЖЕТ: BMR
+   ============================================================ */
+window.__win11RenderBMR = function(body){
+    body.innerHTML =
+        '<div style="padding:10px; font-size:.85em;">' +
+            '<div style="margin-bottom:6px;"><label>Пол:</label>' +
+                '<select id="bmrGender" style="width:100%; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; margin-top:2px;">' +
+                    '<option value="male">Мужской</option><option value="female">Женский</option>' +
+                '</select>' +
+            '</div>' +
+            '<div style="margin-bottom:6px;"><label>Возраст (лет):</label>' +
+                '<input id="bmrAge" type="number" value="30" min="10" max="100" style="width:100%; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; margin-top:2px;">' +
+            '</div>' +
+            '<div style="margin-bottom:6px;"><label>Вес (кг):</label>' +
+                '<input id="bmrWeight" type="number" value="70" min="30" max="300" style="width:100%; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; margin-top:2px;">' +
+            '</div>' +
+            '<div style="margin-bottom:6px;"><label>Рост (см):</label>' +
+                '<input id="bmrHeight" type="number" value="170" min="100" max="250" style="width:100%; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; margin-top:2px;">' +
+            '</div>' +
+            '<div style="margin-bottom:6px;"><label>Активность:</label>' +
+                '<select id="bmrActivity" style="width:100%; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; margin-top:2px;">' +
+                    '<option value="1.2">Малоподвижный</option>' +
+                    '<option value="1.375">Лёгкая (1-3 раза/нед)</option>' +
+                    '<option value="1.55" selected>Средняя (3-5 раз/нед)</option>' +
+                    '<option value="1.725">Высокая (6-7 раз/нед)</option>' +
+                    '<option value="1.9">Очень высокая</option>' +
+                '</select>' +
+            '</div>' +
+            '<button onclick="window.__win11BMRCalc()" style="width:100%; padding:8px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; margin-top:4px;">Рассчитать</button>' +
+            '<div id="bmrResult" style="margin-top:10px; padding:10px; background:rgba(0,0,0,.04); border-radius:8px; text-align:center;"></div>' +
+        '</div>';
+};
+window.__win11BMRCalc = function(){
+    var g = document.getElementById('bmrGender').value;
+    var a = parseInt(document.getElementById('bmrAge').value, 10);
+    var w = parseFloat(document.getElementById('bmrWeight').value);
+    var h = parseFloat(document.getElementById('bmrHeight').value);
+    var act = parseFloat(document.getElementById('bmrActivity').value);
+    if (!a || !w || !h){ return; }
+    var bmr = 10 * w + 6.25 * h - 5 * a + (g === 'male' ? 5 : -161);
+    var tdee = bmr * act;
+    var r = document.getElementById('bmrResult');
+    if (r) r.innerHTML =
+        '<div style="font-size:.85em; opacity:.7;">Базовый обмен (BMR)</div>' +
+        '<div style="font-size:1.6em; font-weight:700; color:var(--primary-color,#3B82F6);">' + Math.round(bmr) + ' ккал</div>' +
+        '<div style="font-size:.85em; opacity:.7; margin-top:6px;">С учётом активности (TDEE)</div>' +
+        '<div style="font-size:1.3em; font-weight:600;">' + Math.round(tdee) + ' ккал/день</div>' +
+        '<div style="font-size:.75em; opacity:.6; margin-top:6px;">' +
+            'Похудение: ' + Math.round(tdee * 0.8) + ' ккал • ' +
+            'Поддержание: ' + Math.round(tdee) + ' • ' +
+            'Набор: ' + Math.round(tdee * 1.15) +
+        '</div>';
+};
+
+/* ============================================================
+   ВИДЖЕТ: СЕКУНДОМЕР
+   ============================================================ */
+window.__win11RenderStopwatch = function(body){
+    body.innerHTML =
+        '<div style="padding:14px; text-align:center;">' +
+            '<div id="swDisplay" style="font-size:2.4em; font-family:monospace; font-weight:700; margin-bottom:14px;">00:00.00</div>' +
+            '<div style="display:flex; gap:6px; justify-content:center;">' +
+                '<button id="swStartBtn" onclick="window.__win11SwToggle()" style="padding:8px 16px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Старт</button>' +
+                '<button onclick="window.__win11SwLap()" style="padding:8px 16px; background:rgba(0,0,0,.06); border:none; border-radius:6px; cursor:pointer;">Круг</button>' +
+                '<button onclick="window.__win11SwReset()" style="padding:8px 16px; background:rgba(220,38,38,.1); color:#dc2626; border:none; border-radius:6px; cursor:pointer;">Сброс</button>' +
+            '</div>' +
+            '<div id="swLaps" style="margin-top:10px; font-size:.85em; max-height:100px; overflow-y:auto;"></div>' +
+        '</div>';
+    if (!window.__win11SwState) window.__win11SwState = { running: false, t0: 0, elapsed: 0, laps: [], int: null };
+};
+window.__win11SwToggle = function(){
+    var s = window.__win11SwState;
+    if (!s) return;
+    if (s.running){
+        s.running = false;
+        s.elapsed += Date.now() - s.t0;
+        clearInterval(s.int);
+        var btn = document.getElementById('swStartBtn');
+        if (btn) btn.textContent = 'Старт';
+    } else {
+        s.running = true;
+        s.t0 = Date.now();
+        s.int = setInterval(window.__win11SwTick, 50);
+        var btn = document.getElementById('swStartBtn');
+        if (btn) btn.textContent = 'Пауза';
+    }
+};
+window.__win11SwTick = function(){
+    var s = window.__win11SwState;
+    if (!s || !s.running) return;
+    var total = s.elapsed + (Date.now() - s.t0);
+    var ms = total % 1000;
+    var sec = Math.floor(total / 1000) % 60;
+    var min = Math.floor(total / 60000);
+    var el = document.getElementById('swDisplay');
+    if (el) el.textContent = String(min).padStart(2,'0') + ':' + String(sec).padStart(2,'0') + '.' + String(Math.floor(ms/10)).padStart(2,'0');
+};
+window.__win11SwLap = function(){
+    var s = window.__win11SwState;
+    if (!s) return;
+    var total = s.running ? (s.elapsed + (Date.now() - s.t0)) : s.elapsed;
+    var ms = total % 1000;
+    var sec = Math.floor(total / 1000) % 60;
+    var min = Math.floor(total / 60000);
+    s.laps.unshift(String(min).padStart(2,'0') + ':' + String(sec).padStart(2,'0') + '.' + String(Math.floor(ms/10)).padStart(2,'0'));
+    var el = document.getElementById('swLaps');
+    if (el) el.innerHTML = s.laps.map(function(l, i){ return '<div style="padding:3px 0; border-bottom:1px solid rgba(0,0,0,.05);">#' + (s.laps.length - i) + ' — ' + l + '</div>'; }).join('');
+};
+window.__win11SwReset = function(){
+    var s = window.__win11SwState;
+    if (!s) return;
+    if (s.int) clearInterval(s.int);
+    s.running = false; s.elapsed = 0; s.laps = [];
+    var el = document.getElementById('swDisplay');
+    if (el) el.textContent = '00:00.00';
+    var laps = document.getElementById('swLaps');
+    if (laps) laps.innerHTML = '';
+    var btn = document.getElementById('swStartBtn');
+    if (btn) btn.textContent = 'Старт';
+};
+
+/* ============================================================
+   ВИДЖЕТ: ТАЙМЕР
+   ============================================================ */
+window.__win11RenderTimer = function(body){
+    body.innerHTML =
+        '<div style="padding:14px; text-align:center;">' +
+            '<div id="tmDisplay" style="font-size:2.4em; font-family:monospace; font-weight:700; margin-bottom:14px;">00:00</div>' +
+            '<div style="display:flex; gap:4px; justify-content:center; margin-bottom:10px;">' +
+                ['1','5','10','15','30'].map(function(m){
+                    return '<button onclick="window.__win11TmSet(' + m + ')" style="padding:6px 10px; background:rgba(0,0,0,.06); border:none; border-radius:6px; cursor:pointer; font-size:.85em;">' + m + 'м</button>';
+                }).join('') +
+            '</div>' +
+            '<div style="display:flex; gap:6px; justify-content:center;">' +
+                '<input id="tmMin" type="number" min="0" max="999" value="0" placeholder="мин" style="width:60px; padding:6px; text-align:center; border:1px solid rgba(0,0,0,.15); border-radius:6px;">' +
+                '<span style="line-height:32px;">:</span>' +
+                '<input id="tmSec" type="number" min="0" max="59" value="0" placeholder="сек" style="width:60px; padding:6px; text-align:center; border:1px solid rgba(0,0,0,.15); border-radius:6px;">' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; justify-content:center; margin-top:10px;">' +
+                '<button id="tmStartBtn" onclick="window.__win11TmToggle()" style="padding:8px 16px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Старт</button>' +
+                '<button onclick="window.__win11TmReset()" style="padding:8px 16px; background:rgba(220,38,38,.1); color:#dc2626; border:none; border-radius:6px; cursor:pointer;">Сброс</button>' +
+            '</div>' +
+        '</div>';
+    if (!window.__win11TmState) window.__win11TmState = { running: false, remaining: 0, int: null };
+};
+window.__win11TmSet = function(min){
+    var m = document.getElementById('tmMin');
+    var s = document.getElementById('tmSec');
+    if (m) m.value = min;
+    if (s) s.value = 0;
+    window.__win11TmReset();
+    window.__win11TmUpdateDisplay(min * 60);
+};
+window.__win11TmUpdateDisplay = function(secs){
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    var el = document.getElementById('tmDisplay');
+    if (el) el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+};
+window.__win11TmToggle = function(){
+    var s = window.__win11TmState;
+    if (!s) return;
+    if (s.running){
+        s.running = false;
+        clearInterval(s.int);
+        var btn = document.getElementById('tmStartBtn');
+        if (btn) btn.textContent = 'Продолжить';
+    } else {
+        if (s.remaining <= 0){
+            var m = parseInt(document.getElementById('tmMin').value, 10) || 0;
+            var sec = parseInt(document.getElementById('tmSec').value, 10) || 0;
+            s.remaining = m * 60 + sec;
+        }
+        if (s.remaining <= 0) return;
+        s.running = true;
+        s.int = setInterval(function(){
+            s.remaining--;
+            window.__win11TmUpdateDisplay(s.remaining);
+            if (s.remaining <= 0){
+                clearInterval(s.int);
+                s.running = false;
+                alert('⏰ Таймер завершён!');
+                var btn = document.getElementById('tmStartBtn');
+                if (btn) btn.textContent = 'Старт';
+            }
+        }, 1000);
+        var btn = document.getElementById('tmStartBtn');
+        if (btn) btn.textContent = 'Пауза';
+    }
+};
+window.__win11TmReset = function(){
+    var s = window.__win11TmState;
+    if (!s) return;
+    if (s.int) clearInterval(s.int);
+    s.running = false; s.remaining = 0;
+    var m = parseInt(document.getElementById('tmMin').value, 10) || 0;
+    var sec = parseInt(document.getElementById('tmSec').value, 10) || 0;
+    window.__win11TmUpdateDisplay(m * 60 + sec);
+    var btn = document.getElementById('tmStartBtn');
+    if (btn) btn.textContent = 'Старт';
+};
+
+/* ============================================================
+   ВИДЖЕТ: КЛАВИАТУРА (пианино)
+   ============================================================ */
+window.__win11RenderKeyboard = function(body){
+    var whiteNotes = ['C','D','E','F','G','A','B','C2','D2','E2','F2','G2','A2','B2'];
+    var blackInfo = [
+        {after:'C', note:'C#', freq:277.18},
+        {after:'D', note:'D#', freq:311.13},
+        {after:'F', note:'F#', freq:369.99},
+        {after:'G', note:'G#', freq:415.30},
+        {after:'A', note:'A#', freq:466.16},
+        {after:'C2', note:'C#2', freq:554.37},
+        {after:'D2', note:'D#2', freq:622.25},
+        {after:'F2', note:'F#2', freq:739.99},
+        {after:'G2', note:'G#2', freq:830.61},
+        {after:'A2', note:'A#2', freq:932.33}
+    ];
+    var h = '<div style="position:relative; padding:8px; user-select:none;">';
+    h += '<div style="position:relative; height:120px; display:flex; justify-content:center;">';
+    whiteNotes.forEach(function(n){
+        h += '<div onclick="window.__win11KbPlay(\'' + n + '\')" style="width:24px; height:120px; background:white; border:1px solid #333; cursor:pointer; display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; font-size:.7em; color:#333;">' + (n.replace('2','')) + '</div>';
+    });
+    h += '</div>';
+    h += '<div style="position:absolute; top:8px; left:0; right:0; height:75px; pointer-events:none;">';
+    var whiteWidth = 24;
+    var totalWhite = whiteNotes.length * whiteWidth;
+    h += '<div style="position:relative; width:' + totalWhite + 'px; margin:0 auto; height:75px;">';
+    var blackOffsets = {C:0, D:1, F:3, G:4, A:5, C2:7, D2:8, F2:10, G2:11, A2:12};
+    blackInfo.forEach(function(b){
+        var pos = blackOffsets[b.after];
+        if (pos !== undefined){
+            var left = pos * whiteWidth + whiteWidth - 7;
+            h += '<div onclick="window.__win11KbPlay(\'' + b.note + '\', ' + b.freq + ')" style="position:absolute; left:' + left + 'px; top:0; width:14px; height:75px; background:#1a1a1a; cursor:pointer; pointer-events:auto; border-radius:0 0 3px 3px;"></div>';
+        }
+    });
+    h += '</div></div>';
+    h += '<div id="kbNote" style="text-align:center; margin-top:8px; font-size:.85em; opacity:.7;">Нажмите клавишу</div>';
+    h += '</div>';
+    body.innerHTML = h;
+};
+window.__win11KbPlay = function(note, freqOverride){
+    var freq = freqOverride;
+    if (!freq) {
+        var map = {C:261.63,D:293.66,E:329.63,F:349.23,G:392.00,A:440.00,B:493.88,C2:523.25,D2:587.33,E2:659.25,F2:698.46,G2:783.99,A2:880.00,B2:987.77,'C#':277.18,'D#':311.13,'F#':369.99,'G#':415.30,'A#':466.16,'C#2':554.37,'D#2':622.25,'F#2':739.99,'G#2':830.61,'A#2':932.33};
+        freq = map[note];
+    }
+    if (!freq) return;
+    var el = document.getElementById('kbNote');
+    if (el) el.textContent = '🎵 ' + note + ' (' + Math.round(freq) + ' Hz)';
+    try {
+        var ctx = window.__win11KbCtx || new (window.AudioContext || window.webkitAudioContext)();
+        window.__win11KbCtx = ctx;
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    } catch(e) {}
+};
+
+/* ============================================================
+   ВИДЖЕТ: ЗАМЕТКИ
+   ============================================================ */
+window.__win11RenderNotes = function(body){
+    var notes = [];
+    try { notes = JSON.parse(localStorage.getItem('win11_notes') || '[]'); } catch(e){}
+    var h = '<div style="padding:8px;">';
+    h += '<div style="display:flex; gap:4px; margin-bottom:8px;">';
+    h += '<input id="ntInput" type="text" placeholder="Новая заметка..." style="flex:1; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; font-size:.85em;">';
+    h += '<button onclick="window.__win11NtAdd()" style="padding:6px 10px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer;">+</button>';
+    h += '</div>';
+    h += '<div id="ntList" style="max-height:200px; overflow-y:auto;">';
+    notes.forEach(function(n, i){
+        h += '<div style="background:rgba(255,235,59,.15); padding:8px; border-radius:6px; margin-bottom:4px; font-size:.85em; display:flex; justify-content:space-between; align-items:flex-start;">';
+        h += '<span style="flex:1; word-break:break-word;">' + (typeof escapeHtml === 'function' ? escapeHtml(n) : n) + '</span>';
+        h += '<button onclick="window.__win11NtDel(' + i + ')" style="background:none; border:none; cursor:pointer; color:#dc2626; font-size:1em; padding:0 4px;">✕</button>';
+        h += '</div>';
+    });
+    h += '</div></div>';
+    body.innerHTML = h;
+};
+window.__win11NtAdd = function(){
+    var inp = document.getElementById('ntInput');
+    if (!inp || !inp.value.trim()) return;
+    var notes = [];
+    try { notes = JSON.parse(localStorage.getItem('win11_notes') || '[]'); } catch(e){}
+    notes.unshift(inp.value.trim());
+    if (notes.length > 50) notes = notes.slice(0, 50);
+    try { localStorage.setItem('win11_notes', JSON.stringify(notes)); } catch(e){}
+    inp.value = '';
+    var body = document.querySelector('.win11-widget[data-widget-id="notes"] .win11-widget-body');
+    if (body) window.__win11RenderNotes(body);
+};
+window.__win11NtDel = function(i){
+    var notes = [];
+    try { notes = JSON.parse(localStorage.getItem('win11_notes') || '[]'); } catch(e){}
+    notes.splice(i, 1);
+    try { localStorage.setItem('win11_notes', JSON.stringify(notes)); } catch(e){}
+    var body = document.querySelector('.win11-widget[data-widget-id="notes"] .win11-widget-body');
+    if (body) window.__win11RenderNotes(body);
+};
+
+/* ============================================================
+   ВИДЖЕТ: ВОДА (гидратация)
+   ============================================================ */
+window.__win11RenderHydration = function(body){
+    var data = { glasses: 0, goal: 8, date: '' };
+    try { data = JSON.parse(localStorage.getItem('win11_hydration') || '{}'); } catch(e){}
+    var today = new Date().toISOString().slice(0,10);
+    if (data.date !== today){ data = { glasses: 0, goal: data.goal || 8, date: today }; }
+    var pct = Math.min(100, (data.glasses / data.goal) * 100);
+    body.innerHTML =
+        '<div style="padding:14px; text-align:center;">' +
+            '<div style="font-size:3em; line-height:1;">💧</div>' +
+            '<div style="font-size:1.8em; font-weight:700; margin:6px 0;"><span id="hydCount">' + data.glasses + '</span> / ' + data.goal + '</div>' +
+            '<div style="font-size:.85em; opacity:.7; margin-bottom:10px;">стаканов воды сегодня</div>' +
+            '<div style="background:rgba(0,0,0,.06); border-radius:8px; height:14px; overflow:hidden; margin-bottom:12px;">' +
+                '<div id="hydBar" style="background:linear-gradient(90deg,#3B82F6,#06b6d4); height:100%; width:' + pct + '%; transition:width .3s;"></div>' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; justify-content:center;">' +
+                '<button onclick="window.__win11HydAdd(1)" style="padding:8px 16px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">+1 стакан</button>' +
+                '<button onclick="window.__win11HydAdd(-1)" style="padding:8px 14px; background:rgba(0,0,0,.06); border:none; border-radius:6px; cursor:pointer;">−1</button>' +
+            '</div>' +
+            '<div style="margin-top:10px; font-size:.8em; opacity:.6;">' +
+                'Цель: <input id="hydGoal" type="number" min="1" max="30" value="' + data.goal + '" style="width:50px; padding:2px; text-align:center; border:1px solid rgba(0,0,0,.15); border-radius:4px;" onchange="window.__win11HydSetGoal(this.value)"> стак.' +
+            '</div>' +
+        '</div>';
+};
+window.__win11HydAdd = function(delta){
+    var data = {};
+    try { data = JSON.parse(localStorage.getItem('win11_hydration') || '{}'); } catch(e){}
+    var today = new Date().toISOString().slice(0,10);
+    if (data.date !== today){ data = { glasses: 0, goal: 8, date: today }; }
+    data.glasses = Math.max(0, (data.glasses || 0) + delta);
+    try { localStorage.setItem('win11_hydration', JSON.stringify(data)); } catch(e){}
+    var el = document.getElementById('hydCount');
+    if (el) el.textContent = data.glasses;
+    var bar = document.getElementById('hydBar');
+    if (bar) bar.style.width = Math.min(100, (data.glasses / data.goal) * 100) + '%';
+};
+window.__win11HydSetGoal = function(g){
+    var data = {};
+    try { data = JSON.parse(localStorage.getItem('win11_hydration') || '{}'); } catch(e){}
+    data.goal = Math.max(1, parseInt(g, 10) || 8);
+    try { localStorage.setItem('win11_hydration', JSON.stringify(data)); } catch(e){}
+    var body = document.querySelector('.win11-widget[data-widget-id="hydration"] .win11-widget-body');
+    if (body) window.__win11RenderHydration(body);
+};
+
+/* ============================================================
+   ВИДЖЕТ: ЗАМЕРЫ ТЕЛА
+   ============================================================ */
+window.__win11RenderMeasurements = function(body){
+    var data = {};
+    try { data = JSON.parse(localStorage.getItem('win11_measurements') || '{}'); } catch(e){}
+    var fields = [
+        {key:'weight', label:'Вес (кг)', icon:'⚖️'},
+        {key:'chest', label:'Грудь (см)', icon:'🏃'},
+        {key:'waist', label:'Талия (см)', icon:'📏'},
+        {key:'hips', label:'Бёдра (см)', icon:'🎯'},
+        {key:'biceps', label:'Бицепс (см)', icon:'💪'},
+        {key:'thigh', label:'Бедро (см)', icon:'🦵'}
+    ];
+    var h = '<div style="padding:10px; font-size:.85em;">';
+    fields.forEach(function(f){
+        h += '<div style="margin-bottom:6px;">';
+        h += '<label>' + f.icon + ' ' + f.label + ':</label>';
+        h += '<input type="number" step="0.1" value="' + (data[f.key] || '') + '" ' +
+             'oninput="window.__win11MsUpdate(\'' + f.key + '\', this.value)" ' +
+             'style="width:100%; padding:6px; border:1px solid rgba(0,0,0,.15); border-radius:6px; margin-top:2px;">';
+        h += '</div>';
+    });
+    if (data.weight && data.height){
+        var bmi = data.weight / Math.pow(data.height/100, 2);
+        h += '<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,.04); border-radius:6px; text-align:center;">';
+        h += '<div style="font-size:.85em; opacity:.7;">BMI</div>';
+        h += '<div style="font-size:1.4em; font-weight:700;">' + bmi.toFixed(1) + '</div>';
+        var cat = bmi < 18.5 ? 'Недостаток' : (bmi < 25 ? 'Норма' : (bmi < 30 ? 'Избыток' : 'Ожирение'));
+        h += '<div style="font-size:.75em;">' + cat + '</div>';
+        h += '</div>';
+    }
+    h += '<div style="margin-top:6px; font-size:.8em; opacity:.6;">Дата: ' + new Date().toLocaleDateString() + '</div>';
+    h += '</div>';
+    body.innerHTML = h;
+};
+window.__win11MsUpdate = function(key, val){
+    var data = {};
+    try { data = JSON.parse(localStorage.getItem('win11_measurements') || '{}'); } catch(e){}
+    data[key] = parseFloat(val) || 0;
+    data.lastUpdate = new Date().toISOString();
+    try { localStorage.setItem('win11_measurements', JSON.stringify(data)); } catch(e){}
+};
+
+/* ============================================================
+   ВИДЖЕТ: ПУЛЬС
+   ============================================================ */
+window.__win11RenderHeartRate = function(body){
+    body.innerHTML =
+        '<div style="padding:14px; text-align:center;">' +
+            '<div id="hrPulse" style="font-size:3em; line-height:1; color:#dc2626;">❤️</div>' +
+            '<div id="hrDisplay" style="font-size:2em; font-weight:700; margin:6px 0;">— <span style="font-size:.5em; opacity:.6;">уд/мин</span></div>' +
+            '<button id="hrTapBtn" onmousedown="window.__win11HrTap()" ontouchstart="window.__win11HrTap()" style="padding:12px 24px; background:#dc2626; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; margin-top:8px;">ТАП</button>' +
+            '<div style="font-size:.8em; opacity:.6; margin-top:6px;">Нажимайте в ритме пульса 5+ раз</div>' +
+            '<button onclick="window.__win11HrReset()" style="margin-top:6px; padding:4px 10px; background:rgba(0,0,0,.06); border:none; border-radius:4px; cursor:pointer; font-size:.8em;">Сброс</button>' +
+        '</div>';
+    if (!window.__win11HrState) window.__win11HrState = { taps: [] };
+};
+window.__win11HrTap = function(){
+    var s = window.__win11HrState;
+    if (!s) return;
+    var now = Date.now();
+    s.taps.push(now);
+    s.taps = s.taps.filter(function(t){ return now - t < 15000; });
+    if (s.taps.length >= 2){
+        var intervals = [];
+        for (var i = 1; i < s.taps.length; i++) intervals.push(s.taps[i] - s.taps[i-1]);
+        var avg = intervals.reduce(function(a,b){ return a + b; }, 0) / intervals.length;
+        var bpm = Math.round(60000 / avg);
+        var el = document.getElementById('hrDisplay');
+        if (el) el.innerHTML = bpm + ' <span style="font-size:.5em; opacity:.6;">уд/мин</span>';
+    }
+};
+window.__win11HrReset = function(){
+    if (window.__win11HrState) window.__win11HrState.taps = [];
+    var el = document.getElementById('hrDisplay');
+    if (el) el.innerHTML = '— <span style="font-size:.5em; opacity:.6;">уд/мин</span>';
+};
+
+/* ============================================================
+   ВИДЖЕТ: ШАГОМЕР
+   ============================================================ */
+window.__win11RenderPedometer = function(body){
+    var data = { steps: 0, date: '' };
+    try { data = JSON.parse(localStorage.getItem('win11_pedometer') || '{}'); } catch(e){}
+    var today = new Date().toISOString().slice(0,10);
+    if (data.date !== today){ data = { steps: 0, goal: 10000, date: today }; }
+    var pct = Math.min(100, (data.steps / (data.goal || 10000)) * 100);
+    var kcal = Math.round(data.steps * 0.04);
+    var dist = (data.steps * 0.0008).toFixed(2);
+    body.innerHTML =
+        '<div style="padding:14px; text-align:center;">' +
+            '<div style="font-size:3em; line-height:1;">👣</div>' +
+            '<div style="font-size:2em; font-weight:700; margin:6px 0;"><span id="pdCount">' + data.steps + '</span></div>' +
+            '<div style="font-size:.85em; opacity:.7; margin-bottom:10px;">шагов сегодня</div>' +
+            '<div style="background:rgba(0,0,0,.06); border-radius:8px; height:10px; overflow:hidden; margin-bottom:10px;">' +
+                '<div id="pdBar" style="background:linear-gradient(90deg,#10B981,#34D399); height:100%; width:' + pct + '%;"></div>' +
+            '</div>' +
+            '<div style="display:flex; justify-content:space-around; font-size:.8em; margin-bottom:10px;">' +
+                '<div><div style="font-weight:700;">' + dist + '</div><div style="opacity:.6;">км</div></div>' +
+                '<div><div style="font-weight:700;">' + kcal + '</div><div style="opacity:.6;">ккал</div></div>' +
+                '<div><div style="font-weight:700;">' + pct.toFixed(0) + '%</div><div style="opacity:.6;">цели</div></div>' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; justify-content:center;">' +
+                '<button onclick="window.__win11PdAdd(100)" style="padding:6px 12px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer;">+100</button>' +
+                '<button onclick="window.__win11PdAdd(500)" style="padding:6px 12px; background:var(--primary-color,#3B82F6); color:white; border:none; border-radius:6px; cursor:pointer;">+500</button>' +
+                '<button onclick="window.__win11PdReset()" style="padding:6px 12px; background:rgba(220,38,38,.1); color:#dc2626; border:none; border-radius:6px; cursor:pointer;">⟲</button>' +
+            '</div>' +
+        '</div>';
+};
+window.__win11PdAdd = function(n){
+    var data = {};
+    try { data = JSON.parse(localStorage.getItem('win11_pedometer') || '{}'); } catch(e){}
+    var today = new Date().toISOString().slice(0,10);
+    if (data.date !== today){ data = { steps: 0, goal: 10000, date: today }; }
+    data.steps = (data.steps || 0) + n;
+    try { localStorage.setItem('win11_pedometer', JSON.stringify(data)); } catch(e){}
+    var body = document.querySelector('.win11-widget[data-widget-id="pedometer"] .win11-widget-body');
+    if (body) window.__win11RenderPedometer(body);
+};
+window.__win11PdReset = function(){
+    var data = { steps: 0, goal: 10000, date: new Date().toISOString().slice(0,10) };
+    try { localStorage.setItem('win11_pedometer', JSON.stringify(data)); } catch(e){}
+    var body = document.querySelector('.win11-widget[data-widget-id="pedometer"] .win11-widget-body');
+    if (body) window.__win11RenderPedometer(body);
 };
 
 /* ============================================================
