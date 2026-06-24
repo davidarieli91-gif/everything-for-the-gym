@@ -19217,6 +19217,7 @@ setTimeout(function(){
                     <div class="workout-controls">
                         <button class="control-btn wk-live-btn" onclick="startTrainerWorkout(this)" data-tooltip="▶ Live">▶</button>
                         <button class="control-btn" onclick="addExerciseRow(this.closest('.workout'))" data-tooltip="${escapeAttr(t('wkAddExercise'))}">+</button>
+                        <button class="control-btn" onclick="win11CtxSaveWorkoutToExplorer()" data-tooltip="💾 В проводник">💾</button>
                         <button class="control-btn" onclick="duplicateWorkout(this.closest('.workout'))" data-tooltip="${escapeAttr(t('wkDuplicate'))}">⎘</button>
                         <button class="control-btn remove" onclick="removeWorkout(this.closest('.workout'))" data-tooltip="${escapeAttr(t('wkRemove'))}">✕</button>
                     </div>
@@ -39714,8 +39715,10 @@ function startDrag(widget, id, startX, startY, e){
     var rect = widget.getBoundingClientRect();
     var offsetX = startX - rect.left;
     var offsetY = startY - rect.top;
+    var initLeft = parseInt(widget.style.left, 10) || 0;
+    var initTop = parseInt(widget.style.top, 10) || 0;
 
-    dragState = { widget: widget, id: id, offsetX: offsetX, offsetY: offsetY };
+    dragState = { widget: widget, id: id, offsetX: offsetX, offsetY: offsetY, startX: initLeft, startY: initTop };
     widget.classList.add('dragging');
 
     document.addEventListener('mousemove', onDragMove);
@@ -39738,17 +39741,28 @@ function onDragMoveTouch(e){
 }
 
 function updateWidgetPosition(clientX, clientY){
-    var area = document.getElementById('win11DesktopArea');
+    var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
     if (!area || !dragState) return;
     var areaRect = area.getBoundingClientRect();
     var x = clientX - areaRect.left - dragState.offsetX;
     var y = clientY - areaRect.top - dragState.offsetY;
 
-    /* Не даём виджету выйти за пределы области */
     var w = dragState.widget.offsetWidth;
     var h = dragState.widget.offsetHeight;
-    x = Math.max(0, Math.min(x, areaRect.width - w));
-    y = Math.max(0, Math.min(y, areaRect.height - h));
+
+    /* На ПК — позволяем тянуть вниз (рабочий стол растёт) */
+    if (!isMobileLayout() && !isTabletLayout()) {
+        x = Math.max(0, Math.min(x, areaRect.width - w - 4));
+        y = Math.max(0, y); /* Не ограничиваем снизу */
+        /* Если виджет выходит за низ — расширяем область */
+        if (y + h > areaRect.height) {
+            area.style.minHeight = (y + h + 40) + 'px';
+        }
+    } else {
+        /* Мобильный/планшет — ограничиваем */
+        x = Math.max(0, Math.min(x, areaRect.width - w - 4));
+        y = Math.max(0, Math.min(y, areaRect.height - h - 4));
+    }
 
     dragState.widget.style.left = x + 'px';
     dragState.widget.style.top = y + 'px';
@@ -39765,46 +39779,50 @@ function onDragEnd(){
     var w = widget.offsetWidth;
     var h = widget.offsetHeight;
 
-    /* Collision detection — не дать виджету накладываться на другие */
-    var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
-    if (area) {
-        var areaRect = area.getBoundingClientRect();
-        /* Не выходить за пределы */
-        x = Math.max(0, Math.min(x, areaRect.width - w - 4));
-        y = Math.max(0, Math.min(y, areaRect.height - h - 4));
-        /* Проверить коллизии с другими виджетами */
-        var others = document.querySelectorAll('.win11-widget:not(.dragging)');
-        var attempts = 0;
-        while (attempts < 50) {
-            var collision = false;
+    /* Запомнить начальную позицию — чтобы понять, было ли реальное перетаскивание */
+    var startX = dragState.startX || 0;
+    var startY = dragState.startY || 0;
+    var moved = Math.abs(x - startX) > 5 || Math.abs(y - startY) > 5;
+
+    /* Только если виджет реально перетащили — проверяем коллизии */
+    if (moved) {
+        var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
+        if (area) {
+            var areaRect = area.getBoundingClientRect();
+
+            /* На ПК — позволить выходить за нижний край (расширение рабочего стола) */
+            if (!isMobileLayout() && !isTabletLayout()) {
+                /* ПК: не ограничиваем снизу — рабочий стол может расти */
+                x = Math.max(0, Math.min(x, areaRect.width - w - 4));
+                if (y + h > areaRect.height) {
+                    /* Расширить рабочую область */
+                    area.style.minHeight = (y + h + 40) + 'px';
+                }
+            } else {
+                /* Мобильный/планшет: ограничиваем */
+                x = Math.max(0, Math.min(x, areaRect.width - w - 4));
+                y = Math.max(0, Math.min(y, areaRect.height - h - 4));
+            }
+
+            /* Collision detection — только если виджет реально перемещён */
+            var others = document.querySelectorAll('.win11-widget:not([data-widget-id="' + id + '"])');
             for (var i = 0; i < others.length; i++) {
                 var o = others[i];
+                if (o.style.display === 'none') continue;
                 var ox = parseInt(o.style.left, 10) || 0;
                 var oy = parseInt(o.style.top, 10) || 0;
                 var ow = o.offsetWidth;
                 var oh = o.offsetHeight;
-                /* Прямоугольная коллизия */
-                if (x < ox + ow + 8 && x + w + 8 > ox && y < oy + oh + 8 && y + h + 8 > oy) {
-                    collision = true;
-                    /* Сдвинуть вниз */
-                    y = oy + oh + 10;
-                    /* Если вышли за низ — сдвинуть вправо */
-                    if (y + h > areaRect.height) {
-                        y = 10;
-                        x = ox + ow + 10;
-                    }
-                    /* Если вышли за право — расширить область (ПК) */
-                    if (x + w > areaRect.width) {
-                        if (!isMobileLayout() && !isTabletLayout()) {
-                            /* ПК — расширить рабочую область */
-                            area.style.minHeight = (parseInt(area.style.minHeight || 0) + h + 20) + 'px';
-                        }
+                if (x < ox + ow + 6 && x + w + 6 > ox && y < oy + oh + 6 && y + h + 6 > oy) {
+                    /* Коллизия — сдвинуть вниз */
+                    y = oy + oh + 8;
+                    /* ПК: расширить если нужно */
+                    if (!isMobileLayout() && !isTabletLayout() && y + h > areaRect.height) {
+                        area.style.minHeight = (y + h + 40) + 'px';
                     }
                     break;
                 }
             }
-            if (!collision) break;
-            attempts++;
         }
     }
 
@@ -39815,8 +39833,22 @@ function onDragEnd(){
     widgetPositions[id] = { x: x, y: y };
     savePositions();
 
-    /* На мобильном/планшете — snap-to-grid */
-    snapWidgetToGrid(widget, id);
+    /* На мобильном/планшете — snap-to-grid только если перетащили */
+    if (moved && (isMobileLayout() || isTabletLayout())) {
+        snapWidgetToGrid(widget, id);
+        /* Если виджет ушёл за край — создать новую страницу */
+        var pgArea = document.getElementById('win11DesktopPages');
+        if (pgArea) {
+            var pgRect = pgArea.getBoundingClientRect();
+            if (y + h > pgRect.height - 10) {
+                /* Виджет в самом низу — переходим на новую страницу */
+                if (typeof addNewPage === 'function') {
+                    addNewPage();
+                    if (typeof showToast === 'function') showToast('➕ Новая страница', 'info');
+                }
+            }
+        }
+    }
 
     dragState = null;
     document.removeEventListener('mousemove', onDragMove);
@@ -41396,7 +41428,7 @@ window.__win11ExplorerUpload = function(winId){
                 var fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
                 var content = ev.target.result;
                 /* Если файл большой (>1MB) — предупреждаем */
-                if (content.length > 1500000) {
+                if (content.length > 3000000) {
                     if (typeof showToast === 'function') showToast('⚠️ Файл «' + file.name + '» слишком большой', 'error');
                     return;
                 }
