@@ -9634,6 +9634,576 @@
             .win11-start-menu { width: calc(100vw - 16px); padding: 16px; }
         }
 
+
+/* ============================================================
+   MOBILE DESKTOP — minimalist iOS/Android-like home screen
+   Activated on body.layout-mobile and body.layout-tablet
+   ============================================================ */
+
+/* Hide old win11 desktop on mobile, show mp-desktop */
+body.layout-mobile #homeScreen,
+body.layout-tablet #homeScreen { display: none !important; }
+
+body:not(.layout-mobile):not(.layout-tablet) #mpDesktopRoot { display: none !important; }
+
+/* Hide mp-desktop when mobile planner/workout is active */
+body.mp-active #mpDesktopRoot { display: none !important; }
+body.planner-active #mpDesktopRoot { display: none !important; }
+
+#mpDesktopRoot {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: var(--font-family, 'Segoe UI', system-ui, -apple-system, sans-serif);
+    background: linear-gradient(160deg, #1a1d3a 0%, #2d1b4e 40%, #1a1d3a 100%);
+    color: #fff;
+}
+body.layout-mobile #mpDesktopRoot,
+body.layout-tablet #mpDesktopRoot { display: flex; }
+
+/* Decorative blooms (bougainvillea) */
+#mpDesktopRoot .mpd-bloom {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    opacity: 0.4;
+}
+.mpd-bloom-1 { top: -10%; left: 50%; width: 300px; height: 300px; background: #ec407a; }
+.mpd-bloom-2 { bottom: 10%; right: -5%; width: 250px; height: 250px; background: #d81b60; }
+.mpd-bloom-3 { top: 40%; left: -10%; width: 200px; height: 200px; background: #ab47bc; }
+
+/* ===== Status bar ===== */
+.mpd-statusbar {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 20px;
+    padding-top: calc(6px + env(safe-area-inset-top, 0px));
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 10;
+    position: relative;
+}
+.mpd-status-time { letter-spacing: 0.5px; }
+.mpd-status-icons { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+
+/* ===== Pages container (swipeable) ===== */
+.mpd-pages {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.mpd-pages::-webkit-scrollbar { display: none; }
+
+.mpd-page {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    position: relative;
+}
+.mpd-page::-webkit-scrollbar { display: none; }
+
+/* ===== Home page ===== */
+.mpd-greeting {
+    text-align: center;
+    margin: 8px 0 16px;
+}
+.mpd-greeting-h {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #fff, #e0e0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.mpd-greeting-date {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+/* Widget cards on home */
+.mpd-widgets-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.mpd-widget-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 18px;
+    padding: 14px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.mpd-widget-card:active { transform: scale(0.96); }
+.mpd-widget-card.wide { grid-column: 1 / -1; }
+
+.mpd-w-icon { font-size: 24px; margin-bottom: 6px; }
+.mpd-w-title { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+.mpd-w-value { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.mpd-w-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+/* Calendar widget */
+.mpd-w-cal { text-align: center; }
+.mpd-w-cal-day { font-size: 32px; font-weight: 800; line-height: 1; }
+.mpd-w-cal-month { font-size: 12px; opacity: 0.8; text-transform: uppercase; }
+.mpd-w-cal-tasks { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+
+/* Weather widget */
+.mpd-w-weather { text-align: center; }
+.mpd-w-w-temp { font-size: 28px; font-weight: 700; }
+.mpd-w-w-desc { font-size: 11px; opacity: 0.8; }
+
+/* Summary widget (wide) */
+.mpd-w-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+.mpd-w-sum-item { text-align: center; }
+.mpd-w-sum-num { font-size: 18px; font-weight: 700; }
+.mpd-w-sum-lbl { font-size: 10px; opacity: 0.7; }
+
+/* ===== App icons grid ===== */
+.mpd-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 18px 0 10px;
+    padding: 0 4px;
+}
+
+.mpd-icons-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px 8px;
+    padding: 0 4px;
+}
+body.layout-tablet .mpd-icons-grid { grid-template-columns: repeat(6, 1fr); }
+
+.mpd-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transition: transform 0.12s;
+}
+.mpd-icon:active { transform: scale(0.88); }
+.mpd-icon-img {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    position: relative;
+}
+body.layout-tablet .mpd-icon-img { width: 64px; height: 64px; font-size: 30px; }
+.mpd-icon-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.9;
+}
+
+/* Edit mode (jiggle) */
+.mpd-editing .mpd-icon,
+.mpd-editing .mpd-widget-card {
+    animation: mpd-jiggle 0.3s infinite alternate;
+}
+.mpd-editing .mpd-icon-img::after {
+    content: '✕';
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 20px;
+    height: 20px;
+    background: #ff3b30;
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+@keyframes mpd-jiggle {
+    0% { transform: rotate(-1.5deg); }
+    100% { transform: rotate(1.5deg); }
+}
+
+/* ===== App Library page ===== */
+.mpd-apps-search {
+    margin: 8px 0 16px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.mpd-apps-search::placeholder { color: rgba(255,255,255,0.5); }
+.mpd-apps-search:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+
+.mpd-cat-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 18px 0 10px;
+    padding: 0 4px;
+    opacity: 0.8;
+}
+
+/* ===== Page indicators ===== */
+.mpd-indicators {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 0;
+    z-index: 10;
+}
+.mpd-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transition: all 0.25s;
+    cursor: pointer;
+}
+.mpd-dot.active {
+    background: #fff;
+    width: 20px;
+    border-radius: 4px;
+}
+
+/* ===== Dock (bottom) ===== */
+.mpd-dock {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    margin: 0 16px 8px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 22px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    z-index: 20;
+}
+.mpd-dock-btn {
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s;
+    position: relative;
+}
+body.layout-tablet .mpd-dock-btn { width: 64px; height: 64px; font-size: 30px; }
+.mpd-dock-btn:active { transform: scale(0.9); }
+.mpd-dock-btn.primary {
+    background: linear-gradient(135deg, var(--primary-color, #3B82F6), var(--primary-dark, #1d4ed8));
+    box-shadow: 0 4px 14px rgba(59,130,246,0.5);
+}
+
+/* ===== Search overlay (pull-down) ===== */
+.mpd-search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(20,20,40,0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    display: none;
+    flex-direction: column;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 20px;
+}
+.mpd-search-overlay.open { display: flex; }
+.mpd-search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.mpd-search-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 16px;
+}
+.mpd-search-input:focus { outline: none; }
+.mpd-search-close {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+.mpd-search-section { margin-bottom: 20px; }
+.mpd-search-section h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin: 0 0 10px;
+    letter-spacing: 0.5px;
+}
+.mpd-search-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.mpd-search-item:active { background: rgba(255,255,255,0.15); }
+.mpd-search-item-ico { font-size: 24px; }
+.mpd-search-item-txt { flex: 1; }
+.mpd-search-item-name { font-size: 15px; font-weight: 500; }
+.mpd-search-item-sub { font-size: 12px; opacity: 0.6; }
+
+/* ===== Bottom sheet (long-press actions) ===== */
+.mpd-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 300;
+    background: rgba(40,40,60,0.95);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: 22px 22px 0 0;
+    padding: 8px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+}
+.mpd-sheet.open { transform: translateY(0); }
+.mpd-sheet-handle {
+    width: 40px;
+    height: 5px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    margin: 4px auto 12px;
+}
+.mpd-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    color: #fff;
+    font-size: 15px;
+}
+.mpd-sheet-item:active { background: rgba(255,255,255,0.1); }
+.mpd-sheet-item.danger { color: #ff453a; }
+.mpd-sheet-item-ico { font-size: 20px; width: 26px; text-align: center; }
+.mpd-sheet-cancel {
+    margin-top: 8px;
+    text-align: center;
+    font-weight: 600;
+    background: rgba(255,255,255,0.1);
+}
+
+/* ===== Fullscreen app view ===== */
+.mpd-app-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 250;
+    background: var(--background-color, #1a1d3a);
+    display: none;
+    flex-direction: column;
+}
+.mpd-app-fullscreen.open { display: flex; }
+.mpd-app-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    background: rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.mpd-app-back {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+.mpd-app-title { flex: 1; font-size: 17px; font-weight: 600; }
+.mpd-app-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ===== Edit mode toolbar ===== */
+.mpd-edit-bar {
+    position: fixed;
+    top: calc(50px + env(safe-area-inset-top, 0px));
+    left: 16px;
+    right: 16px;
+    z-index: 250;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+}
+.mpd-editing .mpd-edit-bar { display: flex; }
+.mpd-edit-bar-title { font-weight: 600; font-size: 15px; }
+.mpd-edit-bar-done {
+    padding: 6px 16px;
+    background: var(--primary-color, #3B82F6);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ===== Add widget sheet ===== */
+.mpd-add-widget-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 12px;
+}
+.mpd-add-widget-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.mpd-add-widget-item:active { background: rgba(255,255,255,0.15); }
+.mpd-add-widget-ico { font-size: 28px; }
+.mpd-add-widget-name { font-size: 12px; text-align: center; }
+
+/* Dark theme adjustments */
+body.dark-theme #mpDesktopRoot {
+    background: linear-gradient(160deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+}
+
+/* Pull-to-refresh */
+.mpd-ptr {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-40px);
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: transform 0.2s;
+    z-index: 5;
+}
+.mpd-ptr.active { transform: translateX(-50%) translateY(10px); }
+
+
+/* Pull-to-refresh */
+.mpd-ptr {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-40px);
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: transform 0.2s;
+    z-index: 5;
+}
+.mpd-ptr.active { transform: translateX(-50%) translateY(10px); }
+
     </style>
 </head>
 <body>
@@ -15745,6 +16315,8 @@ setTimeout(function(){
             document.getElementById('appContainer').classList.add('hidden');
             document.getElementById('homeScreen').classList.remove('hidden');
             document.body.classList.remove('planner-active');
+            /* Mobile: return to mp-desktop */
+            document.body.classList.remove('mp-active');
 
             // Скрыть мобильные элементы
             const mobileNav = document.getElementById('mobileNav');
@@ -15753,6 +16325,10 @@ setTimeout(function(){
             if (fabBtn) fabBtn.style.display = 'none';
 
             renderUsers();
+            /* Re-render mobile desktop if on mobile */
+            if (document.body.classList.contains('layout-mobile') || document.body.classList.contains('layout-tablet')) {
+                if (typeof window.mpDesktopRender === 'function') window.mpDesktopRender();
+            }
         }
 
         let editingUserId = null;
@@ -40782,6 +41358,11 @@ window.win11OpenApp = function(app){
                 document.getElementById('appContainer').classList.remove('hidden');
                 if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'desktop');
                 if (document.body.classList.contains('layout-desktop')) document.body.classList.add('planner-active');
+                /* Mobile: hide mp-desktop, show mobile planner */
+                if (document.body.classList.contains('layout-mobile') || document.body.classList.contains('layout-tablet')) {
+                    document.body.classList.add('mp-active');
+                    if (typeof mpRenderAll === 'function') mpRenderAll();
+                }
             } catch(e) { console.error(e); }
             break;
         case 'workout':
@@ -40791,6 +41372,11 @@ window.win11OpenApp = function(app){
                 document.getElementById('appContainer').classList.remove('hidden');
                 if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'desktop');
                 if (document.body.classList.contains('layout-desktop')) document.body.classList.add('planner-active');
+                /* Mobile: hide mp-desktop, show mobile planner */
+                if (document.body.classList.contains('layout-mobile') || document.body.classList.contains('layout-tablet')) {
+                    document.body.classList.add('mp-active');
+                    if (typeof mpRenderAll === 'function') mpRenderAll();
+                }
             } catch(e) { console.error(e); }
             break;
         case 'calendar':
@@ -42915,6 +43501,671 @@ window.__win11RefreshClients = function(){
         window.__win11RenderClients(search ? search.value : '');
     }
 };
+
+</script>
+<div id="mpDesktopRoot"></div>
+<script>
+/* ============================================================
+   MOBILE DESKTOP — JS renderer and controllers
+   Activated on body.layout-mobile / body.layout-tablet
+   ============================================================ */
+(function(){
+'use strict';
+var W = window;
+var D = document;
+
+/* ---- State ---- */
+var mpdState = {
+    currentPage: 0,   /* 0=home, 1=apps */
+    editing: false,
+    widgets: [],      /* widget ids on home */
+    dockApps: ['home','planner','workout','add']
+};
+
+/* ---- App registry (mobile) ---- */
+var MPD_APPS = {
+    planner:      { icon:'🍽️', name:{ru:'Питание',en:'Nutrition',he:'תזונה'}, color:'linear-gradient(135deg,#10B981,#047857)', cat:'planning', action:function(){ if(typeof win11OpenApp==='function') win11OpenApp('planner'); } },
+    workout:      { icon:'🏋️', name:{ru:'Тренировки',en:'Workouts',he:'אימונים'}, color:'linear-gradient(135deg,#EF4444,#b91c1c)', cat:'planning', action:function(){ if(typeof win11OpenApp==='function') win11OpenApp('workout'); } },
+    calendar:     { icon:'📅', name:{ru:'Календарь',en:'Calendar',he:'יומן'}, color:'linear-gradient(135deg,#F59E0B,#d97706)', cat:'planning', action:function(){ if(typeof openCalendarModal==='function') openCalendarModal(); } },
+    tasks:        { icon:'✅', name:{ru:'Задачи',en:'Tasks',he:'משימות'}, color:'linear-gradient(135deg,#3B82F6,#1d4ed8)', cat:'planning', action:function(){ if(typeof openTasksModal==='function') openTasksModal(); } },
+    shop:         { icon:'🛒', name:{ru:'Магазин',en:'Shop',he:'חנות'}, color:'linear-gradient(135deg,#8B5CF6,#6d28d9)', cat:'planning', action:function(){ if(typeof win11OpenApp==='function') win11OpenApp('shop'); } },
+    leads:        { icon:'🌟', name:{ru:'Лиды',en:'Leads',he:'לידים'}, color:'linear-gradient(135deg,#F59E0B,#ea580c)', cat:'clients', action:function(){ if(typeof win11OpenApp==='function') win11OpenApp('leads'); } },
+    chat:         { icon:'💬', name:{ru:'Чат',en:'Chat',he:'צ׳אט'}, color:'linear-gradient(135deg,#06B6D4,#0891b2)', cat:'clients', action:function(){ if(typeof win11OpenApp==='function') win11OpenApp('chat'); } },
+    trainer:      { icon:'👨‍🏫', name:{ru:'Профиль',en:'Profile',he:'פרופיל'}, color:'linear-gradient(135deg,#6366F1,#4338ca)', cat:'clients', action:function(){ if(typeof win11OpenApp==='function') win11OpenApp('trainer'); } },
+    files:        { icon:'📁', name:{ru:'Файлы',en:'Files',he:'קבצים'}, color:'linear-gradient(135deg,#F472B6,#db2777)', cat:'clients', action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); } },
+    notifications:{ icon:'🔔', name:{ru:'Уведомления',en:'Notifications',he:'הודעות'}, color:'linear-gradient(135deg,#EF4444,#dc2626)', cat:'clients', action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); } },
+    clients:      { icon:'👥', name:{ru:'Клиенты',en:'Clients',he:'לקוחות'}, color:'linear-gradient(135deg,#10B981,#059669)', cat:'clients', action:function(){ if(typeof window.__win11AddWidget==='function') window.__win11AddWidget('clients'); } },
+    /* Tools */
+    calculator:   { icon:'🧮', name:{ru:'Калькулятор',en:'Calculator',he:'מחשבון'}, color:'linear-gradient(135deg,#374151,#1f2937)', cat:'tools', action:function(){ mpdOpenAppFullscreen('calculator'); } },
+    bmr:          { icon:'⚖️', name:{ru:'BMR',en:'BMR',he:'BMR'}, color:'linear-gradient(135deg,#7C3AED,#5b21b6)', cat:'tools', action:function(){ mpdOpenAppFullscreen('bmr'); } },
+    stopwatch:    { icon:'⏱', name:{ru:'Секундомер',en:'Stopwatch',he:'שעון עצר'}, color:'linear-gradient(135deg,#0891b2,#155e75)', cat:'tools', action:function(){ mpdOpenAppFullscreen('stopwatch'); } },
+    timer:        { icon:'⏲', name:{ru:'Таймер',en:'Timer',he:'טיימר'}, color:'linear-gradient(135deg,#ea580c,#c2410c)', cat:'tools', action:function(){ mpdOpenAppFullscreen('timer'); } },
+    keyboard:     { icon:'🎹', name:{ru:'Пианино',en:'Piano',he:'פסנתר'}, color:'linear-gradient(135deg,#1f2937,#000000)', cat:'tools', action:function(){ mpdOpenAppFullscreen('keyboard'); } },
+    notes:        { icon:'📝', name:{ru:'Заметки',en:'Notes',he:'פתקים'}, color:'linear-gradient(135deg,#FCD34D,#f59e0b)', cat:'tools', action:function(){ mpdOpenAppFullscreen('notes'); } },
+    hydration:    { icon:'💧', name:{ru:'Вода',en:'Water',he:'מים'}, color:'linear-gradient(135deg,#3B82F6,#06b6d4)', cat:'tools', action:function(){ mpdOpenAppFullscreen('hydration'); } },
+    measurements: { icon:'📏', name:{ru:'Замеры',en:'Measurements',he:'מדידות'}, color:'linear-gradient(135deg,#84CC16,#65a30d)', cat:'tools', action:function(){ mpdOpenAppFullscreen('measurements'); } },
+    heartrate:    { icon:'❤️', name:{ru:'Пульс',en:'Heart Rate',he:'דופק'}, color:'linear-gradient(135deg,#EF4444,#b91c1c)', cat:'tools', action:function(){ mpdOpenAppFullscreen('heartrate'); } },
+    pedometer:    { icon:'👣', name:{ru:'Шагомер',en:'Pedometer',he:'שלומד'}, color:'linear-gradient(135deg,#10B981,#34D399)', cat:'tools', action:function(){ mpdOpenAppFullscreen('pedometer'); } },
+    settings:     { icon:'⚙️', name:{ru:'Настройки',en:'Settings',he:'הגדרות'}, color:'linear-gradient(135deg,#6B7280,#4b5563)', cat:'tools', action:function(){ if(typeof openSettingsModal==='function') openSettingsModal(); } },
+    scanner:      { icon:'📷', name:{ru:'Сканер',en:'Scanner',he:'סורק'}, color:'linear-gradient(135deg,#1f2937,#374151)', cat:'tools', action:function(){ if(typeof openBarcodeScanner==='function') openBarcodeScanner(); } }
+};
+
+/* Widget registry (home screen cards) */
+var MPD_WIDGETS = {
+    calendar: { icon:'📅', render: mpdRenderWidgetCalendar },
+    weather:  { icon:'🌤️', render: mpdRenderWidgetWeather },
+    summary:  { icon:'📊', render: mpdRenderWidgetSummary, wide: true }
+};
+
+/* ---- Helpers ---- */
+function L(){ return (typeof currentLang!=='undefined') ? currentLang : 'ru'; }
+function t(name){ var app=MPD_APPS[name]; return app ? (app.name[L()]||app.name.ru) : name; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+function loadMpdState(){
+    try {
+        var s = JSON.parse(localStorage.getItem('mpd_state')||'{}');
+        if (s.widgets && s.widgets.length) mpdState.widgets = s.widgets;
+        else mpdState.widgets = ['calendar','weather','summary'];
+        if (s.dockApps) mpdState.dockApps = s.dockApps;
+    } catch(e){ mpdState.widgets = ['calendar','weather','summary']; }
+}
+function saveMpdState(){
+    try { localStorage.setItem('mpd_state', JSON.stringify({widgets:mpdState.widgets, dockApps:mpdState.dockApps})); } catch(e){}
+}
+
+/* ---- Status bar ---- */
+function mpdUpdateStatus(){
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2,'0');
+    var mm = String(now.getMinutes()).padStart(2,'0');
+    var timeEl = D.getElementById('mpdStatusTime');
+    if (timeEl) timeEl.textContent = hh+':'+mm;
+}
+setInterval(mpdUpdateStatus, 30000);
+
+/* ---- Greeting ---- */
+function mpdGreeting(){
+    var h = new Date().getHours();
+    var lang = L();
+    var g = lang==='he' ? (h<12?'בוקר טוב':h<18?'צהריים טובים':'ערב טוב')
+          : lang==='en' ? (h<12?'Good morning':h<18?'Good afternoon':'Good evening')
+          : (h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер');
+    var name = '';
+    try {
+        var session = JSON.parse(localStorage.getItem('currentTrainerSession')||'{}');
+        var trainers = JSON.parse(localStorage.getItem('trainersList')||'[]');
+        var tr = trainers.find(function(t){ return t.id===session.id; });
+        if (tr) name = tr.name;
+    } catch(e){}
+    var sep = lang==='he' ? ', ' : ', ';
+    return g + (name ? (sep + name) : '');
+}
+
+function mpdDateStr(){
+    var lang = L();
+    var now = new Date();
+    var days = lang==='he' ? ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת']
+             : lang==='en' ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+             : ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+    var months = lang==='he' ? ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
+               : lang==='en' ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+               : ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+    return days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()];
+}
+
+/* ---- Widget renderers ---- */
+function mpdRenderWidgetCalendar(){
+    var now = new Date();
+    var months = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК'];
+    var tasks = 0;
+    try { if (typeof getTasks==='function') tasks = getTasks().filter(function(t){ return !t.done; }).length; } catch(e){}
+    return '<div class="mpd-w-cal">' +
+        '<div class="mpd-w-cal-day">' + now.getDate() + '</div>' +
+        '<div class="mpd-w-cal-month">' + months[now.getMonth()] + '</div>' +
+        '<div class="mpd-w-cal-tasks">📋 ' + tasks + '</div>' +
+    '</div>';
+}
+
+function mpdRenderWidgetWeather(){
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('win11_weather_cache')); } catch(e){}
+    var city = (saved && saved.city) || 'Tel Aviv';
+    var temp = saved && saved.temp != null ? Math.round(saved.temp)+'°' : '—';
+    var desc = saved && saved.desc ? saved.desc : 'Нажми';
+    return '<div class="mpd-w-weather">' +
+        '<div class="mpd-w-w-temp">' + temp + '</div>' +
+        '<div class="mpd-w-w-desc">' + desc + '</div>' +
+    '</div>';
+}
+
+function mpdRenderWidgetSummary(){
+    var users=[], tasks=[], leads=[];
+    try { if (typeof getUsers==='function') users = getUsers(); } catch(e){}
+    try { if (typeof getTasks==='function') tasks = getTasks(); } catch(e){}
+    try { var lr = localStorage.getItem('leadsList'); if (lr) leads = JSON.parse(lr)||[]; } catch(e){}
+    var today = new Date().toISOString().slice(0,10);
+    var todayTasks = tasks.filter(function(t){ return t.due===today && !t.done; }).length;
+    var overdue = tasks.filter(function(t){ return t.due && t.due<today && !t.done; }).length;
+    return '<div>' +
+        '<div class="mpd-w-title">📊 Сводка дня</div>' +
+        '<div class="mpd-w-summary">' +
+            '<div class="mpd-w-sum-item"><div class="mpd-w-sum-num">'+users.length+'</div><div class="mpd-w-sum-lbl">Клиенты</div></div>' +
+            '<div class="mpd-w-sum-item"><div class="mpd-w-sum-num">'+leads.length+'</div><div class="mpd-w-sum-lbl">Лиды</div></div>' +
+            '<div class="mpd-w-sum-item"><div class="mpd-w-sum-num">'+todayTasks+'</div><div class="mpd-w-sum-lbl">Сегодня</div></div>' +
+            '<div class="mpd-w-sum-item"><div class="mpd-w-sum-num" style="color:'+(overdue?'#ff6b6b':'inherit')+'">'+overdue+'</div><div class="mpd-w-sum-lbl">Просроч.</div></div>' +
+        '</div>' +
+    '</div>';
+}
+
+/* ---- Render Home page ---- */
+function mpdRenderHome(){
+    var h = '';
+    /* Greeting */
+    h += '<div class="mpd-greeting">';
+    h += '<div class="mpd-greeting-h">' + esc(mpdGreeting()) + '</div>';
+    h += '<div class="mpd-greeting-date">' + esc(mpdDateStr()) + '</div>';
+    h += '</div>';
+
+    /* Widgets */
+    var widgets = mpdState.widgets;
+    if (widgets.length){
+        /* Pair non-wide widgets 2-per-row; wide widgets full width */
+        h += '<div class="mpd-widgets-row" style="grid-template-columns:1fr;">';
+        /* First pass: small widgets paired */
+        var small = widgets.filter(function(w){ return !MPD_WIDGETS[w] || !MPD_WIDGETS[w].wide; });
+        var wide = widgets.filter(function(w){ return MPD_WIDGETS[w] && MPD_WIDGETS[w].wide; });
+
+        if (small.length >= 2){
+            h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+            for (var i=0; i<small.length; i+=2){
+                h += mpdWidgetCard(small[i]);
+                if (small[i+1]) h += mpdWidgetCard(small[i+1]);
+                else h += '<div></div>';
+            }
+            h += '</div>';
+        } else if (small.length === 1){
+            h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' + mpdWidgetCard(small[0]) + '<div></div></div>';
+        }
+
+        /* Wide widgets */
+        wide.forEach(function(w){
+            h += '<div style="margin-top:10px;">' + mpdWidgetCard(w, true) + '</div>';
+        });
+        h += '</div>';
+    }
+
+    /* Apps section */
+    h += '<div class="mpd-section-title">Приложения</div>';
+    h += '<div class="mpd-icons-grid">';
+    var appOrder = ['planner','workout','calendar','tasks','shop','leads','chat','trainer','files','notifications','calculator','bmr','stopwatch','timer','notes','hydration','measurements','heartrate','pedometer','scanner','settings'];
+    appOrder.forEach(function(id){
+        var app = MPD_APPS[id];
+        if (!app) return;
+        h += '<div class="mpd-icon" data-app="'+id+'" onclick="window.__mpdAppTap(\''+id+'\')">';
+        h += '<div class="mpd-icon-img" style="background:'+app.color+'">' + app.icon + '</div>';
+        h += '<div class="mpd-icon-label">' + esc(t(id)) + '</div>';
+        h += '</div>';
+    });
+    h += '</div>';
+
+    return h;
+}
+
+function mpdWidgetCard(wid, forceWide){
+    var w = MPD_WIDGETS[wid];
+    if (!w) return '';
+    var cls = 'mpd-widget-card' + (forceWide || w.wide ? ' wide' : '');
+    return '<div class="'+cls+'" data-widget="'+wid+'" onclick="window.__mpdWidgetTap(\''+wid+'\')">' + w.render() + '</div>';
+}
+
+/* ---- Render App Library page ---- */
+function mpdRenderApps(){
+    var h = '';
+    h += '<input type="search" class="mpd-apps-search" placeholder="🔍 Поиск..." oninput="window.__mpdAppSearch(this.value)">';
+    var cats = [
+        { id:'planning', title: {ru:'📋 Планирование', en:'📋 Planning', he:'📋 תכנון'} },
+        { id:'clients',  title: {ru:'👥 Клиенты', en:'👥 Clients', he:'👥 לקוחות'} },
+        { id:'tools',    title: {ru:'🧰 Инструменты', en:'🧰 Tools', he:'🧰 כלים'} }
+    ];
+    cats.forEach(function(cat){
+        var apps = Object.keys(MPD_APPS).filter(function(id){ return MPD_APPS[id].cat===cat.id; });
+        if (!apps.length) return;
+        h += '<div class="mpd-cat-title">' + (cat.title[L()]||cat.title.ru) + '</div>';
+        h += '<div class="mpd-icons-grid" data-cat="'+cat.id+'">';
+        apps.forEach(function(id){
+            var app = MPD_APPS[id];
+            h += '<div class="mpd-icon" data-app="'+id+'" onclick="window.__mpdAppTap(\''+id+'\')">';
+            h += '<div class="mpd-icon-img" style="background:'+app.color+'">' + app.icon + '</div>';
+            h += '<div class="mpd-icon-label">' + esc(t(id)) + '</div>';
+            h += '</div>';
+        });
+        h += '</div>';
+    });
+    return h;
+}
+
+/* ---- Render dock ---- */
+function mpdRenderDock(){
+    var h = '';
+    mpdState.dockApps.forEach(function(id){
+        if (id === 'home'){
+            h += '<button class="mpd-dock-btn" onclick="window.__mpdGoHome()">🏠</button>';
+        } else if (id === 'add'){
+            h += '<button class="mpd-dock-btn primary" onclick="window.__mpdQuickAdd()">➕</button>';
+        } else {
+            var app = MPD_APPS[id];
+            if (!app) return;
+            h += '<button class="mpd-dock-btn" style="background:'+app.color+'" onclick="window.__mpdAppTap(\''+id+'\')">' + app.icon + '</button>';
+        }
+    });
+    return h;
+}
+
+/* ---- Full render ---- */
+function mpdRender(){
+    var root = D.getElementById('mpDesktopRoot');
+    if (!root) return;
+    /* Build structure if not exists */
+    if (!root.children.length){
+        root.innerHTML =
+            '<div class="mpd-bloom mpd-bloom-1"></div>' +
+            '<div class="mpd-bloom mpd-bloom-2"></div>' +
+            '<div class="mpd-bloom mpd-bloom-3"></div>' +
+            '<div class="mpd-statusbar">' +
+                '<div class="mpd-status-time" id="mpdStatusTime">--:--</div>' +
+                '<div class="mpd-status-icons">📶 🔋</div>' +
+            '</div>' +
+            '<div class="mpd-edit-bar">' +
+                '<div class="mpd-edit-bar-title">✏️ Режим редактирования</div>' +
+                '<button class="mpd-edit-bar-done" onclick="window.__mpdExitEdit()">Готово</button>' +
+            '</div>' +
+            '<div class="mpd-pages" id="mpdPages">' +
+                '<div class="mpd-page" id="mpdPageHome" data-page="0"></div>' +
+                '<div class="mpd-page" id="mpdPageApps" data-page="1"></div>' +
+            '</div>' +
+            '<div class="mpd-indicators" id="mpdIndicators"></div>' +
+            '<div class="mpd-dock" id="mpdDock"></div>';
+        /* Attach swipe handler */
+        mpdAttachSwipe();
+    }
+    /* Fill pages */
+    var homeEl = D.getElementById('mpdPageHome');
+    var appsEl = D.getElementById('mpdPageApps');
+    if (homeEl) homeEl.innerHTML = mpdRenderHome();
+    if (appsEl) appsEl.innerHTML = mpdRenderApps();
+    var dockEl = D.getElementById('mpdDock');
+    if (dockEl) dockEl.innerHTML = mpdRenderDock();
+    /* Indicators */
+    var ind = D.getElementById('mpdIndicators');
+    if (ind){
+        ind.innerHTML = '<div class="mpd-dot active" onclick="window.__mpdGoPage(0)"></div>' +
+                        '<div class="mpd-dot" onclick="window.__mpdGoPage(1)"></div>';
+    }
+    mpdUpdateStatus();
+    /* Apply editing class */
+    if (mpdState.editing) root.classList.add('mpd-editing');
+    else root.classList.remove('mpd-editing');
+}
+
+/* ---- Navigation ---- */
+W.__mpdGoPage = function(idx){
+    var pages = D.getElementById('mpdPages');
+    if (!pages) return;
+    mpdState.currentPage = idx;
+    pages.scrollTo({ left: idx * pages.offsetWidth, behavior: 'smooth' });
+    /* Update indicators */
+    var dots = D.querySelectorAll('#mpdIndicators .mpd-dot');
+    dots.forEach(function(d, i){ d.classList.toggle('active', i===idx); });
+    if (navigator.vibrate) navigator.vibrate(10);
+};
+W.__mpdGoHome = function(){ W.__mpdGoPage(0); };
+
+/* ---- Swipe between pages ---- */
+function mpdAttachSwipe(){
+    var pages = D.getElementById('mpdPages');
+    if (!pages || pages.__swipeInit) return;
+    pages.__swipeInit = true;
+    pages.addEventListener('scroll', function(){
+        var idx = Math.round(pages.scrollLeft / pages.offsetWidth);
+        if (idx !== mpdState.currentPage){
+            mpdState.currentPage = idx;
+            var dots = D.querySelectorAll('#mpdIndicators .mpd-dot');
+            dots.forEach(function(d, i){ d.classList.toggle('active', i===idx); });
+        }
+    }, { passive: true });
+}
+
+/* ---- App tap ---- */
+W.__mpdAppTap = function(id){
+    if (mpdState.editing){
+        /* In edit mode, tapping shows remove option */
+        mpdShowAppSheet(id);
+        return;
+    }
+    var app = MPD_APPS[id];
+    if (app && app.action){
+        if (navigator.vibrate) navigator.vibrate(15);
+        try { app.action(); } catch(e){ console.error(e); }
+    }
+};
+
+/* ---- Widget tap ---- */
+W.__mpdWidgetTap = function(wid){
+    if (mpdState.editing) return;
+    /* Open widget's full view */
+    if (wid === 'calendar' && typeof openCalendarModal==='function'){ openCalendarModal(); return; }
+    if (wid === 'weather'){ mpdOpenAppFullscreen('weather'); return; }
+    if (wid === 'summary'){ mpdOpenAppFullscreen('summary'); return; }
+};
+
+/* ---- Long-press handlers ---- */
+function mpdLongPress(el, callback){
+    var timer = null, started = false;
+    el.addEventListener('touchstart', function(e){
+        started = true;
+        timer = setTimeout(function(){
+            if (started){ callback(e); started = false; }
+        }, 500);
+    }, { passive: true });
+    el.addEventListener('touchend', function(){ started = false; if (timer) clearTimeout(timer); });
+    el.addEventListener('touchmove', function(){ started = false; if (timer) clearTimeout(timer); }, { passive: true });
+    el.addEventListener('mousedown', function(e){
+        if (e.button !== 0) return;
+        timer = setTimeout(function(){ callback(e); }, 600);
+    });
+    el.addEventListener('mouseup', function(){ if (timer) clearTimeout(timer); });
+    el.addEventListener('mouseleave', function(){ if (timer) clearTimeout(timer); });
+}
+
+function mpdAttachLongPress(){
+    var home = D.getElementById('mpdPageHome');
+    if (home && !home.__lpInit){
+        home.__lpInit = true;
+        mpdLongPress(home, function(e){
+            if (e.target.closest('.mpd-icon') || e.target.closest('.mpd-widget-card')) return;
+            mpdEnterEdit();
+        });
+    }
+}
+
+/* ---- Edit mode ---- */
+W.__mpdEnterEdit = function(){
+    mpdState.editing = true;
+    D.getElementById('mpDesktopRoot').classList.add('mpd-editing');
+    if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+};
+W.__mpdExitEdit = function(){
+    mpdState.editing = false;
+    D.getElementById('mpDesktopRoot').classList.remove('mpd-editing');
+    saveMpdState();
+};
+
+/* ---- Bottom sheet (app actions) ---- */
+W.__mpdShowAppSheet = function(id){
+    mpdShowAppSheet(id);
+};
+function mpdShowAppSheet(id){
+    var app = MPD_APPS[id];
+    if (!app) return;
+    var sheet = D.getElementById('mpdSheet');
+    if (!sheet){
+        sheet = D.createElement('div');
+        sheet.id = 'mpdSheet';
+        sheet.className = 'mpd-sheet';
+        D.body.appendChild(sheet);
+    }
+    sheet.innerHTML = '<div class="mpd-sheet-handle"></div>' +
+        '<div class="mpd-sheet-item" onclick="window.__mpdAppTap(\''+id+'\'); window.__mpdCloseSheet();">' +
+            '<span class="mpd-sheet-item-ico">'+app.icon+'</span><span>Открыть '+esc(t(id))+'</span>' +
+        '</div>' +
+        '<div class="mpd-sheet-item" onclick="window.__mpdAddToDock(\''+id+'\')">' +
+            '<span class="mpd-sheet-item-ico">📌</span><span>Закрепить в доке</span>' +
+        '</div>' +
+        '<div class="mpd-sheet-item danger" onclick="window.__mpdCloseSheet()">' +
+            '<span class="mpd-sheet-item-ico">✕</span><span>Отмена</span>' +
+        '</div>';
+    setTimeout(function(){ sheet.classList.add('open'); }, 10);
+}
+W.__mpdCloseSheet = function(){
+    var sheet = D.getElementById('mpdSheet');
+    if (sheet) sheet.classList.remove('open');
+};
+
+/* ---- Add to dock ---- */
+W.__mpdAddToDock = function(id){
+    if (mpdState.dockApps.indexOf(id) >= 0) { W.__mpdCloseSheet(); return; }
+    /* Replace the 'add' button position */
+    var addIdx = mpdState.dockApps.indexOf('add');
+    if (addIdx >= 0){
+        mpdState.dockApps.splice(addIdx, 0, id);
+    } else {
+        mpdState.dockApps.push(id);
+    }
+    saveMpdState();
+    W.__mpdCloseSheet();
+    mpdRender();
+};
+
+/* ---- Quick add ---- */
+W.__mpdQuickAdd = function(){
+    var sheet = D.getElementById('mpdSheet');
+    if (!sheet){
+        sheet = D.createElement('div');
+        sheet.id = 'mpdSheet';
+        sheet.className = 'mpd-sheet';
+        D.body.appendChild(sheet);
+    }
+    var lang = L();
+    var items = [
+        { ico:'👤', txt: lang==='he'?'לקוח חדש':lang==='en'?'New client':'Новый клиент', act:'window.__win11AddClient()' },
+        { ico:'🍽️', txt: lang==='he'?'תפריט':lang==='en'?'Nutrition plan':'План питания', act:'win11OpenApp(\'planner\')' },
+        { ico:'🏋️', txt: lang==='he'?'אימון':lang==='en'?'Workout':'Тренировка', act:'win11OpenApp(\'workout\')' },
+        { ico:'✅', txt: lang==='he'?'משימה':lang==='en'?'Task':'Задача', act:'if(typeof openTasksModal===\'function\')openTasksModal()' },
+        { ico:'📅', txt: lang==='he'?'אירוע':lang==='en'?'Calendar event':'Событие', act:'if(typeof openCalendarModal===\'function\')openCalendarModal()' }
+    ];
+    sheet.innerHTML = '<div class="mpd-sheet-handle"></div>' +
+        items.map(function(it){
+            return '<div class="mpd-sheet-item" onclick="'+it.act+'; window.__mpdCloseSheet();"><span class="mpd-sheet-item-ico">'+it.ico+'</span><span>'+esc(it.txt)+'</span></div>';
+        }).join('') +
+        '<div class="mpd-sheet-item mpd-sheet-cancel" onclick="window.__mpdCloseSheet()">Отмена</div>';
+    setTimeout(function(){ sheet.classList.add('open'); }, 10);
+};
+
+/* ---- Search ---- */
+W.__mpdOpenSearch = function(){
+    var ov = D.getElementById('mpdSearchOverlay');
+    if (!ov){
+        ov = D.createElement('div');
+        ov.id = 'mpdSearchOverlay';
+        ov.className = 'mpd-search-overlay';
+        D.body.appendChild(ov);
+    }
+    var lang = L();
+    ov.innerHTML =
+        '<div class="mpd-search-bar">' +
+            '<input type="search" class="mpd-search-input" placeholder="🔍 '+(lang==='he'?'חיפוש...':lang==='en'?'Search...':'Поиск...')+'" oninput="window.__mpdSearch(this.value)">' +
+            '<button class="mpd-search-close" onclick="window.__mpdCloseSearch()">✕</button>' +
+        '</div>' +
+        '<div class="mpd-search-section"><h4>'+(lang==='he'?'יישומים':lang==='en'?'Apps':'Приложения')+'</h4>' +
+            '<div id="mpdSearchResults">' + mpdSearchResults('') + '</div>' +
+        '</div>';
+    ov.classList.add('open');
+    setTimeout(function(){ var inp = ov.querySelector('.mpd-search-input'); if (inp) inp.focus(); }, 100);
+};
+W.__mpdCloseSearch = function(){
+    var ov = D.getElementById('mpdSearchOverlay');
+    if (ov) ov.classList.remove('open');
+};
+W.__mpdSearch = function(q){
+    var el = D.getElementById('mpdSearchResults');
+    if (el) el.innerHTML = mpdSearchResults(q);
+};
+function mpdSearchResults(q){
+    q = (q||'').toLowerCase();
+    var results = Object.keys(MPD_APPS).filter(function(id){
+        var app = MPD_APPS[id];
+        var name = (app.name.ru+' '+app.name.en+' '+app.name.he).toLowerCase();
+        return !q || name.indexOf(q) >= 0;
+    });
+    if (!results.length) return '<div style="opacity:0.5;text-align:center;padding:20px;">Ничего не найдено</div>';
+    return results.map(function(id){
+        var app = MPD_APPS[id];
+        return '<div class="mpd-search-item" onclick="window.__mpdAppTap(\''+id+'\'); window.__mpdCloseSearch();">' +
+            '<span class="mpd-search-item-ico">'+app.icon+'</span>' +
+            '<div class="mpd-search-item-txt">' +
+                '<div class="mpd-search-item-name">'+esc(t(id))+'</div>' +
+                '<div class="mpd-search-item-sub">'+app.cat+'</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+/* ---- Fullscreen app view (for tools) ---- */
+W.__mpdOpenAppFullscreen = function(id){
+    mpdOpenAppFullscreen(id);
+};
+function mpdOpenAppFullscreen(id){
+    var fs = D.getElementById('mpdAppFullscreen');
+    if (!fs){
+        fs = D.createElement('div');
+        fs.id = 'mpdAppFullscreen';
+        fs.className = 'mpd-app-fullscreen';
+        D.body.appendChild(fs);
+    }
+    var app = MPD_APPS[id];
+    if (!app) return;
+    fs.innerHTML =
+        '<div class="mpd-app-header">' +
+            '<button class="mpd-app-back" onclick="window.__mpdCloseApp()">‹</button>' +
+            '<div class="mpd-app-title">'+app.icon+' '+esc(t(id))+'</div>' +
+        '</div>' +
+        '<div class="mpd-app-body" id="mpdAppBody"></div>';
+    fs.classList.add('open');
+    var body = D.getElementById('mpdAppBody');
+    if (!body) return;
+    /* Render the widget content into body */
+    var renderFn = {
+        calculator: 'window.__win11RenderCalculator',
+        bmr: 'window.__win11RenderBMR',
+        stopwatch: 'window.__win11RenderStopwatch',
+        timer: 'window.__win11RenderTimer',
+        keyboard: 'window.__win11RenderKeyboard',
+        notes: 'window.__win11RenderNotes',
+        hydration: 'window.__win11RenderHydration',
+        measurements: 'window.__win11RenderMeasurements',
+        heartrate: 'window.__win11RenderHeartRate',
+        pedometer: 'window.__win11RenderPedometer',
+        weather: 'window.__win11RenderWeather'
+    }[id];
+    if (renderFn){
+        try { eval(renderFn + '(body)'); } catch(e){ body.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Ошибка загрузки</div>'; }
+    } else if (id === 'summary'){
+        if (typeof window.__win11RenderSummary==='function') window.__win11RenderSummary(body);
+    } else {
+        body.innerHTML = '<div style="padding:40px;text-align:center;opacity:0.6;">'+app.icon+'</div>';
+    }
+}
+W.__mpdCloseApp = function(){
+    var fs = D.getElementById('mpdAppFullscreen');
+    if (fs) fs.classList.remove('open');
+};
+
+/* ---- App search filter ---- */
+W.__mpdAppSearch = function(q){
+    q = (q||'').toLowerCase();
+    D.querySelectorAll('#mpdPageApps .mpd-icon').forEach(function(el){
+        var id = el.getAttribute('data-app');
+        var app = MPD_APPS[id];
+        if (!app) return;
+        var name = (app.name.ru+' '+app.name.en+' '+app.name.he).toLowerCase();
+        el.style.display = (!q || name.indexOf(q)>=0) ? '' : 'none';
+    });
+    /* Hide empty categories */
+    D.querySelectorAll('#mpdPageApps .mpd-icons-grid').forEach(function(grid){
+        var any = false;
+        grid.querySelectorAll('.mpd-icon').forEach(function(el){ if (el.style.display!=='none') any=true; });
+        var cat = grid.previousElementSibling;
+        grid.style.display = any ? '' : 'none';
+        if (cat && cat.classList.contains('mpd-cat-title')) cat.style.display = any ? '' : 'none';
+    });
+};
+
+/* ---- Pull-down search gesture ---- */
+function mpdAttachPullDown(){
+    var startY = 0, pulling = false;
+    D.addEventListener('touchstart', function(e){
+        var y = e.touches[0].clientY;
+        if (y < 60 && mpdState.currentPage === 0 && !D.getElementById('mpdSearchOverlay').classList.contains('open')){
+            startY = y; pulling = true;
+        }
+    }, { passive: true });
+    D.addEventListener('touchmove', function(e){
+        if (!pulling) return;
+        var dy = e.touches[0].clientY - startY;
+        if (dy > 80){
+            pulling = false;
+            W.__mpdOpenSearch();
+        }
+    }, { passive: true });
+    D.addEventListener('touchend', function(){ pulling = false; }, { passive: true });
+}
+
+/* ---- Init ---- */
+function mpdInit(){
+    loadMpdState();
+    mpdRender();
+    mpdAttachLongPress();
+    mpdAttachPullDown();
+    mpdUpdateStatus();
+    /* Re-render when language changes */
+    var origApply = W.applyLanguage;
+    if (typeof origApply==='function' && !W.__mpdLangPatched){
+        W.__mpdLangPatched = true;
+        W.applyLanguage = function(){ var r = origApply.apply(this, arguments); try { mpdRender(); } catch(e){} return r; };
+    }
+}
+
+/* Auto-init on mobile/tablet */
+function mpdAutoInit(){
+    if (D.body.classList.contains('layout-mobile') || D.body.classList.contains('layout-tablet')){
+        mpdInit();
+    }
+}
+if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', function(){ setTimeout(mpdAutoInit, 800); });
+else setTimeout(mpdAutoInit, 800);
+
+/* Re-init when layout changes */
+var origApplyLayout = W.applyLayout;
+if (typeof origApplyLayout==='function' && !W.__mpdLayoutPatched){
+    W.__mpdLayoutPatched = true;
+    W.applyLayout = function(layout){
+        var r = origApplyLayout.apply(this, arguments);
+        setTimeout(function(){
+            if (layout==='mobile' || layout==='tablet'){
+                mpdInit();
+            }
+        }, 200);
+        return r;
+    };
+}
+
+/* Patch goHome to re-show mp-desktop on mobile when returning from app */
+var origGoHome = W.goHome;
+if (typeof origGoHome==='function' && !W.__mpdGoHomePatched){
+    W.__mpdGoHomePatched = true;
+    W.goHome = function(){
+        var r = origGoHome.apply(this, arguments);
+        /* mp-desktop is always visible on mobile (it's fixed) — nothing to do */
+        return r;
+    };
+}
+
+/* Public API */
+W.mpDesktopRender = mpdRender;
+W.mpDesktopInit = mpdInit;
+
+})();
 
 </script>
 </body>
