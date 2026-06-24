@@ -27496,46 +27496,8 @@ setTimeout(function(){
             }
         }
         function loginTrainer() {
-            const password = document.getElementById('trainerPasswordInput').value;
-            if (!selectedTrainerForLogin) return;
-
-            hashPassword(password).then(hash => {
-                if (hash === selectedTrainerForLogin.password) {
-                    currentTrainer = selectedTrainerForLogin;
-                    safeSetItem('currentTrainerSession', JSON.stringify({
-                        id: currentTrainer.id,
-                        loginTime: Date.now()
-                    }));
-                    loadTrainers();
-                    showToast(t('trLoginWelcome') + currentTrainer.name + '!');
-                    /* Снять блокировку и СРАЗУ скрыть overlay —
-                       пользователь попадает на рабочий стол без лишних кликов */
-                    document.body.classList.remove('trainer-locked');
-                    var overlay = document.getElementById('trainerLoginOverlay');
-                    if (overlay) overlay.style.display = 'none';
-                    /* Обновить Win11 рабочий стол: виджеты, ярлыки, имя в меню Пуск */
-                    try {
-                        if (typeof window.__win11RefreshClients === 'function') window.__win11RefreshClients();
-                    } catch(e) {}
-                    try {
-                        if (typeof window.__win11RenderSummary === 'function') {
-                            var sw = document.querySelector('.win11-widget[data-widget-id="summary"]');
-                            if (sw) window.__win11RenderSummary(sw.querySelector('.win11-widget-body'));
-                        }
-                    } catch(e) {}
-                    /* Обновить имя тренера в меню Пуск */
-                    try {
-                        var nameEl = document.getElementById('win11StartUserName');
-                        if (nameEl && currentTrainer) {
-                            nameEl.textContent = currentTrainer.name + (currentTrainer.lastName ? ' ' + currentTrainer.lastName : '');
-                        }
-                    } catch(e) {}
-                } else {
-                    alert(t('trLoginWrongPass'));
-                    document.getElementById('trainerPasswordInput').value = '';
-                    document.getElementById('trainerPasswordInput').focus();
-                }
-            });
+            /* CLIENT APP: trainer login is disabled — this is a client-only app */
+            return;
         }
 
         function showTrainerLoggedInPanel() {
@@ -27680,6 +27642,8 @@ setTimeout(function(){
             try { migrateTrainerPasswords().then(() => { loadTrainers(); }); } catch(e) { try { loadTrainers(); } catch(e2) {} }
             try { if (!localStorage.getItem('taskTemplates')) { localStorage.setItem('taskTemplates', JSON.stringify(getDefaultTaskTemplates())); } } catch(e) {}
             try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e) {}
+            /* CLIENT APP: clear any stale trainer session — this is CLIENT ONLY */
+            try { localStorage.removeItem('currentTrainerSession'); } catch(e) {}
             try { checkTrainerSession(); } catch(e) {}
             try { switchLoginTab('client'); } catch(e) {}
             /* CLIENT: homeScreen stays visible — trainerLoginOverlay is inside it */
@@ -35434,6 +35398,10 @@ function cloudFinishRoleAuth(role, gu){
     var photo = gu.photoURL || '';
     try {
         if (role === 'trainer'){
+            /* CLIENT APP: trainer Google auth is disabled — redirect to client auth */
+            role = 'client';
+        }
+        if (role === 'trainer'){
             var trainers = (typeof getTrainers === 'function') ? getTrainers() : [];
             var tr = trainers.find(function(x){ return (x.googleUid && x.googleUid === gu.uid) || (email && (x.email||'').toLowerCase() === email); });
             if (!tr){
@@ -39778,22 +39746,15 @@ else setTimeout(init,1200);
                window.innerWidth <= 1024;
     }
     function isTrainerLoggedIn(){
-        try {
-            var s = localStorage.getItem('currentTrainerSession');
-            if (!s) return false;
-            var data = JSON.parse(s);
-            // Сессия действительна 8 часов
-            if (data.loginTime && (Date.now() - data.loginTime > 8 * 3600000)) return false;
-            return !!data.id;
-        } catch(e) { return false; }
+        /* CLIENT APP: trainer is NEVER logged in — only clients */
+        return false;
     }
     function enforceScroll(){
         if (!isMobile()) return;
-        // Если тренер залогинен — убрать trainer-locked
-        if (isTrainerLoggedIn()) {
+        /* CLIENT APP: don't remove trainer-locked unless client is logged in */
+        if (typeof __clientUser !== 'undefined' && __clientUser && document.body.classList.contains('client-space-open')) {
             if (document.body.classList.contains('trainer-locked')) {
                 document.body.classList.remove('trainer-locked');
-                console.log('[PG-scroll] removed trainer-locked (trainer is logged in)');
             }
         }
         // === РАДИКАЛЬНАЯ ПОЧИНКА СКРОЛЛИНГА КАРТОЧКИ КЛИЕНТА ===
