@@ -5578,6 +5578,7 @@
         body.layout-mobile .planner-section {
             overflow: visible;
             padding: 12px;
+            padding-bottom: 80px !important;
         }
 
         body.layout-mobile .results-section {
@@ -8088,7 +8089,7 @@
            ПАНЕЛЬ ЗАДАЧ (внизу по центру)
            ============================================================ */
         .win11-taskbar {
-            position: absolute;
+            position: fixed;
             bottom: 0; left: 0; right: 0;
             height: 56px;
             background: rgba(255, 255, 255, 0.7);
@@ -8851,7 +8852,7 @@
         .win11-desktop-pages {
             position: absolute;
             top: 0; left: 0; right: 0;
-            bottom: 56px;  /* место под панель задач */
+            bottom: 52px;  /* место под панель задач */
             display: flex;
             overflow-x: auto;
             overflow-y: hidden;
@@ -9578,20 +9579,20 @@
            ============================================================ */
 
         /* ПК (desktop) — полный рабочий стол */
-        body.layout-desktop .win11-desktop-area { bottom: 72px; }
+        body.layout-desktop .win11-desktop-area { bottom: 56px; }
         body.layout-desktop .win11-taskbar { height: 56px; }
         body.layout-desktop .win11-taskbar-btn { width: 44px; height: 44px; font-size: 1.5em; }
         body.layout-desktop .win11-widget { min-width: 200px; }
 
         /* Планшет (tablet) — средний размер, меньше виджетов в ряд */
-        body.layout-tablet .win11-desktop-area { bottom: 64px; }
+        body.layout-tablet .win11-desktop-area { bottom: 52px; }
         body.layout-tablet .win11-taskbar { height: 52px; padding: 0 12px; }
         body.layout-tablet .win11-taskbar-btn { width: 40px; height: 40px; font-size: 1.3em; }
         body.layout-tablet .win11-widget { min-width: 180px; }
         body.layout-tablet .win11-system-tray .win11-tray-date { display: none; }
 
         /* Смартфон (mobile) — компактный, виджеты в один столбец */
-        body.layout-mobile .win11-desktop-area { bottom: 60px; }
+        body.layout-mobile .win11-desktop-area { bottom: 52px; }
         body.layout-mobile .win11-taskbar {
             height: 52px;
             padding: 0 6px;
@@ -9726,6 +9727,7 @@ setTimeout(function(){
         <!-- ПАНЕЛЬ ЗАДАЧ -->
         <div class="win11-taskbar" id="win11Taskbar">
             <div class="win11-taskbar-apps">
+                <button class="win11-taskbar-btn" data-tooltip="Назад" onclick="win11PrevPage()">◀</button>
                 <button class="win11-taskbar-btn start-btn" id="win11StartBtn" data-tooltip="Пуск" onclick="win11ToggleStartMenu(event)">⊞</button>
                 <button class="win11-taskbar-btn" data-tooltip="Планировщик питания" onclick="win11OpenApp('planner')">🍽️</button>
                 <button class="win11-taskbar-btn" data-tooltip="Тренировки" onclick="win11OpenApp('workout')">🏋️</button>
@@ -9738,6 +9740,7 @@ setTimeout(function(){
                 <button class="win11-taskbar-btn" data-tooltip="Файловый проводник" onclick="openFileExplorer('documents')">📁</button>
                 <button class="win11-taskbar-btn" data-tooltip="Профиль тренера" onclick="win11OpenApp('trainer')">👨‍🏫</button>
                 <button class="win11-taskbar-btn" data-tooltip="Настройки" onclick="openSettingsModal()">⚙️</button>
+                <button class="win11-taskbar-btn" data-tooltip="Вперёд" onclick="win11NextPage()">▶</button>
             </div>
             <div class="win11-system-tray">
                 <div class="win11-tray-clock" onclick="window.__win11OpenClockApp(event)">
@@ -10060,12 +10063,12 @@ setTimeout(function(){
                     <button class="action-btn print-btn mode-nutrition-only" onclick="printPlan()" data-i18n="btnPrint">🖨️ Печать</button>
                     <button class="action-btn print-btn mode-nutrition-only" onclick="shareProgramImage('nutrition')" style="background: linear-gradient(135deg, #25D366, #128C7E);" data-i18n="btnShareWA">📤 WhatsApp</button>
                     <button class="action-btn print-btn mode-nutrition-only" onclick="openTplManager()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);" data-i18n="btnTpl">📦 Шаблоны</button>
-                    <button class="action-btn save-btn mode-nutrition-only" onclick="savePlan()" data-i18n="btnSave">💾 Сохранить</button>
+                    <button class="action-btn save-btn mode-nutrition-only" onclick="openSaveAsDialog('nutrition')" data-i18n="btnSaveAs">💾 Сохранить как...</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printWorkout()" data-i18n="btnPrint">🖨️ Печать</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="printPrivateGym()" style="background: linear-gradient(135deg, #2563EB, #1e40af);" data-i18n="btnPrintPG">🖨️ Private Gym</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="shareProgramImage('workout')" style="background: linear-gradient(135deg, #25D366, #128C7E);" data-i18n="btnShareWA">📤 WhatsApp</button>
                     <button class="action-btn print-btn mode-workout-only" onclick="openTplManager()" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);" data-i18n="btnTpl">📦 Шаблоны</button>
-                    <button class="action-btn save-btn mode-workout-only" onclick="saveWorkoutPlan(); showToast(t('wkSaved'))" data-i18n="btnSave">💾 Сохранить</button>
+                    <button class="action-btn save-btn mode-workout-only" onclick="openSaveAsDialog('workout')" data-i18n="btnSaveAs">💾 Сохранить как...</button>
                     <button class="action-btn save-btn mode-workout-only" onclick="sendWorkoutToClient()" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8); color:white; border:none;" title="Отправить текущую тренировку клиенту">📤 <span data-i18n="btnSendClient">Клиенту</span></button>
                     <button class="icon-btn" onclick="openSettingsModal()" data-tooltip="Настройки" aria-label="Настройки">⚙️</button>
                 </div>
@@ -30563,7 +30566,7 @@ body.mode-workout .mp-add-big { background: #dc2626; box-shadow: 0 4px 14px rgba
 
 /* ===== нижняя навигация ===== */
 .mp-nav {
-    position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
     flex: 0 0 auto;        /* Не растягивается, не сжимается */
     flex-shrink: 0;
     background: var(--surface-color);
@@ -37845,7 +37848,7 @@ function injectCSS(){
     /* Заголовок-ручка ВНУТРИ элемента */
     '.he-bar{cursor:grab;background:linear-gradient(135deg,var(--primary-color),var(--primary-dark));color:#fff;padding:4px 10px;font-size:12px;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none;display:none;align-items:center;gap:6px;}'+
     '.he-bar:active{cursor:grabbing;}'+
-    'body.he-edit .he-bar{display:flex;}'+
+    'body.he-edit .he-bar{display:none !important;}'+
     '.he-bar-x{margin-left:auto;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:700;}'+
     '.he-bar-x:hover{background:rgba(239,68,68,.8);}'+
     /* 8 ручек размера — поверх */
@@ -37865,7 +37868,7 @@ function injectCSS(){
     'body.he-edit .home-tool-card::after{content:"✕";position:absolute;top:-3px;right:-3px;width:16px;height:16px;background:#EF4444;color:#fff;border-radius:50%;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;z-index:10;}'+
     'body.he-edit .home-tool-card.he-hidden::after{content:"👁";background:#10B981;}'+
     '#heBar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9500;background:rgba(15,23,42,.97);backdrop-filter:blur(10px);padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 20px rgba(0,0,0,.2);align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;}'+
-    'body.he-edit #heBar{display:flex;}'+
+    'body.he-edit #heBar{display:none !important;}'+
     '.he-b{border:none;border-radius:10px;padding:8px 14px;font-weight:700;font-size:.82em;cursor:pointer;color:#fff;font-family:inherit;transition:.15s;}'+
     '.he-b:hover{transform:translateY(-1px);filter:brightness(1.15);}'+
     '.he-b-a{background:linear-gradient(135deg,#10B981,#047857)}'+
@@ -40613,6 +40616,45 @@ window.win11CtxSaveWorkoutImage = function(){
     if (typeof showToast === 'function') showToast('🖼️ Откроется окно — нажмите Ctrl+P → Сохранить как PDF/изображение', 'info');
 };
 
+function openSaveAsDialog(type){
+    var id = 'saveAsDialog';
+    if (typeof win11Windows !== 'undefined' && win11Windows[id]) { focusWindow(id); return; }
+    if (typeof createWin11Window !== 'function') {
+        if (type === 'nutrition') savePlan();
+        else { saveWorkoutPlan(); if (typeof showToast === 'function') showToast(t('wkSaved')); }
+        return;
+    }
+    createWin11Window({
+        id: id, icon: '💾', title: 'Сохранить как...', width: 380, height: 420,
+        content: function(body){
+            var title = type === 'nutrition' ? 'Программа питания' : 'Программа тренировок';
+            body.innerHTML = '<div style="padding:20px;">' +
+                '<div style="font-size:1.1em; font-weight:700; margin-bottom:16px;">💾 ' + escapeHtml(title) + '</div>' +
+                '<div style="display:flex; flex-direction:column; gap:10px;">' +
+                    '<button class="win11-explorer-btn" style="padding:14px; font-size:1em; text-align:left;" onclick="doSaveAs(\''+type+'\',\'explorer\')"><span style="font-size:1.3em; margin-right:8px;">📁</span> В проводник (JSON)</button>' +
+                    '<button class="win11-explorer-btn" style="padding:14px; font-size:1em; text-align:left;" onclick="doSaveAs(\''+type+'\',\'pdf\')"><span style="font-size:1.3em; margin-right:8px;">📄</span> PDF (печать)</button>' +
+                    '<button class="win11-explorer-btn" style="padding:14px; font-size:1em; text-align:left;" onclick="doSaveAs(\''+type+'\',\'excel\')"><span style="font-size:1.3em; margin-right:8px;">📗</span> Excel (CSV)</button>' +
+                    '<button class="win11-explorer-btn" style="padding:14px; font-size:1em; text-align:left;" onclick="doSaveAs(\''+type+'\',\'image\')"><span style="font-size:1.3em; margin-right:8px;">🖼️</span> Изображение (HTML)</button>' +
+                    '<div style="height:1px; background:var(--border-color); margin:4px 0;"></div>' +
+                    '<button class="win11-explorer-btn" style="padding:14px; font-size:1em; text-align:left; background:rgba(59,130,246,0.1);" onclick="doSaveAs(\''+type+'\',\'client\')"><span style="font-size:1.3em; margin-right:8px;">👤</span> Для клиента</button>' +
+                '</div></div>';
+        }
+    });
+}
+function doSaveAs(type, format){
+    var name = (type === 'nutrition' ? 'Программа питания' : 'Программа тренировок') + ' ' + new Date().toLocaleDateString(__uiLocale());
+    if (format === 'client') {
+        if (type === 'nutrition') { savePlan(); showToast('👤 Сохранено для клиента', 'success'); }
+        else { saveWorkoutPlan(); showToast('👤 Сохранено для клиента', 'success'); }
+        if (typeof win11Windows !== 'undefined' && win11Windows['saveAsDialog']) __win11CloseWin('saveAsDialog');
+        return;
+    }
+    if (format === 'explorer') { if (type === 'nutrition') savePlanToExplorerFile(name, 'json'); else saveWorkoutToExplorerFile(name, 'json'); }
+    else if (format === 'pdf') { if (type === 'nutrition') win11CtxSavePlanPDF(); else win11CtxSaveWorkoutPDF(); }
+    else if (format === 'excel') { if (type === 'nutrition') win11CtxSavePlanExcel(); else win11CtxSaveWorkoutExcel(); }
+    else if (format === 'image') { if (type === 'nutrition') win11CtxSavePlanImage(); else win11CtxSaveWorkoutImage(); }
+    if (typeof win11Windows !== 'undefined' && win11Windows['saveAsDialog']) __win11CloseWin('saveAsDialog');
+}
 window.win11CtxOpenFiles = function(){
     hideContextMenu();
     openFileExplorer('documents');
@@ -42462,7 +42504,11 @@ function loadDesktopPages(){
         if (saved) desktopPages = JSON.parse(saved);
     } catch(e) {}
     if (!desktopPages.length) {
-        desktopPages = [{ id: 'page_0', items: [] }];
+        desktopPages = [
+            { id: 'page_0', items: [] },
+            { id: 'page_1', items: [] },
+            { id: 'page_2', items: [] }
+        ];
         saveDesktopPages();
     }
 }
@@ -42593,6 +42639,8 @@ function goToPage(idx){
     currentPage = idx;
     container.scrollTo({ left: idx * container.offsetWidth, behavior: 'smooth' });
 }
+window.win11PrevPage = function(){ if (currentPage > 0) goToPage(currentPage - 1); };
+window.win11NextPage = function(){ if (currentPage < desktopPages.length - 1) goToPage(currentPage + 1); else addNewPage(); };
 
 function addNewPage(){
     desktopPages.push({ id: 'page_' + desktopPages.length, items: [] });
