@@ -26193,7 +26193,7 @@ setTimeout(function(){
         }
         function renderTaskProductivity() {
             const tasks=getTasks();const trainers=(typeof getTrainers==='function')?getTrainers():[];const {todayStr}=getTasksDateRange();
-            if(!trainers.length)return '<div style="text-align:center;padding:30px;color:var(--text-light);">Нет тренеров</div>';
+            if(!trainers.length)return '<div style="text-align:center;padding:30px;color:var(--text-light);">'+t('trNoTrainers')+'</div>';
             let h='<div class="analytics-cards-grid">';
             trainers.forEach(tr=>{
                 const tt=tasks.filter(t=>t.assigneeId===tr.id);const total=tt.length;const done=tt.filter(t=>t.done).length;const overdue=tt.filter(t=>!t.done&&t.due&&t.due<todayStr).length;
