@@ -9805,6 +9805,234 @@ setTimeout(function(){
             </div>
         </div>
 
+        <!-- ===== НОВЫЙ МОБИЛЬНЫЙ РАБОЧИЙ СТОЛ (Samsung Galaxy S26 style) ===== -->
+        <div id="mobileDesktop" style="position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:var(--background-color);overflow:hidden;">
+            <!-- Status bar -->
+            <div style="flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:6px 20px;padding-top:calc(6px + env(safe-area-inset-top,0px));font-size:13px;font-weight:600;color:var(--text-primary);">
+                <span id="mdTime">--:--</span>
+                <span style="font-size:12px;">📶 🔋</span>
+            </div>
+            <!-- Scrollable content -->
+            <div id="mdScroll" style="flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px 100px;">
+                <!-- Greeting -->
+                <div id="mdGreeting" style="text-align:center;margin:8px 0 16px;">
+                    <div id="mdGreetingText" style="font-size:22px;font-weight:700;color:var(--text-primary);"></div>
+                    <div id="mdGreetingDate" style="font-size:13px;color:var(--text-light);margin-top:2px;"></div>
+                </div>
+                <!-- Quick stats -->
+                <div id="mdStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;"></div>
+                <!-- Quick actions: Nutrition + Workout -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+                    <button onclick="win11OpenApp('planner')" style="padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#10B981,#047857);color:white;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <span style="font-size:28px;">🍽️</span>
+                        <span>Питание</span>
+                    </button>
+                    <button onclick="win11OpenApp('workout')" style="padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#EF4444,#b91c1c);color:white;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <span style="font-size:28px;">🏋️</span>
+                        <span>Тренировки</span>
+                    </button>
+                </div>
+                <!-- Client search -->
+                <div style="margin-bottom:12px;">
+                    <input type="search" id="mdClientSearch" placeholder="🔍 Поиск клиента..." oninput="mdFilterClients(this.value)" style="width:100%;box-sizing:border-box;padding:12px 16px;border:1px solid var(--border-color);border-radius:14px;font-size:15px;background:var(--surface-color);color:var(--text-primary);">
+                </div>
+                <!-- Client list -->
+                <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:14px;font-weight:700;color:var(--text-primary);">👥 Клиенты (<span id="mdClientCount">0</span>)</span>
+                    <button onclick="openAddUserModal()" style="padding:6px 14px;border:none;border-radius:10px;background:var(--primary-color);color:white;font-size:13px;font-weight:600;cursor:pointer;">+ Добавить</button>
+                </div>
+                <div id="mdClientList" style="display:flex;flex-direction:column;gap:8px;"></div>
+                <!-- App grid (secondary) -->
+                <div style="margin-top:20px;font-size:13px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Приложения</div>
+                <div id="mdAppGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;margin-bottom:20px;"></div>
+            </div>
+            <!-- Bottom dock -->
+            <div style="flex:0 0 auto;display:flex;justify-content:space-around;align-items:center;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));background:var(--surface-color);border-top:1px solid var(--border-color);box-shadow:0 -4px 16px rgba(0,0,0,0.06);">
+                <button onclick="mdGoHome()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(59,130,246,0.1);color:var(--primary-color);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🏠</button>
+                <button onclick="win11OpenApp('planner')" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(16,185,129,0.1);color:#10B981;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🍽️</button>
+                <button onclick="win11OpenApp('workout')" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(239,68,68,0.1);color:#EF4444;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🏋️</button>
+                <button onclick="openSettingsModal()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(107,114,128,0.1);color:#6B7280;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚙️</button>
+            </div>
+        </div>
+        <script>
+        /* === Mobile Desktop (Samsung Galaxy S26 style) === */
+        function mdInit(){
+            if (!document.getElementById('mobileDesktop')) return;
+            /* Show mobile desktop when homeScreen is visible and not locked */
+            mdUpdateVisibility();
+            mdRenderGreeting();
+            mdRenderStats();
+            mdRenderClients('');
+            mdRenderApps();
+            mdUpdateTime();
+            setInterval(mdUpdateTime, 30000);
+        }
+        function mdUpdateVisibility(){
+            var md = document.getElementById('mobileDesktop');
+            if (!md) return;
+            var hs = document.getElementById('homeScreen');
+            var isHidden = hs.classList.contains('hidden') || hs.style.display === 'none';
+            var isLocked = document.body.classList.contains('trainer-locked');
+            var isClientSpace = document.body.classList.contains('client-space-open');
+            var isMpActive = document.body.classList.contains('mp-active');
+            if (isHidden || isLocked || isClientSpace || isMpActive){
+                md.style.display = 'none';
+            } else {
+                md.style.display = 'flex';
+            }
+        }
+        function mdUpdateTime(){
+            var now = new Date();
+            var hh = String(now.getHours()).padStart(2,'0');
+            var mm = String(now.getMinutes()).padStart(2,'0');
+            var el = document.getElementById('mdTime');
+            if (el) el.textContent = hh+':'+mm;
+        }
+        function mdRenderGreeting(){
+            var h = new Date().getHours();
+            var lang = (typeof currentLang!=='undefined') ? currentLang : 'ru';
+            var g = lang==='he' ? (h<12?'בוקר טוב':h<18?'צהריים טובים':'ערב טוב')
+                  : lang==='en' ? (h<12?'Good morning':h<18?'Good afternoon':'Good evening')
+                  : (h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер');
+            var name = '';
+            try {
+                var session = JSON.parse(localStorage.getItem('currentTrainerSession')||'{}');
+                var trainers = JSON.parse(localStorage.getItem('trainersList')||'[]');
+                var tr = trainers.find(function(t){ return t.id===session.id; });
+                if (tr) name = tr.name;
+            } catch(e){}
+            var sep = ', ';
+            var gt = document.getElementById('mdGreetingText');
+            if (gt) gt.textContent = g + (name ? sep+name : '');
+            var days = lang==='he' ? ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת']
+                     : lang==='en' ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+                     : ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+            var months = lang==='he' ? ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
+                       : lang==='en' ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+                       : ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+            var now = new Date();
+            var dt = document.getElementById('mdGreetingDate');
+            if (dt) dt.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()];
+        }
+        function mdRenderStats(){
+            var users=[], tasks=[], leads=[];
+            try { if (typeof getUsers==='function') users = getUsers(); } catch(e){}
+            try { if (typeof getTasks==='function') tasks = getTasks(); } catch(e){}
+            try { var lr = localStorage.getItem('leadsList'); if (lr) leads = JSON.parse(lr)||[]; } catch(e){}
+            var today = new Date().toISOString().slice(0,10);
+            var todayTasks = tasks.filter(function(t){ return t.due===today && !t.done; }).length;
+            var overdue = tasks.filter(function(t){ return t.due && t.due<today && !t.done; }).length;
+            var el = document.getElementById('mdStats');
+            if (!el) return;
+            el.innerHTML =
+                '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--primary-color);">'+users.length+'</div><div style="font-size:11px;color:var(--text-light);">Клиенты</div></div>'+
+                '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#F59E0B;">'+leads.length+'</div><div style="font-size:11px;color:var(--text-light);">Лиды</div></div>'+
+                '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:'+(overdue>0?'#EF4444':'#10B981')+';">'+todayTasks+'</div><div style="font-size:11px;color:var(--text-light);">Задачи</div></div>';
+        }
+        function mdRenderClients(q){
+            q = (q||'').toLowerCase();
+            var users = [];
+            try { if (typeof getUsers==='function') users = getUsers(); } catch(e){}
+            var filtered = users.filter(function(u){
+                if (!q) return true;
+                var name = (u.name||'')+' '+(u.lastName||'')+' '+(u.phone||'');
+                return name.toLowerCase().indexOf(q) >= 0;
+            });
+            filtered.sort(function(a,b){
+                var na = (a.name||'')+' '+(a.lastName||'');
+                var nb = (b.name||'')+' '+(b.lastName||'');
+                return na.localeCompare(nb);
+            });
+            var cnt = document.getElementById('mdClientCount');
+            if (cnt) cnt.textContent = filtered.length;
+            var list = document.getElementById('mdClientList');
+            if (!list) return;
+            if (!filtered.length){
+                list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-light);font-size:14px;">Нет клиентов</div>';
+                return;
+            }
+            list.innerHTML = filtered.map(function(u){
+                var name = (u.name||'Без имени')+(u.lastName?' '+u.lastName:'');
+                var avatar = u.avatar||'👤';
+                var meta = u.phone ? '📞 '+u.phone : (u.age ? '🎂 '+u.age : '');
+                var hasNut = false, hasWk = false;
+                try { hasNut = !!localStorage.getItem('nutritionPlan_'+u.id); } catch(e){}
+                try { hasWk = !!(JSON.parse(localStorage.getItem('workoutPlan_'+u.id)||'[]').length); } catch(e){}
+                var badges = '';
+                if (hasNut) badges += '<span style="display:inline-block;background:rgba(16,185,129,.15);color:#10B981;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;margin-right:3px;">🍽️</span>';
+                if (hasWk) badges += '<span style="display:inline-block;background:rgba(239,68,68,.15);color:#EF4444;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">🏋️</span>';
+                var photo = u.photo
+                    ? '<img src="'+u.photo+'" alt="" referrerpolicy="no-referrer" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\'">'
+                    : '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:20px;">'+avatar+'</div>';
+                return '<div onclick="openUser(\''+u.id+'\')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;">'+
+                    photo+
+                    '<div style="flex:1;min-width:0;">'+
+                        '<div style="font-weight:600;font-size:14px;color:var(--text-primary);">'+(typeof escapeHtml==='function'?escapeHtml(name):name)+'</div>'+
+                        (meta?'<div style="font-size:11px;color:var(--text-light);">'+(typeof escapeHtml==='function'?escapeHtml(meta):meta)+'</div>':'')+
+                        (badges?'<div style="margin-top:3px;">'+badges+'</div>':'')+
+                    '</div>'+
+                    '<div style="opacity:0.3;font-size:18px;">›</div>'+
+                '</div>';
+            }).join('');
+        }
+        function mdFilterClients(q){ mdRenderClients(q); }
+        function mdRenderApps(){
+            var apps = [
+                {icon:'📅',name:'Календарь',color:'#F59E0B',action:function(){ if(typeof openCalendarModal==='function') openCalendarModal(); }},
+                {icon:'✅',name:'Задачи',color:'#3B82F6',action:function(){ if(typeof openTasksModal==='function') openTasksModal(); }},
+                {icon:'🌟',name:'Лиды',color:'#F59E0B',action:function(){ if(typeof openLeadsModal==='function') openLeadsModal(); }},
+                {icon:'💬',name:'Чат',color:'#06B6D4',action:function(){ if(typeof openChat==='function') openChat((typeof currentUserId!=='undefined'?currentUserId:null),'trainer'); }},
+                {icon:'🔔',name:'Уведомл.',color:'#EF4444',action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); }},
+                {icon:'📁',name:'Файлы',color:'#8B5CF6',action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); }},
+                {icon:'👨‍🏫',name:'Профиль',color:'#6366F1',action:function(){ if(typeof openTrainerProfile==='function') openTrainerProfile(); }},
+                {icon:'📋',name:'История',color:'#10B981',action:function(){ if(typeof cwShowHistory==='function') cwShowHistory(); }}
+            ];
+            var grid = document.getElementById('mdAppGrid');
+            if (!grid) return;
+            grid.innerHTML = apps.map(function(app, i){
+                return '<div onclick="mdAppClick('+i+')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;">'+
+                    '<div style="width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:white;box-shadow:0 3px 10px rgba(0,0,0,0.12);background:'+app.color+';">'+app.icon+'</div>'+
+                    '<div style="font-size:10px;color:var(--text-secondary);text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+app.name+'</div>'+
+                '</div>';
+            }).join('');
+            window._mdApps = apps;
+        }
+        window.mdAppClick = function(i){
+            var apps = window._mdApps||[];
+            if (apps[i] && apps[i].action) apps[i].action();
+        };
+        window.mdGoHome = function(){
+            /* Already on home — just scroll to top */
+            var sc = document.getElementById('mdScroll');
+            if (sc) sc.scrollTo({top:0,behavior:'smooth'});
+        };
+        /* Patch goHome to re-show mobile desktop */
+        var _origGoHome = window.goHome;
+        if (typeof _origGoHome==='function' && !window._mdGoHomePatched){
+            window._mdGoHomePatched = true;
+            window.goHome = function(){
+                var r = _origGoHome.apply(this, arguments);
+                setTimeout(function(){ mdUpdateVisibility(); mdRenderClients(''); mdRenderStats(); }, 100);
+                return r;
+            };
+        }
+        /* Patch checkTrainerSession to init mobile desktop */
+        var _origCheckTS = window.checkTrainerSession;
+        if (typeof _origCheckTS==='function' && !window._mdCTSPatched){
+            window._mdCTSPatched = true;
+            window.checkTrainerSession = function(){
+                var r = _origCheckTS.apply(this, arguments);
+                setTimeout(function(){ mdUpdateVisibility(); if (document.getElementById('mobileDesktop').style.display==='flex'){ mdInit(); } }, 200);
+                return r;
+            };
+        }
+        /* Init on load */
+        if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ mdUpdateVisibility(); if (document.getElementById('mobileDesktop').style.display==='flex'){ mdInit(); } }, 1000); });
+        else setTimeout(function(){ mdUpdateVisibility(); if (document.getElementById('mobileDesktop').style.display==='flex'){ mdInit(); } }, 1000);
+        /* Re-check visibility periodically */
+        setInterval(function(){ mdUpdateVisibility(); }, 2000);
+        </script>
+
         <!-- РАБОЧАЯ ОБЛАСТЬ WIN11 — страницы рабочих столов (Android-like) -->
         <div class="win11-desktop-area" id="win11DesktopArea">
             <div class="win11-desktop-pages" id="win11DesktopPages">
