@@ -14,12 +14,9 @@
             justify-content: center;
             background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6b 50%, #1e3a5f 100%);
             padding: 20px;
+            position: relative;
         }
-        .container {
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
+        .container { max-width: 500px; width: 100%; text-align: center; }
         .logo { font-size: 4em; margin-bottom: 16px; }
         .title { color: white; font-size: 1.8em; font-weight: 700; margin-bottom: 8px; }
         .subtitle { color: rgba(255,255,255,0.6); font-size: 1em; margin-bottom: 40px; }
@@ -37,36 +34,97 @@
             color: white;
             display: block;
         }
-        .card:hover {
-            background: rgba(255,255,255,0.15);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-        }
+        .card:hover { background: rgba(255,255,255,0.15); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
         .card:active { transform: scale(0.97); }
         .card-icon { font-size: 3em; margin-bottom: 12px; }
         .card-title { font-size: 1.25em; font-weight: 700; margin-bottom: 6px; }
         .card-desc { font-size: 0.85em; opacity: 0.7; line-height: 1.4; }
         .footer { color: rgba(255,255,255,0.4); font-size: 0.78em; margin-top: 32px; }
+        /* Language selector */
+        .lang-selector { position: absolute; top: 16px; right: 16px; z-index: 10; }
+        .lang-btn { display: flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 0.85em; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(10px); }
+        .lang-btn:active { transform: scale(0.92); }
+        .lang-dropdown { display: none; position: absolute; top: calc(100% + 4px); right: 0; background: rgba(30,58,95,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); overflow: hidden; min-width: 150px; backdrop-filter: blur(20px); z-index: 20; }
+        .lang-dropdown.open { display: block; }
+        .lang-option { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; font-size: 0.9em; color: white; transition: background 0.12s; -webkit-tap-highlight-color: transparent; }
+        .lang-option:active { background: rgba(255,255,255,0.1); }
+        .lang-option.active { background: rgba(59,130,246,0.2); font-weight: 700; }
+        .lang-option-flag { font-size: 1.3em; }
     </style>
 </head>
 <body>
+    <!-- Language selector -->
+    <div class="lang-selector">
+        <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown()">
+            <span id="langBtnFlag">🇷🇺</span>
+            <span id="langBtnCode">RU</span>
+            <span style="font-size:0.7em;opacity:0.6;">▾</span>
+        </button>
+        <div class="lang-dropdown" id="langDropdown">
+            <div class="lang-option" onclick="setLang('ru')"><span class="lang-option-flag">🇷🇺</span><span>Русский</span></div>
+            <div class="lang-option" onclick="setLang('en')"><span class="lang-option-flag">🇬🇧</span><span>English</span></div>
+            <div class="lang-option" onclick="setLang('he')"><span class="lang-option-flag">🇮🇱</span><span>עברית</span></div>
+        </div>
+    </div>
     <div class="container">
         <div class="logo">💪</div>
-        <div class="title">Fitness Planner</div>
-        <div class="subtitle">Выберите приложение</div>
+        <div class="title" id="pageTitle">Fitness Planner</div>
+        <div class="subtitle" id="pageSubtitle">Выберите приложение</div>
         <div class="cards">
             <a href="trainer/" class="card">
                 <div class="card-icon">👨‍🏫</div>
-                <div class="card-title">Тренер</div>
-                <div class="card-desc">Управление клиентами, программы питания и тренировок, календарь, файлы</div>
+                <div class="card-title" id="trainerTitle">Тренер</div>
+                <div class="card-desc" id="trainerDesc">Управление клиентами, программы питания и тренировок, календарь, файлы</div>
             </a>
             <a href="client/" class="card">
                 <div class="card-icon">👤</div>
-                <div class="card-title">Клиент</div>
-                <div class="card-desc">Ваши программы, отметка выполнения, прогресс, чат с тренером</div>
+                <div class="card-title" id="clientTitle">Клиент</div>
+                <div class="card-desc" id="clientDesc">Ваши программы, отметка выполнения, прогресс, чат с тренером</div>
             </a>
         </div>
         <div class="footer">Fitness Planner Israel · v2026</div>
     </div>
+    <script>
+    var translations = {
+        ru: { title:'Fitness Planner', subtitle:'Выберите приложение', trainer:'Тренер', trainerDesc:'Управление клиентами, программы питания и тренировок, календарь, файлы', client:'Клиент', clientDesc:'Ваши программы, отметка выполнения, прогресс, чат с тренером' },
+        en: { title:'Fitness Planner', subtitle:'Select application', trainer:'Trainer', trainerDesc:'Manage clients, nutrition and workout plans, calendar, files', client:'Client', clientDesc:'Your plans, progress tracking, chat with trainer' },
+        he: { title:'Fitness Planner', subtitle:'בחר יישום', trainer:'מאמן', trainerDesc:'ניהול לקוחות, תוכניות תזונה ואימון, יומן, קבצים', client:'לקוח', clientDesc:'התוכניות שלך, מעקב התקדמות, צ׳אט עם המאמן' }
+    };
+    var currentLang = localStorage.getItem('selLang') || 'ru';
+    function toggleLangDropdown(){ document.getElementById('langDropdown').classList.toggle('open'); }
+    function setLang(lang){
+        currentLang = lang;
+        localStorage.setItem('selLang', lang);
+        document.getElementById('langDropdown').classList.remove('open');
+        applyLang();
+    }
+    function applyLang(){
+        var t = translations[currentLang] || translations.ru;
+        document.getElementById('pageTitle').textContent = t.title;
+        document.getElementById('pageSubtitle').textContent = t.subtitle;
+        document.getElementById('trainerTitle').textContent = t.trainer;
+        document.getElementById('trainerDesc').textContent = t.trainerDesc;
+        document.getElementById('clientTitle').textContent = t.client;
+        document.getElementById('clientDesc').textContent = t.clientDesc;
+        var flags = {ru:'🇷🇺',en:'🇬🇧',he:'🇮🇱'};
+        var codes = {ru:'RU',en:'EN',he:'HE'};
+        document.getElementById('langBtnFlag').textContent = flags[currentLang];
+        document.getElementById('langBtnCode').textContent = codes[currentLang];
+        document.documentElement.lang = currentLang;
+        document.documentElement.dir = currentLang === 'he' ? 'rtl' : 'ltr';
+        document.querySelectorAll('.lang-option').forEach(function(opt, i){
+            var langs = ['ru','en','he'];
+            opt.classList.toggle('active', langs[i] === currentLang);
+        });
+    }
+    document.addEventListener('click', function(e){
+        var dd = document.getElementById('langDropdown');
+        var btn = document.getElementById('langBtn');
+        if (dd && dd.classList.contains('open') && !dd.contains(e.target) && (!btn || !btn.contains(e.target))){
+            dd.classList.remove('open');
+        }
+    });
+    applyLang();
+    </script>
 </body>
 </html>
