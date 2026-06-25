@@ -9851,9 +9851,100 @@ setTimeout(function(){
                 <button onclick="mdGoHome()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(59,130,246,0.1);color:var(--primary-color);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🏠</button>
                 <button onclick="win11OpenApp('planner')" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(16,185,129,0.1);color:#10B981;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🍽️</button>
                 <button onclick="win11OpenApp('workout')" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(239,68,68,0.1);color:#EF4444;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🏋️</button>
-                <button onclick="openSettingsModal()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(107,114,128,0.1);color:#6B7280;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚙️</button>
+                <button onclick="mdOpenAppDrawer()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(139,92,246,0.1);color:#8B5CF6;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⊞</button>
             </div>
         </div>
+
+        <!-- App Drawer (Samsung-style) -->
+        <div id="mdAppDrawer" style="position:fixed;inset:0;z-index:60;display:none;flex-direction:column;background:var(--background-color);">
+            <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));border-bottom:1px solid var(--border-color);">
+                <button onclick="mdCloseAppDrawer()" style="width:40px;height:40px;border:none;border-radius:12px;background:var(--surface-color);color:var(--text-primary);font-size:20px;cursor:pointer;">‹</button>
+                <input type="search" id="mdAppSearch" placeholder="🔍 Поиск..." oninput="mdFilterApps(this.value)" style="flex:1;padding:10px 14px;border:1px solid var(--border-color);border-radius:12px;font-size:15px;background:var(--surface-color);color:var(--text-primary);">
+            </div>
+            <div id="mdAppDrawerGrid" style="flex:1;overflow-y:auto;padding:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px 8px;-webkit-overflow-scrolling:touch;"></div>
+            <div style="flex:0 0 auto;padding:8px;text-align:center;color:var(--text-light);font-size:12px;">Закрыть</div>
+        </div>
+        <script>
+        function mdOpenAppDrawer(){
+            var d = document.getElementById('mdAppDrawer');
+            if (!d) return;
+            d.style.display = 'flex';
+            mdRenderAppDrawer('');
+        }
+        function mdCloseAppDrawer(){
+            var d = document.getElementById('mdAppDrawer');
+            if (d) d.style.display = 'none';
+        }
+        function mdRenderAppDrawer(q){
+            q = (q||'').toLowerCase();
+            var allApps = [
+                {icon:'🍽️',name:'Питание',color:'linear-gradient(135deg,#10B981,#047857)',action:function(){ win11OpenApp('planner'); mdCloseAppDrawer(); }},
+                {icon:'🏋️',name:'Тренировки',color:'linear-gradient(135deg,#EF4444,#b91c1c)',action:function(){ win11OpenApp('workout'); mdCloseAppDrawer(); }},
+                {icon:'📅',name:'Календарь',color:'linear-gradient(135deg,#F59E0B,#d97706)',action:function(){ if(typeof openCalendarModal==='function') openCalendarModal(); mdCloseAppDrawer(); }},
+                {icon:'✅',name:'Задачи',color:'linear-gradient(135deg,#3B82F6,#1d4ed8)',action:function(){ if(typeof openTasksModal==='function') openTasksModal(); mdCloseAppDrawer(); }},
+                {icon:'🛒',name:'Магазин',color:'linear-gradient(135deg,#8B5CF6,#6d28d9)',action:function(){ if(typeof openShopModal==='function') openShopModal(); mdCloseAppDrawer(); }},
+                {icon:'🌟',name:'Лиды',color:'linear-gradient(135deg,#F59E0B,#ea580c)',action:function(){ if(typeof openLeadsModal==='function') openLeadsModal(); mdCloseAppDrawer(); }},
+                {icon:'💬',name:'Чат',color:'linear-gradient(135deg,#06B6D4,#0891b2)',action:function(){ if(typeof openChat==='function') openChat((typeof currentUserId!=='undefined'?currentUserId:null),'trainer'); mdCloseAppDrawer(); }},
+                {icon:'🔔',name:'Уведомления',color:'linear-gradient(135deg,#EF4444,#dc2626)',action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); mdCloseAppDrawer(); }},
+                {icon:'📁',name:'Файлы',color:'linear-gradient(135deg,#F472B6,#db2777)',action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); mdCloseAppDrawer(); }},
+                {icon:'👨‍🏫',name:'Профиль',color:'linear-gradient(135deg,#6366F1,#4338ca)',action:function(){ if(typeof openTrainerProfile==='function') openTrainerProfile(); mdCloseAppDrawer(); }},
+                {icon:'📋',name:'История',color:'linear-gradient(135deg,#10B981,#34D399)',action:function(){ if(typeof cwShowHistory==='function') cwShowHistory(); mdCloseAppDrawer(); }},
+                {icon:'📷',name:'Сканер',color:'linear-gradient(135deg,#1f2937,#374151)',action:function(){ if(typeof openBarcodeScanner==='function') openBarcodeScanner(); mdCloseAppDrawer(); }},
+                {icon:'📚',name:'Энциклопедия',color:'linear-gradient(135deg,#7C3AED,#5b21b6)',action:function(){ if(typeof openEncyclopedia==='function') openEncyclopedia(); mdCloseAppDrawer(); }},
+                {icon:'⚙️',name:'Настройки',color:'linear-gradient(135deg,#6B7280,#4b5563)',action:function(){ if(typeof openSettingsModal==='function') openSettingsModal(); mdCloseAppDrawer(); }},
+                /* Widgets */
+                {icon:'🧮',name:'Калькулятор',color:'linear-gradient(135deg,#374151,#1f2937)',action:function(){ mdOpenWidget('calculator'); }},
+                {icon:'⏱',name:'Секундомер',color:'linear-gradient(135deg,#0891b2,#155e75)',action:function(){ mdOpenWidget('stopwatch'); }},
+                {icon:'⏲',name:'Таймер',color:'linear-gradient(135deg,#ea580c,#c2410c)',action:function(){ mdOpenWidget('timer'); }},
+                {icon:'⚖️',name:'BMR',color:'linear-gradient(135deg,#7C3AED,#5b21b6)',action:function(){ mdOpenWidget('bmr'); }},
+                {icon:'📝',name:'Заметки',color:'linear-gradient(135deg,#FCD34D,#f59e0b)',action:function(){ mdOpenWidget('notes'); }},
+                {icon:'💧',name:'Вода',color:'linear-gradient(135deg,#3B82F6,#06b6d4)',action:function(){ mdOpenWidget('hydration'); }},
+                {icon:'📏',name:'Замеры',color:'linear-gradient(135deg,#84CC16,#65a30d)',action:function(){ mdOpenWidget('measurements'); }},
+                {icon:'❤️',name:'Пульс',color:'linear-gradient(135deg,#EF4444,#b91c1c)',action:function(){ mdOpenWidget('heartrate'); }},
+                {icon:'👣',name:'Шагомер',color:'linear-gradient(135deg,#10B981,#34D399)',action:function(){ mdOpenWidget('pedometer'); }},
+                {icon:'🎹',name:'Пианино',color:'linear-gradient(135deg,#1f2937,#000000)',action:function(){ mdOpenWidget('keyboard'); }},
+                {icon:'🌤️',name:'Погода',color:'linear-gradient(135deg,#0EA5E9,#0284c7)',action:function(){ mdOpenWidget('weather'); }}
+            ];
+            var filtered = q ? allApps.filter(function(a){ return a.name.toLowerCase().indexOf(q) >= 0; }) : allApps;
+            var grid = document.getElementById('mdAppDrawerGrid');
+            if (!grid) return;
+            grid.innerHTML = filtered.map(function(app, i){
+                return '<div onclick="mdAppDrawerClick('+allApps.indexOf(app)+')" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;">'+
+                    '<div style="width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;box-shadow:0 4px 12px rgba(0,0,0,0.15);background:'+app.color+';">'+app.icon+'</div>'+
+                    '<div style="font-size:11px;color:var(--text-secondary);text-align:center;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+app.name+'</div>'+
+                '</div>';
+            }).join('');
+            window._mdAllApps = allApps;
+        }
+        window.mdAppDrawerClick = function(i){
+            var apps = window._mdAllApps||[];
+            if (apps[i] && apps[i].action) apps[i].action();
+        };
+        function mdFilterApps(q){ mdRenderAppDrawer(q); }
+        function mdOpenWidget(id){
+            mdCloseAppDrawer();
+            /* Open widget in fullscreen overlay */
+            var fs = document.getElementById('mdWidgetOverlay');
+            if (!fs){
+                fs = document.createElement('div');
+                fs.id = 'mdWidgetOverlay';
+                fs.style.cssText = 'position:fixed;inset:0;z-index:200;background:var(--background-color);display:none;flex-direction:column;';
+                document.body.appendChild(fs);
+            }
+            var names = {calculator:'🧮 Калькулятор',bmr:'⚖️ BMR',stopwatch:'⏱ Секундомер',timer:'⏲ Таймер',keyboard:'🎹 Пианино',notes:'📝 Заметки',hydration:'💧 Вода',measurements:'📏 Замеры',heartrate:'❤️ Пульс',pedometer:'👣 Шагомер',weather:'🌤️ Погода'};
+            fs.innerHTML = '<div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface-color);border-bottom:1px solid var(--border-color);"><button onclick="mdCloseWidget()" style="width:40px;height:40px;border:none;border-radius:12px;background:var(--background-color);color:var(--text-primary);font-size:20px;cursor:pointer;">‹</button><div style="font-size:17px;font-weight:600;">'+(names[id]||id)+'</div></div><div id="mdWidgetBody" style="flex:1;overflow-y:auto;padding:16px;"></div>';
+            fs.style.display = 'flex';
+            var body = document.getElementById('mdWidgetBody');
+            if (!body) return;
+            var fns = {calculator:'window.__win11RenderCalculator',bmr:'window.__win11RenderBMR',stopwatch:'window.__win11RenderStopwatch',timer:'window.__win11RenderTimer',keyboard:'window.__win11RenderKeyboard',notes:'window.__win11RenderNotes',hydration:'window.__win11RenderHydration',measurements:'window.__win11RenderMeasurements',heartrate:'window.__win11RenderHeartRate',pedometer:'window.__win11RenderPedometer',weather:'window.__win11RenderWeather'};
+            var fn = fns[id];
+            if (fn){ try { eval(fn+'(body)'); } catch(e){ body.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Ошибка загрузки</div>'; } }
+        }
+        function mdCloseWidget(){
+            var fs = document.getElementById('mdWidgetOverlay');
+            if (fs) fs.style.display = 'none';
+        }
+        </script>
         <script>
         /* === Mobile Desktop (Samsung Galaxy S26 style) === */
         function mdInit(){
@@ -10012,7 +10103,7 @@ setTimeout(function(){
             window._mdGoHomePatched = true;
             window.goHome = function(){
                 var r = _origGoHome.apply(this, arguments);
-                setTimeout(function(){ mdUpdateVisibility(); mdRenderClients(''); mdRenderStats(); }, 100);
+                /* mdUpdateVisibility already called inside goHome — no delay needed */
                 return r;
             };
         }
@@ -16113,6 +16204,7 @@ setTimeout(function(){
             document.getElementById('appContainer').classList.add('hidden');
             document.getElementById('homeScreen').classList.remove('hidden');
             document.body.classList.remove('planner-active');
+            document.body.classList.remove('mp-active');
 
             // Скрыть мобильные элементы
             const mobileNav = document.getElementById('mobileNav');
@@ -16120,7 +16212,11 @@ setTimeout(function(){
             if (mobileNav) mobileNav.style.display = 'none';
             if (fabBtn) fabBtn.style.display = 'none';
 
-            renderUsers();
+            /* Instantly show mobile desktop — no delays */
+            if (typeof mdUpdateVisibility === 'function') mdUpdateVisibility();
+            if (typeof mdRenderClients === 'function') mdRenderClients('');
+            if (typeof mdRenderStats === 'function') mdRenderStats();
+            if (typeof mdRenderGreeting === 'function') mdRenderGreeting();
         }
 
         let editingUserId = null;
@@ -32625,14 +32721,15 @@ function mpProductCardHtml(p, i){
         if (p.nutriScore && typeof NUTRI_COLORS !== 'undefined' && NUTRI_COLORS[p.nutriScore])
             nutriTag = '<span style="display:inline-block; background:' + NUTRI_COLORS[p.nutriScore] + '; color:#fff; font-weight:800; font-size:.72em; padding:1px 6px; border-radius:5px; margin-inline-start:5px;">' + p.nutriScore + '</span>';
     } catch(e){}
-    return '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpPickAdd(' + i + ')">' +
+    /* Click card → preview; + button → add directly */
+    return '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpProductInfo(' + i + ')">' +
         (thumb ? '<div class="mp-pick-thumb">' + thumb + '</div>' : '') +
         '<div class="mp-pick-main">' +
             '<div class="mp-pick-name">' + esc(name) + nutriTag + '</div>' +
             '<div class="mp-pick-sub">' + mt('pS') + ' ' + r1(p.protein) + ' · ' + mt('fS') + ' ' + r1(p.fat) + ' · ' + mt('cS') + ' ' + r1(p.carbs) + ' · ' + mt('perHundred') + esc(brandTxt) + '</div>' +
         '</div>' +
         '<div class="mp-pick-kcal">' + Math.round(p.calories || 0) + ' ' + mt('kcal') + '</div>' +
-        '<div class="mp-pick-plus">+</div>' +
+        '<button class="mp-pick-plus" style="cursor:pointer; background:none; border:none;" onclick="event.stopPropagation(); mpPickAdd(' + i + ')" title="Добавить">+</button>' +
     '</div>';
 }
 var MP_CAT_COLORS_FALLBACK = '#10B981';
@@ -32699,6 +32796,14 @@ window.mpPickAdd = function(i){
     var it = document.getElementById('mpPickItem' + i);
     if (it){ it.classList.add('justadded'); setTimeout(function(){ it.classList.remove('justadded'); }, 700); }
     if (typeof showToast === 'function') showToast(mt('added'));
+};
+
+/* Открыть превью продукта перед добавлением (как в тренировках) */
+window.mpProductInfo = function(i){
+    var p = __mpPickArr[i]; if (!p) return;
+    if (typeof openProductInfo !== 'function') { mpPickAdd(i); return; }
+    window.__infoAddOverride = function(){ mpPickAdd(i); };
+    openProductInfo(p);
 };
 
 /* --- редактор строки продукта --- */
