@@ -31690,6 +31690,56 @@ body[dir="rtl"] .cw-spark { padding: 0 27px; }
 .cw-finish-btn { padding: 15px 34px; border-radius: 15px; border: none; background: linear-gradient(135deg,#10B981,#047857); color: #fff; font-weight: 800; font-size: 1.05em; cursor: pointer; box-shadow: 0 5px 18px rgba(16,185,129,.35); font-family: inherit; -webkit-tap-highlight-color: transparent; }
 .cw-finish-btn:active { transform: scale(.97); }
 .cw-finish-hint { font-size: .74em; color: var(--text-light); margin-top: 8px; }
+
+/* === NEW: Set types (Warmup/Drop/Failure/Normal) === */
+.cw-set-type { width: 28px; height: 38px; border-radius: 9px; border: 1.5px solid var(--border-color); background: var(--surface-color); cursor: pointer; font-size: .72em; font-weight: 800; flex-shrink: 0; -webkit-tap-highlight-color: transparent; transition: all .15s; }
+.cw-set-type.warmup { border-color: #F59E0B; background: rgba(245,158,11,.10); color: #B45309; }
+.cw-set-type.drop { border-color: #8B5CF6; background: rgba(139,92,246,.10); color: #6D28D9; }
+.cw-set-type.failure { border-color: #EF4444; background: rgba(239,68,68,.10); color: #B91C1C; }
+.cw-set-type:active { transform: scale(.9); }
+.cw-set.warmup .cw-in { border-color: #F59E0B; background: rgba(245,158,11,.04); }
+.cw-set.drop .cw-in { border-color: #8B5CF6; background: rgba(139,92,246,.04); }
+.cw-set.failure .cw-in { border-color: #EF4444; background: rgba(239,68,68,.04); }
+.cw-set.warmup .cw-set-vol { color: #B45309; }
+.cw-set.drop .cw-set-vol { color: #6D28D9; }
+.cw-set.failure .cw-set-vol { color: #B91C1C; }
+
+/* === NEW: Superset styling === */
+.cw-superset-group { border: 2px solid #8B5CF6; border-radius: 18px; margin-bottom: 14px; overflow: hidden; }
+.cw-superset-badge { background: linear-gradient(135deg,#8B5CF6,#6D28D9); color: white; padding: 5px 12px; font-size: .72em; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.cw-superset-group .cw-ex-card { border: none; border-radius: 0; border-bottom: 1px solid rgba(139,92,246,.2); margin-bottom: 0; }
+.cw-superset-group .cw-ex-card:last-child { border-bottom: none; }
+.cw-superset-arrow { text-align: center; background: rgba(139,92,246,.06); padding: 2px; font-size: 1em; color: #8B5CF6; }
+
+/* === NEW: RPE 1-10 compact === */
+.cw-rpe-compact { display: flex; gap: 2px; flex-shrink: 0; }
+.cw-rpe-dot.cw-rpe-sm { width: 16px; height: 16px; font-size: .52em; border-radius: 4px; }
+
+/* === NEW: Add/Remove set buttons === */
+.cw-set-actions { display: flex; gap: 6px; padding: 4px 0 2px 27px; }
+body[dir="rtl"] .cw-set-actions { padding-left: 0; padding-right: 27px; }
+.cw-addset-btn { padding: 4px 10px; border-radius: 8px; border: 1px dashed #3B82F6; background: rgba(59,130,246,.05); color: #3B82F6; font-size: .72em; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cw-addset-btn:active { transform: scale(.92); }
+.cw-removeset-btn { padding: 4px 10px; border-radius: 8px; border: 1px dashed #EF4444; background: rgba(239,68,68,.05); color: #EF4444; font-size: .72em; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+/* === NEW: Rest per exercise badge === */
+.cw-rest-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; background: rgba(59,130,246,.10); color: #3B82F6; font-size: .68em; font-weight: 700; cursor: pointer; }
+.cw-rest-badge:active { transform: scale(.92); }
+
+/* === NEW: Calendar view === */
+.cw-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 14px; }
+.cw-cal-day { aspect-ratio: 1; border-radius: 8px; background: var(--surface-color); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: .68em; color: var(--text-secondary); position: relative; }
+.cw-cal-day.has-workout { background: linear-gradient(135deg,#10B981,#047857); color: white; font-weight: 700; border-color: #047857; }
+.cw-cal-day.today { border: 2px solid #3B82F6; }
+.cw-cal-day.other-month { opacity: .3; }
+.cw-cal-header { text-align: center; font-size: .64em; font-weight: 700; color: var(--text-light); padding: 4px 0; }
+
+/* === NEW: Progress charts === */
+.cw-prog-bar { height: 24px; border-radius: 8px; background: var(--border-color); overflow: hidden; margin-bottom: 6px; position: relative; }
+.cw-prog-bar-fill { height: 100%; border-radius: 8px; transition: width .3s; display: flex; align-items: center; padding: 0 8px; color: white; font-size: .68em; font-weight: 700; }
+.cw-prog-row { margin-bottom: 10px; }
+.cw-prog-label { font-size: .76em; color: var(--text-secondary); margin-bottom: 3px; display: flex; justify-content: space-between; }
+
 /* отчёт */
 .cw-rep { padding-bottom: 30px; }
 .cw-rep-hero { text-align: center; padding: 16px 0 8px; }
@@ -34152,7 +34202,31 @@ var CW_T = {
     repsOf:     { ru:'повторов',    en:'reps',      he:'חזרות' },
     startWk:    { ru:'▶ Начать тренировку', en:'▶ Start workout', he:'▶ התחל אימון' },
     menu:       { ru:'Действия',    en:'Actions',   he:'פעולות' },
-    nothing:    { ru:'Ничего не найдено', en:'Nothing found', he:'לא נמצא' }
+    nothing:    { ru:'Ничего не найдено', en:'Nothing found', he:'לא נמצא' },
+    /* NEW: set types */
+    setTypeNormal:  { ru:'Обычный',   en:'Normal',  he:'רגיל' },
+    setTypeWarmup:  { ru:'Разминка',  en:'Warmup',  he:'חימום' },
+    setTypeDrop:    { ru:'Дроп-сет',  en:'Drop',    he:'דרופ' },
+    setTypeFailure: { ru:'Отказ',     en:'Failure', he:'כישלון' },
+    /* NEW: supersets */
+    superset:   { ru:'🔗 Суперсет',  en:'🔗 Superset', he:'🔗 סופרסט' },
+    linkSuperset:{ ru:'🔗 Объединить в суперсет', en:'🔗 Link as superset', he:'🔗 קשר כסופרסט' },
+    unlinkSuperset:{ ru:'✂️ Разъединить', en:'✂️ Unlink', he:'✂️ נתק' },
+    /* NEW: auto rest */
+    autoRest:   { ru:'⏱ Авто-отдых', en:'⏱ Auto-rest', he:'⏱ מנוחה אוט' },
+    /* NEW: calendar */
+    calendar:   { ru:'📅 Календарь', en:'📅 Calendar', he:'📅 לוח שנה' },
+    history:    { ru:'📋 История',  en:'📋 History', he:'📋 היסטוריה' },
+    /* NEW: progress */
+    progress:   { ru:'📈 Прогресс', en:'📈 Progress', he:'📈 התקדמות' },
+    muscleGroup:{ ru:'Группа мышц', en:'Muscle group', he:'קבוצת שרירים' },
+    totalVolume:{ ru:'Общий объём', en:'Total volume', he:'נפח כולל' },
+    workouts:   { ru:'Тренировок', en:'Workouts', he:'אימונים' },
+    /* NEW: add set */
+    addSet:     { ru:'+ подход',     en:'+ set',     he:'+ סט' },
+    removeSet:  { ru:'− подход',     en:'− set',     he:'− סט' },
+    /* NEW: rest per exercise */
+    restCustom: { ru:'Отдых',       en:'Rest',      he:'מנוחה' }
 };
 function wt(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; return (CW_T[k]&&(CW_T[k][l]||CW_T[k].ru))||k; }
 function eh(s){ return (typeof escapeHtml==='function')?escapeHtml(String(s==null?'':s)):String(s); }
@@ -34160,7 +34234,16 @@ function ea(s){ return (typeof escapeAttr==='function')?escapeAttr(s):String(s);
 function r0(v){ return Math.round(parseFloat(v)||0); }
 
 var GC = {chest:'#EF4444',back:'#3B82F6',shoulders:'#F59E0B',biceps:'#8B5CF6',triceps:'#06B6D4',forearms:'#10B981',quads:'#F97316',hamstrings:'#A855F7',glutes:'#EC4899',calves:'#14B8A6',abs:'#84CC16',cardio:'#DC2626',fullbody:'#6366F1',neck:'#9333EA'};
-var RPE_COLORS = ['#10B981','#84CC16','#F59E0B','#F97316','#EF4444'];
+/* RPE 1-10 color scale (green→yellow→orange→red) */
+var RPE_COLORS = ['#22C55E','#84CC16','#A3E635','#FACC15','#FDE047','#FB923C','#F97316','#EF4444','#DC2626','#991B1B'];
+var RPE_LABELS = ['1','2','3','4','5','6','7','8','9','10'];
+/* Set type colors and labels */
+var SET_TYPES = {
+    normal:  { color:'#3B82F6', bg:'rgba(59,130,246,.08)', label:{ru:'N',en:'N',he:'N'} },
+    warmup:  { color:'#F59E0B', bg:'rgba(245,158,11,.10)', label:{ru:'W',en:'W',he:'W'} },
+    drop:    { color:'#8B5CF6', bg:'rgba(139,92,246,.10)', label:{ru:'D',en:'D',he:'D'} },
+    failure: { color:'#EF4444', bg:'rgba(239,68,68,.10)', label:{ru:'F',en:'F',he:'F'} }
+};
 
 window.__cwLive = { active:false, idx:-1, key:'', uid:'' };
 
@@ -34270,74 +34353,43 @@ function cwRenderInner(){
         '</div>';
     }
 
+    /* Detect superset groups — exercises with same supersetId */
+    var ssGroups = {};
+    exs.forEach(function(ex, i){
+        if (ex.supersetId){
+            if (!ssGroups[ex.supersetId]) ssGroups[ex.supersetId] = [];
+            ssGroups[ex.supersetId].push(i);
+        }
+    });
+    var renderedEx = {};
+
     exs.forEach(function(ex,i){
-        var st = __clientExerciseState[i];
+        if (renderedEx[i]) return;  /* already rendered as part of superset */
         var color = GC[ex.groupId] || '#3B82F6';
         var rest = parseInt(ex.rest, 10)||60;
-        var allDone = st.done;
+        var allDone = __clientExerciseState[i].done;
         var prevSets = cwPrevSets(prev, ex.name, i);
 
-        var setsH = '';
-        st.setsDone.forEach(function(sd,s){
-            var tVol = plannedVol(ex);
-            var pv = prevSets && prevSets[s] ? ((parseFloat(prevSets[s].weight)||0)*(parseInt(prevSets[s].reps, 10)||0)) : 0;
-            var v = setVol(sd);
-            var maxRef = Math.max(v, tVol, pv, 1);
-            var rpeBtns = '';
-            for (var rv=1; rv<=5; rv++){
-                var on = (sd.rpe||0) >= rv;
-                rpeBtns += '<button class="cw-rpe-dot'+(on?' on':'')+'" style="'+(on?('background:'+RPE_COLORS[(sd.rpe||1)-1]+'; border-color:'+RPE_COLORS[(sd.rpe||1)-1]+'; color:#fff;'):'')+'" onclick="cwSetRPE('+i+','+s+','+rv+')">'+rv+'</button>';
-            }
-            setsH += '<div class="cw-set'+(sd.done?' done':'')+'">'+
-                '<div class="cw-set-num" style="color:'+(sd.done?'#10B981':color)+';">'+(s+1)+'</div>'+
-                '<button class="cw-wbtn" onclick="cwAdjW('+i+','+s+',-1)">−</button>'+
-                '<input type="number" inputmode="decimal" class="cw-in" id="cw2_'+i+'_'+s+'_w" value="'+ea(sd.weight)+'" placeholder="0" oninput="cwInput('+i+','+s+')">'+
-                '<button class="cw-wbtn" onclick="cwAdjW('+i+','+s+',1)">+</button>'+
-                '<span class="cw-x">×</span>'+
-                '<input type="number" inputmode="numeric" class="cw-in cw-in-reps" id="cw2_'+i+'_'+s+'_r" value="'+ea(sd.reps)+'" placeholder="0" oninput="cwInput('+i+','+s+')">'+
-                '<button class="cw-set-check'+(sd.done?' done':'')+'" onclick="cwToggleSet('+i+','+s+')">✓</button>'+
-            '</div>'+
-            '<div class="cw-set-sub">'+
-                '<div class="cw-rpe" title="'+wt('effort')+'">'+rpeBtns+'</div>'+
-                '<div class="cw-minibar" id="cwbar_'+i+'_'+s+'" data-target="'+tVol+'" data-prev="'+pv+'">'+
-                    '<div class="cw-minibar-fill" style="width:'+Math.min(100, v/maxRef*100)+'%; background:'+(sd.done?'#10B981':color)+';"></div>'+
-                    (tVol>0?'<i style="left:'+Math.min(100, tVol/maxRef*100)+'%;" title="'+wt('planTag')+'"></i>':'')+
-                    (pv>0?'<u style="left:'+Math.min(100, pv/maxRef*100)+'%;" title="'+wt('prevTag')+'"></u>':'')+
-                '</div>'+
-                '<span class="cw-set-vol" id="cwvol_'+i+'_'+s+'">'+r0(cwIsLbs()? v*KG_TO_LBS : v)+'</span>'+
-            '</div>';
-        });
+        /* Check if this exercise is part of a superset */
+        var ssId = ex.supersetId;
+        var ssExIndices = ssId && ssGroups[ssId] ? ssGroups[ssId] : null;
 
-        /* мини-график достижений по подходам */
-        var sparkVals = st.setsDone.map(function(sd){ return setVol(sd); });
-        var sparkPrev = prevSets ? prevSets.map(function(p){ return (parseFloat(p.weight)||0)*(parseInt(p.reps, 10)||0); }) : [];
-        var sparkMax = Math.max.apply(null, sparkVals.concat(sparkPrev).concat([plannedVol(ex),1]));
-        var sparkH = '<div class="cw-spark">';
-        st.setsDone.forEach(function(sd,s){
-            var hPct = Math.max(4, sparkVals[s]/sparkMax*100);
-            var pPct = sparkPrev[s] ? Math.max(2, sparkPrev[s]/sparkMax*100) : 0;
-            sparkH += '<div class="cw-spark-col">'+
-                (pPct?'<div class="cw-spark-prev" style="height:'+pPct+'%;"></div>':'')+
-                '<div class="cw-spark-bar" style="height:'+hPct+'%; background:'+(sd.done?color:'var(--border-color)')+';"></div>'+
-            '</div>';
-        });
-        sparkH += '</div><div class="cw-spark-leg"><span><span class="dot" style="background:'+color+';"></span>'+wt('volume')+'</span>'+(prevSets?'<span><span class="dot" style="background:#cbd5e1;"></span>'+wt('prevTag')+'</span>':'')+'</div>';
+        /* If superset and this is the first exercise in the group — render the whole group */
+        if (ssExIndices && ssExIndices[0] === i && ssExIndices.length > 1){
+            h += '<div class="cw-superset-group">';
+            h += '<div class="cw-superset-badge">'+wt('superset')+' · '+ssExIndices.length+' '+wt('setsOf')+'</div>';
+            ssExIndices.forEach(function(ssI, ssPos){
+                renderedEx[ssI] = true;
+                h += cwRenderExercise(exs[ssI], ssI, ctx, prev, __clientExerciseState[ssI]);
+                if (ssPos < ssExIndices.length - 1){
+                    h += '<div class="cw-superset-arrow">⇅</div>';
+                }
+            });
+            h += '</div>';
+            return;
+        }
 
-        h += '<div class="cw-ex-card'+(allDone?' alldone':'')+'">'+
-            '<div class="cw-ex-strip" style="background:'+color+';"></div>'+
-            '<div class="cw-ex-body">'+
-                '<div class="cw-ex-head">'+
-                    '<div class="cw-ex-no" style="background:'+color+'20; color:'+color+';">'+(allDone?'✓':(i+1))+'</div>'+
-                    '<div class="cw-ex-titlewrap">'+
-                        '<div class="cw-ex-title"'+(ex.exId?' onclick="openExerciseInfo(\''+encodeURIComponent(JSON.stringify({exId:ex.exId,groupId:ex.groupId||'',subId:ex.subId||'',equip:ex.equip||''}))+'\','+(ctx.live?'false':'true')+')" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"':'')+'>'+eh((typeof localizedExName==='function'?localizedExName(ex):ex.name)||'—')+'</div>'+
-                        '<div class="cw-ex-meta">'+(parseInt(ex.sets, 10)||1)+' '+wt('setsOf')+' · '+eh(ex.reps||'')+' '+wt('repsOf')+(ex.time?' · ⏳'+ex.time+'s':'')+' · ⏱ '+rest+'s</div>'+
-                    '</div>'+
-                    (ctx.live?'<button class="cw-ex-menu" onclick="cwOpenExMenu('+i+')">⋯</button>':'')+
-                '</div>'+
-                setsH + sparkH +
-                (ex.note?'<div class="cw-ex-note">💡 '+eh(ex.note)+'</div>':'')+
-            '</div>'+
-        '</div>';
+        h += cwRenderExercise(ex, i, ctx, prev, __clientExerciseState[i]);
     });
 
     if (ctx.live){
@@ -34350,6 +34402,105 @@ function cwRenderInner(){
     '</div>';
 
     container.innerHTML = h;
+}
+
+/* === NEW: Render a single exercise card (extracted from cwRenderInner) === */
+function cwRenderExercise(ex, i, ctx, prev, st){
+    var color = GC[ex.groupId] || '#3B82F6';
+    var rest = parseInt(ex.rest, 10)||60;
+    var allDone = st.done;
+    var prevSets = cwPrevSets(prev, ex.name, i);
+
+    var setsH = '';
+    st.setsDone.forEach(function(sd,s){
+        var tVol = plannedVol(ex);
+        var pv = prevSets && prevSets[s] ? ((parseFloat(prevSets[s].weight)||0)*(parseInt(prevSets[s].reps, 10)||0)) : 0;
+        var v = setVol(sd);
+        var maxRef = Math.max(v, tVol, pv, 1);
+        /* RPE 1-10 compact dots */
+        var rpeBtns = '';
+        for (var rv=1; rv<=10; rv++){
+            var on = (sd.rpe||0) >= rv;
+            var cls = 'cw-rpe-dot cw-rpe-sm'+(on?' on':'');
+            var stt = on ? ('background:'+RPE_COLORS[rv-1]+'; border-color:'+RPE_COLORS[rv-1]+'; color:#fff;') : '';
+            rpeBtns += '<button class="'+cls+'" style="'+stt+'" onclick="cwSetRPE('+i+','+s+','+rv+')">'+rv+'</button>';
+        }
+        /* Set type */
+        var setType = sd.setType || 'normal';
+        var stInfo = SET_TYPES[setType] || SET_TYPES.normal;
+        var typeBtn = '<button class="cw-set-type '+setType+'" onclick="cwCycleSetType('+i+','+s+')" title="'+wt('setType'+(setType.charAt(0).toUpperCase()+setType.slice(1)))+'">'+stInfo.label[(typeof currentLang!=='undefined'?currentLang:'ru')]+'</button>';
+        /* Set type class for the row */
+        var setRowClass = 'cw-set'+(sd.done?' done':'')+(setType!=='normal'?' '+setType:'');
+        setsH += '<div class="'+setRowClass+'">'+
+            typeBtn +
+            '<div class="cw-set-num" style="color:'+(sd.done?'#10B981':color)+';">'+(s+1)+'</div>'+
+            '<button class="cw-wbtn" onclick="cwAdjW('+i+','+s+',-1)">−</button>'+
+            '<input type="number" inputmode="decimal" class="cw-in" id="cw2_'+i+'_'+s+'_w" value="'+ea(sd.weight)+'" placeholder="0" oninput="cwInput('+i+','+s+')">'+
+            '<button class="cw-wbtn" onclick="cwAdjW('+i+','+s+',1)">+</button>'+
+            '<span class="cw-x">×</span>'+
+            '<input type="number" inputmode="numeric" class="cw-in cw-in-reps" id="cw2_'+i+'_'+s+'_r" value="'+ea(sd.reps)+'" placeholder="0" oninput="cwInput('+i+','+s+')">'+
+            '<button class="cw-set-check'+(sd.done?' done':'')+'" onclick="cwToggleSet('+i+','+s+')">✓</button>'+
+        '</div>'+
+        '<div class="cw-set-sub">'+
+            '<div class="cw-rpe cw-rpe-compact" title="'+wt('effort')+'">'+rpeBtns+'</div>'+
+            '<div class="cw-minibar" id="cwbar_'+i+'_'+s+'" data-target="'+tVol+'" data-prev="'+pv+'">'+
+                '<div class="cw-minibar-fill" style="width:'+Math.min(100, v/maxRef*100)+'%; background:'+(sd.done?'#10B981':color)+';"></div>'+
+                (tVol>0?'<i style="left:'+Math.min(100, tVol/maxRef*100)+'%;" title="'+wt('planTag')+'"></i>':'')+
+                (pv>0?'<u style="left:'+Math.min(100, pv/maxRef*100)+'%;" title="'+wt('prevTag')+'"></u>':'')+
+            '</div>'+
+            '<span class="cw-set-vol" id="cwvol_'+i+'_'+s+'">'+r0(cwIsLbs()? v*KG_TO_LBS : v)+'</span>'+
+        '</div>';
+    });
+
+    /* Add/Remove set buttons */
+    var setActions = '<div class="cw-set-actions">'+
+        '<button class="cw-addset-btn" onclick="cwAddSet('+i+')">'+wt('addSet')+'</button>'+
+        (st.setsDone.length > 1 ? '<button class="cw-removeset-btn" onclick="cwRemoveSet('+i+')">'+wt('removeSet')+'</button>' : '')+
+    '</div>';
+
+    /* Mini sparkline */
+    var sparkVals = st.setsDone.map(function(sd){ return setVol(sd); });
+    var sparkPrev = prevSets ? prevSets.map(function(p){ return (parseFloat(p.weight)||0)*(parseInt(p.reps, 10)||0); }) : [];
+    var sparkMax = Math.max.apply(null, sparkVals.concat(sparkPrev).concat([plannedVol(ex),1]));
+    var sparkH = '<div class="cw-spark">';
+    st.setsDone.forEach(function(sd,s){
+        var hPct = Math.max(4, sparkVals[s]/sparkMax*100);
+        var pPct = sparkPrev[s] ? Math.max(2, sparkPrev[s]/sparkMax*100) : 0;
+        sparkH += '<div class="cw-spark-col">'+
+            (pPct?'<div class="cw-spark-prev" style="height:'+pPct+'%;"></div>':'')+
+            '<div class="cw-spark-bar" style="height:'+hPct+'%; background:'+(sd.done?color:'var(--border-color)')+';"></div>'+
+        '</div>';
+    });
+    sparkH += '</div><div class="cw-spark-leg"><span><span class="dot" style="background:'+color+';"></span>'+wt('volume')+'</span>'+(prevSets?'<span><span class="dot" style="background:#cbd5e1;"></span>'+wt('prevTag')+'</span>':'')+'</div>';
+
+    /* Rest badge */
+    var restBadge = '<span class="cw-rest-badge" onclick="cwEditRest('+i+')">⏱ '+rest+'s</span>';
+
+    /* Superset link button (in live mode) */
+    var ssBtn = '';
+    if (ctx.live){
+        if (ex.supersetId){
+            ssBtn = '<button class="mp-action-item" style="padding:4px 10px;font-size:.72em;" onclick="cwUnlinkSuperset('+i+')">'+wt('unlinkSuperset')+'</button>';
+        } else {
+            ssBtn = '<button class="mp-action-item" style="padding:4px 10px;font-size:.72em;" onclick="cwLinkSuperset('+i+')">'+wt('linkSuperset')+'</button>';
+        }
+    }
+
+    return '<div class="cw-ex-card'+(allDone?' alldone':'')+'">'+
+        '<div class="cw-ex-strip" style="background:'+color+';"></div>'+
+        '<div class="cw-ex-body">'+
+            '<div class="cw-ex-head">'+
+                '<div class="cw-ex-no" style="background:'+color+'20; color:'+color+';">'+(allDone?'✓':(i+1))+'</div>'+
+                '<div class="cw-ex-titlewrap">'+
+                    '<div class="cw-ex-title"'+(ex.exId?' onclick="openExerciseInfo(\''+encodeURIComponent(JSON.stringify({exId:ex.exId,groupId:ex.groupId||'',subId:ex.subId||'',equip:ex.equip||''}))+'\','+(ctx.live?'false':'true')+')" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"':'')+'>'+eh((typeof localizedExName==='function'?localizedExName(ex):ex.name)||'—')+'</div>'+
+                    '<div class="cw-ex-meta">'+(parseInt(ex.sets, 10)||1)+' '+wt('setsOf')+' · '+eh(ex.reps||'')+' '+wt('repsOf')+(ex.time?' · ⏳'+ex.time+'s':'')+' · '+restBadge+'</div>'+
+                '</div>'+
+                (ctx.live?'<button class="cw-ex-menu" onclick="cwOpenExMenu('+i+')">⋯</button>':'')+
+            '</div>'+
+            setsH + setActions + sparkH +
+            (ex.note?'<div class="cw-ex-note">💡 '+eh(ex.note)+'</div>':'')+
+        '</div>'+
+    '</div>';
 }
 
 /* ---------- взаимодействие с подходами ---------- */
@@ -34395,6 +34546,107 @@ window.cwSetRPE = function(i,s,v){
     cwSaveProgress(ctx);
     cwRenderInner();
 };
+
+/* === NEW: Cycle set type (Normal → Warmup → Drop → Failure → Normal) === */
+window.cwCycleSetType = function(i, s){
+    var ctx = cwCtx(); if (!ctx) return;
+    var sd = __clientExerciseState[i] && __clientExerciseState[i].setsDone[s];
+    if (!sd) return;
+    var types = ['normal', 'warmup', 'drop', 'failure'];
+    var cur = types.indexOf(sd.setType || 'normal');
+    sd.setType = types[(cur + 1) % types.length];
+    cwSaveProgress(ctx);
+    cwRenderInner();
+};
+
+/* === NEW: Add set to exercise === */
+window.cwAddSet = function(i){
+    var ctx = cwCtx(); if (!ctx) return;
+    var st = __clientExerciseState[i]; if (!st) return;
+    var w = cwWorkout(ctx); var ex = w && w.exercises && w.exercises[i];
+    if (!ex) return;
+    st.setsDone.push({weight:ex.weight||'',reps:ex.reps||'',done:false,rpe:0,setType:'normal'});
+    /* Also update the plan */
+    ex.sets = String(st.setsDone.length);
+    cwUpdatePlan(function(wk){ wk.exercises[i].sets = ex.sets; });
+    cwSaveProgress(ctx);
+    cwRenderInner();
+};
+
+/* === NEW: Remove last set from exercise === */
+window.cwRemoveSet = function(i){
+    var ctx = cwCtx(); if (!ctx) return;
+    var st = __clientExerciseState[i]; if (!st) return;
+    if (st.setsDone.length <= 1) return;
+    st.setsDone.pop();
+    st.done = st.setsDone.every(function(x){ return x.done; });
+    var w = cwWorkout(ctx); var ex = w && w.exercises && w.exercises[i];
+    if (ex) {
+        ex.sets = String(st.setsDone.length);
+        cwUpdatePlan(function(wk){ wk.exercises[i].sets = ex.sets; });
+    }
+    cwSaveProgress(ctx);
+    cwRenderInner();
+};
+
+/* === NEW: Link two exercises as superset === */
+window.cwLinkSuperset = function(i){
+    var ctx = cwCtx(); if (!ctx) return;
+    var w = cwWorkout(ctx); if (!w || !w.exercises) return;
+    /* Find next exercise without superset or create new group */
+    var nextI = i + 1;
+    if (nextI >= w.exercises.length){
+        if (typeof showToast==='function') showToast('⚠️ Нет следующего упражнения для суперсета');
+        return;
+    }
+    var ssId = 'ss_' + Date.now();
+    cwUpdatePlan(function(wk){
+        if (wk.exercises[i].supersetId){
+            /* Already has superset — add next to same group */
+            ssId = wk.exercises[i].supersetId;
+        }
+        wk.exercises[i].supersetId = ssId;
+        wk.exercises[nextI].supersetId = ssId;
+    });
+    cwRenderInner();
+    if (typeof showToast==='function') showToast('🔗 Суперсет создан');
+};
+
+/* === NEW: Unlink exercise from superset === */
+window.cwUnlinkSuperset = function(i){
+    var ctx = cwCtx(); if (!ctx) return;
+    cwUpdatePlan(function(wk){
+        delete wk.exercises[i].supersetId;
+    });
+    cwRenderInner();
+    if (typeof showToast==='function') showToast('✂️ Суперсет разъединён');
+};
+
+/* === NEW: Edit rest time per exercise === */
+window.cwEditRest = function(i){
+    var ctx = cwCtx(); if (!ctx) return;
+    var w = cwWorkout(ctx); var ex = w && w.exercises && w.exercises[i];
+    if (!ex) return;
+    var cur = parseInt(ex.rest, 10) || 60;
+    var v = prompt(wt('restL'), cur);
+    if (v === null) return;
+    v = Math.max(0, Math.min(600, parseInt(v, 10) || 60));
+    cwUpdatePlan(function(wk){ wk.exercises[i].rest = String(v); });
+    cwRenderInner();
+};
+
+/* === NEW: Auto-rest toggle (stored per user) === */
+window.cwToggleAutoRest = function(){
+    var ctx = cwCtx(); if (!ctx) return;
+    var k = 'cwAutoRest_' + ctx.uid;
+    var cur = localStorage.getItem(k) !== '0';
+    localStorage.setItem(k, cur ? '0' : '1');
+    if (typeof showToast==='function') showToast(wt('autoRest') + ': ' + (cur ? 'OFF' : 'ON'));
+};
+function cwAutoRestOn(){
+    var ctx = cwCtx(); if (!ctx) return false;
+    return localStorage.getItem('cwAutoRest_' + ctx.uid) !== '0';
+}
 window.cwToggleSet = function(i,s){
     var ctx = cwCtx(); if (!ctx) return;
     var sd = cwReadSet(i,s); if (!sd) return;
@@ -34425,12 +34677,55 @@ window.cwToggleSet = function(i,s){
                 }
             }
         }catch(e){}
-        /* отдых после каждого подхода (кроме самого последнего во всей тренировке) */
+        /* Auto rest timer — always starts after marking set done (unless it's the last set) */
         var totalLeft = 0;
         __clientExerciseState.forEach(function(q){ (q.setsDone||[]).forEach(function(x){ if(!x.done) totalLeft++; }); });
         if (totalLeft > 0 && ex){
             var rest = parseInt(ex.rest, 10)||60;
+            /* If superset — shorter rest (scroll to next exercise in superset) */
+            if (ex.supersetId && w.exercises){
+                var ssExs = w.exercises.filter(function(e){ return e.supersetId === ex.supersetId; });
+                if (ssExs.length > 1){
+                    /* Find next exercise in superset that has undone sets */
+                    var foundNext = false;
+                    for (var j = i+1; j < w.exercises.length; j++){
+                        if (w.exercises[j].supersetId === ex.supersetId){
+                            var nst = __clientExerciseState[j];
+                            if (nst && nst.setsDone.some(function(x){ return !x.done; })){
+                                /* Scroll to next superset exercise */
+                                setTimeout(function(){
+                                    var el = document.querySelectorAll('.cw-ex-card')[j];
+                                    if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+                                }, 300);
+                                foundNext = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!foundNext){
+                        /* Wrap around to first exercise in superset */
+                        for (var j2 = 0; j2 < i; j2++){
+                            if (w.exercises[j2].supersetId === ex.supersetId){
+                                var nst2 = __clientExerciseState[j2];
+                                if (nst2 && nst2.setsDone.some(function(x){ return !x.done; })){
+                                    setTimeout(function(){
+                                        var el = document.querySelectorAll('.cw-ex-card')[j2];
+                                        if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
+                                    }, 300);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    /* Shorter rest for supersets */
+                    rest = Math.min(rest, 30);
+                }
+            }
             if (typeof startRestTimer==='function') try{ startRestTimer(rest); }catch(e){}
+            /* Voice countdown */
+            if (typeof __voiceEnabled !== 'undefined' && __voiceEnabled && typeof speakText === 'function'){
+                try { speakText(wt('restL') + ' ' + rest + 's'); } catch(e){}
+            }
         } else if (totalLeft === 0){
             if (typeof playCompleteSound==='function') try{ playCompleteSound(); }catch(e){}
         }
@@ -34492,7 +34787,7 @@ function cwShowReport(){
         '<div class="cw-rep-chip"><b>'+stats.reps+'</b><span>'+wt('repsL')+'</span></div>'+
         '<div class="cw-rep-chip"><b>'+dispVol.toLocaleString(__uiLocale())+'</b><span>'+wt('volume')+' '+cwUnit()+'</span></div>'+
         '<div class="cw-rep-chip"><b>'+durMin+'</b><span>'+wt('minS')+'</span></div>'+
-        (avgRpe>0?'<div class="cw-rep-chip"><b style="color:'+RPE_COLORS[Math.min(4,Math.round(avgRpe)-1)]+';">'+avgRpe+'</b><span>'+wt('avgEffort')+'</span></div>':'')+
+        (avgRpe>0?'<div class="cw-rep-chip"><b style="color:'+RPE_COLORS[Math.min(9,Math.round(avgRpe)-1)]+';">'+avgRpe+'</b><span>'+wt('avgEffort')+'</span></div>':'')+
     '</div>';
 
     /* график: объём по упражнениям */
@@ -34673,7 +34968,14 @@ window.cwOpenExMenu = function(i){
     var ex = w && w.exercises && w.exercises[i]; if (!ex) return;
     var items =
         '<button class="mp-action-item" onclick="cwEditEx('+i+')"><span class="ico">✏️</span>'+wt('editEx')+'</button>'+
-        '<button class="mp-action-item" onclick="cwOpenPicker(\'replace\','+i+')"><span class="ico">🔄</span>'+wt('replaceEx')+'</button>'+
+        '<button class="mp-action-item" onclick="cwOpenPicker(\'replace\','+i+')"><span class="ico">🔄</span>'+wt('replaceEx')+'</button>';
+    /* Superset link/unlink */
+    if (ex.supersetId){
+        items += '<button class="mp-action-item" onclick="cwUnlinkSuperset('+i+'); csCloseSheet();"><span class="ico">✂️</span>'+wt('unlinkSuperset')+'</button>';
+    } else {
+        items += '<button class="mp-action-item" onclick="cwLinkSuperset('+i+'); csCloseSheet();"><span class="ico">🔗</span>'+wt('linkSuperset')+'</button>';
+    }
+    items += '<button class="mp-action-item" onclick="cwEditRest('+i+'); csCloseSheet();"><span class="ico">⏱</span>'+wt('restCustom')+'</button>'+
         '<button class="mp-action-item danger" onclick="cwDeleteEx('+i+')"><span class="ico">🗑</span>'+wt('deleteEx')+'</button>';
     csOpenSheet(
         '<div class="mp-sheet-head"><div class="mp-grab"></div><div class="mp-sheet-title">'+eh((typeof localizedExName==='function'?localizedExName(ex):ex.name)||wt('menu'))+'</div><button class="mp-sheet-x" onclick="csCloseSheet()">✕</button></div>'+
@@ -44805,6 +45107,8 @@ function mpdAttachPullDown(){
 
 /* ---- Init ---- */
 function mpdInit(){
+    /* Don't init mobile desktop for client-only mode */
+    if (D.body.classList.contains('client-space-open')) return;
     loadMpdState();
     mpdRender();
     mpdAttachLongPress();
@@ -44814,12 +45118,13 @@ function mpdInit(){
     var origApply = W.applyLanguage;
     if (typeof origApply==='function' && !W.__mpdLangPatched){
         W.__mpdLangPatched = true;
-        W.applyLanguage = function(){ var r = origApply.apply(this, arguments); try { mpdRender(); } catch(e){} return r; };
+        W.applyLanguage = function(){ var r = origApply.apply(this, arguments); try { if (!D.body.classList.contains('client-space-open')) mpdRender(); } catch(e){} return r; };
     }
 }
 
 /* Auto-init on mobile/tablet */
 function mpdAutoInit(){
+    if (D.body.classList.contains('client-space-open')) return;  /* skip for client mode */
     if (D.body.classList.contains('layout-mobile') || D.body.classList.contains('layout-tablet')){
         mpdInit();
     }
