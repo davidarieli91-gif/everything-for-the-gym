@@ -9627,17 +9627,30 @@
         }
 
         /* ============================================================
-           АДАПТАЦИЯ ПОД УСТРОЙСТВО (ПК / Планшет / Смартфон)
-           Использует те же body.layout-* классы что и остальное приложение
+           АДАПТАЦИЯ ПОД УСТРОЙСТВО — ТОЛЬКО ПЛАНШЕТ/СМАРТФОН
+           PC desktop (Win11) полностью удалён
            ============================================================ */
 
-        /* ПК (desktop) — полный рабочий стол */
-        body.layout-desktop .win11-desktop-area { bottom: 56px; }
-        body.layout-desktop .win11-taskbar { height: 56px; }
-        body.layout-desktop .win11-taskbar-btn { width: 44px; height: 44px; font-size: 1.5em; }
-        body.layout-desktop .win11-widget { min-width: 200px; }
+        /* Скрываем Win11 рабочий стол на ВСЕХ устройствах */
+        .win11-desktop-area,
+        .win11-taskbar,
+        .win11-start-menu,
+        .win11-context-menu,
+        .win11-file-context-menu,
+        .win11-page-indicators,
+        .win11-desktop-pages,
+        .win11-widget,
+        .win11-shortcut,
+        .win11-window,
+        .win11-bloom {
+            display: none !important;
+        }
 
-        /* Планшет (tablet) — средний размер, меньше виджетов в ряд */
+        /* homeScreen всегда виден (содержит карточки клиентов) */
+        #homeScreen { display: block !important; }
+        #homeScreen.hidden { display: block !important; }
+
+        /* Планшет (tablet) */
         body.layout-tablet .win11-desktop-area { bottom: 52px; }
         body.layout-tablet .win11-taskbar { height: 52px; padding: 0 12px; }
         body.layout-tablet .win11-taskbar-btn { width: 40px; height: 40px; font-size: 1.3em; }
@@ -12908,7 +12921,7 @@ setTimeout(function(){
             language: 'ru',
             productPrimaryLang: 'ru',
             productSecondaryLang: 'en',
-            layout: 'desktop',
+            layout: 'tablet',
             interfaceScale: 1.0
         };
 
@@ -15851,23 +15864,17 @@ setTimeout(function(){
             // Показать планировщик
             document.getElementById('homeScreen').classList.add('hidden');
             document.getElementById('appContainer').classList.remove('hidden');
-            // planner-active only for desktop layout
-            if ((userSettings.layout || 'desktop') === 'desktop') {
-                document.body.classList.add('planner-active');
-            }
+            /* Always activate mobile planner */
+            document.body.classList.add('mp-active');
+            if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'tablet');
 
             // Имя в хедере
             document.getElementById('currentUserLabel').textContent = user.avatar + ' ' + user.name;
 
-            // Показать мобильную навигацию и FAB для соответствующих режимов
-            const layout = userSettings.layout || 'desktop';
-            const mobileNav = document.getElementById('mobileNav');
-            const fabBtn = document.getElementById('fabAddMeal');
-            if (mobileNav) mobileNav.style.display = layout === 'mobile' ? 'block' : 'none';
-            if (fabBtn) fabBtn.style.display = layout === 'mobile' ? 'flex' : 'none';
-
             // Загрузить план пользователя
             loadUserPlan(userId);
+            /* Activate mobile planner */
+            if (typeof mpRenderAll === 'function') setTimeout(function(){ mpRenderAll(); }, 100);
         }
 
         function goHome() {
@@ -16325,7 +16332,7 @@ setTimeout(function(){
                 if (!userSettings.language) userSettings.language = 'ru';
                 if (!userSettings.productPrimaryLang) userSettings.productPrimaryLang = 'ru';
                 if (!userSettings.productSecondaryLang) userSettings.productSecondaryLang = 'en';
-                if (!userSettings.layout) userSettings.layout = 'desktop';
+                if (!userSettings.layout) userSettings.layout = 'tablet';
                 if (!userSettings.interfaceScale) userSettings.interfaceScale = 1.0;
                 currentLang = userSettings.language;
                 productPrimaryLang = userSettings.productPrimaryLang;
@@ -16392,7 +16399,7 @@ setTimeout(function(){
             });
             
             // Layout
-            applyLayout(userSettings.layout || 'desktop');
+            applyLayout(userSettings.layout || 'tablet');
         }
 
         // Установка темы
@@ -16422,9 +16429,15 @@ setTimeout(function(){
         }
 
         function applyLayout(layout) {
-            if (!layout) layout = 'desktop';
+            /* FORCE mobile/tablet only — no PC desktop */
+            if (layout === 'desktop') {
+                layout = (window.innerWidth >= 768) ? 'tablet' : 'mobile';
+            }
+            if (!layout) layout = (window.innerWidth >= 768) ? 'tablet' : 'mobile';
             document.body.classList.remove('layout-desktop', 'layout-tablet', 'layout-mobile');
             document.body.classList.add('layout-' + layout);
+            /* Save the forced layout */
+            if (typeof userSettings !== 'undefined') userSettings.layout = layout;
 
             // Manage planner-active overflow
             if (layout === 'desktop' && !document.getElementById('appContainer').classList.contains('hidden')) {
@@ -16596,7 +16609,7 @@ setTimeout(function(){
                 language: 'ru',
                 productPrimaryLang: 'ru',
                 productSecondaryLang: 'en',
-                layout: 'desktop',
+                layout: 'tablet',
                 interfaceScale: 1.0
             };
             currentLang = 'ru';
@@ -17049,7 +17062,7 @@ setTimeout(function(){
             updateProgressBars();
             
             // Тост в мобильном/планшетном режиме
-            if ((userSettings.layout || 'desktop') !== 'desktop') {
+            if ((userSettings.layout || 'tablet') !== 'desktop') {
                 showToast(t('toastMealAdded'));
             }
         }
@@ -40755,8 +40768,10 @@ window.win11OpenApp = function(app){
                 if (typeof switchAppMode === 'function') switchAppMode('nutrition');
                 document.getElementById('homeScreen').classList.add('hidden');
                 document.getElementById('appContainer').classList.remove('hidden');
-                if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'desktop');
-                if (document.body.classList.contains('layout-desktop')) document.body.classList.add('planner-active');
+                if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'tablet');
+                /* Always activate mobile planner */
+                document.body.classList.add('mp-active');
+                if (typeof mpRenderAll === 'function') mpRenderAll();
             } catch(e) { console.error(e); }
             break;
         case 'workout':
@@ -40764,8 +40779,10 @@ window.win11OpenApp = function(app){
                 if (typeof switchAppMode === 'function') switchAppMode('workout');
                 document.getElementById('homeScreen').classList.add('hidden');
                 document.getElementById('appContainer').classList.remove('hidden');
-                if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'desktop');
-                if (document.body.classList.contains('layout-desktop')) document.body.classList.add('planner-active');
+                if (typeof applyLayout === 'function') applyLayout(userSettings.layout || 'tablet');
+                /* Always activate mobile planner */
+                document.body.classList.add('mp-active');
+                if (typeof mpRenderAll === 'function') mpRenderAll();
             } catch(e) { console.error(e); }
             break;
         case 'calendar':
