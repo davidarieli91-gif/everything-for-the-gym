@@ -43432,5 +43432,1484 @@ window.__win11RefreshClients = function(){
 };
 
 </script>
+
+<!-- NUTRITION_UPGRADES_V1 -->
+<script>
+// ============================================================
+// NUTRITION PLANNER UPGRADES v1.0
+// Adds 7 features to trainer/index.html and client/index.html:
+//   1) Open Food Facts integration (barcode + name search, 2M+ products)
+//   2) Water tracker (localStorage, 250ml glass buttons)
+//   3) Recent products (last 15 used)
+//   4) PDF export (jsPDF, weekly/daily report)
+//   5) Voice input (Web Speech API for product search)
+//   6) Apple Health / Google Fit hook (Web Share Target API)
+//   7) AI Photo recognition (food analysis via upload + remote API)
+// ============================================================
+
+(function() {
+  'use strict';
+
+  // Avoid double-init
+  if (window.__nutritionUpgradesV1) return;
+  window.__nutritionUpgradesV1 = true;
+
+  // ----- i18n strings -----
+  const I18N = {
+    ru: {
+      offTitle: '🌐 Open Food Facts',
+      offHint: 'Поиск по 2M+ продуктов мира, включая израильские бренды',
+      offSearchPh: 'Введите название продукта...',
+      offSearchBtn: 'Искать',
+      offBarcodeBtn: '📷 Штрих-код',
+      offScanning: 'Сканирование...',
+      offLoading: 'Загрузка результатов...',
+      offNoResults: 'Ничего не найдено. Попробуйте изменить запрос.',
+      offError: 'Ошибка поиска. Проверьте интернет.',
+      offAddBtn: '+ Добавить',
+      offKcal: 'ккал',
+      offProt: 'Б',
+      offFat: 'Ж',
+      offCarb: 'У',
+      offPer100g: 'на 100г',
+      offAdded: 'Добавлено в план',
+      waterTitle: '💧 Вода',
+      waterGoal: 'Цель',
+      waterMl: 'мл',
+      waterAdd250: '+250',
+      waterAdd500: '+500',
+      waterCustom: 'Своё',
+      waterReset: 'Сброс',
+      waterHint: 'Норма воды: 30 мл × вес тела',
+      recentTitle: '🕒 Недавние',
+      recentEmpty: 'Здесь появятся ваши последние продукты',
+      recentClear: 'Очистить',
+      voiceBtn: '🎤 Голос',
+      voiceListening: 'Слушаю...',
+      voiceNotSupported: 'Голосовой ввод не поддерживается в этом браузере',
+      voiceError: 'Ошибка распознавания. Попробуйте ещё раз.',
+      pdfBtn: '📄 PDF-отчёт',
+      pdfDay: 'За день',
+      pdfWeek: 'За неделю',
+      pdfMonth: 'За месяц',
+      pdfGenerating: 'Генерация PDF...',
+      pdfTitle: 'Отчёт по питанию',
+      pdfDate: 'Дата',
+      pdfClient: 'Клиент',
+      pdfTotal: 'Итого',
+      pdfGoal: 'Цель',
+      pdfLeft: 'Остаток',
+      pdfMeals: 'Приёмы пищи',
+      healthBtn: '苹果 Apple Health',
+      healthSync: 'Синхр. Apple Health',
+      healthNotSupported: 'Apple Health / Google Fit недоступны в этом браузере',
+      healthSynced: 'Получено: {steps} шагов, {weight} кг',
+      aiBtn: '🤖 AI-фото',
+      aiAnalyzing: 'Анализирую блюдо...',
+      aiHint: 'Загрузите фото блюда — AI определит продукты и калории',
+      aiUploadBtn: 'Выбрать фото',
+      aiAnalyzing2: 'AI анализирует состав и вес...',
+      aiDetected: 'Найдено продуктов: {n}',
+      aiAddAll: '+ Добавить все',
+      aiNoDetect: 'Не удалось распознать блюдо. Попробуйте другое фото.',
+      aiError: 'Ошибка AI-анализа. Попробуйте позже.',
+      aiOfflineHint: 'AI работает через интернет. Проверьте подключение.',
+      settingsTitle: 'Расширенные функции',
+      settingsHint: 'Активируйте Open Food Facts, AI-фото, голосовой ввод и др.'
+    },
+    en: {
+      offTitle: '🌐 Open Food Facts',
+      offHint: 'Search 2M+ global products, including Israeli brands',
+      offSearchPh: 'Enter product name...',
+      offSearchBtn: 'Search',
+      offBarcodeBtn: '📷 Barcode',
+      offScanning: 'Scanning...',
+      offLoading: 'Loading results...',
+      offNoResults: 'Nothing found. Try a different query.',
+      offError: 'Search error. Check your internet.',
+      offAddBtn: '+ Add',
+      offKcal: 'kcal',
+      offProt: 'P',
+      offFat: 'F',
+      offCarb: 'C',
+      offPer100g: 'per 100g',
+      offAdded: 'Added to plan',
+      waterTitle: '💧 Water',
+      waterGoal: 'Goal',
+      waterMl: 'ml',
+      waterAdd250: '+250',
+      waterAdd500: '+500',
+      waterCustom: 'Custom',
+      waterReset: 'Reset',
+      waterHint: 'Daily water: 30 ml × body weight',
+      recentTitle: '🕒 Recent',
+      recentEmpty: 'Your recent products will appear here',
+      recentClear: 'Clear',
+      voiceBtn: '🎤 Voice',
+      voiceListening: 'Listening...',
+      voiceNotSupported: 'Voice input not supported in this browser',
+      voiceError: 'Recognition error. Try again.',
+      pdfBtn: '📄 PDF Report',
+      pdfDay: 'Today',
+      pdfWeek: 'This week',
+      pdfMonth: 'This month',
+      pdfGenerating: 'Generating PDF...',
+      pdfTitle: 'Nutrition Report',
+      pdfDate: 'Date',
+      pdfClient: 'Client',
+      pdfTotal: 'Total',
+      pdfGoal: 'Goal',
+      pdfLeft: 'Remaining',
+      pdfMeals: 'Meals',
+      healthBtn: 'Apple Health',
+      healthSync: 'Sync Apple Health',
+      healthNotSupported: 'Apple Health / Google Fit unavailable in this browser',
+      healthSynced: 'Received: {steps} steps, {weight} kg',
+      aiBtn: '🤖 AI Photo',
+      aiAnalyzing: 'Analyzing meal...',
+      aiHint: 'Upload a meal photo — AI will identify products and calories',
+      aiUploadBtn: 'Choose photo',
+      aiAnalyzing2: 'AI is analyzing composition and weight...',
+      aiDetected: 'Detected {n} products',
+      aiAddAll: '+ Add all',
+      aiNoDetect: 'Could not recognize the dish. Try a different photo.',
+      aiError: 'AI analysis error. Try later.',
+      aiOfflineHint: 'AI requires internet. Check connection.',
+      settingsTitle: 'Advanced features',
+      settingsHint: 'Enable Open Food Facts, AI photo, voice input and more'
+    },
+    he: {
+      offTitle: '🌐 Open Food Facts',
+      offHint: 'חיפוש ב-2M+ מוצרים, כולל מותגים ישראלים',
+      offSearchPh: 'הקלד שם מוצר...',
+      offSearchBtn: 'חיפוש',
+      offBarcodeBtn: '📷 ברקוד',
+      offScanning: 'סורק...',
+      offLoading: 'טוען תוצאות...',
+      offNoResults: 'לא נמצא. נסה שאילתה אחרת.',
+      offError: 'שגיאת חיפוש. בדוק אינטרנט.',
+      offAddBtn: '+ הוסף',
+      offKcal: 'קק"ל',
+      offProt: 'ח',
+      offFat: 'ש',
+      offCarb: 'פ',
+      offPer100g: 'ל-100ג',
+      offAdded: 'נוסף לתוכנית',
+      waterTitle: '💧 מים',
+      waterGoal: 'יעד',
+      waterMl: 'מ"ל',
+      waterAdd250: '+250',
+      waterAdd500: '+500',
+      waterCustom: 'אחר',
+      waterReset: 'אפס',
+      waterHint: 'מים יומיים: 30 מ"ל × משקל גוף',
+      recentTitle: '🕒 אחרונים',
+      recentEmpty: 'המוצרים האחרונים שלך יופיעו כאן',
+      recentClear: 'נקה',
+      voiceBtn: '🎤 קול',
+      voiceListening: 'מקשיב...',
+      voiceNotSupported: 'קלט קולי לא נתמך בדפדפן זה',
+      voiceError: 'שגיאת זיהוי. נסה שוב.',
+      pdfBtn: '📄 דוח PDF',
+      pdfDay: 'היום',
+      pdfWeek: 'השבוע',
+      pdfMonth: 'החודש',
+      pdfGenerating: 'יוצר PDF...',
+      pdfTitle: 'דוח תזונה',
+      pdfDate: 'תאריך',
+      pdfClient: 'לקוח',
+      pdfTotal: 'סה"כ',
+      pdfGoal: 'יעד',
+      pdfLeft: 'נשאר',
+      pdfMeals: 'ארוחות',
+      healthBtn: 'Apple Health',
+      healthSync: 'סנכרן Apple Health',
+      healthNotSupported: 'Apple Health / Google Fit לא זמין בדפדפן זה',
+      healthSynced: 'התקבל: {steps} צעדים, {weight} ק"ג',
+      aiBtn: '🤖 AI-תמונה',
+      aiAnalyzing: 'מנתח ארוחה...',
+      aiHint: 'העלה תמונת ארוחה — AI יזהה מוצרים וקלוריות',
+      aiUploadBtn: 'בחר תמונה',
+      aiAnalyzing2: 'AI מנתח הרכב ומשקל...',
+      aiDetected: 'זוהו {n} מוצרים',
+      aiAddAll: '+ הוסף הכל',
+      aiNoDetect: 'לא הצליח לזהות. נסה תמונה אחרת.',
+      aiError: 'שגיאת AI. נסה מאוחר יותר.',
+      aiOfflineHint: 'AI דורש אינטרנט. בדוק חיבור.',
+      settingsTitle: 'תכונות מתקדמות',
+      settingsHint: 'הפעל Open Food Facts, AI-תמונה, קלט קולי ועוד'
+    }
+  };
+
+  // Get current UI language
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined') return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
+
+  function t(key, vars) {
+    const lang = uiLang();
+    let s = (I18N[lang] && I18N[lang][key]) || (I18N.ru[key]) || key;
+    if (vars) {
+      Object.keys(vars).forEach(k => {
+        s = s.replace('{' + k + '}', vars[k]);
+      });
+    }
+    return s;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  // ----- Storage helpers -----
+  function lsGet(key, def) {
+    try {
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : def;
+    } catch(e) { return def; }
+  }
+  function lsSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+  }
+
+  function getUserId() {
+    try {
+      if (typeof currentUserId !== 'undefined' && currentUserId) return currentUserId;
+      if (typeof __clientUser !== 'undefined' && __clientUser && __clientUser.id) return __clientUser.id;
+    } catch(e) {}
+    return 'default';
+  }
+
+  function waterKey() {
+    return 'waterTracker_' + getUserId() + '_' + new Date().toISOString().slice(0,10);
+  }
+
+  function recentKey() {
+    return 'recentProducts_' + getUserId();
+  }
+
+  function healthKey() {
+    return 'healthData_' + getUserId() + '_' + new Date().toISOString().slice(0,10);
+  }
+
+  // ============================================================
+  // 1. OPEN FOOD FACTS INTEGRATION
+  // ============================================================
+
+  const OFF_BASE = 'https://world.openfoodfacts.org';
+  let offCache = {}; // short-term cache to avoid duplicate requests
+
+  async function offSearchByName(query) {
+    if (!query || query.trim().length < 2) return [];
+    const cacheKey = 'name:' + query.toLowerCase().trim();
+    if (offCache[cacheKey]) return offCache[cacheKey];
+
+    const url = OFF_BASE + '/cgi/search.pl?' + new URLSearchParams({
+      search_terms: query,
+      search_simple: 1,
+      action: 'process',
+      json: 1,
+      page_size: 20,
+      fields: 'product_name,product_name_he,product_name_ru,code,nutriments,brands,image_front_small_url,image_front_thumb_url'
+    });
+
+    try {
+      const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      const products = (data.products || []).map(p => normalizeOffProduct(p)).filter(p => p && p.kcal > 0);
+      offCache[cacheKey] = products;
+      return products;
+    } catch(e) {
+      console.warn('OFF search error:', e);
+      throw e;
+    }
+  }
+
+  async function offLookupBarcode(barcode) {
+    if (!barcode || !/^\d{8,14}$/.test(barcode)) return null;
+    const cacheKey = 'bc:' + barcode;
+    if (offCache[cacheKey]) return offCache[cacheKey];
+
+    const url = OFF_BASE + '/api/v2/product/' + barcode + '.json?fields=product_name,product_name_he,product_name_ru,nutriments,brands,image_front_small_url,image_front_thumb_url';
+
+    try {
+      const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (data.status !== 1 || !data.product) return null;
+      const p = normalizeOffProduct(data.product);
+      offCache[cacheKey] = p;
+      return p;
+    } catch(e) {
+      console.warn('OFF barcode error:', e);
+      return null;
+    }
+  }
+
+  function normalizeOffProduct(p) {
+    if (!p) return null;
+    const n = p.nutriments || {};
+    const kcal = n['energy-kcal_100g'] || n['energy_100g'] && Math.round(n['energy_100g'] / 4.184) || 0;
+    if (!kcal && !p.product_name) return null;
+    return {
+      source: 'off',
+      code: p.code || '',
+      name: p.product_name || p.product_name_he || p.product_name_ru || p.brands || 'Unknown',
+      nameHe: p.product_name_he || '',
+      nameRu: p.product_name_ru || '',
+      nameEn: p.product_name || '',
+      brand: p.brands || '',
+      kcal: kcal,
+      protein: n['proteins_100g'] || 0,
+      fat: n['fat_100g'] || 0,
+      carbs: n['carbohydrates_100g'] || 0,
+      fiber: n['fiber_100g'] || 0,
+      sugar: n['sugars_100g'] || 0,
+      sodium: n['sodium_100g'] || 0,
+      calcium: n['calcium_100g'] || 0,
+      iron: n['iron_100g'] || 0,
+      image: p.image_front_small_url || p.image_front_thumb_url || '',
+      category: 'off' // external product
+    };
+  }
+
+  // Inject OFF product into the existing meal-adding flow
+  function addOffProductToMeal(mealIdx, offProduct, amount) {
+    amount = amount || 100;
+    // Find or create a custom product in allProducts
+    try {
+      if (typeof allProducts === 'undefined') {
+        // Client mode: may not have allProducts - inject minimal structure
+        window.allProducts = window.allProducts || [];
+      }
+      // Check if already added by code
+      let existingIdx = -1;
+      for (let i = 0; i < allProducts.length; i++) {
+        if (allProducts[i] && allProducts[i].offCode === offProduct.code) {
+          existingIdx = i;
+          break;
+        }
+      }
+      let prodIdx;
+      if (existingIdx >= 0) {
+        prodIdx = existingIdx;
+      } else {
+        const newProd = {
+          name: offProduct.name,
+          nameHe: offProduct.nameHe || offProduct.name,
+          nameEn: offProduct.nameEn || offProduct.name,
+          nameRu: offProduct.nameRu || offProduct.name,
+          cat: 'off',
+          category: 'off',
+          calories: offProduct.kcal,
+          protein: offProduct.protein,
+          fat: offProduct.fat,
+          carbs: offProduct.carbs,
+          fiber: offProduct.fiber || 0,
+          offCode: offProduct.code,
+          brand: offProduct.brand,
+          image: offProduct.image,
+          isCustom: true,
+          __external: true
+        };
+        allProducts.push(newProd);
+        prodIdx = allProducts.length - 1;
+      }
+      // Now use the existing addProductToMeal if available
+      if (typeof addProductToMeal === 'function') {
+        addProductToMeal(mealIdx, prodIdx, amount);
+      } else if (typeof mpAddProductToMeal === 'function') {
+        mpAddProductToMeal(mealIdx, prodIdx, amount);
+      } else if (typeof window.addProductToMeal === 'function') {
+        window.addProductToMeal(mealIdx, prodIdx, amount);
+      } else {
+        // Fallback: dispatch event for app to handle
+        window.dispatchEvent(new CustomEvent('nutrition:addExternalProduct', {
+          detail: { mealIdx, prodIdx, amount, offProduct }
+        }));
+      }
+      // Track recent
+      trackRecentProduct(offProduct);
+      return true;
+    } catch(e) {
+      console.error('addOffProductToMeal error:', e);
+      return false;
+    }
+  }
+
+  // ============================================================
+  // 2. WATER TRACKER
+  // ============================================================
+
+  function getWaterGoal() {
+    // Default 2000ml, override if user has body weight tracked
+    try {
+      const measures = lsGet('bodyMeasures_' + getUserId(), null);
+      if (measures && measures.length > 0) {
+        const lastWeight = measures[measures.length - 1].weight;
+        if (lastWeight && lastWeight > 30) return Math.round(lastWeight * 30);
+      }
+    } catch(e) {}
+    return 2000;
+  }
+
+  function getWaterToday() {
+    return lsGet(waterKey(), 0);
+  }
+
+  function addWater(ml) {
+    const cur = getWaterToday();
+    const newVal = Math.max(0, cur + ml);
+    lsSet(waterKey(), newVal);
+    renderWaterWidget();
+  }
+
+  function resetWater() {
+    lsSet(waterKey(), 0);
+    renderWaterWidget();
+  }
+
+  function renderWaterWidget() {
+    const el = document.getElementById('waterTrackerWidget');
+    if (!el) return;
+    const cur = getWaterToday();
+    const goal = getWaterGoal();
+    const pct = Math.min(100, Math.round((cur / goal) * 100));
+    const remaining = Math.max(0, goal - cur);
+
+    el.innerHTML =
+      '<div class="water-card" style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 6px rgba(33,150,243,0.12);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+          '<div style="font-weight:700;color:#0D47A1;font-size:16px;">' + esc(t('waterTitle')) + '</div>' +
+          '<div style="font-size:13px;color:#1565C0;">' + esc(t('waterGoal')) + ': ' + goal + ' ' + esc(t('waterMl')) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">' +
+          '<div style="flex:1;height:24px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);">' +
+            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#2196F3,#03A9F4);transition:width 0.3s;"></div>' +
+          '</div>' +
+          '<div style="font-weight:700;color:#0D47A1;font-size:18px;min-width:80px;text-align:right;">' + cur + ' <span style="font-size:12px;color:#1565C0;">' + esc(t('waterMl')) + '</span></div>' +
+        '</div>' +
+        (remaining > 0 ? '<div style="font-size:12px;color:#1565C0;margin-bottom:10px;">' + esc(t('waterLeft') || 'Осталось') + ': ' + remaining + ' ' + esc(t('waterMl')) + '</div>' :
+                        '<div style="font-size:12px;color:#2E7D32;margin-bottom:10px;font-weight:600;">✓ ' + esc(t('waterGoal') === 'Цель' ? 'Цель достигнута!' : 'Goal reached!') + '</div>') +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button onclick="window.__nuAddWater(250)" style="background:#2196F3;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;cursor:pointer;">' + esc(t('waterAdd250')) + '</button>' +
+          '<button onclick="window.__nuAddWater(500)" style="background:#2196F3;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;cursor:pointer;">' + esc(t('waterAdd500')) + '</button>' +
+          '<button onclick="window.__nuCustomWater()" style="background:#fff;color:#1565C0;border:1px solid #90CAF9;border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;cursor:pointer;">' + esc(t('waterCustom')) + '</button>' +
+          '<button onclick="window.__nuResetWater()" style="background:transparent;color:#546E7A;border:0;border-radius:8px;padding:8px 14px;font-weight:500;font-size:13px;cursor:pointer;margin-left:auto;">' + esc(t('waterReset')) + '</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  window.__nuAddWater = addWater;
+  window.__nuResetWater = resetWater;
+  window.__nuCustomWater = function() {
+    const v = prompt(uiLang() === 'he' ? 'כמה מ"ל?' : (uiLang() === 'en' ? 'How many ml?' : 'Сколько мл?'), '200');
+    if (v) {
+      const n = parseInt(v, 10);
+      if (n > 0 && n < 5000) addWater(n);
+    }
+  };
+
+  // ============================================================
+  // 3. RECENT PRODUCTS
+  // ============================================================
+
+  function getRecentProducts() {
+    return lsGet(recentKey(), []);
+  }
+
+  function trackRecentProduct(offProduct) {
+    let recent = getRecentProducts();
+    // Dedup by code
+    recent = recent.filter(p => p.code !== offProduct.code);
+    recent.unshift({
+      code: offProduct.code,
+      name: offProduct.name,
+      nameHe: offProduct.nameHe,
+      brand: offProduct.brand,
+      kcal: offProduct.kcal,
+      protein: offProduct.protein,
+      fat: offProduct.fat,
+      carbs: offProduct.carbs,
+      image: offProduct.image,
+      ts: Date.now()
+    });
+    recent = recent.slice(0, 15);
+    lsSet(recentKey(), recent);
+  }
+
+  function clearRecentProducts() {
+    lsSet(recentKey(), []);
+    renderRecentWidget();
+  }
+
+  function renderRecentWidget() {
+    const el = document.getElementById('recentProductsWidget');
+    if (!el) return;
+    const recent = getRecentProducts();
+    if (!recent.length) {
+      el.innerHTML = '<div style="background:#FAFAFA;border-radius:12px;padding:14px 16px;margin:10px 0;color:#757575;font-size:13px;text-align:center;">' +
+        '<div style="font-weight:600;color:#424242;margin-bottom:4px;">' + esc(t('recentTitle')) + '</div>' +
+        esc(t('recentEmpty')) + '</div>';
+      return;
+    }
+    let h = '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin:10px 0;border:1px solid #EEEEEE;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<div style="font-weight:700;color:#424242;font-size:14px;">' + esc(t('recentTitle')) + '</div>' +
+        '<button onclick="window.__nuClearRecent()" style="background:transparent;color:#757575;border:0;font-size:12px;cursor:pointer;text-decoration:underline;">' + esc(t('recentClear')) + '</button>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">';
+    recent.slice(0, 10).forEach(p => {
+      h += '<div onclick="window.__nuAddRecent(\'' + esc(p.code) + '\')" style="background:#FAFAFA;border-radius:8px;padding:8px;cursor:pointer;border:1px solid transparent;transition:all 0.2s;" onmouseover="this.style.borderColor=\'#2196F3\';this.style.background=\'#E3F2FD\'" onmouseout="this.style.borderColor=\'transparent\';this.style.background=\'#FAFAFA\'">' +
+              (p.image ? '<img src="' + esc(p.image) + '" style="width:100%;height:50px;object-fit:contain;border-radius:4px;margin-bottom:4px;" onerror="this.style.display=\'none\'">' : '') +
+              '<div style="font-size:12px;font-weight:600;color:#212121;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(p.name || p.nameHe || '—').slice(0, 22) + '</div>' +
+              '<div style="font-size:11px;color:#757575;">' + Math.round(p.kcal) + ' ' + esc(t('offKcal')) + '/' + esc(t('offPer100g')) + '</div>' +
+            '</div>';
+    });
+    h += '</div></div>';
+    el.innerHTML = h;
+  }
+
+  window.__nuClearRecent = clearRecentProducts;
+  window.__nuAddRecent = async function(code) {
+    // Re-lookup to get full product, then add to current meal (or open picker)
+    const p = await offLookupBarcode(code);
+    if (p) {
+      // Add to first meal or trigger picker
+      if (typeof mpOpenProductPicker === 'function' && typeof mpMeals === 'function') {
+        const meals = mpMeals();
+        if (meals.length > 0) {
+          addOffProductToMeal(0, p, 100);
+          if (typeof mpRenderBody === 'function') mpRenderBody();
+          if (typeof showToast === 'function') showToast(t('offAdded'));
+        } else {
+          // No meal - just show info
+          alert(t('offAdded') + ': ' + p.name);
+        }
+      }
+    }
+  };
+
+  // ============================================================
+  // 4. PDF EXPORT (using jsPDF loaded dynamically)
+  // ============================================================
+
+  let jsPDFLoaded = false;
+  function ensureJsPDF() {
+    return new Promise((resolve, reject) => {
+      if (jsPDFLoaded && window.jspdf) return resolve(window.jspdf);
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload = () => {
+        jsPDFLoaded = !!window.jspdf;
+        resolve(window.jspdf);
+      };
+      s.onerror = () => reject(new Error('jsPDF failed to load'));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function generatePDFReport(period) {
+    // period: 'day' | 'week' | 'month'
+    try {
+      if (typeof showToast === 'function') showToast(t('pdfGenerating'));
+      const { jsPDF } = await ensureJsPDF();
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+      // Get current nutrition plan data
+      const plan = (typeof getPlan === 'function') ? getPlan() : null;
+      if (!plan) {
+        alert('No active plan');
+        return;
+      }
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString(uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU'));
+      const clientName = (typeof getClientName === 'function') ? (getClientName() || '') : '';
+      const calories = (typeof gv === 'function') ? gv('calories') : 0;
+      const protein = (typeof gv === 'function') ? gv('protein') : 0;
+      const fat = (typeof gv === 'function') ? gv('fat') : 0;
+      const carbs = (typeof gv === 'function') ? gv('carbs') : 0;
+
+      // Header
+      doc.setFillColor(33, 150, 243);
+      doc.rect(0, 0, 210, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text(t('pdfTitle'), 14, 15);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(dateStr + (period === 'week' ? ' (' + t('pdfWeek') + ')' : (period === 'month' ? ' (' + t('pdfMonth') + ')' : '')), 14, 24);
+
+      // Client info
+      doc.setTextColor(33, 33, 33);
+      doc.setFontSize(12);
+      let y = 40;
+      if (clientName) {
+        doc.text(t('pdfClient') + ': ' + clientName, 14, y);
+        y += 8;
+      }
+
+      // Goals vs totals
+      const totalCal = (typeof gv === 'function') ? gv('totalCalories') : 0;
+      const totalProt = (typeof gv === 'function') ? gv('totalProtein') : 0;
+      const totalFat = (typeof gv === 'function') ? gv('totalFat') : 0;
+      const totalCarb = (typeof gv === 'function') ? gv('totalCarbs') : 0;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(t('pdfTotal'), 14, y);
+      y += 6;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.text(t('pdfGoal') + ': ' + Math.round(calories) + ' kcal  |  ' + t('pdfTotal') + ': ' + Math.round(totalCal) + ' kcal  |  ' + t('pdfLeft') + ': ' + Math.max(0, Math.round(calories - totalCal)) + ' kcal', 14, y);
+      y += 8;
+
+      // Macronutrient table
+      doc.setFillColor(238, 238, 238);
+      doc.rect(14, y, 182, 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.text(t('pdfMeals'), 16, y + 5.5);
+      y += 14;
+
+      // Water tracker
+      const water = getWaterToday();
+      const waterGoal = getWaterGoal();
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(t('waterTitle').replace(/[^a-zA-Zа-яА-Я\u0590-\u05FF ]/g, '') + ': ' + water + '/' + waterGoal + ' ' + t('waterMl'), 14, y);
+      y += 8;
+
+      // Meals breakdown
+      const meals = (typeof mpMeals === 'function') ? mpMeals() : [];
+      meals.forEach((meal, idx) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        const title = meal.querySelector('.meal-title') ? meal.querySelector('.meal-title').value : (t('pdfMeals') + ' ' + (idx+1));
+        const cal = (typeof getMealTot === 'function') ? getMealTot(meal, 'calories') : 0;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text(esc(title), 14, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text(Math.round(cal) + ' ' + t('offKcal'), 180, y, { align: 'right' });
+        y += 5;
+        // Items
+        const rows = meal.querySelectorAll('.meal-body tr');
+        rows.forEach(tr => {
+          if (y > 275) { doc.addPage(); y = 20; }
+          const sel = tr.querySelector('.product-select');
+          const p = (sel && sel.value !== '' && typeof allProducts !== 'undefined') ? allProducts[parseInt(sel.value, 10)] : null;
+          const name = p ? ((typeof getProductDualNameText === 'function') ? getProductDualNameText(p) : p.name) : '—';
+          const amt = tr.querySelector('.weight-input') ? tr.querySelector('.weight-input').value : '';
+          doc.setFontSize(9);
+          doc.text('  • ' + esc(name).slice(0, 60), 16, y);
+          doc.text(amt + 'g', 150, y, { align: 'right' });
+          const kc = tr.querySelector('.product-calories') ? (parseFloat(tr.querySelector('.product-calories').textContent) || 0) : 0;
+          doc.text(Math.round(kc) + ' ' + t('offKcal'), 180, y, { align: 'right' });
+          y += 4.5;
+        });
+        y += 4;
+      });
+
+      // Footer with page numbers
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('— ' + i + ' / ' + pageCount + ' —', 105, 290, { align: 'center' });
+      }
+
+      const filename = 'nutrition_' + now.toISOString().slice(0,10) + '_' + period + '.pdf';
+      doc.save(filename);
+      if (typeof showToast === 'function') showToast('✓ PDF');
+    } catch(e) {
+      console.error('PDF error:', e);
+      alert('PDF error: ' + e.message);
+    }
+  }
+
+  window.__nuPdf = generatePDFReport;
+
+  // ============================================================
+  // 5. VOICE INPUT (Web Speech API)
+  // ============================================================
+
+  let voiceRecognition = null;
+  let voiceListening = false;
+
+  function initVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const rec = new SR();
+    rec.lang = uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU');
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    return rec;
+  }
+
+  function startVoiceSearch(targetInputId) {
+    if (!voiceRecognition) voiceRecognition = initVoice();
+    if (!voiceRecognition) {
+      alert(t('voiceNotSupported'));
+      return;
+    }
+    if (voiceListening) {
+      voiceRecognition.stop();
+      voiceListening = false;
+      return;
+    }
+    const btn = document.querySelector('[data-voice-target="' + targetInputId + '"]');
+    if (btn) {
+      btn.classList.add('listening');
+      btn.textContent = t('voiceListening');
+    }
+    voiceRecognition.onresult = function(ev) {
+      const text = ev.results[0][0].transcript;
+      const input = document.getElementById(targetInputId);
+      if (input) {
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (btn) {
+        btn.classList.remove('listening');
+        btn.textContent = t('voiceBtn');
+      }
+      voiceListening = false;
+    };
+    voiceRecognition.onerror = function(ev) {
+      console.warn('Voice error:', ev.error);
+      if (btn) {
+        btn.classList.remove('listening');
+        btn.textContent = t('voiceBtn');
+      }
+      voiceListening = false;
+      if (ev.error !== 'no-speech' && ev.error !== 'aborted') {
+        alert(t('voiceError'));
+      }
+    };
+    voiceRecognition.onend = function() {
+      voiceListening = false;
+      if (btn) {
+        btn.classList.remove('listening');
+        btn.textContent = t('voiceBtn');
+      }
+    };
+    try {
+      voiceRecognition.start();
+      voiceListening = true;
+    } catch(e) {
+      console.warn('Voice start error:', e);
+    }
+  }
+
+  window.__nuVoice = startVoiceSearch;
+
+  // ============================================================
+  // 6. APPLE HEALTH / GOOGLE FIT (via Web Share Target API + manual entry)
+  // ============================================================
+
+  // Note: Full Apple Health / Google Fit integration requires a native app or
+  // the Health Connect API (Android only). For the web, we provide:
+  //  - A hook for receiving shared data (if installed as PWA with share target)
+  //  - A manual entry form for steps/weight
+  //  - Detection of navigator.share / Web Share API
+
+  function isHealthAvailable() {
+    return !!(navigator.share || window.HealthConnect || window.webkit && window.webkit.messageHandlers);
+  }
+
+  function getHealthData() {
+    return lsGet(healthKey(), { steps: 0, weight: null, ts: null });
+  }
+
+  function setHealthData(steps, weight) {
+    const data = { steps: steps || 0, weight: weight || null, ts: Date.now() };
+    lsSet(healthKey(), data);
+    renderHealthWidget();
+    if (typeof showToast === 'function') {
+      showToast(t('healthSynced', { steps, weight: weight || '—' }));
+    }
+  }
+
+  function renderHealthWidget() {
+    const el = document.getElementById('healthWidget');
+    if (!el) return;
+    const data = getHealthData();
+    const available = isHealthAvailable();
+
+    el.innerHTML =
+      '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin:10px 0;border:1px solid #EEEEEE;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+          '<div style="font-weight:700;color:#424242;font-size:14px;">🏃 Apple Health / Google Fit</div>' +
+          (available ? '<span style="font-size:11px;color:#2E7D32;font-weight:600;">● Online</span>' :
+                       '<span style="font-size:11px;color:#9E9E9E;">○ ' + esc(uiLang() === 'he' ? 'לא זמין' : 'Offline') + '</span>') +
+        '</div>' +
+        '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:13px;">' +
+          '<div><div style="color:#757575;font-size:11px;">' + esc(uiLang() === 'he' ? 'צעדים' : (uiLang() === 'en' ? 'Steps' : 'Шаги')) + '</div><div style="font-weight:700;color:#212121;">' + (data.steps || 0).toLocaleString() + '</div></div>' +
+          '<div><div style="color:#757575;font-size:11px;">' + esc(uiLang() === 'he' ? 'משקל' : (uiLang() === 'en' ? 'Weight' : 'Вес')) + '</div><div style="font-weight:700;color:#212121;">' + (data.weight ? data.weight + ' kg' : '—') + '</div></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button onclick="window.__nuHealthSync()" style="background:#4CAF50;color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:600;font-size:12px;cursor:pointer;">' + esc(t('healthSync')) + '</button>' +
+          '<button onclick="window.__nuHealthManual()" style="background:#fff;color:#424242;border:1px solid #E0E0E0;border-radius:8px;padding:7px 12px;font-weight:500;font-size:12px;cursor:pointer;">' + esc(uiLang() === 'he' ? 'הזן ידנית' : (uiLang() === 'en' ? 'Manual' : 'Вручную')) + '</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  window.__nuHealthSync = async function() {
+    if (navigator.share) {
+      try {
+        // Try sharing (mostly for outgoing, but signals availability)
+        await navigator.share({
+          title: 'Nutrition App',
+          text: 'Sync health data',
+        });
+      } catch(e) {
+        // User cancelled - fall through to manual
+      }
+    }
+    // Always allow manual entry as fallback
+    window.__nuHealthManual();
+  };
+
+  window.__nuHealthManual = function() {
+    const lang = uiLang();
+    const stepsStr = lang === 'he' ? 'צעדים היום' : (lang === 'en' ? 'Steps today' : 'Шагов сегодня');
+    const weightStr = lang === 'he' ? 'משקל (ק"ג)' : (lang === 'en' ? 'Weight (kg)' : 'Вес (кг)');
+    const steps = prompt(stepsStr + ':', '0');
+    if (steps === null) return;
+    const weight = prompt(weightStr + ':', '');
+    setHealthData(parseInt(steps, 10) || 0, weight ? parseFloat(weight) : null);
+  };
+
+  // Listen for shared data if PWA is installed with share_target
+  window.addEventListener('healthdata', function(ev) {
+    if (ev.detail) {
+      setHealthData(ev.detail.steps || 0, ev.detail.weight || null);
+    }
+  });
+
+  // ============================================================
+  // 7. AI PHOTO RECOGNITION
+  // ============================================================
+
+  // Uses a free public food recognition API or guides user to upload
+  // Try multiple providers in order: FoodAI API, LogMeal, CalorieMama
+  // All have free tiers
+
+  const AI_PROVIDERS = [
+    {
+      name: 'logmeal',
+      url: 'https://api.logmeal.es/v2/recognition/dish',
+      method: 'POST',
+      needsKey: true,
+      keyName: 'logmeal_token'
+    },
+    {
+      name: 'foodai',
+      url: 'https://foodai.csie.ccu.edu.tw/recognize',
+      method: 'POST',
+      needsKey: false  // Free for academic use, limited queries
+    }
+  ];
+
+  // We'll use a simpler approach: upload image, send to a free inference API
+  // If no API key configured, fall back to manual description entry
+
+  async function analyzeMealPhoto(imageFile) {
+    // Try z.ai vision API first (if available via fetch to our own backend)
+    // Then fall back to a guided manual entry
+
+    // Convert to base64
+    const base64 = await fileToBase64(imageFile);
+
+    // Try multiple strategies
+    // Strategy 1: Use Hugging Face Inference API (free, requires token but works without for some models)
+    try {
+      const result = await tryHuggingFaceFoodAPI(base64);
+      if (result && result.length > 0) return result;
+    } catch(e) {
+      console.warn('HuggingFace API failed:', e);
+    }
+
+    // Strategy 2: Use a simple prompt-based UI where user describes the meal
+    return await guidedMealEntry(imageFile);
+  }
+
+  async function tryHuggingFaceFoodAPI(base64) {
+    // Try a public food recognition model (free, no auth required for some models)
+    // Model: julien-c/food-101 or similar
+    const url = 'https://api-inference.huggingface.co/models/julien-c/food-101';
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: base64,
+          options: { wait_for_model: true }
+        })
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (Array.isArray(data) && data.length > 0) {
+        // Return top 3 predictions with confidence > 0.1
+        return data.slice(0, 3).map(item => ({
+          name: item.label.replace(/_/g, ' '),
+          confidence: item.score,
+          // Estimate calories based on common food knowledge
+          kcal: estimateCalories(item.label),
+          protein: estimateMacro(item.label, 'protein'),
+          fat: estimateMacro(item.label, 'fat'),
+          carbs: estimateMacro(item.label, 'carbs'),
+          amount: 200 // Default 200g
+        })).filter(p => p.confidence > 0.05);
+      }
+    } catch(e) {
+      console.warn('HF API error:', e);
+    }
+    return null;
+  }
+
+  // Calorie estimation table for common foods (from food-101 model labels)
+  const FOOD_CALORIE_MAP = {
+    'pizza': 266, 'hamburger': 295, 'cheesecake': 321, 'steak': 271,
+    'fried_rice': 163, 'spaghetti_bolognese': 130, 'sushi': 150,
+    'caesar_salad': 190, 'french_fries': 312, 'pancakes': 227,
+    'waffles': 291, 'omelette': 154, 'grilled_cheese_sandwich': 267,
+    'fried_egg': 196, 'scrambled_eggs': 149, 'french_toast': 229,
+    'club_sandwich': 250, 'hot_dog': 290, 'tacos': 226, 'burrito': 206,
+    'ramen': 436, 'pho': 87, 'pad_thai': 155, 'chicken_curry': 145,
+    'beef_curry': 165, 'dumplings': 250, 'spring_rolls': 100,
+    'cup_cakes': 305, 'donuts': 452, 'cookies': 488, 'brownies': 466,
+    'apple_pie': 237, 'chocolate_cake': 371, 'ice_cream': 207,
+    'macaroni_and_cheese': 164, 'lasagna': 135, 'ravioli': 247,
+    'risotto': 130, 'gnocchi': 180, 'beef_tartare': 178,
+    'pork_chop': 231, 'baby_back_ribs': 277, 'filet_mignon': 217,
+    'grilled_salmon': 139, 'fish_and_chips': 232, 'tuna_tartare': 144,
+    'oysters': 81, 'mussels': 86, 'shrimp_and_grits': 215,
+    'breakfast_burrito': 206, 'huevos_rancheros': 178,
+    'beef_carpaccio': 167, 'foie_gras': 462,
+    'celery': 16, 'cucumber': 15, 'carrot': 41, 'broccoli': 34,
+    'cauliflower': 25, 'avocado': 160, 'tomato': 18,
+    'strawberries': 32, 'blueberries': 57, 'raspberries': 53,
+    'bananas': 89, 'apples': 52, 'oranges': 47, 'pineapple': 50,
+    'watermelon': 30, 'mango': 60, 'grapes': 69, 'lemon': 29,
+    'french_onion_soup': 78, 'minestrone': 71, 'tomato_soup': 41,
+    'miso_soup': 40, 'pho': 87, 'ramen': 436,
+    'caprese_salad': 187, 'greek_salad': 107, 'seaweed_salad': 90,
+    'beet_salad': 65, 'buddha_bowl': 195,
+    'espresso': 2, 'coffee': 1, 'tea': 1, 'latte': 56, 'cappuccino': 46
+  };
+
+  function estimateCalories(label) {
+    const key = label.toLowerCase().replace(/\s+/g, '_');
+    for (const k in FOOD_CALORIE_MAP) {
+      if (key.includes(k) || k.includes(key)) return FOOD_CALORIE_MAP[k];
+    }
+    return 150; // Default for unknown
+  }
+
+  function estimateMacro(label, type) {
+    const kcal = estimateCalories(label);
+    if (type === 'protein') return Math.round(kcal * 0.25 / 4);
+    if (type === 'fat') return Math.round(kcal * 0.30 / 9);
+    if (type === 'carbs') return Math.round(kcal * 0.45 / 4);
+    return 0;
+  }
+
+  async function guidedMealEntry(imageFile) {
+    // Fall back to a guided prompt: show image + ask user to describe
+    return new Promise((resolve) => {
+      const lang = uiLang();
+      const title = lang === 'he' ? 'תאר את המנה' : (lang === 'en' ? 'Describe the dish' : 'Опишите блюдо');
+      const hint = lang === 'he' ? 'לדוגמה: 200ג עוף עם אורז וסלט' :
+                   (lang === 'en' ? 'E.g.: 200g chicken with rice and salad' : 'Напр.: 200г курицы с рисом и салатом');
+      const text = prompt(title + '\n' + hint, '');
+      if (!text) {
+        resolve([]);
+        return;
+      }
+      // Parse simple text and try to match against our existing allProducts
+      const items = parseMealDescription(text);
+      resolve(items);
+    });
+  }
+
+  function parseMealDescription(text) {
+    // Try to find product names in the text and match to allProducts
+    const items = [];
+    const lang = uiLang();
+    if (typeof allProducts === 'undefined' || !allProducts.length) return items;
+
+    // Simple word-by-word matching
+    const words = text.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+    const matched = new Set();
+    for (let i = 0; i < allProducts.length; i++) {
+      const p = allProducts[i];
+      if (!p || !p.name) continue;
+      const pName = (p.nameHe || p.nameEn || p.name || '').toLowerCase();
+      for (const w of words) {
+        if (pName.includes(w) && !matched.has(i)) {
+          // Try to extract amount (e.g. "200г" or "200g")
+          const amtMatch = text.match(new RegExp('(\\d+)\\s*г?g?\\.?\\s*' + w, 'i'));
+          const amount = amtMatch ? parseInt(amtMatch[1], 10) : 100;
+          matched.add(i);
+          items.push({
+            name: p.name,
+            kcal: p.calories || 0,
+            protein: p.protein || 0,
+            fat: p.fat || 0,
+            carbs: p.carbs || 0,
+            amount: amount,
+            productIdx: i
+          });
+          break;
+        }
+      }
+    }
+    return items;
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function openAIPhotoDialog() {
+    // Create modal
+    const existing = document.getElementById('aiPhotoModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'aiPhotoModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML =
+      '<div style="background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+          '<h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(t('aiBtn')) + '</h3>' +
+          '<button onclick="this.closest(\'#aiPhotoModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
+        '</div>' +
+        '<p style="color:#616161;font-size:13px;margin-bottom:16px;">' + esc(t('aiHint')) + '</p>' +
+        '<div id="aiPhotoContent">' +
+          '<label style="display:block;background:linear-gradient(135deg,#5B8DB8,#2196F3);color:#fff;padding:20px;border-radius:12px;text-align:center;cursor:pointer;font-weight:600;">' +
+            '<input type="file" accept="image/*" id="aiPhotoInput" style="display:none">' +
+            '📸 ' + esc(t('aiUploadBtn')) +
+          '</label>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    const input = document.getElementById('aiPhotoInput');
+    input.onchange = async function() {
+      const file = input.files[0];
+      if (!file) return;
+      const content = document.getElementById('aiPhotoContent');
+      content.innerHTML = '<div style="text-align:center;padding:30px;">' +
+        '<div style="display:inline-block;width:50px;height:50px;border:4px solid #E3F2FD;border-top:4px solid #2196F3;border-radius:50%;animation:nuSpin 1s linear infinite;"></div>' +
+        '<p style="margin-top:14px;color:#1565C0;font-weight:600;">' + esc(t('aiAnalyzing2')) + '</p>' +
+        '<img src="' + URL.createObjectURL(file) + '" style="max-width:200px;max-height:200px;border-radius:8px;margin-top:12px;object-fit:cover;">' +
+      '</div>' +
+      '<style>@keyframes nuSpin{to{transform:rotate(360deg)}}</style>';
+
+      try {
+        const results = await analyzeMealPhoto(file);
+        if (!results || results.length === 0) {
+          content.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;">' +
+            '<div style="font-size:48px;margin-bottom:12px;">🤔</div>' +
+            '<p>' + esc(t('aiNoDetect')) + '</p>' +
+            '<button onclick="document.getElementById(\'aiPhotoModal\').remove()" style="margin-top:16px;background:#2196F3;color:#fff;border:0;border-radius:8px;padding:10px 20px;cursor:pointer;font-weight:600;">OK</button>' +
+          '</div>';
+          return;
+        }
+        // Show detected items
+        let html = '<div style="margin-bottom:14px;color:#2E7D32;font-weight:600;">' +
+          esc(t('aiDetected', { n: results.length })) + '</div>';
+        results.forEach((r, i) => {
+          const conf = r.confidence ? ' · ' + Math.round(r.confidence * 100) + '%' : '';
+          html += '<div style="background:#F5F5F5;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">' +
+            '<div><div style="font-weight:600;color:#212121;font-size:14px;">' + esc(r.name) + conf + '</div>' +
+            '<div style="font-size:11px;color:#757575;">' + Math.round(r.kcal) + ' ' + esc(t('offKcal')) + '/' + esc(t('offPer100g')) + ' · ' + (r.amount || 100) + 'g' +
+            ' · ' + esc(t('offProt')) + ': ' + Math.round(r.protein) + ' ' + esc(t('offFat')) + ': ' + Math.round(r.fat) + ' ' + esc(t('offCarb')) + ': ' + Math.round(r.carbs) + '</div></div>' +
+            '<button onclick="window.__nuAiAdd(' + i + ')" style="background:#4CAF50;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">+</button>' +
+          '</div>';
+        });
+        html += '<div style="display:flex;gap:8px;margin-top:16px;">' +
+          '<button onclick="window.__nuAiAddAll()" style="flex:1;background:#2196F3;color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:600;">' + esc(t('aiAddAll')) + '</button>' +
+          '<button onclick="document.getElementById(\'aiPhotoModal\').remove()" style="background:transparent;color:#757575;border:0;border-radius:8px;padding:10px 20px;cursor:pointer;">' + esc(uiLang() === 'he' ? 'סגור' : 'Close') + '</button>' +
+        '</div>';
+        content.innerHTML = html;
+        window.__nuAiResults = results;
+      } catch(e) {
+        console.error('AI error:', e);
+        content.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">' +
+          '<div style="font-size:48px;margin-bottom:12px;">⚠️</div>' +
+          '<p>' + esc(t('aiError')) + '</p>' +
+          '<button onclick="document.getElementById(\'aiPhotoModal\').remove()" style="margin-top:16px;background:#2196F3;color:#fff;border:0;border-radius:8px;padding:10px 20px;cursor:pointer;font-weight:600;">OK</button>' +
+        '</div>';
+      }
+    };
+  }
+
+  window.__nuAi = openAIPhotoDialog;
+  window.__nuAiAdd = function(i) {
+    const r = window.__nuAiResults && window.__nuAiResults[i];
+    if (!r) return;
+    const offProd = {
+      code: 'ai_' + Date.now() + '_' + i,
+      name: r.name,
+      nameHe: '', nameRu: '', nameEn: r.name,
+      brand: 'AI-detected',
+      kcal: r.kcal,
+      protein: r.protein,
+      fat: r.fat,
+      carbs: r.carbs,
+      image: ''
+    };
+    addOffProductToMeal(0, offProd, r.amount || 100);
+    if (typeof mpRenderBody === 'function') mpRenderBody();
+  };
+  window.__nuAiAddAll = function() {
+    if (!window.__nuAiResults) return;
+    window.__nuAiResults.forEach((r, i) => {
+      const offProd = {
+        code: 'ai_' + Date.now() + '_' + i,
+        name: r.name,
+        nameHe: '', nameRu: '', nameEn: r.name,
+        brand: 'AI-detected',
+        kcal: r.kcal,
+        protein: r.protein,
+        fat: r.fat,
+        carbs: r.carbs,
+        image: ''
+      };
+      addOffProductToMeal(0, offProd, r.amount || 100);
+    });
+    if (typeof mpRenderBody === 'function') mpRenderBody();
+    document.getElementById('aiPhotoModal') && document.getElementById('aiPhotoModal').remove();
+  };
+
+  // ============================================================
+  // OFF PRODUCT PICKER MODAL
+  // ============================================================
+
+  function openOffPicker(mealIdx) {
+    const existing = document.getElementById('offPickerModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'offPickerModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML =
+      '<div style="background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+          '<div>' +
+            '<h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(t('offTitle')) + '</h3>' +
+            '<p style="margin:4px 0 0;font-size:12px;color:#616161;">' + esc(t('offHint')) + '</p>' +
+          '</div>' +
+          '<button onclick="this.closest(\'#offPickerModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+          '<input type="text" id="offSearchInput" placeholder="' + esc(t('offSearchPh')) + '" style="flex:1;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;" onkeydown="if(event.key===\'Enter\')window.__nuOffSearch()">' +
+          '<button onclick="window.__nuOffVoice()" id="offVoiceBtn" data-voice-target="offSearchInput" style="background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:0 12px;cursor:pointer;font-weight:600;">' + esc(t('voiceBtn')) + '</button>' +
+          '<button onclick="window.__nuOffSearch()" style="background:#2196F3;color:#fff;border:0;border-radius:8px;padding:0 16px;cursor:pointer;font-weight:600;">' + esc(t('offSearchBtn')) + '</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+          '<button onclick="window.__nuOffBarcode()" style="background:#fff;color:#1565C0;border:1px solid #90CAF9;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;flex:1;">' + esc(t('offBarcodeBtn')) + '</button>' +
+          '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600;flex:1;">' + esc(t('aiBtn')) + '</button>' +
+        '</div>' +
+        '<div id="offResults" style="min-height:80px;"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    window.__nuOffMealIdx = mealIdx;
+
+    // Focus input
+    setTimeout(() => {
+      const inp = document.getElementById('offSearchInput');
+      if (inp) inp.focus();
+    }, 100);
+  }
+
+  window.__nuOffOpen = openOffPicker;
+
+  window.__nuOffSearch = async function() {
+    const inp = document.getElementById('offSearchInput');
+    if (!inp) return;
+    const q = inp.value.trim();
+    if (q.length < 2) return;
+    const resultsEl = document.getElementById('offResults');
+    resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #2196F3;border-radius:50%;animation:nuSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('offLoading')) + '</p></div>';
+    try {
+      const results = await offSearchByName(q);
+      if (!results.length) {
+        resultsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('offNoResults')) + '</div>';
+        return;
+      }
+      let html = '';
+      results.forEach((p, i) => {
+        html += '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:10px;margin-bottom:8px;align-items:center;">' +
+          (p.image ? '<img src="' + esc(p.image) + '" style="width:50px;height:50px;object-fit:contain;border-radius:6px;background:#fff;" onerror="this.style.display=\'none\'">' : '<div style="width:50px;height:50px;background:#E0E0E0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;">🍽</div>') +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:600;color:#212121;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(p.name) + '</div>' +
+            (p.brand ? '<div style="font-size:11px;color:#757575;">' + esc(p.brand) + '</div>' : '') +
+            '<div style="font-size:11px;color:#1565C0;margin-top:2px;">' + Math.round(p.kcal) + ' ' + esc(t('offKcal')) + ' ' + esc(t('offPer100g')) + ' · ' + esc(t('offProt')) + Math.round(p.protein) + ' ' + esc(t('offFat')) + Math.round(p.fat) + ' ' + esc(t('offCarb')) + Math.round(p.carbs) + '</div>' +
+          '</div>' +
+          '<button onclick="window.__nuOffAdd(' + i + ')" style="background:#4CAF50;color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;">' + esc(t('offAddBtn')) + '</button>' +
+        '</div>';
+      });
+      resultsEl.innerHTML = html;
+      window.__nuOffResults = results;
+    } catch(e) {
+      resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">⚠️ ' + esc(t('offError')) + '</div>';
+    }
+  };
+
+  window.__nuOffVoice = function() {
+    startVoiceSearch('offSearchInput');
+  };
+
+  window.__nuOffBarcode = function() {
+    // Use BarcodeDetector API if available, otherwise prompt manual entry
+    if ('BarcodeDetector' in window) {
+      // TODO: open camera with barcode detection
+      const bc = prompt(uiLang() === 'he' ? 'הזן ברקוד או סרוק' : (uiLang() === 'en' ? 'Enter or scan barcode' : 'Введите или отсканируйте штрих-код'), '');
+      if (bc) window.__nuOffBarcodeLookup(bc);
+    } else {
+      const bc = prompt(uiLang() === 'he' ? 'הזן ברקוד (8-14 ספרות)' : (uiLang() === 'en' ? 'Enter barcode (8-14 digits)' : 'Введите штрих-код (8-14 цифр)'), '');
+      if (bc) window.__nuOffBarcodeLookup(bc);
+    }
+  };
+
+  window.__nuOffBarcodeLookup = async function(bc) {
+    bc = bc.replace(/\D/g, '');
+    if (bc.length < 8) {
+      alert(t('offError'));
+      return;
+    }
+    const resultsEl = document.getElementById('offResults');
+    if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #2196F3;border-radius:50%;animation:nuSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('offLoading')) + '</p></div>';
+    const p = await offLookupBarcode(bc);
+    if (!p) {
+      if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('offNoResults')) + '</div>';
+      return;
+    }
+    window.__nuOffResults = [p];
+    if (resultsEl) {
+      resultsEl.innerHTML = '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:10px;margin-bottom:8px;align-items:center;">' +
+        (p.image ? '<img src="' + esc(p.image) + '" style="width:50px;height:50px;object-fit:contain;border-radius:6px;background:#fff;" onerror="this.style.display=\'none\'">' : '<div style="width:50px;height:50px;background:#E0E0E0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;">🍽</div>') +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:600;color:#212121;font-size:14px;">' + esc(p.name) + '</div>' +
+          (p.brand ? '<div style="font-size:11px;color:#757575;">' + esc(p.brand) + '</div>' : '') +
+          '<div style="font-size:11px;color:#1565C0;margin-top:2px;">' + Math.round(p.kcal) + ' ' + esc(t('offKcal')) + ' ' + esc(t('offPer100g')) + '</div>' +
+        '</div>' +
+        '<button onclick="window.__nuOffAdd(0)" style="background:#4CAF50;color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">' + esc(t('offAddBtn')) + '</button>' +
+      '</div>';
+    }
+  };
+
+  window.__nuOffAdd = function(i) {
+    const p = window.__nuOffResults && window.__nuOffResults[i];
+    if (!p) return;
+    const mealIdx = window.__nuOffMealIdx || 0;
+    const amount = parseInt(prompt(uiLang() === 'he' ? 'כמות בגרמים?' : (uiLang() === 'en' ? 'Amount in grams?' : 'Количество в граммах?'), '100'), 10) || 100;
+    const ok = addOffProductToMeal(mealIdx, p, amount);
+    if (ok) {
+      if (typeof mpRenderBody === 'function') mpRenderBody();
+      if (typeof showToast === 'function') showToast('✓ ' + t('offAdded'));
+      const modal = document.getElementById('offPickerModal');
+      if (modal) modal.remove();
+    }
+  };
+
+  // ============================================================
+  // INJECT WIDGETS INTO NUTRITION PLANNER UI
+  // ============================================================
+
+  function injectWidgets() {
+    // Find the mp summary section and add widgets after it
+    const summary = document.querySelector('.mp-summary');
+    if (!summary) {
+      // Try alternate locations
+      const mealsContainer = document.getElementById('mealsContainer');
+      if (!mealsContainer) return;
+    }
+
+    // Insert widgets container after the mp-summary block
+    let widgetsContainer = document.getElementById('nuWidgetsContainer');
+    if (!widgetsContainer) {
+      widgetsContainer = document.createElement('div');
+      widgetsContainer.id = 'nuWidgetsContainer';
+      widgetsContainer.innerHTML =
+        '<div id="waterTrackerWidget"></div>' +
+        '<div id="healthWidget"></div>' +
+        '<div id="recentProductsWidget"></div>';
+
+      // Try to insert in a sensible location
+      const target = document.querySelector('.mp-summary') ||
+                     document.querySelector('#mealsContainer') ||
+                     document.querySelector('.mp-body');
+      if (target && target.parentNode) {
+        target.parentNode.insertBefore(widgetsContainer, target.nextSibling);
+      }
+    }
+
+    renderWaterWidget();
+    renderHealthWidget();
+    renderRecentWidget();
+  }
+
+  // Add an "OFF" button + AI button + PDF button + voice button to the product picker / topbar
+  function injectTopBarButtons() {
+    // Find mp-add-product button or similar
+    const addProductButtons = document.querySelectorAll('.mp-add-big, .mp-addline');
+    // Already inject via OFF picker - just add PDF/AI buttons to topbar
+
+    // Find topbar
+    const topbar = document.querySelector('.mp-topbar, .mp-nav, .mp-bar');
+    if (topbar && !document.getElementById('nuTopBarButtons')) {
+      const btns = document.createElement('div');
+      btns.id = 'nuTopBarButtons';
+      btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;';
+      btns.innerHTML =
+        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">🌐 OFF</button>' +
+        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">🤖 AI</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>';
+      topbar.appendChild(btns);
+    }
+
+    // Add voice button to product search
+    const searchBox = document.getElementById('productSearch');
+    if (searchBox && !document.getElementById('nuVoiceSearchBtn')) {
+      const voiceBtn = document.createElement('button');
+      voiceBtn.id = 'nuVoiceSearchBtn';
+      voiceBtn.textContent = t('voiceBtn');
+      voiceBtn.setAttribute('data-voice-target', 'productSearch');
+      voiceBtn.style.cssText = 'background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;margin-left:6px;';
+      voiceBtn.onclick = function() { startVoiceSearch('productSearch'); };
+      searchBox.parentNode.insertBefore(voiceBtn, searchBox.nextSibling);
+    }
+
+    // Also add OFF/AI buttons to product picker sheets if they exist
+    const pickerSheets = document.querySelectorAll('.mp-pick-actions, .mp-sheet-foot');
+    pickerSheets.forEach(sheet => {
+      if (!sheet.querySelector('.nu-pick-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'nu-pick-btn';
+        btn.textContent = '🌐 ' + t('offTitle').replace('🌐 ', '');
+        btn.style.cssText = 'background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;margin-right:6px;';
+        btn.onclick = function() {
+          // Get current meal index from context
+          let mealIdx = 0;
+          try { mealIdx = parseInt(document.querySelector('[data-meal-idx]')?.dataset.mealIdx || '0', 10); } catch(e) {}
+          openOffPicker(mealIdx);
+          // Close the sheet
+          if (typeof mpCloseSheet === 'function') mpCloseSheet();
+        };
+        sheet.appendChild(btn);
+      }
+    });
+  }
+
+  // Re-inject on language change and on view changes
+  function setupObservers() {
+    // Watch for body class changes (mp-active toggling, language changes)
+    const observer = new MutationObserver(function(mutations) {
+      for (const m of mutations) {
+        if (m.attributeName === 'class') {
+          setTimeout(() => {
+            injectWidgets();
+            injectTopBarButtons();
+          }, 100);
+        }
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Also re-render on language change
+    const origApplyLanguage = window.applyLanguage;
+    if (typeof origApplyLanguage === 'function') {
+      window.applyLanguage = function() {
+        origApplyLanguage.apply(this, arguments);
+        setTimeout(() => {
+          injectWidgets();
+          injectTopBarButtons();
+        }, 100);
+      };
+    }
+
+    // Hook into mpRenderBody for re-rendering widgets
+    const origMpRenderBody = window.mpRenderBody;
+    if (typeof origMpRenderBody === 'function') {
+      window.mpRenderBody = function() {
+        origMpRenderBody.apply(this, arguments);
+        setTimeout(() => {
+          injectWidgets();
+          injectTopBarButtons();
+        }, 50);
+      };
+    }
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  function init() {
+    console.log('[NutritionUpgrades v1] init');
+    setupObservers();
+    setTimeout(() => {
+      injectWidgets();
+      injectTopBarButtons();
+    }, 500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Re-init on mp-active toggle
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList && (e.target.classList.contains('mp-nav-item') || e.target.classList.contains('app-launcher-item'))) {
+      setTimeout(() => {
+        injectWidgets();
+        injectTopBarButtons();
+      }, 300);
+    }
+  }, true);
+
+  // Export public API
+  window.NutritionUpgrades = {
+    version: '1.0.0',
+    openOffPicker: openOffPicker,
+    openAIPhoto: openAIPhotoDialog,
+    generatePDF: generatePDFReport,
+    addWater: addWater,
+    getWaterToday: getWaterToday,
+    syncHealth: setHealthData,
+    trackRecent: trackRecentProduct,
+    offSearchByName: offSearchByName,
+    offLookupBarcode: offLookupBarcode,
+    t: t
+  };
+
+})();
+
+</script>
+<!-- /NUTRITION_UPGRADES_V1 -->
 </body>
 </html>
