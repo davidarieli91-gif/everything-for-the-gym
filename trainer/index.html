@@ -9646,9 +9646,9 @@
             display: none !important;
         }
 
-        /* homeScreen всегда виден (содержит карточки клиентов) */
+        /* homeScreen виден по умолчанию, но скрывается через .hidden */
         #homeScreen { display: block !important; }
-        #homeScreen.hidden { display: block !important; }
+        #homeScreen.hidden { display: none !important; }
 
         /* Планшет (tablet) */
         body.layout-tablet .win11-desktop-area { bottom: 52px; }
