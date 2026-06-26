@@ -45329,6 +45329,23 @@ window.__win11RefreshClients = function(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!-- HISTORY_MANAGER_V1 -->
 <script>
 // ============================================================
@@ -45663,13 +45680,22 @@ window.__win11RefreshClients = function(){
     history.unshift(entry);
     saveHistory('workout', history);
 
-    // Clear current workout plan
-    try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify([])); } catch(e) {}
-    // Also clear the DOM workouts so saveWorkoutPlan doesn't re-save them
-    const workoutsContainer = document.getElementById('workoutsContainer');
-    if (workoutsContainer) workoutsContainer.querySelectorAll('.workout').forEach(w => w.remove());
-    if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-    if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+    // Check if we're in client app (read-only view) — don't clear the plan
+    const isClientApp = (typeof __clientUser !== 'undefined' && __clientUser) ||
+                        (!!document.querySelector('.cs-topbar') && getComputedStyle(document.querySelector('.cs-topbar')).display !== 'none' && document.querySelector('.cs-topbar').getBoundingClientRect().width > 0);
+
+    if (!isClientApp) {
+      // Trainer app: clear current workout plan so trainer can build a new one
+      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify([])); } catch(e) {}
+      // Also clear the DOM workouts so saveWorkoutPlan doesn't re-save them
+      const workoutsContainer = document.getElementById('workoutsContainer');
+      if (workoutsContainer) workoutsContainer.querySelectorAll('.workout').forEach(w => w.remove());
+      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+    } else {
+      // Client app: just keep the plan (read-only). User can view it but not edit.
+      // The archive is a snapshot for reference.
+    }
 
     if (typeof showToast === 'function') showToast(t('archiveSuccess'));
     if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
@@ -45710,17 +45736,25 @@ window.__win11RefreshClients = function(){
     history.unshift(entry);
     saveHistory('nutrition', history);
 
-    // Clear current nutrition plan
-    try { localStorage.removeItem('nutritionPlan_' + cid); } catch(e) {}
-    // Clear UI
-    const container = document.getElementById('mealsContainer');
-    if (container) container.querySelectorAll('.meal').forEach(m => m.remove());
-    ['totalCalories', 'totalProtein', 'totalFat', 'totalCarbs'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = '0';
-    });
-    const pc = document.getElementById('progressContainer');
-    if (pc) pc.style.display = 'none';
+    // Check if we're in client app (read-only view) — don't clear the plan
+    const isClientApp = (typeof __clientUser !== 'undefined' && __clientUser) ||
+                        (!!document.querySelector('.cs-topbar') && getComputedStyle(document.querySelector('.cs-topbar')).display !== 'none' && document.querySelector('.cs-topbar').getBoundingClientRect().width > 0);
+
+    if (!isClientApp) {
+      // Trainer app: clear current nutrition plan
+      try { localStorage.removeItem('nutritionPlan_' + cid); } catch(e) {}
+      // Clear UI
+      const container = document.getElementById('mealsContainer');
+      if (container) container.querySelectorAll('.meal').forEach(m => m.remove());
+      ['totalCalories', 'totalProtein', 'totalFat', 'totalCarbs'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '0';
+      });
+      const pc = document.getElementById('progressContainer');
+      if (pc) pc.style.display = 'none';
+    } else {
+      // Client app: keep the plan (read-only)
+    }
 
     if (typeof showToast === 'function') showToast(t('archiveSuccess'));
     if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
@@ -45874,7 +45908,10 @@ window.__win11RefreshClients = function(){
     html += '</div>';
 
     // Inject into the open sheet
-    const sheet = document.getElementById('mpSheet') || document.getElementById('csSheet');
+    // In client app, csSheet is visible; in trainer app, mpSheet is visible
+    const isClientApp = (typeof __clientUser !== 'undefined' && __clientUser) ||
+                        (!!document.querySelector('.cs-topbar') && getComputedStyle(document.querySelector('.cs-topbar')).display !== 'none' && document.querySelector('.cs-topbar').getBoundingClientRect().width > 0);
+    const sheet = isClientApp ? document.getElementById('csSheet') : (document.getElementById('mpSheet') || document.getElementById('csSheet'));
     if (sheet) {
       const body = sheet.querySelector('.mp-sheet-body') || sheet.querySelector('.cs-sheet-body') || sheet;
       body.innerHTML = '<div style="padding:14px;">' + html + '</div>';
@@ -46036,10 +46073,10 @@ window.__win11RefreshClients = function(){
 
     html += '</div>';
 
-    openSheet(html, true);
-    // Store current type and full history for filtering
+    // Store current type BEFORE openSheet (so the sheet title is correct)
     window.__hmCurrentType = type;
     window.__hmCurrentHistory = history;
+    openSheet(html, true);
   }
 
   function renderHistoryEntry(entry, type, lang) {
@@ -46104,7 +46141,21 @@ window.__win11RefreshClients = function(){
 
   // ---- Sheet helpers ----
   function openSheet(html, tall) {
-    // Use mpOpenSheet if available (trainer app)
+    // Detect which app we're in
+    // Client app: has visible .cs-topbar OR __clientUser set, NO mp-active class
+    // Trainer app: has mp-active class on body
+    const isClientApp = (typeof __clientUser !== 'undefined' && __clientUser) ||
+                        (!!document.querySelector('.cs-topbar') && getComputedStyle(document.querySelector('.cs-topbar')).display !== 'none' && document.querySelector('.cs-topbar').getBoundingClientRect().width > 0);
+
+    // In client app, ALWAYS use csOpenSheet (mpSheet is hidden inside mobilePlanner)
+    if (isClientApp && typeof csOpenSheet === 'function') {
+      const head = '<div class="mp-sheet-head"><div class="mp-grab"></div><div class="mp-sheet-title">' +
+        esc(window.__hmCurrentType === 'workout' ? t('histWk') : t('histNut')) +
+        '</div><button class="mp-sheet-x" onclick="csCloseSheet()">✕</button></div>';
+      csOpenSheet(head + html);
+      return;
+    }
+    // In trainer app, use mpOpenSheet
     if (typeof mpOpenSheet === 'function') {
       const head = '<div class="mp-sheet-head"><div class="mp-grab"></div><div class="mp-sheet-title">' +
         esc(window.__hmCurrentType === 'workout' ? t('histWk') : t('histNut')) +
@@ -46112,12 +46163,15 @@ window.__win11RefreshClients = function(){
       mpOpenSheet(head + html, tall);
       return;
     }
-    // Use csOpenSheet if available (client app)
+    // Fallback: csOpenSheet if available
     if (typeof csOpenSheet === 'function') {
-      csOpenSheet(html);
+      const head = '<div class="mp-sheet-head"><div class="mp-grab"></div><div class="mp-sheet-title">' +
+        esc(window.__hmCurrentType === 'workout' ? t('histWk') : t('histNut')) +
+        '</div><button class="mp-sheet-x" onclick="csCloseSheet()">✕</button></div>';
+      csOpenSheet(head + html);
       return;
     }
-    // Fallback: create own modal
+    // Last resort: create own modal
     let m = document.getElementById('hmModal');
     if (!m) {
       m = document.createElement('div');
@@ -46150,82 +46204,206 @@ window.__win11RefreshClients = function(){
   // INJECT BUTTONS INTO PLANNER UI
   // ============================================================
   function injectButtons() {
-    if (!document.body.classList.contains('mp-active')) return;
+    // Detect app mode
+    const isTrainerPlanner = document.body.classList.contains('mp-active');
+    const isClientApp = !isTrainerPlanner && (typeof __clientUser !== 'undefined' && __clientUser) ||
+                        (!!document.querySelector('.cs-topbar'));
+    
+    if (!isTrainerPlanner && !isClientApp) return;
 
-    // Inject into topbar (next to existing OFF/AI/PDF buttons if they exist, or standalone)
-    const topbar = document.querySelector('.mp-topbar');
-    if (topbar) {
-      const isWk = document.body.classList.contains('mode-workout');
-      const type = isWk ? 'workout' : 'nutrition';
-      let btnsContainer = document.getElementById('nuTopBarButtons');
-      if (!btnsContainer) {
-        btnsContainer = document.createElement('div');
-        btnsContainer.id = 'nuTopBarButtons';
-        btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
-        topbar.appendChild(btnsContainer);
+    // Determine current view type (workout or nutrition)
+    let currentType = 'workout';
+    if (isTrainerPlanner) {
+      currentType = document.body.classList.contains('mode-workout') ? 'workout' : 'nutrition';
+    } else {
+      // Client app: check which view is active
+      // Look for "Мои тренировки" or "Моё питание" headings, or check the visible view
+      const workoutHeading = Array.from(document.querySelectorAll('h3, h2, h1')).find(el => {
+        const txt = el.textContent || '';
+        return txt.includes('Мои тренировки') || txt.includes('My workouts') || txt.includes('אימונים שלי') || txt.includes('Тренировки');
+      });
+      const nutritionHeading = Array.from(document.querySelectorAll('h3, h2, h1')).find(el => {
+        const txt = el.textContent || '';
+        return txt.includes('Моё питание') || txt.includes('My nutrition') || txt.includes('התזונה שלי') || txt.includes('Питание');
+      });
+      // Check which one is currently visible
+      if (nutritionHeading) {
+        const r = nutritionHeading.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) currentType = 'nutrition';
       }
-
-      let histBtn = document.getElementById('hmHistoryBtn');
-      if (!histBtn) {
-        histBtn = document.createElement('button');
-        histBtn.id = 'hmHistoryBtn';
-        histBtn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-        btnsContainer.appendChild(histBtn);
+      if (workoutHeading) {
+        const r = workoutHeading.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) currentType = 'workout';
       }
-      // Update text and handler on every injection (mode may have changed)
-      const lang = uiLang();
-      const btnText = lang === 'he' ? 'היסטוריה' : (lang === 'en' ? 'History' : 'История');
-      if (histBtn.textContent !== '📜 ' + btnText) {
-        histBtn.textContent = '📜 ' + btnText;
-      }
-      // Always update the click handler to use the current type
-      histBtn.onclick = null;
-      histBtn.onclick = () => showHistorySheet(type);
     }
 
-    // Inject into "Ещё" actions menu — wrap mpOpenActions
-    if (!window.__hmActionsWrapped) {
-      const orig = window.mpOpenActions;
-      if (typeof orig === 'function') {
-        window.mpOpenActions = function() {
-          // Add history items to the sheet content after original renders
-          orig.apply(this, arguments);
-          setTimeout(() => {
-            const sheet = document.getElementById('mpSheet');
-            if (!sheet) return;
-            const body = sheet.querySelector('.mp-sheet-body');
-            if (!body) return;
-            // Check if already injected (avoid duplicates)
-            if (body.querySelector('.hm-action-btn')) return;
-            const isWk = document.body.classList.contains('mode-workout');
-            const type = isWk ? 'workout' : 'nutrition';
-            // Insert history items at the top
-            const histBtn = document.createElement('button');
-            histBtn.className = 'mp-action-item hm-action-btn';
-            histBtn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
-            // Remove emoji prefix from i18n labels (they already include 📜/📦)
-            const histLabel = t('histTitle').replace(/^[^\p{L}\p{N}]+/u, '').trim();
-            histBtn.innerHTML = '<span class="ico" style="font-size:18px;">📜</span><span>' + esc(histLabel) + '</span>';
-            histBtn.onclick = () => {
-              if (typeof mpCloseSheet === 'function') mpCloseSheet();
-              showHistorySheet(type);
-            };
-            const archBtn = document.createElement('button');
-            archBtn.className = 'mp-action-item hm-action-btn';
-            archBtn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
-            const archLabel = t('archiveCur').replace(/^[^\p{L}\p{N}]+/u, '').trim();
-            archBtn.innerHTML = '<span class="ico" style="font-size:18px;">📦</span><span>' + esc(archLabel) + '</span>';
-            archBtn.onclick = () => {
-              if (typeof mpCloseSheet === 'function') mpCloseSheet();
-              window.__hmArchive(type);
-            };
-            body.insertBefore(archBtn, body.firstChild);
-            body.insertBefore(histBtn, body.firstChild);
-          }, 50);
+    // ===== TRAINER APP: inject into .mp-topbar =====
+    if (isTrainerPlanner) {
+      const topbar = document.querySelector('.mp-topbar');
+      if (topbar) {
+        let btnsContainer = document.getElementById('nuTopBarButtons');
+        if (!btnsContainer) {
+          btnsContainer = document.createElement('div');
+          btnsContainer.id = 'nuTopBarButtons';
+          btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+          topbar.appendChild(btnsContainer);
+        }
+
+        let histBtn = document.getElementById('hmHistoryBtn');
+        if (!histBtn) {
+          histBtn = document.createElement('button');
+          histBtn.id = 'hmHistoryBtn';
+          histBtn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+          btnsContainer.appendChild(histBtn);
+        }
+        const lang = uiLang();
+        const btnText = lang === 'he' ? 'היסטוריה' : (lang === 'en' ? 'History' : 'История');
+        if (histBtn.textContent !== '📜 ' + btnText) {
+          histBtn.textContent = '📜 ' + btnText;
+        }
+        histBtn.onclick = null;
+        histBtn.onclick = () => showHistorySheet(currentType);
+      }
+
+      // Inject into "Ещё" actions menu — wrap mpOpenActions
+      if (!window.__hmActionsWrapped) {
+        const orig = window.mpOpenActions;
+        if (typeof orig === 'function') {
+          window.mpOpenActions = function() {
+            orig.apply(this, arguments);
+            setTimeout(() => {
+              const sheet = document.getElementById('mpSheet');
+              if (!sheet) return;
+              const body = sheet.querySelector('.mp-sheet-body');
+              if (!body) return;
+              if (body.querySelector('.hm-action-btn')) return;
+              const isWk = document.body.classList.contains('mode-workout');
+              const type = isWk ? 'workout' : 'nutrition';
+              injectActionItemsIntoBody(body, type);
+            }, 50);
+          };
+          window.__hmActionsWrapped = true;
+        }
+      }
+    }
+
+    // ===== CLIENT APP: inject into .cs-topbar =====
+    if (isClientApp) {
+      const csTopbar = document.querySelector('.cs-topbar');
+      if (csTopbar) {
+        let btnsContainer = document.getElementById('nuCsTopBarButtons');
+        if (!btnsContainer) {
+          btnsContainer = document.createElement('div');
+          btnsContainer.id = 'nuCsTopBarButtons';
+          btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+          // Insert before the ⋯ button
+          const moreBtn = csTopbar.querySelector('button[onclick*="csOpenMore"], button.mp-topbar-btn');
+          if (moreBtn) {
+            csTopbar.insertBefore(btnsContainer, moreBtn);
+          } else {
+            csTopbar.appendChild(btnsContainer);
+          }
+        }
+
+        let histBtn = document.getElementById('hmHistoryBtn');
+        if (!histBtn) {
+          histBtn = document.createElement('button');
+          histBtn.id = 'hmHistoryBtn';
+          histBtn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+          btnsContainer.appendChild(histBtn);
+        }
+        let archBtn = document.getElementById('hmArchiveBtn');
+        if (!archBtn) {
+          archBtn = document.createElement('button');
+          archBtn.id = 'hmArchiveBtn';
+          archBtn.style.cssText = 'background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+          btnsContainer.appendChild(archBtn);
+        }
+        const lang = uiLang();
+        const histText = lang === 'he' ? 'היסטוריה' : (lang === 'en' ? 'History' : 'История');
+        const archText = lang === 'he' ? 'להיסטוריה' : (lang === 'en' ? 'To history' : 'В историю');
+        if (histBtn.textContent !== '📜 ' + histText) histBtn.textContent = '📜 ' + histText;
+        if (archBtn.textContent !== '📦 ' + archText) archBtn.textContent = '📦 ' + archText;
+        histBtn.onclick = null;
+        histBtn.onclick = () => showHistorySheet(currentType);
+        archBtn.onclick = null;
+        archBtn.onclick = () => window.__hmArchive(currentType);
+      }
+
+      // Wrap csOpenMore to add history items
+      if (!window.__hmCsMoreWrapped) {
+        const orig = window.csOpenMore;
+        if (typeof orig === 'function') {
+          window.csOpenMore = function() {
+            orig.apply(this, arguments);
+            setTimeout(() => {
+              const sheet = document.getElementById('csSheet');
+              if (!sheet) return;
+              const body = sheet.querySelector('.mp-sheet-body');
+              if (!body) return;
+              if (body.querySelector('.hm-action-btn')) return;
+              // Determine current view type
+              let type = 'workout';
+              const headings = Array.from(document.querySelectorAll('h3, h2'));
+              const nutHeading = headings.find(h => {
+                const txt = h.textContent || '';
+                return txt.includes('Моё питание') || txt.includes('My nutrition') || txt.includes('התזונה');
+              });
+              if (nutHeading) {
+                const r = nutHeading.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) type = 'nutrition';
+              }
+              injectActionItemsIntoBody(body, type);
+            }, 50);
+          };
+          window.__hmCsMoreWrapped = true;
+        }
+      }
+
+      // Also override cwShowHistory to use our new HistoryManager
+      if (!window.__hmCwShowWrapped) {
+        window.cwShowHistory = function() {
+          // Determine current view type
+          let type = 'workout';
+          const headings = Array.from(document.querySelectorAll('h3, h2'));
+          const nutHeading = headings.find(h => {
+            const txt = h.textContent || '';
+            return txt.includes('Моё питание') || txt.includes('My nutrition') || txt.includes('התזונה');
+          });
+          if (nutHeading) {
+            const r = nutHeading.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) type = 'nutrition';
+          }
+          showHistorySheet(type);
         };
-        window.__hmActionsWrapped = true;
+        window.__hmCwShowWrapped = true;
       }
     }
+  }
+
+  function injectActionItemsIntoBody(body, type) {
+    const histBtn = document.createElement('button');
+    histBtn.className = 'mp-action-item hm-action-btn';
+    histBtn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
+    const histLabel = t('histTitle').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+    histBtn.innerHTML = '<span class="ico" style="font-size:18px;">📜</span><span>' + esc(histLabel) + ' (' + (type === 'workout' ? (uiLang() === 'he' ? 'אימונים' : (uiLang() === 'en' ? 'workouts' : 'тренировок')) : (uiLang() === 'he' ? 'תזונה' : (uiLang() === 'en' ? 'nutrition' : 'питания'))) + ')</span>';
+    histBtn.onclick = () => {
+      if (typeof mpCloseSheet === 'function') mpCloseSheet();
+      if (typeof csCloseSheet === 'function') csCloseSheet();
+      showHistorySheet(type);
+    };
+    const archBtn = document.createElement('button');
+    archBtn.className = 'mp-action-item hm-action-btn';
+    archBtn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
+    const archLabel = t('archiveCur').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+    archBtn.innerHTML = '<span class="ico" style="font-size:18px;">📦</span><span>' + esc(archLabel) + ' (' + (type === 'workout' ? (uiLang() === 'he' ? 'אימונים' : (uiLang() === 'en' ? 'workouts' : 'тренировок')) : (uiLang() === 'he' ? 'תזונה' : (uiLang() === 'en' ? 'nutrition' : 'питания'))) + ')</span>';
+    archBtn.onclick = () => {
+      if (typeof mpCloseSheet === 'function') mpCloseSheet();
+      if (typeof csCloseSheet === 'function') csCloseSheet();
+      window.__hmArchive(type);
+    };
+    body.insertBefore(archBtn, body.firstChild);
+    body.insertBefore(histBtn, body.firstChild);
   }
 
   // ---- Observer for re-injection ----
@@ -46248,16 +46426,30 @@ window.__win11RefreshClients = function(){
       };
       window.__hmBodyWrapped = true;
     }
+
+    // For client app: observe changes to #clientSpace or any element that contains the views
+    const clientSpace = document.getElementById('clientSpace');
+    if (clientSpace) {
+      const csObs = new MutationObserver(() => {
+        setTimeout(injectButtons, 200);
+      });
+      csObs.observe(clientSpace, { childList: true, subtree: true });
+    }
+    // Also observe body for childList changes (in case client space is added dynamically)
+    const bodyObs = new MutationObserver(() => {
+      setTimeout(injectButtons, 200);
+    });
+    bodyObs.observe(document.body, { childList: true });
   }
 
   function init() {
-    console.log('[HistoryManager v1.0] init');
+    console.log('[HistoryManager v1.1] init');
     setupObserver();
     setTimeout(injectButtons, 500);
-    // Retry for 30s
+    // Retry for 30s (covers both trainer and client app startup)
     let retries = 0;
     const iv = setInterval(() => {
-      if (document.body.classList.contains('mp-active')) injectButtons();
+      injectButtons();
       if (++retries > 15) clearInterval(iv);
     }, 2000);
   }
@@ -46268,16 +46460,17 @@ window.__win11RefreshClients = function(){
     init();
   }
 
-  // Click on Питание/Тренировки buttons triggers re-inject
+  // Click on nav buttons (Питание/Тренировки/Ещё) triggers re-inject
   document.addEventListener('click', function(e) {
-    if (e.target && (e.target.textContent || '').match(/Питание|Nutrition|תזונה|Тренировки|Workout|אימון/)) {
+    const txt = (e.target && e.target.textContent) || '';
+    if (txt.match(/Питание|Nutrition|תזונה|Тренировки|Workout|אימון|Ещё|More|עוד/)) {
       setTimeout(injectButtons, 500);
     }
   }, true);
 
   // Public API
   window.HistoryManager = {
-    version: '1.0.0',
+    version: '1.1.0',
     showHistory: showHistorySheet,
     archiveCurrent: function(type) { return type === 'workout' ? archiveCurrentWorkout() : archiveCurrentNutrition(); },
     restore: restoreEntry,
@@ -46294,5 +46487,690 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /HISTORY_MANAGER_V1 -->
+<!-- EXERCISE_SEARCH_V1 -->
+<script>
+// ============================================================
+// EXERCISE SEARCH v1.0
+// Searches wger.de exercise database (859 exercises with muscles/equipment)
+// Adds found exercises to current workout plan AND/OR to local EXERCISE_DB
+// Works in trainer app (where mp-active + mode-workout is active)
+// ============================================================
+
+(function() {
+  'use strict';
+
+  if (window.__exerciseSearchV1) {
+    setTimeout(window.ExerciseSearch && ExerciseSearch.injectButtons, 100);
+    return;
+  }
+  window.__exerciseSearchV1 = true;
+
+  // ---- i18n ----
+  const I18N = {
+    ru: {
+      title: '🔎 Поиск упражнений в интернете',
+      hint: 'База wger.de — 859 упражнений с мышцами и оборудованием (CC-BY-SA 4)',
+      searchPh: 'Введите название упражнения...',
+      searchBtn: 'Искать',
+      loading: 'Загрузка...',
+      noResults: 'Ничего не найдено. Попробуйте другой запрос.',
+      error: 'Ошибка поиска. Проверьте интернет.',
+      addBtn: '+ Добавить',
+      addAllBtn: '+ Добавить все',
+      added: 'Добавлено в тренировку',
+      addedAll: 'Добавлено: {n} упражнений',
+      saveToDb: '💾 В общую базу',
+      savedToDb: 'Сохранено в общую базу ({n} упражнений всего)',
+      alreadyInDb: 'Уже в базе',
+      muscleLabel: 'Мышцы',
+      equipLabel: 'Оборудование',
+      catLabel: 'Категория',
+      filterAll: 'Все',
+      filterMuscle: 'По мышцам',
+      filterEquip: 'По оборудованию',
+      resultsCount: 'Найдено: {n}',
+      closeBtn: 'Закрыть',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 Слушаю...',
+      voiceNotSupported: 'Голосовой ввод не поддерживается',
+      addToWorkoutBtn: '🏋️ В тренировку',
+      addToDbBtn: '📚 В базу'
+    },
+    en: {
+      title: '🔎 Search exercises online',
+      hint: 'wger.de database — 859 exercises with muscles and equipment (CC-BY-SA 4)',
+      searchPh: 'Enter exercise name...',
+      searchBtn: 'Search',
+      loading: 'Loading...',
+      noResults: 'Nothing found. Try another query.',
+      error: 'Search error. Check your internet.',
+      addBtn: '+ Add',
+      addAllBtn: '+ Add all',
+      added: 'Added to workout',
+      addedAll: 'Added: {n} exercises',
+      saveToDb: '💾 Save to database',
+      savedToDb: 'Saved to database ({n} exercises total)',
+      alreadyInDb: 'Already in DB',
+      muscleLabel: 'Muscles',
+      equipLabel: 'Equipment',
+      catLabel: 'Category',
+      filterAll: 'All',
+      filterMuscle: 'By muscle',
+      filterEquip: 'By equipment',
+      resultsCount: 'Found: {n}',
+      closeBtn: 'Close',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 Listening...',
+      voiceNotSupported: 'Voice input not supported',
+      addToWorkoutBtn: '🏋️ To workout',
+      addToDbBtn: '📚 To database'
+    },
+    he: {
+      title: '🔎 חיפוש תרגילים באינטרנט',
+      hint: 'מסד נתונים wger.de — 859 תרגילים עם שרירים וציוד (CC-BY-SA 4)',
+      searchPh: 'הקלד שם תרגיל...',
+      searchBtn: 'חיפוש',
+      loading: 'טוען...',
+      noResults: 'לא נמצא. נסה שאילתה אחרת.',
+      error: 'שגיאת חיפוש. בדוק אינטרנט.',
+      addBtn: '+ הוסף',
+      addAllBtn: '+ הוסף הכל',
+      added: 'נוסף לאימון',
+      addedAll: 'נוסף: {n} תרגילים',
+      saveToDb: '💾 שמור למסד',
+      savedToDb: 'נשמר למסד ({n} תרגילים סה"כ)',
+      alreadyInDb: 'כבר במסד',
+      muscleLabel: 'שרירים',
+      equipLabel: 'ציוד',
+      catLabel: 'קטגוריה',
+      filterAll: 'הכל',
+      filterMuscle: 'לפי שריר',
+      filterEquip: 'לפי ציוד',
+      resultsCount: 'נמצאו: {n}',
+      closeBtn: 'סגור',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 מקשיב...',
+      voiceNotSupported: 'קלט קולי לא נתמך',
+      addToWorkoutBtn: '🏋️ לאימון',
+      addToDbBtn: '📚 למסד'
+    }
+  };
+
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
+
+  function t(key, vars) {
+    const lang = uiLang();
+    let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  // ---- wger.de API ----
+  const WGER_BASE = 'https://wger.de/api/v2';
+  let searchCache = {};
+
+  // Map wger categories to our EXERCISE_DB groups
+  const CATEGORY_MAP = {
+    'Abs': 'abs',
+    'Arms': 'biceps', // could be biceps or triceps
+    'Back': 'back',
+    'Calves': 'calves',
+    'Chest': 'chest',
+    'Glutes': 'glutes',
+    'Legs': 'quads',
+    'Shoulders': 'shoulders',
+    'Cardio': 'cardio'
+  };
+
+  async function wgerSearchExercises(query, options) {
+    options = options || {};
+    if (!query || query.trim().length < 2) return [];
+    const cacheKey = 'q:' + query.toLowerCase().trim() + ':' + (options.muscle || '') + ':' + (options.equipment || '');
+    if (searchCache[cacheKey]) return searchCache[cacheKey];
+
+    // wger doesn't have a direct text search, so we fetch all and filter
+    // Use exerciseinfo endpoint which returns translations
+    const params = new URLSearchParams({
+      format: 'json',
+      limit: '100',
+      language: '2', // English
+      offset: '0'
+    });
+    if (options.muscle) params.set('muscles', options.muscle);
+    if (options.equipment) params.set('equipment', options.equipment);
+
+    const url = WGER_BASE + '/exerciseinfo/?' + params;
+    try {
+      const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      const all = (data.results || []).map(ex => normalizeWgerExercise(ex)).filter(ex => ex);
+      // Filter by name (case insensitive)
+      const q = query.toLowerCase().trim();
+      let filtered = all.filter(ex => ex.name.toLowerCase().includes(q));
+      // If few results, fetch more pages
+      if (filtered.length < 5 && data.next) {
+        const moreResults = await fetchMorePages(query, data.next, 3);
+        filtered = filtered.concat(moreResults);
+      }
+      // Dedup by id
+      const seen = new Set();
+      filtered = filtered.filter(ex => {
+        if (seen.has(ex.wgerId)) return false;
+        seen.add(ex.wgerId);
+        return true;
+      });
+      searchCache[cacheKey] = filtered;
+      return filtered;
+    } catch(e) {
+      console.warn('wger search error:', e);
+      throw e;
+    }
+  }
+
+  async function fetchMorePages(query, nextUrl, maxPages) {
+    const results = [];
+    let url = nextUrl;
+    const q = query.toLowerCase().trim();
+    for (let i = 0; i < maxPages && url; i++) {
+      try {
+        const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
+        if (!resp.ok) break;
+        const data = await resp.json();
+        for (const ex of (data.results || [])) {
+          const norm = normalizeWgerExercise(ex);
+          if (norm && norm.name.toLowerCase().includes(q)) {
+            results.push(norm);
+          }
+        }
+        url = data.next;
+      } catch(e) { break; }
+    }
+    return results;
+  }
+
+  function normalizeWgerExercise(ex) {
+    if (!ex) return null;
+    let name = '';
+    let description = '';
+    for (const tr of (ex.translations || [])) {
+      if (tr.language === 2) { // English
+        name = tr.name || '';
+        description = tr.description || '';
+        break;
+      }
+    }
+    if (!name) {
+      // Fallback to any translation
+      const tr = (ex.translations || [])[0];
+      if (tr) {
+        name = tr.name || '';
+        description = tr.description || '';
+      }
+    }
+    if (!name) return null;
+
+    const muscles = (ex.muscles || []).map(m => m.name).filter(n => n);
+    const secondary = (ex.muscles_secondary || []).map(m => m.name).filter(n => n);
+    const equipment = (ex.equipment || []).map(e => e.name).filter(n => n);
+    const category = ex.category ? ex.category.name : '';
+
+    // Map to our group system
+    let groupId = 'fullbody';
+    if (category && CATEGORY_MAP[category]) groupId = CATEGORY_MAP[category];
+
+    return {
+      wgerId: ex.id,
+      name: name,
+      description: description.replace(/<[^>]+>/g, '').trim().substring(0, 300),
+      muscles: muscles,
+      musclesSecondary: secondary,
+      equipment: equipment,
+      category: category,
+      groupId: groupId,
+      images: (ex.images || []).slice(0, 3).map(img => img.image)
+    };
+  }
+
+  // ---- Add exercise to current workout ----
+  function addExerciseToWorkout(wgerEx) {
+    try {
+      // Create exercise object matching our workout structure
+      const newEx = {
+        name: wgerEx.name,
+        sets: 3,
+        reps: 10,
+        weight: '',
+        rest: 60,
+        time: '',
+        note: wgerEx.description ? wgerEx.description.substring(0, 100) : '',
+        exId: '',
+        groupId: wgerEx.groupId,
+        subId: '',
+        equip: wgerEx.equipment && wgerEx.equipment.length ? wgerEx.equipment[0] : '',
+        _wgerSource: true
+      };
+
+      // Method 1: Use addExerciseRow — signature is (workoutEl, ex, skipSave)
+      if (typeof addExerciseRow === 'function') {
+        // Find the actual workout element (NOT the mode-switch button)
+        // Look inside #workoutsContainer for the .workout with .workout-body
+        const workoutsContainer = document.getElementById('workoutsContainer');
+        const workouts = workoutsContainer
+          ? workoutsContainer.querySelectorAll('.workout')
+          : document.querySelectorAll('.workout');
+        // Find the first workout that has a .workout-body
+        let workoutEl = null;
+        for (const w of workouts) {
+          if (w.querySelector('.workout-body')) {
+            workoutEl = w;
+            break;
+          }
+        }
+        if (workoutEl) {
+          try {
+            addExerciseRow(workoutEl, newEx);
+            if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+            if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+            if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+            return true;
+          } catch(e) {
+            console.warn('addExerciseRow failed, trying alternative:', e);
+          }
+        }
+      }
+
+      // Method 2: Directly append to workoutPlan in localStorage and re-render
+      const cid = window.HistoryManager ? window.HistoryManager.getClientId() : (typeof currentUserId !== 'undefined' ? currentUserId : null);
+      if (cid) {
+        const raw = localStorage.getItem('workoutPlan_' + cid);
+        const plan = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(plan)) {
+          // If no workout exists, create one
+          if (plan.length === 0) {
+            plan.push({
+              id: 'wk_' + Date.now(),
+              title: 'New Workout',
+              date: new Date().toISOString().slice(0, 10),
+              duration: 60,
+              exercises: []
+            });
+          }
+          if (!plan[0].exercises) plan[0].exercises = [];
+          plan[0].exercises.push(newEx);
+          localStorage.setItem('workoutPlan_' + cid, JSON.stringify(plan));
+          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+          if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
+          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+          return true;
+        }
+      }
+
+      // Method 3: Dispatch event for app to handle
+      window.dispatchEvent(new CustomEvent('exercise:addExternal', {
+        detail: { exercise: newEx, wgerExercise: wgerEx }
+      }));
+      return true;
+    } catch(e) {
+      console.error('addExerciseToWorkout error:', e);
+      return false;
+    }
+  }
+
+  // ---- Add exercise to local EXERCISE_DB ----
+  function addExerciseToDb(wgerEx) {
+    try {
+      if (typeof EXERCISE_DB === 'undefined') {
+        console.warn('EXERCISE_DB not available');
+        return false;
+      }
+
+      // Check if already exists (by name)
+      for (const group of EXERCISE_DB) {
+        for (const sub of (group.subgroups || [])) {
+          for (const ex of (sub.exercises || [])) {
+            if (ex.en && ex.en.toLowerCase() === wgerEx.name.toLowerCase()) {
+              return 'exists';
+            }
+          }
+        }
+      }
+
+      // Find or create group
+      let group = EXERCISE_DB.find(g => g.id === wgerEx.groupId);
+      if (!group) {
+        // Add to fullbody if no match
+        group = EXERCISE_DB.find(g => g.id === 'fullbody');
+      }
+      if (!group) return false;
+
+      // Find or create a subgroup for wger-sourced exercises
+      let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
+      if (!sub) {
+        sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
+        if (!group.subgroups) group.subgroups = [];
+        group.subgroups.push(sub);
+      }
+
+      // Add exercise with translations
+      const newEx = {
+        id: 'wger_' + wgerEx.wgerId,
+        equip: wgerEx.equipment && wgerEx.equipment.length ? mapEquipment(wgerEx.equipment[0]) : 'bw',
+        ru: wgerEx.name, // English name as fallback for all
+        en: wgerEx.name,
+        he: wgerEx.name,
+        _wgerImported: true,
+        _wgerMuscles: wgerEx.muscles.join(', '),
+        _wgerCategory: wgerEx.category,
+        _wgerDescription: wgerEx.description
+      };
+      sub.exercises.push(newEx);
+
+      // Save to localStorage for persistence
+      const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
+      imported.push({ ...newEx, groupId: wgerEx.groupId, wgerId: wgerEx.wgerId, ts: Date.now() });
+      localStorage.setItem('wgerImportedExercises', JSON.stringify(imported));
+
+      return true;
+    } catch(e) {
+      console.error('addExerciseToDb error:', e);
+      return false;
+    }
+  }
+
+  function mapEquipment(wgerEquip) {
+    const map = {
+      'Barbell': 'barbell',
+      'Dumbbell': 'dumbbell',
+      'Machine': 'machine',
+      'Cable': 'cable',
+      'Kettlebell': 'kettlebell',
+      'Bodyweight': 'bw',
+      'none (bodyweight exercise)': 'bw',
+      'Bands': 'band',
+      'Medicine Ball': 'medicine-ball',
+      'Exercise Ball': 'fitball',
+      'Foam Roller': 'foam-roller',
+      'EZ-Bar': 'ezbar',
+      'Smith Machine': 'smith',
+      'TRX': 'trx',
+      'Plates': 'plates'
+    };
+    return map[wgerEquip] || 'bw';
+  }
+
+  // ---- Modal UI ----
+  async function openExerciseSearchModal() {
+    const existing = document.getElementById('exSearchModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'exSearchModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML =
+      '<div style="background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+          '<div>' +
+            '<h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(t('title')) + '</h3>' +
+            '<p style="margin:4px 0 0;font-size:12px;color:#616161;">' + esc(t('hint')) + '</p>' +
+          '</div>' +
+          '<button onclick="this.closest(\'#exSearchModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+          '<input type="text" id="exSearchInput" placeholder="' + esc(t('searchPh')) + '" style="flex:1;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;" onkeydown="if(event.key===\'Enter\')window.__exSearch()">' +
+          '<button onclick="window.__exVoiceSearch()" id="exVoiceBtn" style="background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:0 12px;cursor:pointer;font-weight:600;">' + esc(t('voiceBtn')) + '</button>' +
+          '<button onclick="window.__exSearch()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:0 16px;cursor:pointer;font-weight:600;">' + esc(t('searchBtn')) + '</button>' +
+        '</div>' +
+        '<div id="exSearchResults" style="min-height:80px;"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    setTimeout(() => {
+      const inp = document.getElementById('exSearchInput');
+      if (inp) inp.focus();
+    }, 100);
+  }
+
+  window.__exOpen = openExerciseSearchModal;
+
+  window.__exSearch = async function() {
+    const inp = document.getElementById('exSearchInput');
+    if (!inp) return;
+    const q = inp.value.trim();
+    if (q.length < 2) return;
+    const resultsEl = document.getElementById('exSearchResults');
+    resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #10B981;border-radius:50%;animation:exSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('loading')) + '</p></div><style>@keyframes exSpin{to{transform:rotate(360deg)}}</style>';
+    try {
+      const results = await wgerSearchExercises(q);
+      if (!results.length) {
+        resultsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('noResults')) + '</div>';
+        return;
+      }
+      let html = '<div style="font-size:12px;color:#616161;margin-bottom:10px;">' + esc(t('resultsCount', {n: results.length})) + '</div>';
+      // Add "Add all" button at top
+      html += '<div style="margin-bottom:12px;"><button onclick="window.__exAddAll()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('addAllBtn')) + '</button></div>';
+      results.forEach((ex, i) => {
+        const muscles = ex.muscles.concat(ex.musclesSecondary).slice(0, 4);
+        const equip = ex.equipment.slice(0, 3);
+        const img = ex.images && ex.images.length ? ex.images[0] : '';
+        html += '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:8px;align-items:flex-start;">' +
+          (img ? '<img src="' + esc(img) + '" style="width:60px;height:60px;object-fit:contain;border-radius:6px;background:#fff;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:60px;height:60px;background:#E0E0E0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏋️</div>') +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:600;color:#212121;font-size:14px;">' + esc(ex.name) + '</div>' +
+            (ex.category ? '<div style="font-size:11px;color:#1565C0;margin-top:2px;">' + esc(t('catLabel')) + ': ' + esc(ex.category) + '</div>' : '') +
+            (muscles.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">💪 ' + esc(t('muscleLabel')) + ': ' + esc(muscles.join(', ')) + '</div>' : '') +
+            (equip.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">🛠 ' + esc(t('equipLabel')) + ': ' + esc(equip.join(', ')) + '</div>' : '') +
+            (ex.description ? '<div style="font-size:11px;color:#9E9E9E;margin-top:4px;line-height:1.4;">' + esc(ex.description.substring(0, 120)) + (ex.description.length > 120 ? '...' : '') + '</div>' : '') +
+            '<div style="display:flex;gap:6px;margin-top:8px;">' +
+              '<button onclick="window.__exAddToWorkout(' + i + ')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToWorkoutBtn')) + '</button>' +
+              '<button onclick="window.__exAddToDb(' + i + ')" style="background:#1565C0;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToDbBtn')) + '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      resultsEl.innerHTML = html;
+      window.__exSearchResults = results;
+    } catch(e) {
+      resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">⚠️ ' + esc(t('error')) + '</div>';
+    }
+  };
+
+  window.__exVoiceSearch = function() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert(t('voiceNotSupported')); return; }
+    const rec = new SR();
+    rec.lang = uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU');
+    rec.interimResults = false;
+    const btn = document.getElementById('exVoiceBtn');
+    if (btn) btn.textContent = t('voiceListening');
+    rec.onresult = function(ev) {
+      const text = ev.results[0][0].transcript;
+      const inp = document.getElementById('exSearchInput');
+      if (inp) {
+        inp.value = text;
+        window.__exSearch();
+      }
+      if (btn) btn.textContent = t('voiceBtn');
+    };
+    rec.onerror = function() { if (btn) btn.textContent = t('voiceBtn'); };
+    rec.onend = function() { if (btn) btn.textContent = t('voiceBtn'); };
+    rec.start();
+  };
+
+  window.__exAddToWorkout = function(i) {
+    const ex = window.__exSearchResults && window.__exSearchResults[i];
+    if (!ex) return;
+    const ok = addExerciseToWorkout(ex);
+    if (ok && typeof showToast === 'function') showToast('✓ ' + t('added'));
+  };
+
+  window.__exAddToDb = function(i) {
+    const ex = window.__exSearchResults && window.__exSearchResults[i];
+    if (!ex) return;
+    const result = addExerciseToDb(ex);
+    if (result === 'exists') {
+      if (typeof showToast === 'function') showToast(t('alreadyInDb'));
+    } else if (result) {
+      const count = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]').length;
+      if (typeof showToast === 'function') showToast(t('savedToDb', {n: count}));
+    } else {
+      alert('Save failed');
+    }
+  };
+
+  window.__exAddAll = function() {
+    if (!window.__exSearchResults || !window.__exSearchResults.length) return;
+    let added = 0;
+    window.__exSearchResults.forEach(ex => {
+      if (addExerciseToWorkout(ex)) added++;
+    });
+    if (typeof showToast === 'function') showToast(t('addedAll', {n: added}));
+  };
+
+  // ---- Inject button into topbar (workout mode only) ----
+  function injectButtons() {
+    // Only inject in trainer app workout mode
+    if (!document.body.classList.contains('mp-active')) return;
+    if (!document.body.classList.contains('mode-workout')) return;
+
+    const topbar = document.querySelector('.mp-topbar');
+    if (!topbar) return;
+
+    // Find or create button container
+    let btnsContainer = document.getElementById('nuTopBarButtons');
+    if (!btnsContainer) {
+      btnsContainer = document.createElement('div');
+      btnsContainer.id = 'nuTopBarButtons';
+      btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+      topbar.appendChild(btnsContainer);
+    }
+
+    if (!document.getElementById('exSearchBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'exSearchBtn';
+      btn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+      btn.innerHTML = '🔎 ' + (uiLang() === 'he' ? 'wger' : (uiLang() === 'en' ? 'wger' : 'wger'));
+      btn.title = t('title');
+      btn.onclick = openExerciseSearchModal;
+      // Insert as FIRST button (before OFF)
+      btnsContainer.insertBefore(btn, btnsContainer.firstChild);
+    }
+  }
+
+  // ---- Observer ----
+  function setupObserver() {
+    const obs = new MutationObserver(muts => {
+      for (const m of muts) {
+        if (m.attributeName === 'class') {
+          setTimeout(injectButtons, 200);
+        }
+      }
+    });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    const orig = window.mpRenderBody;
+    if (typeof orig === 'function' && !window.__exBodyWrapped) {
+      window.mpRenderBody = function() {
+        orig.apply(this, arguments);
+        setTimeout(injectButtons, 100);
+      };
+      window.__exBodyWrapped = true;
+    }
+  }
+
+  function init() {
+    console.log('[ExerciseSearch v1.0] init');
+    setupObserver();
+    setTimeout(injectButtons, 500);
+    let retries = 0;
+    const iv = setInterval(() => {
+      if (document.body.classList.contains('mp-active') && document.body.classList.contains('mode-workout')) {
+        injectButtons();
+      }
+      if (++retries > 15) clearInterval(iv);
+    }, 2000);
+
+    // Load imported exercises from localStorage into EXERCISE_DB on startup
+    setTimeout(() => {
+      try {
+        if (typeof EXERCISE_DB !== 'undefined') {
+          const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
+          if (imported.length) {
+            let loaded = 0;
+            imported.forEach(item => {
+              // Check if already in DB (by id)
+              let exists = false;
+              for (const g of EXERCISE_DB) {
+                for (const sg of (g.subgroups || [])) {
+                  if (sg.exercises && sg.exercises.find(e => e.id === item.id)) {
+                    exists = true;
+                    break;
+                  }
+                }
+                if (exists) break;
+              }
+              if (!exists) {
+                let group = EXERCISE_DB.find(g => g.id === item.groupId);
+                if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
+                if (group) {
+                  let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
+                  if (!sub) {
+                    sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
+                    if (!group.subgroups) group.subgroups = [];
+                    group.subgroups.push(sub);
+                  }
+                  const { groupId, wgerId, ts, ...exData } = item;
+                  sub.exercises.push(exData);
+                  loaded++;
+                }
+              }
+            });
+            if (loaded > 0) console.log('[ExerciseSearch] Loaded', loaded, 'imported exercises');
+          }
+        }
+      } catch(e) {
+        console.warn('Failed to load imported exercises:', e);
+      }
+    }, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  document.addEventListener('click', function(e) {
+    const txt = (e.target && e.target.textContent) || '';
+    if (txt.match(/Тренировки|Workout|אימון/)) {
+      setTimeout(injectButtons, 500);
+    }
+  }, true);
+
+  window.ExerciseSearch = {
+    version: '1.0.0',
+    open: openExerciseSearchModal,
+    search: wgerSearchExercises,
+    addToWorkout: addExerciseToWorkout,
+    addToDb: addExerciseToDb,
+    injectButtons: injectButtons
+  };
+
+})();
+
+</script>
+<!-- /EXERCISE_SEARCH_V1 -->
 </body>
 </html>
