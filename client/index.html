@@ -44672,5 +44672,977 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /NUTRITION_UPGRADES_V1_1 -->
+
+
+
+
+
+
+
+<!-- HISTORY_MANAGER_V1 -->
+<script>
+// ============================================================
+// HISTORY MANAGER v1.0
+// Per-client history for workout AND nutrition plans
+// Works in BOTH trainer and client apps
+// Storage keys:
+//   clientWorkoutHistory_{clientId}    — array of archived workout plans
+//   clientNutritionHistory_{clientId}  — array of archived nutrition plans
+// Each entry: { id, archivedAt, label, summary, plan, type }
+// ============================================================
+
+(function() {
+  'use strict';
+
+  if (window.__historyManagerV1) return;
+  window.__historyManagerV1 = true;
+
+  // ---- i18n ----
+  const I18N = {
+    ru: {
+      histTitle: '📜 История',
+      histWk: '📜 История тренировок',
+      histNut: '📜 История питания',
+      archiveCur: '📦 В историю',
+      archiveConfirmWk: 'Отправить текущую тренировку в историю? Текущий план очистится, и вы сможете построить новый.',
+      archiveConfirmNut: 'Отправить текущий план питания в историю? Текущий план очистится, и вы сможете построить новый.',
+      archiveSuccess: '✅ Отправлено в историю',
+      archiveEmpty: '⚠️ Нет данных для архивации',
+      restore: '↩ Восстановить',
+      restoreConfirm: 'Восстановить план из истории? Текущий план будет отправлен в историю автоматически.',
+      restoreSuccess: '✅ План восстановлен',
+      viewOnly: '👁 Просмотр',
+      duplicate: '📋 Копия',
+      delete: '🗑 Удалить',
+      deleteConfirm: 'Удалить эту запись из истории безвозвратно?',
+      activeNow: 'Активный план',
+      archivedCount: 'В истории: {n}',
+      empty: 'История пуста. Отправьте сюда план, чтобы он сохранился навсегда.',
+      today: 'сегодня',
+      yesterday: 'вчера',
+      daysAgo: '{n} дн. назад',
+      monthsAgo: '{n} мес. назад',
+      yearsAgo: '{n} г. назад',
+      monthsShort: ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'],
+      filterAll: 'Все',
+      filter30: '30 дней',
+      filterYear: 'Год',
+      filterSearch: 'Поиск...',
+      mealCount: '{n} приёмов',
+      exCount: '{n} упражнений',
+      wkCount: '{n} тренировок',
+      kcalTotal: '{n} ккал',
+      noMatch: 'Ничего не найдено',
+      previewTitle: 'Просмотр записи',
+      close: 'Закрыть',
+      back: '← Назад',
+      saveAsNew: '💾 Сохранить как новый',
+      exportBtn: '📤 Экспорт',
+      stats: 'Статистика',
+      totalArchived: 'Всего в архиве',
+      oldestEntry: 'Самая старая запись',
+      newestEntry: 'Самая новая'
+    },
+    en: {
+      histTitle: '📜 History',
+      histWk: '📜 Workout History',
+      histNut: '📜 Nutrition History',
+      archiveCur: '📦 Send to history',
+      archiveConfirmWk: 'Send current workout to history? Current plan will be cleared so you can build a new one.',
+      archiveConfirmNut: 'Send current nutrition plan to history? Current plan will be cleared so you can build a new one.',
+      archiveSuccess: '✅ Sent to history',
+      archiveEmpty: '⚠️ Nothing to archive',
+      restore: '↩ Restore',
+      restoreConfirm: 'Restore this plan? Current plan will be auto-archived.',
+      restoreSuccess: '✅ Plan restored',
+      viewOnly: '👁 View',
+      duplicate: '📋 Duplicate',
+      delete: '🗑 Delete',
+      deleteConfirm: 'Permanently delete this history entry?',
+      activeNow: 'Active plan',
+      archivedCount: 'In history: {n}',
+      empty: 'History is empty. Send a plan here to keep it forever.',
+      today: 'today',
+      yesterday: 'yesterday',
+      daysAgo: '{n}d ago',
+      monthsAgo: '{n}mo ago',
+      yearsAgo: '{n}y ago',
+      monthsShort: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      filterAll: 'All',
+      filter30: '30 days',
+      filterYear: 'Year',
+      filterSearch: 'Search...',
+      mealCount: '{n} meals',
+      exCount: '{n} exercises',
+      wkCount: '{n} workouts',
+      kcalTotal: '{n} kcal',
+      noMatch: 'No matches',
+      previewTitle: 'Entry preview',
+      close: 'Close',
+      back: '← Back',
+      saveAsNew: '💾 Save as new',
+      exportBtn: '📤 Export',
+      stats: 'Statistics',
+      totalArchived: 'Total archived',
+      oldestEntry: 'Oldest entry',
+      newestEntry: 'Newest'
+    },
+    he: {
+      histTitle: '📜 היסטוריה',
+      histWk: '📜 היסטוריית אימונים',
+      histNut: '📜 היסטוריית תזונה',
+      archiveCur: '📦 להיסטוריה',
+      archiveConfirmWk: 'לשלוח את האימון הנוכחי להיסטוריה? התוכנית הנוכחית תימחק ותוכל לבנות חדשה.',
+      archiveConfirmNut: 'לשלוח את תוכנית התזונה הנוכחית להיסטוריה? התוכנית הנוכחית תימחק ותוכל לבנות חדשה.',
+      archiveSuccess: '✅ נשלח להיסטוריה',
+      archiveEmpty: '⚠️ אין מה לארכב',
+      restore: '↩ שחזר',
+      restoreConfirm: 'לשחזר תוכנית זו? התוכנית הנוכחית תישלח אוטומטית להיסטוריה.',
+      restoreSuccess: '✅ התוכנית שוחזרה',
+      viewOnly: '👁 צפה',
+      duplicate: '📋 העתק',
+      delete: '🗑 מחק',
+      deleteConfirm: 'למחוק רשומה זו מההיסטוריה לצמיתות?',
+      activeNow: 'תוכנית פעילה',
+      archivedCount: 'בהיסטוריה: {n}',
+      empty: 'ההיסטוריה ריקה. שלח תוכנית לכאן כדי לשמור אותה לצמיתות.',
+      today: 'היום',
+      yesterday: 'אתמול',
+      daysAgo: 'לפני {n} ימים',
+      monthsAgo: 'לפני {n} חודשים',
+      yearsAgo: 'לפני {n} שנים',
+      monthsShort: ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'],
+      filterAll: 'הכל',
+      filter30: '30 יום',
+      filterYear: 'שנה',
+      filterSearch: 'חיפוש...',
+      mealCount: '{n} ארוחות',
+      exCount: '{n} תרגילים',
+      wkCount: '{n} אימונים',
+      kcalTotal: '{n} קק"ל',
+      noMatch: 'לא נמצא',
+      previewTitle: 'תצוגה מקדימה',
+      close: 'סגור',
+      back: '← חזור',
+      saveAsNew: '💾 שמור כחדש',
+      exportBtn: '📤 ייצוא',
+      stats: 'סטטיסטיקה',
+      totalArchived: 'סה"כ בארכיון',
+      oldestEntry: 'הרשומה הישנה ביותר',
+      newestEntry: 'החדשה ביותר'
+    }
+  };
+
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
+
+  function t(key, vars) {
+    const lang = uiLang();
+    let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function lsGet(key, def) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+  }
+  function lsSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+  }
+
+  // Get the current client ID — works in both trainer and client apps
+  function getClientId() {
+    try {
+      // Client app
+      if (typeof __clientUser !== 'undefined' && __clientUser && __clientUser.id) return __clientUser.id;
+      // Trainer app — current selected client
+      if (typeof currentUserId !== 'undefined' && currentUserId) return currentUserId;
+      // Trainer's own profile
+      if (typeof currentTrainerSession !== 'undefined' && currentTrainerSession && currentTrainerSession.id) return currentTrainerSession.id;
+    } catch(e) {}
+    return null;
+  }
+
+  function getClientName() {
+    try {
+      if (typeof __clientUser !== 'undefined' && __clientUser && __clientUser.name) return __clientUser.name;
+      if (typeof currentUserId !== 'undefined' && currentUserId && typeof getUsers === 'function') {
+        const u = getUsers().find(u => u.id === currentUserId);
+        if (u) return u.name;
+      }
+      if (typeof currentTrainerSession !== 'undefined' && currentTrainerSession && currentTrainerSession.name) return currentTrainerSession.name;
+    } catch(e) {}
+    return '';
+  }
+
+  function historyKey(type) {
+    const cid = getClientId();
+    if (!cid) return null;
+    return 'client' + (type === 'workout' ? 'Workout' : 'Nutrition') + 'History_' + cid;
+  }
+
+  function getHistory(type) {
+    const key = historyKey(type);
+    if (!key) return [];
+    return lsGet(key, []);
+  }
+
+  function saveHistory(type, arr) {
+    const key = historyKey(type);
+    if (!key) return false;
+    lsSet(key, arr);
+    return true;
+  }
+
+  // ---- Date formatting ----
+  function formatDate(iso, lang) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const months = (I18N[lang] || I18N.ru).monthsShort;
+
+    if (diffDays === 0) return t('today') + ', ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    if (diffDays === 1) return t('yesterday');
+    if (diffDays < 7) return t('daysAgo', { n: diffDays });
+    if (diffDays < 60) return d.getDate() + ' ' + months[d.getMonth()];
+    if (diffDays < 365) return t('monthsAgo', { n: Math.floor(diffDays / 30) });
+    return t('yearsAgo', { n: Math.floor(diffDays / 365) });
+  }
+
+  function fullDate(iso, lang) {
+    const d = new Date(iso);
+    const months = (I18N[lang] || I18N.ru).monthsShort;
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' · ' +
+           d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  }
+
+  // ---- Build plan summary ----
+  function summarizeWorkout(workouts) {
+    if (!Array.isArray(workouts)) workouts = [workouts];
+    let totalEx = 0, totalSets = 0, titles = [];
+    workouts.forEach(w => {
+      titles.push(w.title || ('W' + (titles.length + 1)));
+      if (w.exercises) {
+        totalEx += w.exercises.length;
+        w.exercises.forEach(ex => {
+          totalSets += (ex.sets || 0);
+        });
+      }
+    });
+    return {
+      type: 'workout',
+      wkCount: workouts.length,
+      exCount: totalEx,
+      setCount: totalSets,
+      titles: titles.join(' · ')
+    };
+  }
+
+  function summarizeNutrition(plan) {
+    if (!plan) return { type: 'nutrition', mealCount: 0, kcal: 0, titles: '' };
+    const meals = plan.meals || [];
+    let totalKcal = 0;
+    const titles = meals.map(m => m.title || ('Meal'));
+    meals.forEach(m => {
+      if (m.totals && m.totals.calories) totalKcal += m.totals.calories;
+      else if (m.products) {
+        m.products.forEach(p => {
+          // Estimate
+          totalKcal += (p.kcal || 0) * (p.weight || 0) / 100;
+        });
+      }
+    });
+    return {
+      type: 'nutrition',
+      mealCount: meals.length,
+      kcal: Math.round(totalKcal),
+      titles: titles.join(' · ')
+    };
+  }
+
+  // ============================================================
+  // ARCHIVE current plan to history
+  // ============================================================
+  function archiveCurrentWorkout() {
+    const cid = getClientId();
+    if (!cid) return;
+
+    // Get current workouts from localStorage
+    let current = [];
+    try {
+      const raw = localStorage.getItem('workoutPlan_' + cid);
+      if (raw) current = JSON.parse(raw);
+    } catch(e) {}
+    if (!Array.isArray(current) || !current.length) {
+      // Also check if there's a non-per-client key
+      try {
+        const raw = localStorage.getItem('workoutPlan');
+        if (raw) current = JSON.parse(raw);
+      } catch(e) {}
+    }
+    if (!current.length) {
+      if (typeof showToast === 'function') showToast(t('archiveEmpty'));
+      else alert(t('archiveEmpty'));
+      return;
+    }
+
+    if (!confirm(t('archiveConfirmWk'))) return;
+
+    const summary = summarizeWorkout(current);
+    const entry = {
+      id: 'wh_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      archivedAt: new Date().toISOString(),
+      label: new Date().toLocaleDateString(uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU')),
+      summary: summary,
+      plan: current,
+      type: 'workout'
+    };
+
+    const history = getHistory('workout');
+    history.unshift(entry);
+    saveHistory('workout', history);
+
+    // Clear current workout plan
+    try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify([])); } catch(e) {}
+    // Also clear the DOM workouts so saveWorkoutPlan doesn't re-save them
+    const workoutsContainer = document.getElementById('workoutsContainer');
+    if (workoutsContainer) workoutsContainer.querySelectorAll('.workout').forEach(w => w.remove());
+    if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+    if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+
+    if (typeof showToast === 'function') showToast(t('archiveSuccess'));
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
+    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+  }
+
+  function archiveCurrentNutrition() {
+    const cid = getClientId();
+    if (!cid) return;
+
+    let current = null;
+    try {
+      const raw = localStorage.getItem('nutritionPlan_' + cid);
+      if (raw) current = JSON.parse(raw);
+    } catch(e) {}
+
+    if (!current || !current.meals || !current.meals.length) {
+      if (typeof showToast === 'function') showToast(t('archiveEmpty'));
+      else alert(t('archiveEmpty'));
+      return;
+    }
+
+    if (!confirm(t('archiveConfirmNut'))) return;
+
+    const summary = summarizeNutrition(current);
+    const entry = {
+      id: 'nh_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      archivedAt: new Date().toISOString(),
+      label: new Date().toLocaleDateString(uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU')),
+      summary: summary,
+      plan: current,
+      type: 'nutrition'
+    };
+
+    const history = getHistory('nutrition');
+    history.unshift(entry);
+    saveHistory('nutrition', history);
+
+    // Clear current nutrition plan
+    try { localStorage.removeItem('nutritionPlan_' + cid); } catch(e) {}
+    // Clear UI
+    const container = document.getElementById('mealsContainer');
+    if (container) container.querySelectorAll('.meal').forEach(m => m.remove());
+    ['totalCalories', 'totalProtein', 'totalFat', 'totalCarbs'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '0';
+    });
+    const pc = document.getElementById('progressContainer');
+    if (pc) pc.style.display = 'none';
+
+    if (typeof showToast === 'function') showToast(t('archiveSuccess'));
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+  }
+
+  // ============================================================
+  // RESTORE plan from history (auto-archives current first)
+  // ============================================================
+  function restoreEntry(type, entryId) {
+    const cid = getClientId();
+    if (!cid) return;
+    if (!confirm(t('restoreConfirm'))) return;
+
+    const history = getHistory(type);
+    const entry = history.find(e => e.id === entryId);
+    if (!entry) return;
+
+    // Auto-archive current plan first
+    if (type === 'workout') {
+      try {
+        const raw = localStorage.getItem('workoutPlan_' + cid);
+        const current = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(current) && current.length) {
+          const curSummary = summarizeWorkout(current);
+          history.unshift({
+            id: 'wh_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            archivedAt: new Date().toISOString(),
+            label: new Date().toLocaleDateString(uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU')),
+            summary: curSummary,
+            plan: current,
+            type: 'workout'
+          });
+        }
+      } catch(e) {}
+      // Restore the entry
+      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify(entry.plan)); } catch(e) {}
+      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+    } else {
+      try {
+        const raw = localStorage.getItem('nutritionPlan_' + cid);
+        const current = raw ? JSON.parse(raw) : null;
+        if (current && current.meals && current.meals.length) {
+          const curSummary = summarizeNutrition(current);
+          history.unshift({
+            id: 'nh_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            archivedAt: new Date().toISOString(),
+            label: new Date().toLocaleDateString(uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU')),
+            summary: curSummary,
+            plan: current,
+            type: 'nutrition'
+          });
+        }
+      } catch(e) {}
+      try { localStorage.setItem('nutritionPlan_' + cid, JSON.stringify(entry.plan)); } catch(e) {}
+      if (typeof loadUserPlan === 'function') try { loadUserPlan(cid); } catch(e) {}
+      if (typeof loadPlan === 'function') try { loadPlan(); } catch(e) {}
+    }
+
+    // Remove restored entry from history
+    const newHistory = history.filter(e => e.id !== entryId);
+    saveHistory(type, newHistory);
+
+    if (typeof showToast === 'function') showToast(t('restoreSuccess'));
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
+    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+  }
+
+  // ============================================================
+  // DUPLICATE plan from history (keeps history entry, loads plan as new)
+  // ============================================================
+  function duplicateEntry(type, entryId) {
+    const cid = getClientId();
+    if (!cid) return;
+    const history = getHistory(type);
+    const entry = history.find(e => e.id === entryId);
+    if (!entry) return;
+
+    if (type === 'workout') {
+      // Append to current workouts (don't replace)
+      let current = [];
+      try {
+        const raw = localStorage.getItem('workoutPlan_' + cid);
+        if (raw) current = JSON.parse(raw);
+      } catch(e) {}
+      if (!Array.isArray(current)) current = [];
+      const newPlan = entry.plan.map(w => ({...w, id: 'wk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)}));
+      const combined = current.concat(newPlan);
+      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify(combined)); } catch(e) {}
+      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+    } else {
+      // For nutrition: replace current (only one plan at a time)
+      try { localStorage.setItem('nutritionPlan_' + cid, JSON.stringify(entry.plan)); } catch(e) {}
+      if (typeof loadUserPlan === 'function') try { loadUserPlan(cid); } catch(e) {}
+    }
+
+    if (typeof showToast === 'function') showToast(t('restoreSuccess'));
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
+    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+  }
+
+  // ============================================================
+  // DELETE entry from history permanently
+  // ============================================================
+  function deleteEntry(type, entryId) {
+    if (!confirm(t('deleteConfirm'))) return;
+    const history = getHistory(type);
+    const newHistory = history.filter(e => e.id !== entryId);
+    saveHistory(type, newHistory);
+    showHistorySheet(type); // re-render
+    if (typeof showToast === 'function') showToast('🗑');
+  }
+
+  // ============================================================
+  // VIEW entry (read-only preview)
+  // ============================================================
+  function viewEntry(type, entryId) {
+    const history = getHistory(type);
+    const entry = history.find(e => e.id === entryId);
+    if (!entry) return;
+
+    const lang = uiLang();
+    let html = '';
+
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #E0E0E0;">';
+    html += '<div>';
+    html += '<div style="font-size:11px;color:#757575;">' + esc(fullDate(entry.archivedAt, lang)) + '</div>';
+    html += '<div style="font-weight:700;color:#212121;font-size:16px;margin-top:2px;">' + esc(entry.label) + '</div>';
+    html += '</div>';
+    html += '<button onclick="window.__hmShowHistory(\'' + type + '\')" style="background:transparent;color:#1565C0;border:0;font-size:14px;cursor:pointer;font-weight:600;">' + esc(t('back')) + '</button>';
+    html += '</div>';
+
+    if (type === 'workout') {
+      html += renderWorkoutPreview(entry.plan);
+    } else {
+      html += renderNutritionPreview(entry.plan);
+    }
+
+    // Action buttons
+    html += '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">';
+    html += '<button onclick="window.__hmRestore(\'' + type + '\',\'' + entryId + '\')" style="flex:1;min-width:140px;background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:12px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('restore')) + '</button>';
+    html += '<button onclick="window.__hmDuplicate(\'' + type + '\',\'' + entryId + '\')" style="flex:1;min-width:140px;background:#fff;color:#3B82F6;border:1px solid #3B82F6;border-radius:8px;padding:12px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('duplicate')) + '</button>';
+    html += '<button onclick="window.__hmDelete(\'' + type + '\',\'' + entryId + '\')" style="background:#fff;color:#C62828;border:1px solid #C62828;border-radius:8px;padding:12px 16px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('delete')) + '</button>';
+    html += '</div>';
+
+    // Inject into the open sheet
+    const sheet = document.getElementById('mpSheet') || document.getElementById('csSheet');
+    if (sheet) {
+      const body = sheet.querySelector('.mp-sheet-body') || sheet.querySelector('.cs-sheet-body') || sheet;
+      body.innerHTML = '<div style="padding:14px;">' + html + '</div>';
+      body.scrollTop = 0;
+    } else {
+      // Fallback: open new sheet
+      openSheet('<div style="padding:14px;">' + html + '</div>');
+    }
+  }
+
+  function renderWorkoutPreview(workouts) {
+    if (!Array.isArray(workouts)) workouts = [workouts];
+    let html = '';
+    workouts.forEach((w, i) => {
+      html += '<div style="background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:10px;">';
+      html += '<div style="font-weight:700;color:#212121;font-size:14px;margin-bottom:6px;">🏋️ ' + esc(w.title || ('Workout ' + (i+1))) + '</div>';
+      if (w.date) html += '<div style="font-size:11px;color:#757575;margin-bottom:6px;">📅 ' + esc(w.date) + '</div>';
+      if (w.exercises && w.exercises.length) {
+        w.exercises.forEach(ex => {
+          html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #E0E0E0;font-size:13px;">';
+          html += '<div><div style="font-weight:600;color:#212121;">' + esc(ex.name || ex.title || '—') + '</div>';
+          if (ex.sets) html += '<div style="font-size:11px;color:#757575;">' + ex.sets + ' sets × ' + (ex.reps || '—') + ' ' + esc(ex.weight ? '@ ' + ex.weight : '') + '</div>';
+          html += '</div>';
+          html += '</div>';
+        });
+      } else {
+        html += '<div style="color:#757575;font-size:12px;font-style:italic;">—</div>';
+      }
+      html += '</div>';
+    });
+    return html;
+  }
+
+  function renderNutritionPreview(plan) {
+    if (!plan || !plan.meals) return '<div style="color:#757575;font-size:13px;">—</div>';
+    let html = '';
+    if (plan.params) {
+      html += '<div style="background:#E3F2FD;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1565C0;">';
+      const p = plan.params;
+      const bits = [];
+      if (p.age) bits.push(uiLang() === 'he' ? 'גיל: ' + p.age : (uiLang() === 'en' ? 'Age: ' + p.age : 'Возраст: ' + p.age));
+      if (p.weight) bits.push(uiLang() === 'he' ? 'משקל: ' + p.weight + ' kg' : (uiLang() === 'en' ? 'Weight: ' + p.weight + 'kg' : 'Вес: ' + p.weight + ' кг'));
+      if (p.height) bits.push(uiLang() === 'he' ? 'גובה: ' + p.height + ' cm' : (uiLang() === 'en' ? 'Height: ' + p.height + 'cm' : 'Рост: ' + p.height + ' см'));
+      html += bits.join(' · ');
+      html += '</div>';
+    }
+    plan.meals.forEach(m => {
+      html += '<div style="background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:10px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+      html += '<div style="font-weight:700;color:#212121;font-size:14px;">🍽️ ' + esc(m.title || 'Meal') + '</div>';
+      if (m.totals && m.totals.calories) html += '<div style="font-size:12px;color:#1565C0;font-weight:600;">' + Math.round(m.totals.calories) + ' ' + t('kcalTotal', {n:''}).trim() + '</div>';
+      html += '</div>';
+      if (m.targetPercent) html += '<div style="font-size:11px;color:#757575;margin-bottom:4px;">🎯 ' + m.targetPercent + '%</div>';
+      if (m.notes) html += '<div style="font-size:11px;color:#757575;font-style:italic;margin-bottom:4px;">📝 ' + esc(m.notes) + '</div>';
+      if (m.products && m.products.length) {
+        m.products.forEach(p => {
+          html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #EEEEEE;font-size:12px;">';
+          html += '<div><span style="font-weight:600;">' + esc(p.productName || p.name || '—') + '</span> · ' + (p.weight || 0) + 'g</div>';
+          if (p.kcal) html += '<div style="color:#757575;">' + Math.round(p.kcal * (p.weight || 0) / 100) + ' ' + t('kcalTotal', {n:''}).trim() + '</div>';
+          html += '</div>';
+        });
+      } else {
+        html += '<div style="color:#757575;font-size:12px;font-style:italic;">—</div>';
+      }
+      html += '</div>';
+    });
+    return html;
+  }
+
+  // ============================================================
+  // SHOW HISTORY SHEET (main UI)
+  // ============================================================
+  function showHistorySheet(type) {
+    const cid = getClientId();
+    const history = getHistory(type);
+    const lang = uiLang();
+    const isWk = type === 'workout';
+    const clientName = getClientName();
+
+    // Get current active plan summary
+    let activeSummary = null;
+    if (isWk) {
+      try {
+        const raw = localStorage.getItem('workoutPlan_' + cid);
+        if (raw) {
+          const cur = JSON.parse(raw);
+          if (Array.isArray(cur) && cur.length) activeSummary = summarizeWorkout(cur);
+        }
+      } catch(e) {}
+    } else {
+      try {
+        const raw = localStorage.getItem('nutritionPlan_' + cid);
+        if (raw) {
+          const cur = JSON.parse(raw);
+          if (cur && cur.meals && cur.meals.length) activeSummary = summarizeNutrition(cur);
+        }
+      } catch(e) {}
+    }
+
+    let html = '';
+    html += '<div style="padding:14px;">';
+    html += '<div style="font-weight:700;font-size:16px;color:#212121;margin-bottom:4px;">' + esc(isWk ? t('histWk') : t('histNut')) + '</div>';
+    if (clientName) {
+      html += '<div style="font-size:12px;color:#757575;margin-bottom:12px;">👤 ' + esc(clientName) + '</div>';
+    }
+
+    // Statistics
+    if (history.length > 0) {
+      const oldest = history[history.length - 1];
+      const newest = history[0];
+      html += '<div style="background:linear-gradient(135deg,#F3E5F5,#E1BEE7);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#4A148C;">';
+      html += '<div style="font-weight:700;margin-bottom:4px;">📊 ' + esc(t('stats')) + '</div>';
+      html += '<div>' + esc(t('totalArchived')) + ': <b>' + history.length + '</b></div>';
+      html += '<div>' + esc(t('newestEntry')) + ': ' + esc(formatDate(newest.archivedAt, lang)) + '</div>';
+      html += '<div>' + esc(t('oldestEntry')) + ': ' + esc(formatDate(oldest.archivedAt, lang)) + '</div>';
+      html += '</div>';
+    }
+
+    // Active plan section
+    html += '<div style="font-weight:700;font-size:13px;color:#2E7D32;margin-bottom:8px;">✓ ' + esc(t('activeNow')) + '</div>';
+    if (activeSummary) {
+      html += '<div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:10px;padding:12px;margin-bottom:10px;">';
+      html += '<div style="font-weight:600;color:#1B5E20;font-size:13px;">' + esc(activeSummary.titles || 'Plan') + '</div>';
+      html += '<div style="font-size:11px;color:#2E7D32;margin-top:2px;">';
+      if (isWk) {
+        html += t('wkCount', {n: activeSummary.wkCount}) + ' · ' + t('exCount', {n: activeSummary.exCount}) + ' · ' + activeSummary.setCount + ' sets';
+      } else {
+        html += t('mealCount', {n: activeSummary.mealCount}) + ' · ' + t('kcalTotal', {n: activeSummary.kcal});
+      }
+      html += '</div>';
+      // Archive button
+      html += '<button onclick="window.__hmArchive(\'' + type + '\')" style="margin-top:8px;width:100%;background:#FF9800;color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('archiveCur')) + '</button>';
+      html += '</div>';
+    } else {
+      html += '<div style="background:#FAFAFA;border:1px dashed #BDBDBD;border-radius:10px;padding:12px;margin-bottom:14px;color:#757575;font-size:12px;text-align:center;">' + esc(t('empty')) + '</div>';
+    }
+
+    // Archived entries header
+    if (history.length > 0) {
+      html += '<div style="font-weight:700;font-size:13px;color:#424242;margin:14px 0 8px;">' + esc(t('archivedCount', {n: history.length})) + '</div>';
+
+      // Filter buttons
+      html += '<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">';
+      html += '<button onclick="window.__hmFilter(\'all\')" id="hmFilterAll" style="background:#1565C0;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('filterAll')) + '</button>';
+      html += '<button onclick="window.__hmFilter(\'30\')" id="hmFilter30" style="background:#fff;color:#1565C0;border:1px solid #90CAF9;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('filter30')) + '</button>';
+      html += '<button onclick="window.__hmFilter(\'year\')" id="hmFilterYear" style="background:#fff;color:#1565C0;border:1px solid #90CAF9;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('filterYear')) + '</button>';
+      html += '</div>';
+
+      // Search box
+      html += '<input type="text" id="hmSearchInput" placeholder="' + esc(t('filterSearch')) + '" oninput="window.__hmSearch(this.value)" style="width:100%;padding:8px 10px;border:1px solid #E0E0E0;border-radius:8px;font-size:13px;margin-bottom:10px;box-sizing:border-box;">';
+
+      // History list
+      html += '<div id="hmHistoryList">';
+      history.forEach(entry => {
+        html += renderHistoryEntry(entry, type, lang);
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+
+    openSheet(html, true);
+    // Store current type and full history for filtering
+    window.__hmCurrentType = type;
+    window.__hmCurrentHistory = history;
+  }
+
+  function renderHistoryEntry(entry, type, lang) {
+    const s = entry.summary || {};
+    let html = '<div class="hm-entry" data-search="' + esc((entry.label + ' ' + (s.titles || '')).toLowerCase()) + '" data-date="' + new Date(entry.archivedAt).getTime() + '" style="background:#FAFAFA;border:1px solid #E0E0E0;border-radius:10px;padding:12px;margin-bottom:8px;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">';
+    html += '<div style="flex:1;cursor:pointer;" onclick="window.__hmView(\'' + type + '\',\'' + entry.id + '\')">';
+    html += '<div style="font-weight:700;color:#212121;font-size:13px;">📅 ' + esc(formatDate(entry.archivedAt, lang)) + '</div>';
+    html += '<div style="font-size:11px;color:#424242;margin-top:3px;font-weight:600;">' + esc(entry.label) + '</div>';
+    if (s.titles) html += '<div style="font-size:11px;color:#757575;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(s.titles) + '</div>';
+    html += '<div style="font-size:10px;color:#9E9E9E;margin-top:3px;">';
+    if (type === 'workout') {
+      html += t('wkCount', {n: s.wkCount || 0}) + ' · ' + t('exCount', {n: s.exCount || 0}) + ' · ' + (s.setCount || 0) + ' sets';
+    } else {
+      html += t('mealCount', {n: s.mealCount || 0}) + ' · ' + t('kcalTotal', {n: s.kcal || 0});
+    }
+    html += '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">';
+    html += '<button onclick="window.__hmRestore(\'' + type + '\',\'' + entry.id + '\')" title="' + esc(t('restore')) + '" style="background:#3B82F6;color:#fff;border:0;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:11px;font-weight:600;">↩</button>';
+    html += '<button onclick="window.__hmView(\'' + type + '\',\'' + entry.id + '\')" title="' + esc(t('viewOnly')) + '" style="background:#fff;color:#424242;border:1px solid #E0E0E0;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:11px;font-weight:600;">👁</button>';
+    html += '<button onclick="window.__hmDelete(\'' + type + '\',\'' + entry.id + '\')" title="' + esc(t('delete')) + '" style="background:#fff;color:#C62828;border:1px solid #FFCDD2;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:11px;font-weight:600;">🗑</button>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  // ---- Filter & Search ----
+  window.__hmFilter = function(period) {
+    const list = document.getElementById('hmHistoryList');
+    if (!list) return;
+    const now = Date.now();
+    const cutoff = period === '30' ? now - 30*24*60*60*1000 :
+                   period === 'year' ? now - 365*24*60*60*1000 : 0;
+    list.querySelectorAll('.hm-entry').forEach(el => {
+      const ts = parseInt(el.dataset.date, 10);
+      el.style.display = (cutoff === 0 || ts >= cutoff) ? '' : 'none';
+    });
+    // Update button styles
+    ['All','30','Year'].forEach(p => {
+      const btn = document.getElementById('hmFilter' + p);
+      if (btn) {
+        if (p.toLowerCase() === period) {
+          btn.style.background = '#1565C0'; btn.style.color = '#fff'; btn.style.border = '0';
+        } else {
+          btn.style.background = '#fff'; btn.style.color = '#1565C0'; btn.style.border = '1px solid #90CAF9';
+        }
+      }
+    });
+  };
+
+  window.__hmSearch = function(query) {
+    query = (query || '').toLowerCase().trim();
+    const list = document.getElementById('hmHistoryList');
+    if (!list) return;
+    list.querySelectorAll('.hm-entry').forEach(el => {
+      const text = el.dataset.search || '';
+      el.style.display = (!query || text.indexOf(query) >= 0) ? '' : 'none';
+    });
+  };
+
+  // ---- Sheet helpers ----
+  function openSheet(html, tall) {
+    // Use mpOpenSheet if available (trainer app)
+    if (typeof mpOpenSheet === 'function') {
+      const head = '<div class="mp-sheet-head"><div class="mp-grab"></div><div class="mp-sheet-title">' +
+        esc(window.__hmCurrentType === 'workout' ? t('histWk') : t('histNut')) +
+        '</div><button class="mp-sheet-x" onclick="mpCloseSheet()">✕</button></div>';
+      mpOpenSheet(head + html, tall);
+      return;
+    }
+    // Use csOpenSheet if available (client app)
+    if (typeof csOpenSheet === 'function') {
+      csOpenSheet(html);
+      return;
+    }
+    // Fallback: create own modal
+    let m = document.getElementById('hmModal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'hmModal';
+      m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:flex-end;justify-content:center;';
+      document.body.appendChild(m);
+    }
+    m.innerHTML = '<div style="background:#fff;border-radius:16px 16px 0 0;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid #E0E0E0;">' +
+        '<div style="font-weight:700;color:#212121;">' + esc(t('histTitle')) + '</div>' +
+        '<button onclick="this.closest(\'#hmModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
+      '</div>' + html + '</div>';
+    m.style.display = 'flex';
+  }
+
+  // ---- Public API ----
+  window.__hmShowHistory = showHistorySheet;
+  window.__hmArchive = function(type) {
+    if (type === 'workout') archiveCurrentWorkout();
+    else archiveCurrentNutrition();
+    // Re-open history sheet to refresh
+    setTimeout(() => showHistorySheet(type), 300);
+  };
+  window.__hmRestore = restoreEntry;
+  window.__hmDuplicate = duplicateEntry;
+  window.__hmDelete = deleteEntry;
+  window.__hmView = viewEntry;
+
+  // ============================================================
+  // INJECT BUTTONS INTO PLANNER UI
+  // ============================================================
+  function injectButtons() {
+    if (!document.body.classList.contains('mp-active')) return;
+
+    // Inject into topbar (next to existing OFF/AI/PDF buttons if they exist, or standalone)
+    const topbar = document.querySelector('.mp-topbar');
+    if (topbar) {
+      const isWk = document.body.classList.contains('mode-workout');
+      const type = isWk ? 'workout' : 'nutrition';
+      let btnsContainer = document.getElementById('nuTopBarButtons');
+      if (!btnsContainer) {
+        btnsContainer = document.createElement('div');
+        btnsContainer.id = 'nuTopBarButtons';
+        btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+        topbar.appendChild(btnsContainer);
+      }
+
+      let histBtn = document.getElementById('hmHistoryBtn');
+      if (!histBtn) {
+        histBtn = document.createElement('button');
+        histBtn.id = 'hmHistoryBtn';
+        histBtn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        btnsContainer.appendChild(histBtn);
+      }
+      // Update text and handler on every injection (mode may have changed)
+      const lang = uiLang();
+      const btnText = lang === 'he' ? 'היסטוריה' : (lang === 'en' ? 'History' : 'История');
+      if (histBtn.textContent !== '📜 ' + btnText) {
+        histBtn.textContent = '📜 ' + btnText;
+      }
+      // Always update the click handler to use the current type
+      histBtn.onclick = null;
+      histBtn.onclick = () => showHistorySheet(type);
+    }
+
+    // Inject into "Ещё" actions menu — wrap mpOpenActions
+    if (!window.__hmActionsWrapped) {
+      const orig = window.mpOpenActions;
+      if (typeof orig === 'function') {
+        window.mpOpenActions = function() {
+          // Add history items to the sheet content after original renders
+          orig.apply(this, arguments);
+          setTimeout(() => {
+            const sheet = document.getElementById('mpSheet');
+            if (!sheet) return;
+            const body = sheet.querySelector('.mp-sheet-body');
+            if (!body) return;
+            // Check if already injected (avoid duplicates)
+            if (body.querySelector('.hm-action-btn')) return;
+            const isWk = document.body.classList.contains('mode-workout');
+            const type = isWk ? 'workout' : 'nutrition';
+            // Insert history items at the top
+            const histBtn = document.createElement('button');
+            histBtn.className = 'mp-action-item hm-action-btn';
+            histBtn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
+            // Remove emoji prefix from i18n labels (they already include 📜/📦)
+            const histLabel = t('histTitle').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+            histBtn.innerHTML = '<span class="ico" style="font-size:18px;">📜</span><span>' + esc(histLabel) + '</span>';
+            histBtn.onclick = () => {
+              if (typeof mpCloseSheet === 'function') mpCloseSheet();
+              showHistorySheet(type);
+            };
+            const archBtn = document.createElement('button');
+            archBtn.className = 'mp-action-item hm-action-btn';
+            archBtn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
+            const archLabel = t('archiveCur').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+            archBtn.innerHTML = '<span class="ico" style="font-size:18px;">📦</span><span>' + esc(archLabel) + '</span>';
+            archBtn.onclick = () => {
+              if (typeof mpCloseSheet === 'function') mpCloseSheet();
+              window.__hmArchive(type);
+            };
+            body.insertBefore(archBtn, body.firstChild);
+            body.insertBefore(histBtn, body.firstChild);
+          }, 50);
+        };
+        window.__hmActionsWrapped = true;
+      }
+    }
+  }
+
+  // ---- Observer for re-injection ----
+  function setupObserver() {
+    const obs = new MutationObserver(muts => {
+      for (const m of muts) {
+        if (m.attributeName === 'class') {
+          setTimeout(injectButtons, 200);
+        }
+      }
+    });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Wrap mpRenderBody to re-inject after re-render
+    const orig = window.mpRenderBody;
+    if (typeof orig === 'function' && !window.__hmBodyWrapped) {
+      window.mpRenderBody = function() {
+        orig.apply(this, arguments);
+        setTimeout(injectButtons, 100);
+      };
+      window.__hmBodyWrapped = true;
+    }
+  }
+
+  function init() {
+    console.log('[HistoryManager v1.0] init');
+    setupObserver();
+    setTimeout(injectButtons, 500);
+    // Retry for 30s
+    let retries = 0;
+    const iv = setInterval(() => {
+      if (document.body.classList.contains('mp-active')) injectButtons();
+      if (++retries > 15) clearInterval(iv);
+    }, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Click on Питание/Тренировки buttons triggers re-inject
+  document.addEventListener('click', function(e) {
+    if (e.target && (e.target.textContent || '').match(/Питание|Nutrition|תזונה|Тренировки|Workout|אימון/)) {
+      setTimeout(injectButtons, 500);
+    }
+  }, true);
+
+  // Public API
+  window.HistoryManager = {
+    version: '1.0.0',
+    showHistory: showHistorySheet,
+    archiveCurrent: function(type) { return type === 'workout' ? archiveCurrentWorkout() : archiveCurrentNutrition(); },
+    restore: restoreEntry,
+    duplicate: duplicateEntry,
+    delete: deleteEntry,
+    view: viewEntry,
+    getHistory: getHistory,
+    getClientId: getClientId,
+    getClientName: getClientName,
+    t: t
+  };
+
+})();
+
+</script>
+<!-- /HISTORY_MANAGER_V1 -->
 </body>
 </html>
