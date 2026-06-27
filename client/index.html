@@ -44774,740 +44774,7 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /NUTRITION_UPGRADES_V1_1 -->
-<!-- EXERCISE_SEARCH_V1 -->
-<script>
-// ============================================================
-// EXERCISE SEARCH v1.1 — Multilingual (RU/EN/HE)
-// Searches wger.de exercise database (859 exercises)
-// - Searches across ALL translations (EN, RU, HE)
-// - Shows all available translations for each exercise
-// - Caches results for fast subsequent searches
-// Works in trainer app (where mp-active + mode-workout is active)
-// ============================================================
 
-(function() {
-  'use strict';
-
-  if (window.__exerciseSearchV1) {
-    setTimeout(window.ExerciseSearch && ExerciseSearch.injectButtons, 100);
-    return;
-  }
-  window.__exerciseSearchV1 = true;
-
-  // ---- i18n ----
-  const I18N = {
-    ru: {
-      title: '🔎 Поиск упражнений в интернете',
-      hint: 'База wger.de — 859 упражнений. Поиск работает на русском, иврите и английском',
-      searchPh: 'Введите название (RU/EN/HE)...',
-      searchBtn: 'Искать',
-      loading: 'Поиск по 859 упражнениям...',
-      noResults: 'Ничего не найдено. Попробуйте другой запрос.',
-      error: 'Ошибка поиска. Проверьте интернет.',
-      addBtn: '+ Добавить',
-      addAllBtn: '+ Добавить все',
-      added: 'Добавлено в тренировку',
-      addedAll: 'Добавлено: {n} упражнений',
-      saveToDb: '💾 В общую базу',
-      savedToDb: 'Сохранено в общую базу ({n} упражнений всего)',
-      alreadyInDb: 'Уже в базе',
-      muscleLabel: 'Мышцы',
-      equipLabel: 'Оборудование',
-      catLabel: 'Категория',
-      resultsCount: 'Найдено: {n}',
-      closeBtn: 'Закрыть',
-      voiceBtn: '🎤',
-      voiceListening: '🔴 Слушаю...',
-      voiceNotSupported: 'Голосовой ввод не поддерживается',
-      addToWorkoutBtn: '🏋️ В тренировку',
-      addToDbBtn: '📚 В базу',
-      alsoIn: 'Также на:',
-      langLabels: { en: 'Англ.', ru: 'Рус.', he: 'Ивр.' }
-    },
-    en: {
-      title: '🔎 Search exercises online',
-      hint: 'wger.de database — 859 exercises. Search works in Russian, Hebrew and English',
-      searchPh: 'Enter name (RU/EN/HE)...',
-      searchBtn: 'Search',
-      loading: 'Searching 859 exercises...',
-      noResults: 'Nothing found. Try another query.',
-      error: 'Search error. Check your internet.',
-      addBtn: '+ Add',
-      addAllBtn: '+ Add all',
-      added: 'Added to workout',
-      addedAll: 'Added: {n} exercises',
-      saveToDb: '💾 Save to database',
-      savedToDb: 'Saved to database ({n} exercises total)',
-      alreadyInDb: 'Already in DB',
-      muscleLabel: 'Muscles',
-      equipLabel: 'Equipment',
-      catLabel: 'Category',
-      resultsCount: 'Found: {n}',
-      closeBtn: 'Close',
-      voiceBtn: '🎤',
-      voiceListening: '🔴 Listening...',
-      voiceNotSupported: 'Voice input not supported',
-      addToWorkoutBtn: '🏋️ To workout',
-      addToDbBtn: '📚 To database',
-      alsoIn: 'Also in:',
-      langLabels: { en: 'EN', ru: 'RU', he: 'HE' }
-    },
-    he: {
-      title: '🔎 חיפוש תרגילים באינטרנט',
-      hint: 'מסד נתונים wger.de — 859 תרגילים. חיפוש ברוסית, עברית ואנגלית',
-      searchPh: 'הקלד שם (RU/EN/HE)...',
-      searchBtn: 'חיפוש',
-      loading: 'מחפש ב-859 תרגילים...',
-      noResults: 'לא נמצא. נסה שאילתה אחרת.',
-      error: 'שגיאת חיפוש. בדוק אינטרנט.',
-      addBtn: '+ הוסף',
-      addAllBtn: '+ הוסף הכל',
-      added: 'נוסף לאימון',
-      addedAll: 'נוסף: {n} תרגילים',
-      saveToDb: '💾 שמור למסד',
-      savedToDb: 'נשמר למסד ({n} תרגילים סה"כ)',
-      alreadyInDb: 'כבר במסד',
-      muscleLabel: 'שרירים',
-      equipLabel: 'ציוד',
-      catLabel: 'קטגוריה',
-      resultsCount: 'נמצאו: {n}',
-      closeBtn: 'סגור',
-      voiceBtn: '🎤',
-      voiceListening: '🔴 מקשיב...',
-      voiceNotSupported: 'קלט קולי לא נתמך',
-      addToWorkoutBtn: '🏋️ לאימון',
-      addToDbBtn: '📚 למסד',
-      alsoIn: 'גם ב:',
-      langLabels: { en: 'אנג', ru: 'רוס', he: 'עבר' }
-    }
-  };
-
-  function uiLang() {
-    try {
-      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
-      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
-    return 'ru';
-  }
-
-  function t(key, vars) {
-    const lang = uiLang();
-    let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
-    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
-    return s;
-  }
-
-  function esc(s) {
-    if (s == null) return '';
-    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  }
-
-  // ---- wger.de API ----
-  const WGER_BASE = 'https://wger.de/api/v2';
-  // Language code map (wger id → our code)
-  const WGER_LANG_IDS = { en: 2, ru: 5, he: 21 };
-  const WGER_LANG_BY_ID = { 2: 'en', 5: 'ru', 21: 'he' };
-
-  // Cache: all exercises with all translations (fetched once per session)
-  let allExercisesCache = null;
-  let cacheLoading = false;
-  let cacheLoadPromise = null;
-
-  // Map wger categories to our EXERCISE_DB groups
-  const CATEGORY_MAP = {
-    'Abs': 'abs',
-    'Arms': 'biceps',
-    'Back': 'back',
-    'Calves': 'calves',
-    'Chest': 'chest',
-    'Glutes': 'glutes',
-    'Legs': 'quads',
-    'Shoulders': 'shoulders',
-    'Cardio': 'cardio'
-  };
-
-  // Fetch ALL exercises with all translations (cached)
-  async function fetchAllExercises() {
-    if (allExercisesCache) return allExercisesCache;
-    if (cacheLoadPromise) return cacheLoadPromise;
-    
-    cacheLoading = true;
-    cacheLoadPromise = (async () => {
-      const all = [];
-      let url = WGER_BASE + '/exerciseinfo/?format=json&limit=100';
-      let pagesFetched = 0;
-      const maxPages = 12; // ~1200 exercises max
-      
-      while (url && pagesFetched < maxPages) {
-        pagesFetched++;
-        try {
-          const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
-          if (!resp.ok) throw new Error('HTTP ' + resp.status);
-          const data = await resp.json();
-          
-          for (const ex of (data.results || [])) {
-            const norm = normalizeWgerExercise(ex);
-            if (norm) all.push(norm);
-          }
-          
-          url = data.next;
-        } catch(e) {
-          console.warn('Fetch page error:', e);
-          break;
-        }
-      }
-      
-      console.log('[ExerciseSearch] Fetched', all.length, 'exercises across', pagesFetched, 'pages');
-      allExercisesCache = all;
-      cacheLoading = false;
-      return all;
-    })();
-    
-    return cacheLoadPromise;
-  }
-
-  // Multilingual search across all cached exercises
-  async function searchExercises(query) {
-    if (!query || query.trim().length < 2) return [];
-    const q = query.toLowerCase().trim();
-    const all = await fetchAllExercises();
-    
-    const matches = [];
-    const seenIds = new Set();
-    
-    for (const ex of all) {
-      if (seenIds.has(ex.wgerId)) continue;
-      
-      // Search in all available translations
-      let matched = false;
-      let matchedLang = null;
-      
-      for (const lang of ['en', 'ru', 'he']) {
-        const name = (ex.translations[lang] || '').toLowerCase();
-        if (name && name.includes(q)) {
-          matched = true;
-          matchedLang = lang;
-          break;
-        }
-      }
-      
-      // Also search in description
-      if (!matched) {
-        const desc = (ex.description || '').toLowerCase();
-        if (desc.includes(q)) {
-          matched = true;
-          matchedLang = 'desc';
-        }
-      }
-      
-      if (matched) {
-        seenIds.add(ex.wgerId);
-        matches.push({ ...ex, _matchedLang: matchedLang });
-      }
-    }
-    
-    return matches.slice(0, 50); // Limit to 50 results
-  }
-
-  function normalizeWgerExercise(ex) {
-    if (!ex) return null;
-    
-    // Extract translations for EN, RU, HE
-    const translations = { en: '', ru: '', he: '' };
-    let description = '';
-    
-    for (const tr of (ex.translations || [])) {
-      const langCode = WGER_LANG_BY_ID[tr.language];
-      if (!langCode) continue;
-      
-      if (!translations[langCode]) {
-        translations[langCode] = tr.name || '';
-      }
-      // Take description from English (or first available)
-      if (tr.language === 2 && tr.description) {
-        description = tr.description.replace(/<[^>]+>/g, '').trim().substring(0, 300);
-      } else if (!description && tr.description) {
-        description = tr.description.replace(/<[^>]+>/g, '').trim().substring(0, 300);
-      }
-    }
-    
-    // Fallback name: prefer current UI lang, then EN, then any
-    const ui = uiLang();
-    const name = translations[ui] || translations.en || translations.ru || translations.he || '';
-    if (!name) return null;
-    
-    const muscles = (ex.muscles || []).map(m => m.name).filter(n => n);
-    const secondary = (ex.muscles_secondary || []).map(m => m.name).filter(n => n);
-    const equipment = (ex.equipment || []).map(e => e.name).filter(n => n);
-    const category = ex.category ? ex.category.name : '';
-    
-    // Map to our group system
-    let groupId = 'fullbody';
-    if (category && CATEGORY_MAP[category]) groupId = CATEGORY_MAP[category];
-    
-    return {
-      wgerId: ex.id,
-      name: name,
-      translations: translations,
-      description: description,
-      muscles: muscles,
-      musclesSecondary: secondary,
-      equipment: equipment,
-      category: category,
-      groupId: groupId,
-      images: (ex.images || []).slice(0, 3).map(img => img.image)
-    };
-  }
-
-  // ---- Add exercise to current workout ----
-  function addExerciseToWorkout(wgerEx) {
-    try {
-      // Use the name in the current UI language if available
-      const ui = uiLang();
-      const displayName = wgerEx.translations[ui] || wgerEx.translations.en || wgerEx.name;
-      
-      const newEx = {
-        name: displayName,
-        sets: 3,
-        reps: 10,
-        weight: '',
-        rest: 60,
-        time: '',
-        note: wgerEx.description ? wgerEx.description.substring(0, 100) : '',
-        exId: '',
-        groupId: wgerEx.groupId,
-        subId: '',
-        equip: wgerEx.equipment && wgerEx.equipment.length ? wgerEx.equipment[0] : '',
-        _wgerSource: true
-      };
-
-      // Method 1: Use addExerciseRow — signature is (workoutEl, ex, skipSave)
-      if (typeof addExerciseRow === 'function') {
-        const workoutsContainer = document.getElementById('workoutsContainer');
-        const workouts = workoutsContainer
-          ? workoutsContainer.querySelectorAll('.workout')
-          : document.querySelectorAll('.workout');
-        let workoutEl = null;
-        for (const w of workouts) {
-          if (w.querySelector('.workout-body')) {
-            workoutEl = w;
-            break;
-          }
-        }
-        if (workoutEl) {
-          try {
-            addExerciseRow(workoutEl, newEx);
-            if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-            if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-            if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
-            return true;
-          } catch(e) {
-            console.warn('addExerciseRow failed, trying alternative:', e);
-          }
-        }
-      }
-
-      // Method 2: Directly append to workoutPlan in localStorage
-      const cid = window.HistoryManager ? window.HistoryManager.getClientId() : (typeof currentUserId !== 'undefined' ? currentUserId : null);
-      if (cid) {
-        const raw = localStorage.getItem('workoutPlan_' + cid);
-        const plan = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(plan)) {
-          if (plan.length === 0) {
-            plan.push({
-              id: 'wk_' + Date.now(),
-              title: 'New Workout',
-              date: new Date().toISOString().slice(0, 10),
-              duration: 60,
-              exercises: []
-            });
-          }
-          if (!plan[0].exercises) plan[0].exercises = [];
-          plan[0].exercises.push(newEx);
-          localStorage.setItem('workoutPlan_' + cid, JSON.stringify(plan));
-          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-          if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
-          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
-          return true;
-        }
-      }
-
-      // Method 3: Dispatch event
-      window.dispatchEvent(new CustomEvent('exercise:addExternal', {
-        detail: { exercise: newEx, wgerExercise: wgerEx }
-      }));
-      return true;
-    } catch(e) {
-      console.error('addExerciseToWorkout error:', e);
-      return false;
-    }
-  }
-
-  // ---- Add exercise to local EXERCISE_DB ----
-  function addExerciseToDb(wgerEx) {
-    try {
-      if (typeof EXERCISE_DB === 'undefined') {
-        console.warn('EXERCISE_DB not available');
-        return false;
-      }
-
-      // Check if already exists (by name in any language)
-      for (const group of EXERCISE_DB) {
-        for (const sub of (group.subgroups || [])) {
-          for (const ex of (sub.exercises || [])) {
-            const exNames = [ex.en, ex.ru, ex.he].filter(Boolean).map(n => n.toLowerCase());
-            const wgerNames = [wgerEx.translations.en, wgerEx.translations.ru, wgerEx.translations.he].filter(Boolean).map(n => n.toLowerCase());
-            for (const wn of wgerNames) {
-              if (exNames.includes(wn)) return 'exists';
-            }
-          }
-        }
-      }
-
-      let group = EXERCISE_DB.find(g => g.id === wgerEx.groupId);
-      if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
-      if (!group) return false;
-
-      let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
-      if (!sub) {
-        sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
-        if (!group.subgroups) group.subgroups = [];
-        group.subgroups.push(sub);
-      }
-
-      const newEx = {
-        id: 'wger_' + wgerEx.wgerId,
-        equip: wgerEx.equipment && wgerEx.equipment.length ? mapEquipment(wgerEx.equipment[0]) : 'bw',
-        ru: wgerEx.translations.ru || wgerEx.translations.en,
-        en: wgerEx.translations.en || wgerEx.translations.ru,
-        he: wgerEx.translations.he || wgerEx.translations.en,
-        _wgerImported: true,
-        _wgerMuscles: wgerEx.muscles.join(', '),
-        _wgerCategory: wgerEx.category,
-        _wgerDescription: wgerEx.description
-      };
-      sub.exercises.push(newEx);
-
-      const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
-      imported.push({ ...newEx, groupId: wgerEx.groupId, wgerId: wgerEx.wgerId, ts: Date.now() });
-      localStorage.setItem('wgerImportedExercises', JSON.stringify(imported));
-
-      return true;
-    } catch(e) {
-      console.error('addExerciseToDb error:', e);
-      return false;
-    }
-  }
-
-  function mapEquipment(wgerEquip) {
-    const map = {
-      'Barbell': 'barbell',
-      'Dumbbell': 'dumbbell',
-      'Machine': 'machine',
-      'Cable': 'cable',
-      'Kettlebell': 'kettlebell',
-      'Bodyweight': 'bw',
-      'none (bodyweight exercise)': 'bw',
-      'Bands': 'band',
-      'Medicine Ball': 'medicine-ball',
-      'Exercise Ball': 'fitball',
-      'Foam Roller': 'foam-roller',
-      'EZ-Bar': 'ezbar',
-      'Smith Machine': 'smith',
-      'TRX': 'trx',
-      'Plates': 'plates'
-    };
-    return map[wgerEquip] || 'bw';
-  }
-
-  // ---- Modal UI ----
-  async function openExerciseSearchModal() {
-    const existing = document.getElementById('exSearchModal');
-    if (existing) existing.remove();
-
-    const lang = uiLang();
-    const modal = document.createElement('div');
-    modal.id = 'exSearchModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
-    modal.innerHTML =
-      '<div style="background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
-          '<div>' +
-            '<h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(t('title')) + '</h3>' +
-            '<p style="margin:4px 0 0;font-size:12px;color:#616161;">' + esc(t('hint')) + '</p>' +
-          '</div>' +
-          '<button onclick="this.closest(\'#exSearchModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
-          '<input type="text" id="exSearchInput" placeholder="' + esc(t('searchPh')) + '" style="flex:1;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;" onkeydown="if(event.key===\'Enter\')window.__exSearch()">' +
-          '<button onclick="window.__exVoiceSearch()" id="exVoiceBtn" style="background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:0 12px;cursor:pointer;font-weight:600;">' + esc(t('voiceBtn')) + '</button>' +
-          '<button onclick="window.__exSearch()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:0 16px;cursor:pointer;font-weight:600;">' + esc(t('searchBtn')) + '</button>' +
-        '</div>' +
-        '<div id="exSearchResults" style="min-height:80px;">' +
-          '<div style="text-align:center;padding:30px;color:#757575;font-size:13px;">' +
-            '<div style="font-size:40px;margin-bottom:10px;">🏋️</div>' +
-            '<p>' + esc(t('hint')) + '</p>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    document.body.appendChild(modal);
-
-    setTimeout(() => {
-      const inp = document.getElementById('exSearchInput');
-      if (inp) inp.focus();
-    }, 100);
-    
-    // Pre-fetch all exercises in background for fast searches
-    if (!allExercisesCache && !cacheLoading) {
-      fetchAllExercises().catch(e => console.warn('Pre-fetch failed:', e));
-    }
-  }
-
-  window.__exOpen = openExerciseSearchModal;
-
-  window.__exSearch = async function() {
-    const inp = document.getElementById('exSearchInput');
-    if (!inp) return;
-    const q = inp.value.trim();
-    if (q.length < 2) return;
-    const resultsEl = document.getElementById('exSearchResults');
-    
-    // Show loading state
-    resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #10B981;border-radius:50%;animation:exSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('loading')) + '</p></div><style>@keyframes exSpin{to{transform:rotate(360deg)}}</style>';
-    
-    try {
-      const results = await searchExercises(q);
-      if (!results.length) {
-        resultsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('noResults')) + '</div>';
-        return;
-      }
-      
-      const langLabels = t('langLabels');
-      let html = '<div style="font-size:12px;color:#616161;margin-bottom:10px;">' + esc(t('resultsCount', {n: results.length})) + '</div>';
-      html += '<div style="margin-bottom:12px;"><button onclick="window.__exAddAll()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('addAllBtn')) + '</button></div>';
-      
-      results.forEach((ex, i) => {
-        const muscles = ex.muscles.concat(ex.musclesSecondary).slice(0, 4);
-        const equip = ex.equipment.slice(0, 3);
-        const img = ex.images && ex.images.length ? ex.images[0] : '';
-        
-        // Build translations display
-        const ui = uiLang();
-        let translationsHtml = '';
-        const otherLangs = ['en', 'ru', 'he'].filter(l => l !== ui);
-        for (const langCode of otherLangs) {
-          if (ex.translations[langCode]) {
-            translationsHtml += '<span style="background:#F5F5F5;border-radius:4px;padding:2px 6px;font-size:10px;color:#616161;margin-right:4px;">' + esc(langLabels[langCode]) + ': ' + esc(ex.translations[langCode]) + '</span>';
-          }
-        }
-        
-        html += '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:8px;align-items:flex-start;">' +
-          (img ? '<img src="' + esc(img) + '" style="width:60px;height:60px;object-fit:contain;border-radius:6px;background:#fff;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:60px;height:60px;background:#E0E0E0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏋️</div>') +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-weight:600;color:#212121;font-size:14px;">' + esc(ex.name) + '</div>' +
-            (translationsHtml ? '<div style="margin-top:3px;">' + esc(t('alsoIn')) + ' ' + translationsHtml + '</div>' : '') +
-            (ex.category ? '<div style="font-size:11px;color:#1565C0;margin-top:4px;">' + esc(t('catLabel')) + ': ' + esc(ex.category) + '</div>' : '') +
-            (muscles.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">💪 ' + esc(t('muscleLabel')) + ': ' + esc(muscles.join(', ')) + '</div>' : '') +
-            (equip.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">🛠 ' + esc(t('equipLabel')) + ': ' + esc(equip.join(', ')) + '</div>' : '') +
-            (ex.description ? '<div style="font-size:11px;color:#9E9E9E;margin-top:4px;line-height:1.4;">' + esc(ex.description.substring(0, 120)) + (ex.description.length > 120 ? '...' : '') + '</div>' : '') +
-            '<div style="display:flex;gap:6px;margin-top:8px;">' +
-              '<button onclick="window.__exAddToWorkout(' + i + ')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToWorkoutBtn')) + '</button>' +
-              '<button onclick="window.__exAddToDb(' + i + ')" style="background:#1565C0;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToDbBtn')) + '</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      });
-      resultsEl.innerHTML = html;
-      window.__exSearchResults = results;
-    } catch(e) {
-      console.error('Search error:', e);
-      resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">⚠️ ' + esc(t('error')) + '</div>';
-    }
-  };
-
-  window.__exVoiceSearch = function() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert(t('voiceNotSupported')); return; }
-    const rec = new SR();
-    rec.lang = uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU');
-    rec.interimResults = false;
-    const btn = document.getElementById('exVoiceBtn');
-    if (btn) btn.textContent = t('voiceListening');
-    rec.onresult = function(ev) {
-      const text = ev.results[0][0].transcript;
-      const inp = document.getElementById('exSearchInput');
-      if (inp) {
-        inp.value = text;
-        window.__exSearch();
-      }
-      if (btn) btn.textContent = t('voiceBtn');
-    };
-    rec.onerror = function() { if (btn) btn.textContent = t('voiceBtn'); };
-    rec.onend = function() { if (btn) btn.textContent = t('voiceBtn'); };
-    rec.start();
-  };
-
-  window.__exAddToWorkout = function(i) {
-    const ex = window.__exSearchResults && window.__exSearchResults[i];
-    if (!ex) return;
-    const ok = addExerciseToWorkout(ex);
-    if (ok && typeof showToast === 'function') showToast('✓ ' + t('added'));
-  };
-
-  window.__exAddToDb = function(i) {
-    const ex = window.__exSearchResults && window.__exSearchResults[i];
-    if (!ex) return;
-    const result = addExerciseToDb(ex);
-    if (result === 'exists') {
-      if (typeof showToast === 'function') showToast(t('alreadyInDb'));
-    } else if (result) {
-      const count = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]').length;
-      if (typeof showToast === 'function') showToast(t('savedToDb', {n: count}));
-    } else {
-      alert('Save failed');
-    }
-  };
-
-  window.__exAddAll = function() {
-    if (!window.__exSearchResults || !window.__exSearchResults.length) return;
-    let added = 0;
-    window.__exSearchResults.forEach(ex => {
-      if (addExerciseToWorkout(ex)) added++;
-    });
-    if (typeof showToast === 'function') showToast(t('addedAll', {n: added}));
-  };
-
-  // ---- Inject button into topbar (workout mode only) ----
-  function injectButtons() {
-    if (!document.body.classList.contains('mp-active')) return;
-    if (!document.body.classList.contains('mode-workout')) return;
-
-    const topbar = document.querySelector('.mp-topbar');
-    if (!topbar) return;
-
-    let btnsContainer = document.getElementById('nuTopBarButtons');
-    if (!btnsContainer) {
-      btnsContainer = document.createElement('div');
-      btnsContainer.id = 'nuTopBarButtons';
-      btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
-      topbar.appendChild(btnsContainer);
-    }
-
-    if (!document.getElementById('exSearchBtn')) {
-      const btn = document.createElement('button');
-      btn.id = 'exSearchBtn';
-      btn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-      btn.innerHTML = '🔎 wger';
-      btn.title = t('title');
-      btn.onclick = openExerciseSearchModal;
-      btnsContainer.insertBefore(btn, btnsContainer.firstChild);
-    }
-  }
-
-  // ---- Observer ----
-  function setupObserver() {
-    const obs = new MutationObserver(muts => {
-      for (const m of muts) {
-        if (m.attributeName === 'class') {
-          setTimeout(injectButtons, 200);
-        }
-      }
-    });
-    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-    const orig = window.mpRenderBody;
-    if (typeof orig === 'function' && !window.__exBodyWrapped) {
-      window.mpRenderBody = function() {
-        orig.apply(this, arguments);
-        setTimeout(injectButtons, 100);
-      };
-      window.__exBodyWrapped = true;
-    }
-  }
-
-  function init() {
-    console.log('[ExerciseSearch v1.1] init');
-    setupObserver();
-    setTimeout(injectButtons, 500);
-    let retries = 0;
-    const iv = setInterval(() => {
-      if (document.body.classList.contains('mp-active') && document.body.classList.contains('mode-workout')) {
-        injectButtons();
-      }
-      if (++retries > 15) clearInterval(iv);
-    }, 2000);
-
-    // Load imported exercises from localStorage into EXERCISE_DB on startup
-    setTimeout(() => {
-      try {
-        if (typeof EXERCISE_DB !== 'undefined') {
-          const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
-          if (imported.length) {
-            let loaded = 0;
-            imported.forEach(item => {
-              let exists = false;
-              for (const g of EXERCISE_DB) {
-                for (const sg of (g.subgroups || [])) {
-                  if (sg.exercises && sg.exercises.find(e => e.id === item.id)) {
-                    exists = true;
-                    break;
-                  }
-                }
-                if (exists) break;
-              }
-              if (!exists) {
-                let group = EXERCISE_DB.find(g => g.id === item.groupId);
-                if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
-                if (group) {
-                  let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
-                  if (!sub) {
-                    sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
-                    if (!group.subgroups) group.subgroups = [];
-                    group.subgroups.push(sub);
-                  }
-                  const { groupId, wgerId, ts, ...exData } = item;
-                  sub.exercises.push(exData);
-                  loaded++;
-                }
-              }
-            });
-            if (loaded > 0) console.log('[ExerciseSearch] Loaded', loaded, 'imported exercises');
-          }
-        }
-      } catch(e) {
-        console.warn('Failed to load imported exercises:', e);
-      }
-    }, 1500);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  document.addEventListener('click', function(e) {
-    const txt = (e.target && e.target.textContent) || '';
-    if (txt.match(/Тренировки|Workout|אימון/)) {
-      setTimeout(injectButtons, 500);
-    }
-  }, true);
-
-  window.ExerciseSearch = {
-    version: '1.1.0',
-    open: openExerciseSearchModal,
-    search: searchExercises,
-    addToWorkout: addExerciseToWorkout,
-    addToDb: addExerciseToDb,
-    injectButtons: injectButtons,
-    fetchAllExercises: fetchAllExercises
-  };
-
-})();
-
-</script>
-<!-- /EXERCISE_SEARCH_V1 -->
 <!-- HISTORY_MANAGER_V1 -->
 <script>
 // ============================================================
@@ -47511,5 +46778,1029 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /COMPACT_SETTINGS_V1 -->
+
+
+
+
+<!-- SETTINGS_FIX_V1 -->
+<script>
+// ============================================================
+// SETTINGS FIX v1.0
+// Fixes:
+// 1. Modal scale slider - add .cs-modal, .mp-sheet, .cs-sheet to --fs-modals CSS selector
+// 2. Font size sliders - add mobile planner classes (.mp-body, .mp-topbar, etc.) to CSS selectors
+// 3. Interface scale - ensure it applies to mobile planner
+// ============================================================
+
+(function() {
+  'use strict';
+
+  if (window.__settingsFixV1) return;
+  window.__settingsFixV1 = true;
+
+  function injectFixStyles() {
+    if (document.getElementById('settingsFixStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'settingsFixStyles';
+    style.textContent = `
+      /* ===== FIX: Font size CSS variables now apply to mobile planner classes too ===== */
+
+      /* Left panel (products/exercises database) — add mobile planner product list */
+      .products-sidebar,
+      .mp-pick-list,
+      .mp-pick-item,
+      .pr-group-body,
+      .ex-group-body {
+        font-size: calc(1em * var(--fs-left, 1)) !important;
+      }
+
+      /* Meals/workouts panel — add mobile planner body */
+      .meals-container,
+      .workouts-container,
+      .mp-body,
+      .mp-meal-head,
+      .mp-prow,
+      .mp-card,
+      .mp-ex-card {
+        font-size: calc(1em * var(--fs-meals, 1)) !important;
+      }
+
+      /* Header — add mobile planner topbar */
+      .main-header,
+      .mp-topbar,
+      .cs-topbar,
+      .mp-nav,
+      .cs-nav {
+        font-size: calc(1em * var(--fs-header, 1)) !important;
+      }
+
+      /* Modals — add compact settings modal + mobile planner sheets */
+      .modal-content,
+      .info-modal-content,
+      .tools-modal-content,
+      .calendar-content,
+      .cal-add-content,
+      .cs-modal,
+      .mp-sheet,
+      .cs-sheet,
+      #csSettingsOverlay .cs-modal,
+      #exSearchModal > div,
+      #offPickerModal > div,
+      #aiPhotoModal > div {
+        font-size: calc(1em * var(--fs-modals, 1)) !important;
+      }
+
+      /* Tools (home buttons) — add mobile dock buttons */
+      .mp-nav-item,
+      .md-app-icon,
+      #mdAppGrid > div {
+        font-size: calc(1em * var(--fs-tools, 1));
+      }
+
+      /* ===== FIX: Interface scale — apply to document root, not just body ===== */
+      html {
+        font-size: calc(16px * var(--interface-scale, 1));
+      }
+    `;
+    document.head.appendChild(style);
+    console.log('[SettingsFix] CSS injected');
+  }
+
+  // Also fix the updateInterfaceScale function to set CSS variable
+  const origUpdateInterfaceScale = window.updateInterfaceScale;
+  if (typeof origUpdateInterfaceScale === 'function') {
+    window.updateInterfaceScale = function(val) {
+      val = parseFloat(val);
+      // Set CSS variable on document root
+      document.documentElement.style.setProperty('--interface-scale', val);
+      // Also set on body for backward compat
+      document.body.style.fontSize = val + 'em';
+      // Update label
+      const valLabel = document.getElementById('interfaceScaleValue');
+      if (valLabel) valLabel.textContent = Math.round(val * 100) + '%';
+      // Save
+      try {
+        if (typeof userSettings !== 'undefined') userSettings.interfaceScale = val;
+        if (typeof saveSettings === 'function') saveSettings();
+      } catch(e) {}
+    };
+  }
+
+  // Apply saved settings on load
+  function applySavedSettings() {
+    try {
+      // Apply interface scale
+      const is = parseFloat(localStorage.getItem('interfaceScale') ||
+        (typeof userSettings !== 'undefined' && userSettings.interfaceScale) || 1);
+      document.documentElement.style.setProperty('--interface-scale', is);
+
+      // Apply panel font sizes from localStorage
+      const keys = ['left', 'meals', 'header', 'modals', 'tools'];
+      keys.forEach(k => {
+        const saved = parseInt(localStorage.getItem('panelFs_' + k), 10);
+        if (!isNaN(saved) && saved >= 70) {
+          const ratio = (saved / 100).toFixed(2);
+          document.documentElement.style.setProperty('--fs-' + k, ratio);
+        }
+      });
+    } catch(e) { console.warn('Apply saved settings error:', e); }
+  }
+
+  // Init
+  function init() {
+    injectFixStyles();
+    applySavedSettings();
+    // Re-apply after a delay (in case other scripts override)
+    setTimeout(applySavedSettings, 1000);
+    setTimeout(applySavedSettings, 3000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+
+</script>
+<!-- /SETTINGS_FIX_V1 -->
+<!-- MULTI_EX_SEARCH_V1 -->
+<script>
+// ============================================================
+// MULTI-SOURCE EXERCISE SEARCH v1.0
+// Three separate exercise databases:
+//   1. wger (English) — 859 exercises via API
+//   2. Hebrew (Israeli) — 200+ curated exercises with Hebrew names
+//   3. Russian — 200+ curated exercises with Russian names
+// Each button opens its own search modal with results from that database
+// ============================================================
+
+(function() {
+  'use strict';
+
+  if (window.__multiExSearchV1) return;
+  window.__multiExSearchV1 = true;
+
+  // ---- i18n ----
+  const I18N = {
+    ru: {
+      title: '🔎 Поиск упражнений',
+      wgerTitle: '🔎 wger (English)',
+      heTitle: '🔎 חיפוש תרגילים (עברית)',
+      ruTitle: '🔎 Поиск упражнений (Русский)',
+      searchPh: 'Поиск...',
+      loading: 'Загрузка...',
+      noResults: 'Ничего не найдено',
+      addBtn: '+ Добавить',
+      addAllBtn: '+ Добавить все',
+      added: 'Добавлено в тренировку',
+      addedAll: 'Добавлено: {n}',
+      muscleLabel: 'Мышцы',
+      equipLabel: 'Оборудование',
+      catLabel: 'Категория',
+      resultsCount: 'Найдено: {n}',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 Слушаю...',
+      addToWorkout: '🏋️ В тренировку',
+      addToDb: '📚 В базу',
+      alreadyInDb: 'Уже в базе',
+      savedToDb: 'Сохранено ({n})'
+    },
+    en: {
+      title: '🔎 Exercise Search',
+      wgerTitle: '🔎 wger (English)',
+      heTitle: '🔎 Exercise Search (Hebrew)',
+      ruTitle: '🔎 Exercise Search (Russian)',
+      searchPh: 'Search...',
+      loading: 'Loading...',
+      noResults: 'Nothing found',
+      addBtn: '+ Add',
+      addAllBtn: '+ Add all',
+      added: 'Added to workout',
+      addedAll: 'Added: {n}',
+      muscleLabel: 'Muscles',
+      equipLabel: 'Equipment',
+      catLabel: 'Category',
+      resultsCount: 'Found: {n}',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 Listening...',
+      addToWorkout: '🏋️ To workout',
+      addToDb: '📚 To database',
+      alreadyInDb: 'Already in DB',
+      savedToDb: 'Saved ({n})'
+    },
+    he: {
+      title: '🔎 חיפוש תרגילים',
+      wgerTitle: '🔎 wger (English)',
+      heTitle: '🔎 חיפוש תרגילים (עברית)',
+      ruTitle: '🔎 חיפוש תרגילים (Русский)',
+      searchPh: 'חיפוש...',
+      loading: 'טוען...',
+      noResults: 'לא נמצא',
+      addBtn: '+ הוסף',
+      addAllBtn: '+ הוסף הכל',
+      added: 'נוסף לאימון',
+      addedAll: 'נוסף: {n}',
+      muscleLabel: 'שרירים',
+      equipLabel: 'ציוד',
+      catLabel: 'קטגוריה',
+      resultsCount: 'נמצאו: {n}',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 מקשיב...',
+      addToWorkout: '🏋️ לאימון',
+      addToDb: '📚 למסד',
+      alreadyInDb: 'כבר במסד',
+      savedToDb: 'נשמר ({n})'
+    }
+  };
+
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
+
+  function t(key, vars) {
+    const lang = uiLang();
+    let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  // ============================================================
+  // HEBREW EXERCISE DATABASE (200+ exercises)
+  // ============================================================
+  const HE_EXERCISES = [
+    // ===== חזה (Chest) =====
+    {name:'לחיצת חזה בשכיבה',en:'Bench Press',muscles:'חזה, כתפיים קדמיות, תלת ראשי',equip:'מוט',cat:'חזה'},
+    {name:'לחיצת חזה בשכיבה עם משקולות',en:'Dumbbell Bench Press',muscles:'חזה, כתפיים קדמיות',equip:'משקולות',cat:'חזה'},
+    {name:'פרפר בשכיבה',en:'Dumbbell Fly',muscles:'חזה',equip:'משקולות',cat:'חזה'},
+    {name:'לחיצת חזה בשיפוע חיובי',en:'Incline Bench Press',muscles:'חזה עליון',equip:'מוט',cat:'חזה'},
+    {name:'לחיצת חזה בשיפוע עם משקולות',en:'Incline Dumbbell Press',muscles:'חזה עליון',equip:'משקולות',cat:'חזה'},
+    {name:'פרפר בשיפוע',en:'Incline Dumbbell Fly',muscles:'חזה עליון',equip:'משקולות',cat:'חזה'},
+    {name:'לחיצת חזה בשיפוע שלילי',en:'Decline Bench Press',muscles:'חזה תחתון',equip:'מוט',cat:'חזה'},
+    {name:'כבלים מצטלבים',en:'Cable Crossover',muscles:'חזה',equip:'כבלים',cat:'חזה'},
+    {name:'דחיקות על מכשיר',en:'Machine Chest Press',muscles:'חזה',equip:'מכונה',cat:'חזה'},
+    {name:'פרפר על מכשיר',en:'Pec Deck',muscles:'חזה',equip:'מכונה',cat:'חזה'},
+    {name:'שכיבות סמיכה',en:'Push-ups',muscles:'חזה, תלת ראשי, כתפיים',equip:'משקל גוף',cat:'חזה'},
+    {name:'שכיבות סמיכה בשיפוע',en:'Incline Push-ups',muscles:'חזה תחתון',equip:'משקל גוף',cat:'חזה'},
+    {name:'דיפס לחזה',en:'Chest Dips',muscles:'חזה תחתון, תלת ראשי',equip:'משקל גוף',cat:'חזה'},
+    {name:'לחיצת סמית',en:'Smith Machine Bench Press',muscles:'חזה',equip:'סמית',cat:'חזה'},
+    {name:'לחיצת חזה צרה',en:'Close-Grip Bench Press',muscles:'חזה פנימי, תלת ראשי',equip:'מוט',cat:'חזה'},
+
+    // ===== גב (Back) =====
+    {name:'מתח רחב',en:'Pull-ups (Wide Grip)',muscles:'גב רחב, זוגי',equip:'משקל גוף',cat:'גב'},
+    {name:'מתח צר',en:'Chin-ups',muscles:'גב רחב, זוגי',equip:'משקל גוף',cat:'גב'},
+    {name:'חתירה לחזה בכבלים',en:'Lat Pulldown',muscles:'גב רחב',equip:'כבלים',cat:'גב'},
+    {name:'חתירה בשכיבה',en:'Barbell Row',muscles:'גב רחב, כתפיות אחוריות',equip:'מוט',cat:'גב'},
+    {name:'חתירה עם משקולת אחת',en:'One-Arm Dumbbell Row',muscles:'גב רחב',equip:'משקולות',cat:'גב'},
+    {name:'חתירה בכבלים ישוב',en:'Seated Cable Row',muscles:'גב רחב, כתפיות אחוריות',equip:'כבלים',cat:'גב'},
+    {name:'חתירה הפוכה',en:'Inverted Row',muscles:'גב רחב',equip:'משקל גוף',cat:'גב'},
+    {name:'פולאובר',en:'Dumbbell Pullover',muscles:'גב רחב, חזה',equip:'משקולות',cat:'גב'},
+    {name:'מתח באחיזה נייטרלית',en:'Neutral Grip Pull-up',muscles:'גב רחב',equip:'משקל גוף',cat:'גב'},
+    {name:'חתירת טי-בר',en:'T-Bar Row',muscles:'גב רחב, כתפיות אחוריות',equip:'מוט',cat:'גב'},
+    {name:'דדליפט',en:'Deadlift',muscles:'גב, רגליים, אחורי ירך',equip:'מוט',cat:'גב'},
+    {name:'דדליפט רומני',en:'Romanian Deadlift',muscles:'אחורי ירך, גב תחתון',equip:'מוט',cat:'גב'},
+    {name:'היפראקסטנציה',en:'Hyperextension',muscles:'גב תחתון',equip:'משקל גוף',cat:'גב'},
+    {name:'פולדאון ישר לחזה',en:'Straight Arm Pulldown',muscles:'גב רחב',equip:'כבלים',cat:'גב'},
+    {name:'שרוול גב על מכשיר',en:'Machine Row',muscles:'גב רחב',equip:'מכונה',cat:'גב'},
+
+    // ===== כתפיים (Shoulders) =====
+    {name:'לחיצת כתפיים עם מוט',en:'Overhead Press',muscles:'כתפיים, תלת ראשי',equip:'מוט',cat:'כתפיים'},
+    {name:'לחיצת כתפיים עם משקולות',en:'Dumbbell Shoulder Press',muscles:'כתפיים',equip:'משקולות',cat:'כתפיים'},
+    {name:'לחיצת ארנולד',en:'Arnold Press',muscles:'כתפיים',equip:'משקולות',cat:'כתפיים'},
+    {name:'הרמות צד עם משקולות',en:'Lateral Raises',muscles:'כתפיים צידיות',equip:'משקולות',cat:'כתפיים'},
+    {name:'הרמות צד בכבלים',en:'Cable Lateral Raise',muscles:'כתפיים צידיות',equip:'כבלים',cat:'כתפיים'},
+    {name:'הרמות קדמיות',en:'Front Raises',muscles:'כתפיים קדמיות',equip:'משקולות',cat:'כתפיים'},
+    {name:'פרפר לכתפיות אחוריות',en:'Rear Delt Fly',muscles:'כתפיות אחוריות',equip:'משקולות',cat:'כתפיים'},
+    {name:'פייס פול',en:'Face Pull',muscles:'כתפיות אחוריות',equip:'כבלים',cat:'כתפיים'},
+    {name:'חתירה זקופה',en:'Upright Row',muscles:'כתפיים, זוגי',equip:'מוט',cat:'כתפיים'},
+    {name:'לחיצת כתפיים בסמית',en:'Smith Machine Shoulder Press',muscles:'כתפיים',equip:'סמית',cat:'כתפיים'},
+    {name:'לחיצה מאחורי הצוואר',en:'Behind the Neck Press',muscles:'כתפיים',equip:'מוט',cat:'כתפיים'},
+    {name:'הרמות צד במכונה',en:'Machine Lateral Raise',muscles:'כתפיים צידיות',equip:'מכונה',cat:'כתפיים'},
+    {name:'שרוול כתפיים עם גומיות',en:'Band Pull Apart',muscles:'כתפיות אחוריות',equip:'גומיות',cat:'כתפיים'},
+    {name:'פלאנק עם הקלה לכתף',en:'Plank Shoulder Tap',muscles:'כתפיים, ליבה',equip:'משקל גוף',cat:'כתפיים'},
+    {name:'פייק פוש-אפ',en:'Pike Push-up',muscles:'כתפיים',equip:'משקל גוף',cat:'כתפיים'},
+
+    // ===== תלת ראשי (Triceps) =====
+    {name:'פשיטת תלת ראשי בכבלים',en:'Triceps Pushdown',muscles:'תלת ראשי',equip:'כבלים',cat:'ידיים'},
+    {name:'פשיטת תלת ראשי עם חבל',en:'Rope Pushdown',muscles:'תלת ראשי',equip:'כבלים',cat:'ידיים'},
+    {name:'פשיטת תלת ראשי מעל הראש',en:'Overhead Triceps Extension',muscles:'תלת ראשי',equip:'משקולות',cat:'ידיים'},
+    {name:'סקאל קראשר',en:'Skull Crushers',muscles:'תלת ראשי',equip:'מוט EZ',cat:'ידיים'},
+    {name:'דיפס לתלת ראשי',en:'Bench Dips',muscles:'תלת ראשי',equip:'משקל גוף',cat:'ידיים'},
+    {name:'קיקבק',en:'Triceps Kickback',muscles:'תלת ראשי',equip:'משקולות',cat:'ידיים'},
+    {name:'לחיצת חזה צרה',en:'Close-Grip Bench Press',muscles:'תלת ראשי, חזה',equip:'מוט',cat:'ידיים'},
+    {name:'שכיבות סמיכה יהלום',en:'Diamond Push-ups',muscles:'תלת ראשי',equip:'משקל גוף',cat:'ידיים'},
+    {name:'פשיטת תלת ראשי עם משקולת',en:'Dumbbell Overhead Extension',muscles:'תלת ראשי',equip:'משקולות',cat:'ידיים'},
+    {name:'פשיטת תלת ראשי במכונה',en:'Machine Triceps Extension',muscles:'תלת ראשי',equip:'מכונה',cat:'ידיים'},
+
+    // ===== זוגי (Biceps) =====
+    {name:'כפיפת מרפקים עם מוט',en:'Barbell Curl',muscles:'זוגי',equip:'מוט',cat:'ידיים'},
+    {name:'כפיפת מרפקים עם משקולות',en:'Dumbbell Curl',muscles:'זוגי',equip:'משקולות',cat:'ידיים'},
+    {name:'כפיפת פטיש',en:'Hammer Curl',muscles:'זוזי, כף יד',equip:'משקולות',cat:'ידיים'},
+    {name:'כפיפת מרפקים בכבלים',en:'Cable Curl',muscles:'זוזי',equip:'כבלים',cat:'ידיים'},
+    {name:'כפיפת מרפקים בספסל מטיף',en:'Preacher Curl',muscles:'זוזי',equip:'מוט EZ',cat:'ידיים'},
+    {name:'כפיפת מרפקים מרוכזת',en:'Concentration Curl',muscles:'זוזי',equip:'משקולות',cat:'ידיים'},
+    {name:'כפיפת מרפקים במכונה',en:'Machine Bicep Curl',muscles:'זוזי',equip:'מכונה',cat:'ידיים'},
+    {name:'זוטמן',en:'Zottman Curl',muscles:'זוזי, כף יד',equip:'משקולות',cat:'ידיים'},
+    {name:'כפיפת מרפקים בשיפוע',en:'Incline Dumbbell Curl',muscles:'זוזי',equip:'משקולות',cat:'ידיים'},
+    {name:'כפיפת מרפקים עם גומיות',en:'Band Curl',muscles:'זוזי',equip:'גומיות',cat:'ידיים'},
+
+    // ===== רגליים (Legs) =====
+    {name:'סקווט עם מוט',en:'Barbell Squat',muscles:'ארבע ראשי, ישבן',equip:'מוט',cat:'רגליים'},
+    {name:'סקווט קדמי',en:'Front Squat',muscles:'ארבע ראשי',equip:'מוט',cat:'רגליים'},
+    {name:'לחיצת רגליים',en:'Leg Press',muscles:'ארבע ראשי, ישבן',equip:'מכונה',cat:'רגליים'},
+    {name:'שפיפת רגליים',en:'Leg Extension',muscles:'ארבע ראשי',equip:'מכונה',cat:'רגליים'},
+    {name:'כפיפת ברך משקולת',en:'Goblet Squat',muscles:'ארבע ראשי, ישבן',equip:'משקולת',cat:'רגליים'},
+    {name:"לונג'ס",en:'Lunges',muscles:'ארבע ראשי, ישבן',equip:'משקולות',cat:'רגליים'},
+    {name:'סקווט בולגרי',en:'Bulgarian Split Squat',muscles:'ארבע ראשי, ישבן',equip:'משקולות',cat:'רגליים'},
+    {name:'סקווט סומו',en:'Sumo Squat',muscles:'ישבן, ירך פנימית',equip:'מוט',cat:'רגליים'},
+    {name:'סקווט בסמית',en:'Smith Machine Squat',muscles:'ארבע ראשי, ישבן',equip:'סמית',cat:'רגליים'},
+    {name:'האק סקווט',en:'Hack Squat',muscles:'ארבע ראשי',equip:'מכונה',cat:'רגליים'},
+    {name:'כפיפת ברך אחורית',en:'Leg Curl',muscles:'אחורי ירך',equip:'מכונה',cat:'רגליים'},
+    {name:'כפיפת ברך עמידה',en:'Standing Leg Curl',muscles:'אחורי ירך',equip:'מכונה',cat:'רגליים'},
+    {name:'דדליפט רומני עם משקולות',en:'Romanian Deadlift (DB)',muscles:'אחורי ירך, ישבן',equip:'משקולות',cat:'רגליים'},
+    {name:'היפ תראסט',en:'Hip Thrust',muscles:'ישבן',equip:'מוט',cat:'רגליים'},
+    {name:'גשר ישבן',en:'Glute Bridge',muscles:'ישבן',equip:'משקל גוף',cat:'רגליים'},
+    {name:'פישוט רגל במכונה',en:'Leg Extension Single',muscles:'ארבע ראשי',equip:'מכונה',cat:'רגליים'},
+    {name:'קפיצות קופסה',en:'Box Jumps',muscles:'ארבע ראשי, ישבן',equip:'משקל גוף',cat:'רגליים'},
+    {name:'שפיפת סורכס עומד',en:'Standing Calf Raise',muscles:'סורכס',equip:'מכונה',cat:'רגליים'},
+    {name:'שפיפת סורכס ישוב',en:'Seated Calf Raise',muscles:'סורכס',equip:'מכונה',cat:'רגליים'},
+    {name:'שפיפת סורכס עם משקולת',en:'Dumbbell Calf Raise',muscles:'סורכס',equip:'משקולות',cat:'רגליים'},
+
+    // ===== בטן (Abs) =====
+    {name:'כפיפת בטן',en:'Crunches',muscles:'בטן',equip:'משקל גוף',cat:'בטן'},
+    {name:'כפיפת בטן בכבלים',en:'Cable Crunch',muscles:'בטן',equip:'כבלים',cat:'בטן'},
+    {name:'הרמת רגליים תלוי',en:'Hanging Leg Raise',muscles:'בטן תחתון',equip:'משקל גוף',cat:'בטן'},
+    {name:'פלאנק',en:'Plank',muscles:'ליבה',equip:'משקל גוף',cat:'בטן'},
+    {name:'פלאנק צידי',en:'Side Plank',muscles:'מותן',equip:'משקל גוף',cat:'בטן'},
+    {name:'טוויסט רוסי',en:'Russian Twist',muscles:'מותן',equip:'משקל גוף',cat:'בטן'},
+    {name:'אופניים',en:'Bicycle Crunch',muscles:'בטן, מותן',equip:'משקל גוף',cat:'בטן'},
+    {name:'הרמת רגליים שכיבה',en:'Leg Raises',muscles:'בטן תחתון',equip:'משקל גוף',cat:'בטן'},
+    {name:'גלגל בטן',en:'Ab Wheel Rollout',muscles:'בטן',equip:'מכשיר',cat:'בטן'},
+    {name:'כפיפת בטן הפוכה',en:'Reverse Crunch',muscles:'בטן תחתון',equip:'משקל גוף',cat:'בטן'},
+    {name:"ווד צ'ופ",en:'Wood Chop',muscles:'מותן, בטן',equip:'כבלים',cat:'בטן'},
+    {name:'פלוף',en:'Pallof Press',muscles:'ליבה',equip:'כבלים',cat:'בטן'},
+    {name:'טיפוס הרים',en:'Mountain Climbers',muscles:'בטן, ליבה',equip:'משקל גוף',cat:'בטן'},
+    {name:'דד באג',en:'Dead Bug',muscles:'ליבה',equip:'משקל גוף',cat:'בטן'},
+
+    // ===== אמבט (Forearms) =====
+    {name:'כפיפת שורש כף יד',en:'Wrist Curl',muscles:'אמבט',equip:'מוט',cat:'אמבט'},
+    {name:'פשיטת שורש כף יד',en:'Reverse Wrist Curl',muscles:'אמבט',equip:'מוט',cat:'אמבט'},
+    {name:'הליכת חקלאי',en:"Farmer's Walk",muscles:'אחיזה, אמבט',equip:'משקולות',cat:'אמבט'},
+
+    // ===== תרגילים כלל גופיים (Full body) =====
+    {name:'בורפי',en:'Burpees',muscles:'כל הגוף',equip:'משקל גוף',cat:'כל הגוף'},
+    {name:'קטלבל סווינג',en:'Kettlebell Swing',muscles:'ישבן, אחורי ירך, גב',equip:'קטלבל',cat:'כל הגוף'},
+    {name:'טורקיש גט-אפ',en:'Turkish Get-Up',muscles:'כל הגוף',equip:'קטלבל',cat:'כל הגוף'},
+    {name:'כדור תופת',en:'Battle Ropes',muscles:'כתפיים, גב, זוזי',equip:'חבלים',cat:'כל הגוף'},
+    {name:'סקווט עם קפיצה',en:'Jump Squat',muscles:'רגליים, ליבה',equip:'משקל גוף',cat:'כל הגוף'},
+    {name:'תרסר',en:'Thruster',muscles:'רגליים, כתפיים',equip:'מוט',cat:'כל הגוף'},
+    {name:"קלין אנד ג'רק",en:'Clean and Jerk',muscles:'כל הגוף',equip:'מוט',cat:'כל הגוף'},
+    {name:'סנאץ',en:'Snatch',muscles:'כל הגוף',equip:'מוט',cat:'כל הגוף'},
+    {name:'פאוור קלין',en:'Power Clean',muscles:'גב, רגליים, כתפיים',equip:'מוט',cat:'כל הגוף'},
+    {name:'מאסל אפ',en:'Muscle-Up',muscles:'גב, חזה, ידיים',equip:'משקל גוף',cat:'כל הגוף'},
+
+    // ===== תרגילי TRX =====
+    {name:'TRX חתירה',en:'TRX Row',muscles:'גב',equip:'TRX',cat:'גב'},
+    {name:'TRX פלאי',en:'TRX Fly',muscles:'חזה',equip:'TRX',cat:'חזה'},
+    {name:'TRX כפיפת זוזי',en:'TRX Bicep Curl',muscles:'זוזי',equip:'TRX',cat:'ידיים'},
+    {name:'TRX פשיטת תלת',en:'TRX Triceps Extension',muscles:'תלת ראשי',equip:'TRX',cat:'ידיים'},
+
+    // ===== סטרצ'ינג (Stretches) =====
+    {name:'מתיחת ארבע ראשי',en:'Quad Stretch',muscles:'ארבע ראשי',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'מתיחת אחורי ירך',en:'Hamstring Stretch',muscles:'אחורי ירך',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'מתיחת חזה',en:'Chest Stretch',muscles:'חזה',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'מתיחת גב',en:'Back Stretch',muscles:'גב',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'מתיחת כתפיים',en:'Shoulder Stretch',muscles:'כתפיים',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'מתיחת סורכס',en:'Calf Stretch',muscles:'סורכס',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'מתיחת ישבן',en:'Hip Stretch',muscles:'ישבן',equip:'משקל גוף',cat:'מתיחות'},
+    {name:'תנוחת ילד',en:"Child's Pose",muscles:'גב תחתון',equip:'משקל גוף',cat:'מתיחות'},
+  ];
+
+  // ============================================================
+  // RUSSIAN EXERCISE DATABASE (200+ exercises)
+  // ============================================================
+  const RU_EXERCISES = [
+    // ===== Грудь (Chest) =====
+    {name:'Жим штанги лёжа',en:'Bench Press',muscles:'Грудь, передние дельты, трицепс',equip:'Штанга',cat:'Грудь'},
+    {name:'Жим гантелей лёжа',en:'Dumbbell Bench Press',muscles:'Грудь, передние дельты',equip:'Гантели',cat:'Грудь'},
+    {name:'Разведение гантелей лёжа',en:'Dumbbell Fly',muscles:'Грудь',equip:'Гантели',cat:'Грудь'},
+    {name:'Жим штанги на наклонной скамье',en:'Incline Bench Press',muscles:'Верх груди',equip:'Штанга',cat:'Грудь'},
+    {name:'Жим гантелей на наклонной',en:'Incline Dumbbell Press',muscles:'Верх груди',equip:'Гантели',cat:'Грудь'},
+    {name:'Разведение гантелей на наклонной',en:'Incline Dumbbell Fly',muscles:'Верх груди',equip:'Гантели',cat:'Грудь'},
+    {name:'Жим штанги на скамье с негативным уклоном',en:'Decline Bench Press',muscles:'Низ груди',equip:'Штанга',cat:'Грудь'},
+    {name:'Кроссовер',en:'Cable Crossover',muscles:'Грудь',equip:'Кроссовер',cat:'Грудь'},
+    {name:'Жим от груди в тренажёре',en:'Machine Chest Press',muscles:'Грудь',equip:'Тренажёр',cat:'Грудь'},
+    {name:'Бабочка (Pec Deck)',en:'Pec Deck',muscles:'Грудь',equip:'Тренажёр',cat:'Грудь'},
+    {name:'Отжимания от пола',en:'Push-ups',muscles:'Грудь, трицепс, дельты',equip:'Свой вес',cat:'Грудь'},
+    {name:'Отжимания с ногами на возвышении',en:'Decline Push-ups',muscles:'Верх груди',equip:'Свой вес',cat:'Грудь'},
+    {name:'Отжимания на брусьях (грудь)',en:'Chest Dips',muscles:'Низ груди, трицепс',equip:'Свой вес',cat:'Грудь'},
+    {name:'Жим в Смите',en:'Smith Machine Bench Press',muscles:'Грудь',equip:'Смит',cat:'Грудь'},
+    {name:'Жим лёжа узким хватом',en:'Close-Grip Bench Press',muscles:'Внутр. груди, трицепс',equip:'Штанга',cat:'Грудь'},
+    {name:'Пуловер с гантелью',en:'Dumbbell Pullover',muscles:'Грудь, широчайшие',equip:'Гантели',cat:'Грудь'},
+    {name:'Сведение рук в кроссовере снизу',en:'Low Cable Crossover',muscles:'Верх груди',equip:'Кроссовер',cat:'Грудь'},
+    {name:'Жим гантелей на фитболе',en:'Dumbbell Press on Fitball',muscles:'Грудь, стабилизаторы',equip:'Гантели',cat:'Грудь'},
+
+    // ===== Спина (Back) =====
+    {name:'Подтягивания широким хватом',en:'Pull-ups (Wide Grip)',muscles:'Широчайшие, бицепс',equip:'Свой вес',cat:'Спина'},
+    {name:'Подтягивания обратным хватом',en:'Chin-ups',muscles:'Широчайшие, бицепс',equip:'Свой вес',cat:'Спина'},
+    {name:'Тяга верхнего блока',en:'Lat Pulldown',muscles:'Широчайшие',equip:'Кроссовер',cat:'Спина'},
+    {name:'Тяга штанги в наклоне',en:'Barbell Row',muscles:'Широчайшие, задние дельты',equip:'Штанга',cat:'Спина'},
+    {name:'Тяга гантели одной рукой',en:'One-Arm Dumbbell Row',muscles:'Широчайшие',equip:'Гантели',cat:'Спина'},
+    {name:'Тяга нижнего блока сидя',en:'Seated Cable Row',muscles:'Широчайшие, задние дельты',equip:'Кроссовер',cat:'Спина'},
+    {name:'Австралийские подтягивания',en:'Inverted Row',muscles:'Широчайшие',equip:'Свой вес',cat:'Спина'},
+    {name:'Пуловер',en:'Dumbbell Pullover',muscles:'Широчайшие, грудь',equip:'Гантели',cat:'Спина'},
+    {name:'Подтягивания параллельным хватом',en:'Neutral Grip Pull-up',muscles:'Широчайшие',equip:'Свой вес',cat:'Спина'},
+    {name:'Тяга Т-грифа',en:'T-Bar Row',muscles:'Широчайшие, задние дельты',equip:'Т-гриф',cat:'Спина'},
+    {name:'Становая тяга',en:'Deadlift',muscles:'Спина, ноги, бицепс бедра',equip:'Штанга',cat:'Спина'},
+    {name:'Румынская тяга',en:'Romanian Deadlift',muscles:'Бицепс бедра, поясница',equip:'Штанга',cat:'Спина'},
+    {name:'Гиперэкстензия',en:'Hyperextension',muscles:'Поясница',equip:'Свой вес',cat:'Спина'},
+    {name:'Тяга прямых рук сверху',en:'Straight Arm Pulldown',muscles:'Широчайшие',equip:'Кроссовер',cat:'Спина'},
+    {name:'Тяга в тренажёре сидя',en:'Machine Row',muscles:'Широчайшие',equip:'Тренажёр',cat:'Спина'},
+    {name:'Тяга штанги в наклоне обратным хватом',en:'Underhand Barbell Row',muscles:'Широчайшие, бицепс',equip:'Штанга',cat:'Спина'},
+    {name:'Тяга сумо',en:'Sumo Deadlift',muscles:'Спина, ягодицы',equip:'Штанга',cat:'Спина'},
+    {name:'Шраги со штангой',en:'Barbell Shrug',muscles:'Трапеции',equip:'Штанга',cat:'Спина'},
+    {name:'Шраги с гантелями',en:'Dumbbell Shrug',muscles:'Трапеции',equip:'Гантели',cat:'Спина'},
+
+    // ===== Плечи (Shoulders) =====
+    {name:'Жим стоя с штангой',en:'Overhead Press',muscles:'Плечи, трицепс',equip:'Штанга',cat:'Плечи'},
+    {name:'Жим гантелей сидя',en:'Dumbbell Shoulder Press',muscles:'Плечи',equip:'Гантели',cat:'Плечи'},
+    {name:'Жим Арнольда',en:'Arnold Press',muscles:'Плечи',equip:'Гантели',cat:'Плечи'},
+    {name:'Махи гантелями в стороны',en:'Lateral Raises',muscles:'Средняя дельта',equip:'Гантели',cat:'Плечи'},
+    {name:'Махи в стороны в кроссовере',en:'Cable Lateral Raise',muscles:'Средняя дельта',equip:'Кроссовер',cat:'Плечи'},
+    {name:'Махи гантелями перед собой',en:'Front Raises',muscles:'Передняя дельта',equip:'Гантели',cat:'Плечи'},
+    {name:'Обратные разведения',en:'Rear Delt Fly',muscles:'Задняя дельта',equip:'Гантели',cat:'Плечи'},
+    {name:'Фейс пулл',en:'Face Pull',muscles:'Задняя дельта',equip:'Кроссовер',cat:'Плечи'},
+    {name:'Тяга штанги к подбородку',en:'Upright Row',muscles:'Плечи, трапеции',equip:'Штанга',cat:'Плечи'},
+    {name:'Жим в Смите сидя',en:'Smith Machine Shoulder Press',muscles:'Плечи',equip:'Смит',cat:'Плечи'},
+    {name:'Жим из-за головы',en:'Behind the Neck Press',muscles:'Плечи',equip:'Штанга',cat:'Плечи'},
+    {name:'Махи в тренажёре',en:'Machine Lateral Raise',muscles:'Средняя дельта',equip:'Тренажёр',cat:'Плечи'},
+    {name:'Разведение с эспандером',en:'Band Pull Apart',muscles:'Задняя дельта',equip:'Эспандер',cat:'Плечи'},
+    {name:'Пайк отжимания',en:'Pike Push-up',muscles:'Плечи',equip:'Свой вес',cat:'Плечи'},
+    {name:'Жим гантелей стоя',en:'Standing Dumbbell Press',muscles:'Плечи',equip:'Гантели',cat:'Плечи'},
+
+    // ===== Трицепс (Triceps) =====
+    {name:'Разгибание на трицепс в кроссовере',en:'Triceps Pushdown',muscles:'Трицепс',equip:'Кроссовер',cat:'Руки'},
+    {name:'Разгибание с канатом',en:'Rope Pushdown',muscles:'Трицепс',equip:'Кроссовер',cat:'Руки'},
+    {name:'Французский жим',en:'Skull Crushers',muscles:'Трицепс',equip:'EZ-штанга',cat:'Руки'},
+    {name:'Разгибание из-за головы',en:'Overhead Triceps Extension',muscles:'Трицепс',equip:'Гантели',cat:'Руки'},
+    {name:'Отжимания от скамьи',en:'Bench Dips',muscles:'Трицепс',equip:'Свой вес',cat:'Руки'},
+    {name:'Кикбэк',en:'Triceps Kickback',muscles:'Трицепс',equip:'Гантели',cat:'Руки'},
+    {name:'Жим лёжа узким хватом',en:'Close-Grip Bench Press',muscles:'Трицепс, грудь',equip:'Штанга',cat:'Руки'},
+    {name:'Алмазные отжимания',en:'Diamond Push-ups',muscles:'Трицепс',equip:'Свой вес',cat:'Руки'},
+    {name:'Разгибание с гантелью из-за головы',en:'Dumbbell Overhead Extension',muscles:'Трицепс',equip:'Гантели',cat:'Руки'},
+    {name:'Разгибание в тренажёре',en:'Machine Triceps Extension',muscles:'Трицепс',equip:'Тренажёр',cat:'Руки'},
+
+    // ===== Бицепс (Biceps) =====
+    {name:'Подъём штанги на бицепс',en:'Barbell Curl',muscles:'Бицепс',equip:'Штанга',cat:'Руки'},
+    {name:'Подъём гантелей на бицепс',en:'Dumbbell Curl',muscles:'Бицепс',equip:'Гантели',cat:'Руки'},
+    {name:'Молотки',en:'Hammer Curl',muscles:'Бицепс, предплечье',equip:'Гантели',cat:'Руки'},
+    {name:'Подъём на бицепс в кроссовере',en:'Cable Curl',muscles:'Бицепс',equip:'Кроссовер',cat:'Руки'},
+    {name:'Подъём на скамье Скотта',en:'Preacher Curl',muscles:'Бицепс',equip:'EZ-штанга',cat:'Руки'},
+    {name:'Концентрированный подъём',en:'Concentration Curl',muscles:'Бицепс',equip:'Гантели',cat:'Руки'},
+    {name:'Сгибание в тренажёре',en:'Machine Bicep Curl',muscles:'Бицепс',equip:'Тренажёр',cat:'Руки'},
+    {name:'Подъём Зоттмана',en:'Zottman Curl',muscles:'Бицепс, предплечье',equip:'Гантели',cat:'Руки'},
+    {name:'Подъём гантелей на наклонной скамье',en:'Incline Dumbbell Curl',muscles:'Бицепс',equip:'Гантели',cat:'Руки'},
+    {name:'Сгибание с эспандером',en:'Band Curl',muscles:'Бицепс',equip:'Эспандер',cat:'Руки'},
+
+    // ===== Ноги (Legs) =====
+    {name:'Приседания со штангой',en:'Barbell Squat',muscles:'Квадрицепс, ягодицы',equip:'Штанга',cat:'Ноги'},
+    {name:'Фронтальные приседания',en:'Front Squat',muscles:'Квадрицепс',equip:'Штанга',cat:'Ноги'},
+    {name:'Жим ногами',en:'Leg Press',muscles:'Квадрицепс, ягодицы',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Разгибание ног сидя',en:'Leg Extension',muscles:'Квадрицепс',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Гоблет присед',en:'Goblet Squat',muscles:'Квадрицепс, ягодицы',equip:'Гантель',cat:'Ноги'},
+    {name:'Выпады',en:'Lunges',muscles:'Квадрицепс, ягодицы',equip:'Гантели',cat:'Ноги'},
+    {name:'Болгарские сплит-приседания',en:'Bulgarian Split Squat',muscles:'Квадрицепс, ягодицы',equip:'Гантели',cat:'Ноги'},
+    {name:'Сумо-приседания',en:'Sumo Squat',muscles:'Ягодицы, внутр. бедро',equip:'Штанга',cat:'Ноги'},
+    {name:'Приседания в Смите',en:'Smith Machine Squat',muscles:'Квадрицепс, ягодицы',equip:'Смит',cat:'Ноги'},
+    {name:'Гакк-приседания',en:'Hack Squat',muscles:'Квадрицепс',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Сгибание ног лёжа',en:'Leg Curl',muscles:'Бицепс бедра',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Сгибание ног стоя',en:'Standing Leg Curl',muscles:'Бицепс бедра',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Румынская тяга с гантелями',en:'Romanian Deadlift (DB)',muscles:'Бицепс бедра, ягодицы',equip:'Гантели',cat:'Ноги'},
+    {name:'Ягодичный мостик со штангой',en:'Hip Thrust',muscles:'Ягодицы',equip:'Штанга',cat:'Ноги'},
+    {name:'Ягодичный мостик',en:'Glute Bridge',muscles:'Ягодицы',equip:'Свой вес',cat:'Ноги'},
+    {name:'Запрыгивания на тумбу',en:'Box Jumps',muscles:'Квадрицепс, ягодицы',equip:'Свой вес',cat:'Ноги'},
+    {name:'Подъём на икры стоя',en:'Standing Calf Raise',muscles:'Икры',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Подъём на икры сидя',en:'Seated Calf Raise',muscles:'Икры',equip:'Тренажёр',cat:'Ноги'},
+    {name:'Подъём на икры с гантелями',en:'Dumbbell Calf Raise',muscles:'Икры',equip:'Гантели',cat:'Ноги'},
+    {name:'Становая тяга на прямых ногах',en:'Stiff-Legged Deadlift',muscles:'Бицепс бедра',equip:'Штанга',cat:'Ноги'},
+    {name:'Шаги фермера',en:'Walking Lunges',muscles:'Квадрицепс, ягодицы',equip:'Гантели',cat:'Ноги'},
+    {name:'Приседания пистолетиком',en:'Pistol Squat',muscles:'Квадрицепс',equip:'Свой вес',cat:'Ноги'},
+
+    // ===== Пресс (Abs) =====
+    {name:'Скручивания',en:'Crunches',muscles:'Пресс',equip:'Свой вес',cat:'Пресс'},
+    {name:'Скручивания в кроссовере',en:'Cable Crunch',muscles:'Пресс',equip:'Кроссовер',cat:'Пресс'},
+    {name:'Подъём ног в висе',en:'Hanging Leg Raise',muscles:'Низ пресса',equip:'Свой вес',cat:'Пресс'},
+    {name:'Планка',en:'Plank',muscles:'Кор',equip:'Свой вес',cat:'Пресс'},
+    {name:'Боковая планка',en:'Side Plank',muscles:'Косые',equip:'Свой вес',cat:'Пресс'},
+    {name:'Русский твист',en:'Russian Twist',muscles:'Косые',equip:'Свой вес',cat:'Пресс'},
+    {name:'Велосипед',en:'Bicycle Crunch',muscles:'Пресс, косые',equip:'Свой вес',cat:'Пресс'},
+    {name:'Подъём ног лёжа',en:'Leg Raises',muscles:'Низ пресса',equip:'Свой вес',cat:'Пресс'},
+    {name:'Колесо для пресса',en:'Ab Wheel Rollout',muscles:'Пресс',equip:'Инвентарь',cat:'Пресс'},
+    {name:'Обратные скручивания',en:'Reverse Crunch',muscles:'Низ пресса',equip:'Свой вес',cat:'Пресс'},
+    {name:'Дровосек',en:'Wood Chop',muscles:'Косые, пресс',equip:'Кроссовер',cat:'Пресс'},
+    {name:'Паллоф пресс',en:'Pallof Press',muscles:'Кор',equip:'Кроссовер',cat:'Пресс'},
+    {name:'Альпинист',en:'Mountain Climbers',muscles:'Пресс, кор',equip:'Свой вес',cat:'Пресс'},
+    {name:'Мёртвый жук',en:'Dead Bug',muscles:'Кор',equip:'Свой вес',cat:'Пресс'},
+    {name:'Скручивания на фитболе',en:'Fitball Crunch',muscles:'Пресс',equip:'Фитбол',cat:'Пресс'},
+
+    // ===== Предплечья (Forearms) =====
+    {name:'Сгибание запястий',en:'Wrist Curl',muscles:'Предплечья',equip:'Штанга',cat:'Предплечья'},
+    {name:'Разгибание запястий',en:'Reverse Wrist Curl',muscles:'Предплечья',equip:'Штанга',cat:'Предплечья'},
+    {name:'Прогулка фермера',en:"Farmer's Walk",muscles:'Хват, предплечья',equip:'Гантели',cat:'Предплечья'},
+
+    // ===== Всё тело (Full body) =====
+    {name:'Берпи',en:'Burpees',muscles:'Всё тело',equip:'Свой вес',cat:'Всё тело'},
+    {name:'Махи гирей',en:'Kettlebell Swing',muscles:'Ягодицы, бицепс бедра, спина',equip:'Гиря',cat:'Всё тело'},
+    {name:'Турецкий подъём',en:'Turkish Get-Up',muscles:'Всё тело',equip:'Гиря',cat:'Всё тело'},
+    {name:'Боевые канаты',en:'Battle Ropes',muscles:'Плечи, спина, бицепс',equip:'Канаты',cat:'Всё тело'},
+    {name:'Приседания с прыжком',en:'Jump Squat',muscles:'Ноги, кор',equip:'Свой вес',cat:'Всё тело'},
+    {name:'Трастер',en:'Thruster',muscles:'Ноги, плечи',equip:'Штанга',cat:'Всё тело'},
+    {name:'Рывок',en:'Clean and Jerk',muscles:'Всё тело',equip:'Штанга',cat:'Всё тело'},
+    {name:'Снэтч',en:'Snatch',muscles:'Всё тело',equip:'Штанга',cat:'Всё тело'},
+    {name:'Пауэр клин',en:'Power Clean',muscles:'Спина, ноги, плечи',equip:'Штанга',cat:'Всё тело'},
+    {name:'Выход силой',en:'Muscle-Up',muscles:'Спина, грудь, руки',equip:'Свой вес',cat:'Всё тело'},
+    {name:'Запрыгивания на тумбу',en:'Box Jump',muscles:'Ноги',equip:'Свой вес',cat:'Всё тело'},
+    {name:'Двойные прыжки на скакалке',en:'Double Under',muscles:'Икры, плечи',equip:'Скакалка',cat:'Всё тело'},
+
+    // ===== TRX =====
+    {name:'TRX тяга',en:'TRX Row',muscles:'Спина',equip:'TRX',cat:'Спина'},
+    {name:'TRX разведение',en:'TRX Fly',muscles:'Грудь',equip:'TRX',cat:'Грудь'},
+    {name:'TRX на бицепс',en:'TRX Bicep Curl',muscles:'Бицепс',equip:'TRX',cat:'Руки'},
+    {name:'TRX на трицепс',en:'TRX Triceps Extension',muscles:'Трицепс',equip:'TRX',cat:'Руки'},
+
+    // ===== Растяжка (Stretching) =====
+    {name:'Растяжка квадрицепса',en:'Quad Stretch',muscles:'Квадрицепс',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка бицепса бедра',en:'Hamstring Stretch',muscles:'Бицепс бедра',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка грудных',en:'Chest Stretch',muscles:'Грудь',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка спины',en:'Back Stretch',muscles:'Спина',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка плеч',en:'Shoulder Stretch',muscles:'Плечи',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка икр',en:'Calf Stretch',muscles:'Икры',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка ягодиц',en:'Hip Stretch',muscles:'Ягодицы',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Поза ребёнка',en:"Child's Pose",muscles:'Поясница',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Растяжка сгибателя бедра',en:'Hip Flexor Stretch',muscles:'Сгибатель бедра',equip:'Свой вес',cat:'Растяжка'},
+    {name:'Складка',en:'Forward Fold',muscles:'Бицепс бедра, поясница',equip:'Свой вес',cat:'Растяжка'},
+
+    // ===== Кардио =====
+    {name:'Бег на дорожке',en:'Treadmill Running',muscles:'Ноги, кор',equip:'Дорожка',cat:'Кардио'},
+    {name:'Эллипс',en:'Elliptical',muscles:'Ноги, руки',equip:'Эллипс',cat:'Кардио'},
+    {name:'Степпер',en:'Stairmaster',muscles:'Ноги, ягодицы',equip:'Степпер',cat:'Кардио'},
+    {name:'Гребля',en:'Rowing Machine',muscles:'Спина, ноги, руки',equip:'Гребля',cat:'Кардио'},
+    {name:'Велотренажёр',en:'Stationary Bike',muscles:'Ноги',equip:'Велотренажёр',cat:'Кардио'},
+    {name:'Прыжки на скакалке',en:'Jump Rope',muscles:'Икры, плечи',equip:'Скакалка',cat:'Кардио'},
+  ];
+
+  // ============================================================
+  // WGER API SEARCH (English) — direct fetch, no dependency on old script
+  // ============================================================
+  const WGER_BASE = 'https://wger.de/api/v2';
+  let wgerCache = null;
+  let wgerCachePromise = null;
+
+  async function wgerFetchAll() {
+    if (wgerCache) return wgerCache;
+    if (wgerCachePromise) return wgerCachePromise;
+    wgerCachePromise = (async () => {
+      const all = [];
+      let url = WGER_BASE + '/exerciseinfo/?format=json&limit=100';
+      let pages = 0;
+      while (url && pages < 12) {
+        pages++;
+        try {
+          const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
+          if (!resp.ok) break;
+          const data = await resp.json();
+          for (const ex of (data.results || [])) {
+            let name = '';
+            for (const tr of (ex.translations || [])) {
+              if (tr.language === 2) { name = tr.name || ''; break; }
+            }
+            if (!name) continue;
+            all.push({
+              wgerId: ex.id,
+              name: name,
+              muscles: (ex.muscles || []).map(m => m.name).filter(n => n),
+              equipment: (ex.equipment || []).map(e => e.name).filter(n => n),
+              category: ex.category ? ex.category.name : '',
+              description: ''
+            });
+          }
+          url = data.next;
+        } catch(e) { break; }
+      }
+      console.log('[MultiExSearch] wger cached:', all.length, 'exercises');
+      wgerCache = all;
+      return all;
+    })();
+    return wgerCachePromise;
+  }
+
+  async function wgerSearchEnglish(query) {
+    if (!query || query.trim().length < 2) return [];
+    const q = query.toLowerCase().trim();
+    const all = await wgerFetchAll();
+    return all.filter(ex => {
+      const name = (ex.name || '').toLowerCase();
+      return name.includes(q);
+    }).slice(0, 50);
+  }
+
+  // ============================================================
+  // SEARCH FUNCTIONS
+  // ============================================================
+
+  function searchLocalDb(db, query) {
+    if (!query || query.trim().length < 1) return db.slice(0, 50);
+    const q = query.toLowerCase().trim();
+    return db.filter(ex => {
+      const name = (ex.name || '').toLowerCase();
+      const en = (ex.en || '').toLowerCase();
+      const muscles = (ex.muscles || '').toLowerCase();
+      return name.includes(q) || en.includes(q) || muscles.includes(q);
+    }).slice(0, 50);
+  }
+
+  // ============================================================
+  // ADD EXERCISE TO WORKOUT (shared)
+  // ============================================================
+  function addExerciseToWorkout(ex) {
+    try {
+      const newEx = {
+        name: ex.name,
+        sets: 3,
+        reps: 10,
+        weight: '',
+        rest: 60,
+        time: '',
+        note: '',
+        exId: '',
+        groupId: mapCategoryToGroup(ex.cat),
+        subId: '',
+        equip: ex.equip || '',
+        _externalSource: true
+      };
+
+      if (typeof addExerciseRow === 'function') {
+        const workoutsContainer = document.getElementById('workoutsContainer');
+        const workouts = workoutsContainer ? workoutsContainer.querySelectorAll('.workout') : document.querySelectorAll('.workout');
+        let workoutEl = null;
+        for (const w of workouts) {
+          if (w.querySelector('.workout-body')) { workoutEl = w; break; }
+        }
+        if (workoutEl) {
+          addExerciseRow(workoutEl, newEx);
+          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+          return true;
+        }
+      }
+
+      const cid = window.HistoryManager ? window.HistoryManager.getClientId() : (typeof currentUserId !== 'undefined' ? currentUserId : null);
+      if (cid) {
+        const raw = localStorage.getItem('workoutPlan_' + cid);
+        const plan = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(plan)) {
+          if (plan.length === 0) {
+            plan.push({ id: 'wk_' + Date.now(), title: 'New Workout', date: new Date().toISOString().slice(0, 10), duration: 60, exercises: [] });
+          }
+          if (!plan[0].exercises) plan[0].exercises = [];
+          plan[0].exercises.push(newEx);
+          localStorage.setItem('workoutPlan_' + cid, JSON.stringify(plan));
+          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+          return true;
+        }
+      }
+      return false;
+    } catch(e) { console.error('addExerciseToWorkout error:', e); return false; }
+  }
+
+  function mapCategoryToGroup(cat) {
+    const map = {
+      'חזה': 'chest', 'גב': 'back', 'כתפיים': 'shoulders', 'ידיים': 'biceps',
+      'רגליים': 'quads', 'בטן': 'abs', 'אמבט': 'forearms', 'כל הגוף': 'fullbody',
+      'מתיחות': 'stretch',
+      'Грудь': 'chest', 'Спина': 'back', 'Плечи': 'shoulders', 'Руки': 'biceps',
+      'Ноги': 'quads', 'Пресс': 'abs', 'Предплечья': 'forearms', 'Всё тело': 'fullbody',
+      'Растяжка': 'stretch', 'Кардио': 'cardio',
+      'Chest': 'chest', 'Back': 'back', 'Shoulders': 'shoulders', 'Arms': 'biceps',
+      'Legs': 'quads', 'Abs': 'abs', 'Forearms': 'forearms'
+    };
+    return map[cat] || 'fullbody';
+  }
+
+  function addExerciseToDb(ex) {
+    try {
+      if (typeof EXERCISE_DB === 'undefined') return false;
+      for (const group of EXERCISE_DB) {
+        for (const sub of (group.subgroups || [])) {
+          for (const e of (sub.exercises || [])) {
+            if (e.en && e.en.toLowerCase() === (ex.en || '').toLowerCase()) return 'exists';
+          }
+        }
+      }
+      let group = EXERCISE_DB.find(g => g.id === mapCategoryToGroup(ex.cat));
+      if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
+      if (!group) return false;
+      let sub = (group.subgroups || []).find(s => s.id === 'external_imported');
+      if (!sub) {
+        sub = { id: 'external_imported', name: '🌐 Внешние', exercises: [] };
+        if (!group.subgroups) group.subgroups = [];
+        group.subgroups.push(sub);
+      }
+      sub.exercises.push({
+        id: 'ext_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        equip: 'bw',
+        ru: ex.name, en: ex.en || ex.name, he: ex.name,
+        _externalImported: true
+      });
+      return true;
+    } catch(e) { console.error('addExerciseToDb error:', e); return false; }
+  }
+
+  // ============================================================
+  // MODAL UI
+  // ============================================================
+  function openSearchModal(source) {
+    // source: 'wger' | 'he' | 'ru'
+    const existing = document.getElementById('multiExSearchModal');
+    if (existing) existing.remove();
+
+    const titles = {
+      wger: t('wgerTitle'),
+      he: t('heTitle'),
+      ru: t('ruTitle')
+    };
+
+    const modal = document.createElement('div');
+    modal.id = 'multiExSearchModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML =
+      '<div style="background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+          '<div><h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(titles[source]) + '</h3></div>' +
+          '<button onclick="this.closest(\'#multiExSearchModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+          '<input type="text" id="multiExSearchInput" placeholder="' + esc(t('searchPh')) + '" style="flex:1;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;" oninput="window.__mesSearch(\'' + source + '\')">' +
+          '<button onclick="window.__mesVoice()" id="multiExVoiceBtn" style="background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:0 12px;cursor:pointer;font-weight:600;">' + esc(t('voiceBtn')) + '</button>' +
+        '</div>' +
+        '<div id="multiExResults" style="min-height:80px;"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    window.__mesCurrentSource = source;
+
+    // For local databases, show all exercises immediately
+    if (source === 'he' || source === 'ru') {
+      const db = source === 'he' ? HE_EXERCISES : RU_EXERCISES;
+      renderResults(db.slice(0, 50), source);
+    } else {
+      // For wger, show hint to search
+      document.getElementById('multiExResults').innerHTML =
+        '<div style="text-align:center;padding:30px;color:#757575;font-size:13px;">' +
+        '<div style="font-size:40px;margin-bottom:10px;">🏋️</div>' +
+        '<p>Type to search 859 exercises in English</p>' +
+        '</div>';
+    }
+
+    setTimeout(() => { const inp = document.getElementById('multiExSearchInput'); if (inp) inp.focus(); }, 100);
+  }
+
+  function renderResults(results, source) {
+    const el = document.getElementById('multiExResults');
+    if (!el) return;
+    if (!results.length) {
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('noResults')) + '</div>';
+      return;
+    }
+    let html = '<div style="font-size:12px;color:#616161;margin-bottom:10px;">' + esc(t('resultsCount', {n: results.length})) + '</div>';
+    if (results.length > 1) {
+      html += '<div style="margin-bottom:12px;"><button onclick="window.__mesAddAll()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('addAllBtn')) + '</button></div>';
+    }
+    results.forEach((ex, i) => {
+      const name = ex.name || ex.exercise_name || '';
+      const en = ex.en || '';
+      const muscles = ex.muscles || (ex.muscles && ex.muscles.join ? ex.muscles.join(', ') : '');
+      const equip = ex.equip || (ex.equipment && ex.equipment.join ? ex.equipment.join(', ') : '');
+      const cat = ex.cat || ex.category || '';
+      html += '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:8px;align-items:flex-start;">' +
+        '<div style="width:40px;height:40px;background:#E0E0E0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏋️</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-weight:600;color:#212121;font-size:14px;">' + esc(name) + '</div>' +
+          (en ? '<div style="font-size:11px;color:#9E9E9E;margin-top:1px;">EN: ' + esc(en) + '</div>' : '') +
+          (cat ? '<div style="font-size:11px;color:#1565C0;margin-top:2px;">' + esc(t('catLabel')) + ': ' + esc(cat) + '</div>' : '') +
+          (muscles ? '<div style="font-size:11px;color:#757575;margin-top:2px;">💪 ' + esc(muscles) + '</div>' : '') +
+          (equip ? '<div style="font-size:11px;color:#757575;margin-top:2px;">🛠 ' + esc(equip) + '</div>' : '') +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button onclick="window.__mesAddToWorkout(' + i + ')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToWorkout')) + '</button>' +
+            '<button onclick="window.__mesAddToDb(' + i + ')" style="background:#1565C0;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToDb')) + '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    el.innerHTML = html;
+    window.__mesResults = results;
+  }
+
+  // ---- Search handlers ----
+  window.__mesOpen = openSearchModal;
+
+  window.__mesSearch = async function(source) {
+    const inp = document.getElementById('multiExSearchInput');
+    if (!inp) return;
+    const q = inp.value.trim();
+
+    if (source === 'he' || source === 'ru') {
+      const db = source === 'he' ? HE_EXERCISES : RU_EXERCISES;
+      const results = searchLocalDb(db, q);
+      renderResults(results, source);
+      return;
+    }
+
+    // wger search (English) — fetch directly from wger API
+    if (q.length < 2) return;
+    const el = document.getElementById('multiExResults');
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #10B981;border-radius:50%;animation:mesSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('loading')) + '</p></div><style>@keyframes mesSpin{to{transform:rotate(360deg)}}</style>';
+
+    try {
+      const results = await wgerSearchEnglish(q);
+      const transformed = results.map(ex => ({
+        name: ex.name,
+        en: ex.name,
+        muscles: ex.muscles ? ex.muscles.join(', ') : '',
+        equip: ex.equipment ? ex.equipment.join(', ') : '',
+        cat: ex.category || '',
+        _wgerEx: ex
+      }));
+      renderResults(transformed, source);
+    } catch(e) {
+      console.error('wger search error:', e);
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">⚠️ ' + esc(t('noResults')) + '</div>';
+    }
+  };
+
+  window.__mesVoice = function() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert(t('voiceNotSupported')); return; }
+    const rec = new SR();
+    const source = window.__mesCurrentSource;
+    rec.lang = source === 'he' ? 'he-IL' : (source === 'ru' ? 'ru-RU' : 'en-US');
+    rec.interimResults = false;
+    const btn = document.getElementById('multiExVoiceBtn');
+    if (btn) btn.textContent = t('voiceListening');
+    rec.onresult = function(ev) {
+      const text = ev.results[0][0].transcript;
+      const inp = document.getElementById('multiExSearchInput');
+      if (inp) { inp.value = text; window.__mesSearch(source); }
+      if (btn) btn.textContent = t('voiceBtn');
+    };
+    rec.onerror = function() { if (btn) btn.textContent = t('voiceBtn'); };
+    rec.onend = function() { if (btn) btn.textContent = t('voiceBtn'); };
+    rec.start();
+  };
+
+  window.__mesAddToWorkout = function(i) {
+    const ex = window.__mesResults && window.__mesResults[i];
+    if (!ex) return;
+    const ok = addExerciseToWorkout(ex);
+    if (ok && typeof showToast === 'function') showToast('✓ ' + t('added'));
+  };
+
+  window.__mesAddToDb = function(i) {
+    const ex = window.__mesResults && window.__mesResults[i];
+    if (!ex) return;
+    const result = addExerciseToDb(ex);
+    if (result === 'exists') {
+      if (typeof showToast === 'function') showToast(t('alreadyInDb'));
+    } else if (result) {
+      if (typeof showToast === 'function') showToast(t('savedToDb', {n: ''}));
+    }
+  };
+
+  window.__mesAddAll = function() {
+    if (!window.__mesResults) return;
+    let added = 0;
+    window.__mesResults.forEach(ex => { if (addExerciseToWorkout(ex)) added++; });
+    if (typeof showToast === 'function') showToast(t('addedAll', {n: added}));
+  };
+
+  // ============================================================
+  // INJECT 3 BUTTONS INTO TOPBAR (workout mode only)
+  // ============================================================
+  function injectButtons() {
+    if (!document.body.classList.contains('mp-active')) return;
+    if (!document.body.classList.contains('mode-workout')) return;
+
+    const topbar = document.querySelector('.mp-topbar');
+    if (!topbar) return;
+
+    let btnsContainer = document.getElementById('nuTopBarButtons');
+    if (!btnsContainer) {
+      btnsContainer = document.createElement('div');
+      btnsContainer.id = 'nuTopBarButtons';
+      btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+      topbar.appendChild(btnsContainer);
+    }
+
+    // Remove old single exercise search button if present
+    const oldBtn = document.getElementById('exSearchBtn');
+    if (oldBtn) oldBtn.remove();
+
+    // Add 3 buttons: wger (EN), Hebrew, Russian
+    if (!document.getElementById('mesBtnWger')) {
+      const btnWger = document.createElement('button');
+      btnWger.id = 'mesBtnWger';
+      btnWger.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;';
+      btnWger.innerHTML = '🇬🇧 EN';
+      btnWger.title = 'wger — English exercises (859)';
+      btnWger.onclick = () => openSearchModal('wger');
+      btnsContainer.insertBefore(btnWger, btnsContainer.firstChild);
+    }
+
+    if (!document.getElementById('mesBtnHe')) {
+      const btnHe = document.createElement('button');
+      btnHe.id = 'mesBtnHe';
+      btnHe.style.cssText = 'background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;';
+      btnHe.innerHTML = '🇮🇱 עבר';
+      btnHe.title = 'מאגר תרגילים בעברית';
+      btnHe.onclick = () => openSearchModal('he');
+      btnsContainer.insertBefore(btnHe, btnsContainer.firstChild);
+    }
+
+    if (!document.getElementById('mesBtnRu')) {
+      const btnRu = document.createElement('button');
+      btnRu.id = 'mesBtnRu';
+      btnRu.style.cssText = 'background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;';
+      btnRu.innerHTML = '🇷🇺 RU';
+      btnRu.title = 'База упражнений на русском';
+      btnRu.onclick = () => openSearchModal('ru');
+      btnsContainer.insertBefore(btnRu, btnsContainer.firstChild);
+    }
+  }
+
+  // ---- Observer ----
+  function setupObserver() {
+    const obs = new MutationObserver(muts => {
+      for (const m of muts) {
+        if (m.attributeName === 'class') setTimeout(injectButtons, 200);
+      }
+    });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    const orig = window.mpRenderBody;
+    if (typeof orig === 'function' && !window.__mesBodyWrapped) {
+      window.mpRenderBody = function() {
+        orig.apply(this, arguments);
+        setTimeout(injectButtons, 100);
+      };
+      window.__mesBodyWrapped = true;
+    }
+  }
+
+  function init() {
+    console.log('[MultiExSearch v1.0] init — HE:', HE_EXERCISES.length, 'RU:', RU_EXERCISES.length);
+    setupObserver();
+    setTimeout(injectButtons, 500);
+    let retries = 0;
+    const iv = setInterval(() => {
+      if (document.body.classList.contains('mp-active') && document.body.classList.contains('mode-workout')) injectButtons();
+      if (++retries > 15) clearInterval(iv);
+    }, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  document.addEventListener('click', function(e) {
+    const txt = (e.target && e.target.textContent) || '';
+    if (txt.match(/Тренировки|Workout|אימון/)) setTimeout(injectButtons, 500);
+  }, true);
+
+  window.MultiExSearch = {
+    version: '1.0.0',
+    open: openSearchModal,
+    HE_EXERCISES: HE_EXERCISES,
+    RU_EXERCISES: RU_EXERCISES,
+    injectButtons: injectButtons
+  };
+
+})();
+
+</script>
+<!-- /MULTI_EX_SEARCH_V1 -->
 </body>
 </html>
