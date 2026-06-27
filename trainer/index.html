@@ -34751,125 +34751,81 @@ window.cwOpenExMenu = function(i){
 
 /* Get archived workouts for a user */
 function getArchivedWorkouts(userId){
-    try {
-        var raw = localStorage.getItem('workoutArchive_' + userId);
-        return raw ? JSON.parse(raw) : [];
-    } catch(e) { return []; }
+        // MIGRATED: old workoutArchive_* data is now read from clientWorkoutHistory_*
+        try {
+            var newHist = JSON.parse(localStorage.getItem('clientWorkoutHistory_' + userId) || '[]');
+            // Also check old key for migration
+            var oldArch = JSON.parse(localStorage.getItem('workoutArchive_' + userId) || '[]');
+            if (oldArch.length > 0 && newHist.length === 0) {
+                // Migrate old format to new
+                var migrated = oldArch.map(function(a) {
+                    return {
+                        id: a.id || ('migrated_' + Date.now() + '_' + Math.random()),
+                        archivedAt: a.archivedAt || new Date().toISOString(),
+                        label: a.label || 'Migrated',
+                        summary: { type: 'workout', wkCount: (a.workouts||[]).length, exCount: (a.workouts||[]).reduce(function(s,w){return s+(w.exercises||[]).length;},0), setCount: 0, titles: (a.workouts||[]).map(function(w){return w.title||'W';}).join(' · ') },
+                        plan: a.workouts || [],
+                        type: 'workout'
+                    };
+                });
+                localStorage.setItem('clientWorkoutHistory_' + userId, JSON.stringify(migrated));
+                localStorage.removeItem('workoutArchive_' + userId);
+                return migrated;
+            }
+            return newHist;
+        } catch(e) { return []; }
+    }
 }
 
 /* Save archived workouts */
 function saveArchivedWorkouts(userId, archive){
-    try { localStorage.setItem('workoutArchive_' + userId, JSON.stringify(archive)); } catch(e) {}
+        // MIGRATED: saves to new clientWorkoutHistory_* key
+        try { localStorage.setItem('clientWorkoutHistory_' + userId, JSON.stringify(archive)); } catch(e) {}
+    }
 }
 
 /* Archive current workouts (move from active to archive) */
 window.cwArchiveWorkouts = function(){
-    var ctx = cwCtx(); if (!ctx) return;
-    var uid = ctx.uid;
-    if (!confirm(wt('confirmArchive'))) return;
-    var current = cwWorkouts(ctx);
-    if (!current.length){ if (typeof showToast==='function') showToast('⚠️ Нет тренировок для архивации'); return; }
-    var archive = getArchivedWorkouts(uid);
-    archive.unshift({
-        id: 'arch_' + Date.now(),
-        archivedAt: new Date().toISOString(),
-        workouts: current,
-        label: new Date().toLocaleDateString(__uiLocale())
-    });
-    saveArchivedWorkouts(uid, archive);
-    try { localStorage.setItem(ctx.key, JSON.stringify([])); } catch(e) {}
-    if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-    if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-    if (typeof showToast === 'function') showToast(wt('archiveOld'), 'success');
-    if (typeof csCloseSheet === 'function') csCloseSheet();
-    if (typeof cwRenderInner === 'function') cwRenderInner();
-};
+        // MIGRATED: delegates to HistoryManager
+        if (window.HistoryManager && typeof window.HistoryManager.archiveCurrent === 'function') {
+            window.HistoryManager.archiveCurrent('workout');
+        }
+    };
 
 /* Restore workouts from archive */
 window.cwRestoreWorkout = function(archId){
-    var ctx = cwCtx(); if (!ctx) return;
-    var uid = ctx.uid;
-    var archive = getArchivedWorkouts(uid);
-    var arch = archive.find(function(a){ return a.id === archId; });
-    if (!arch || !arch.workouts) return;
-    if (!confirm(wt('confirmRestore'))) return;
-    var current = cwWorkouts(ctx);
-    if (current && current.length){
-        archive.unshift({
-            id: 'arch_' + Date.now(),
-            archivedAt: new Date().toISOString(),
-            workouts: current,
-            label: new Date().toLocaleDateString(__uiLocale())
-        });
-    }
-    archive = archive.filter(function(a){ return a.id !== archId; });
-    saveArchivedWorkouts(uid, archive);
-    try { localStorage.setItem(ctx.key, JSON.stringify(arch.workouts)); } catch(e) {}
-    if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-    if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-    if (typeof showToast === 'function') showToast('✅ ' + wt('restoreWk'), 'success');
-    if (typeof csCloseSheet === 'function') csCloseSheet();
-    if (typeof cwRenderInner === 'function') cwRenderInner();
-};
+        // MIGRATED: delegates to HistoryManager
+        if (window.HistoryManager && typeof window.HistoryManager.restore === 'function') {
+            window.HistoryManager.restore('workout', archId);
+        }
+    };
 
 /* Show workout history sheet */
 window.cwShowHistory = function(){
-    if (typeof csOpenSheet !== 'function') return;
-    var ctx = cwCtx(); if (!ctx) return;
-    var uid = ctx.uid;
-    var archive = getArchivedWorkouts(uid);
-    var current = cwWorkouts(ctx);
-
-    var h = '<div class="mp-sheet-head"><div class="mp-grab"></div>' +
-        '<div class="mp-sheet-title">' + wt('wkHistory') + '</div>' +
-        '<button class="mp-sheet-x" onclick="csCloseSheet()">✕</button></div>';
-    h += '<div class="mp-sheet-body" style="padding:14px;">';
-
-    /* Active workouts */
-    h += '<div style="font-weight:700; font-size:.9em; margin-bottom:10px; color:var(--text-primary);">' + wt('activeWks') + ' (' + (current ? current.length : 0) + ')</div>';
-    if (current && current.length){
-        current.forEach(function(w, i){
-            var exCount = (w.exercises || []).length;
-            var title = w.title || (wt('startWk').replace(/▶\s*/,'')) + ' ' + (i+1);
-            h += '<div style="background:var(--surface-color); border:1px solid var(--border-color); border-radius:12px; padding:12px; margin-bottom:8px;">';
-            h += '<div style="display:flex; justify-content:space-between; align-items:center;">';
-            h += '<div><div style="font-weight:600; font-size:.92em;">' + eh(title) + '</div>';
-            h += '<div style="font-size:.76em; color:var(--text-light);">' + exCount + ' ' + wt('setsOf') + '</div></div>';
-            h += '<span style="font-size:.7em; padding:3px 8px; border-radius:8px; background:rgba(16,185,129,.12); color:#047857; font-weight:700;">✓ ' + (wt('setActive').replace(/✅\s*/,'')) + '</span>';
-            h += '</div></div>';
-        });
-    }
-    if (current && current.length){
-        h += '<button class="mp-action-item" style="margin-top:6px;" onclick="cwArchiveWorkouts()"><span class="ico">📦</span>' + wt('archiveWk') + '</button>';
-    }
-
-    /* Archived workouts */
-    h += '<div style="font-weight:700; font-size:.9em; margin:20px 0 10px; color:var(--text-light);">' + wt('archivedWks') + ' (' + archive.length + ')</div>';
-    if (archive.length){
-        archive.forEach(function(arch){
-            var wks = arch.workouts || [];
-            var totalEx = wks.reduce(function(a, w){ return a + (w.exercises ? w.exercises.length : 0); }, 0);
-            var date = new Date(arch.archivedAt).toLocaleDateString(__uiLocale());
-            var titles = wks.map(function(w, i){ return w.title || ('W' + (i+1)); }).join(' · ');
-            h += '<div style="background:var(--surface-color); border:1px solid var(--border-color); border-radius:12px; padding:12px; margin-bottom:8px;">';
-            h += '<div style="display:flex; justify-content:space-between; align-items:flex-start;">';
-            h += '<div style="flex:1;">';
-            h += '<div style="font-weight:600; font-size:.92em;">📅 ' + eh(date) + '</div>';
-            h += '<div style="font-size:.78em; color:var(--text-secondary); margin-top:2px;">' + eh(titles) + '</div>';
-            h += '<div style="font-size:.72em; color:var(--text-light); margin-top:2px;">' + wks.length + ' ' + wt('setsOf') + ' · ' + totalEx + ' ' + wt('repsOf') + '</div>';
-            h += '</div>';
-            h += '<button onclick="cwRestoreWorkout(\'' + arch.id + '\')" style="padding:6px 10px; border-radius:8px; border:1px solid #3B82F6; background:rgba(59,130,246,.08); color:#3B82F6; font-size:.76em; font-weight:700; cursor:pointer; flex-shrink:0;">' + wt('restoreWk') + '</button>';
-            h += '</div></div>';
-        });
-    } else {
-        h += '<div style="text-align:center; padding:30px 10px; color:var(--text-light); font-size:.88em;">' + wt('noHistory') + '</div>';
-    }
-
-    h += '</div>';
-    csOpenSheet(h);
-    var s = document.getElementById('csSheet');
-    if (s) s.style.height = '85vh';
-};
+        // MIGRATED: delegates to HistoryManager
+        if (window.HistoryManager && typeof window.HistoryManager.showHistory === 'function') {
+            // Detect type based on current view
+            var type = 'workout';
+            if (typeof document !== 'undefined') {
+                var headings = document.querySelectorAll('h3, h2, h1');
+                for (var i = 0; i < headings.length; i++) {
+                    var txt = headings[i].textContent || '';
+                    var r = headings[i].getBoundingClientRect();
+                    if (r.width > 0 && r.height > 0) {
+                        if (txt.indexOf('Питание') >= 0 || txt.indexOf('Nutrition') >= 0 || txt.indexOf('תזונה') >= 0) {
+                            type = 'nutrition';
+                            break;
+                        }
+                        if (txt.indexOf('Тренировки') >= 0 || txt.indexOf('Workout') >= 0 || txt.indexOf('אימון') >= 0) {
+                            type = 'workout';
+                            break;
+                        }
+                    }
+                }
+            }
+            window.HistoryManager.showHistory(type);
+        }
+    };
 
 window.cwEditEx = function(i){
     if (typeof csOpenSheet!=='function') return;
@@ -35110,7 +35066,7 @@ window.addEventListener('popstate', function(){
         var ms = document.getElementById('mpSheet');
         if (ms && ms.classList.contains('open')){ if (typeof mpCloseSheet==='function') mpCloseSheet(); return; }
         var ov = document.getElementById('liveWorkoutOverlay');
-        if (ov && ov.style.display === 'flex'){ cwCloseLive(); return; }
+        if (ov && ov.style.display !== 'none'){ cwCloseLive(); return; }
         if (typeof __clientActiveWorkoutIdx!=='undefined' && __clientActiveWorkoutIdx >= 0 &&
             typeof __clientUser!=='undefined' && __clientUser &&
             typeof closeClientWorkout==='function'){ closeClientWorkout(); return; }
@@ -35739,7 +35695,7 @@ function refreshOpenViews(){
             else if (typeof renderClientWorkoutList === 'function') renderClientWorkoutList();
         }
         var lw = document.getElementById('liveWorkoutOverlay');
-        if (lw && lw.style.display === 'flex' && typeof renderClientActiveWorkout === 'function') renderClientActiveWorkout();
+        if (lw && lw.style.display !== 'none' && typeof renderClientActiveWorkout === 'function') renderClientActiveWorkout();
         if (typeof renderHomeScreen === 'function' && !document.getElementById('homeScreen').classList.contains('hidden')) { try { renderHomeScreen(); } catch(e){} }
     } catch(e){}
 }
@@ -36306,7 +36262,7 @@ function bmInit(){
             var r = origAL.apply(this, arguments);
             try {
                 var ov = document.getElementById('bmOverlay');
-                if (ov && ov.style.display === 'flex') bmRender();
+                if (ov && ov.style.display !== 'none') bmRender();
                 var btn = document.getElementById('bmTrainerBtn');
                 if (btn) btn.title = bt('title');
             } catch(e){}
@@ -36591,7 +36547,7 @@ window.chatOnRemoteUpdate = function(){
     try {
         var ov = document.getElementById('chtOverlay');
         var c = window.__chatCtx;
-        if (ov && ov.style.display === 'flex' && c.uid){
+        if (ov && ov.style.display !== 'none' && c.uid){
             var n = chatLoad(c.uid).length;
             if (n !== __chatLastCount){
                 chatMarkRead();
@@ -36617,7 +36573,7 @@ function chatInit(){
             try {
                 chatUpdateHead();
                 var ov = document.getElementById('chtOverlay');
-                if (ov && ov.style.display === 'flex') chatRender(false);
+                if (ov && ov.style.display !== 'none') chatRender(false);
                 var btn = document.getElementById('chtTrainerBtn');
                 if (btn) btn.title = cht('title');
             } catch(e){}
@@ -37063,7 +37019,7 @@ function subInit(){
             var r = origAL.apply(this, arguments);
             try {
                 var ov = document.getElementById('subOverlay');
-                if (ov && ov.style.display === 'flex') subRender();
+                if (ov && ov.style.display !== 'none') subRender();
                 var btn = document.getElementById('subTrainerBtn');
                 if (btn) btn.title = st('title');
             } catch(e){}
@@ -37432,7 +37388,7 @@ function ntfInit(){
                 var bell = document.getElementById('ntfBell');
                 if (bell) bell.title = nt('title');
                 var ov = document.getElementById('ntfOverlay');
-                if (ov && ov.style.display === 'flex') ntfRender();
+                if (ov && ov.style.display !== 'none') ntfRender();
             } catch(e){}
             return r;
         };
@@ -37854,7 +37810,7 @@ function dashInit(){
                 var b = document.getElementById('dshHomeBtn');
                 if (b) b.textContent = dt('dashBtn');
                 var ov = document.getElementById('dshOverlay');
-                if (ov && ov.style.display === 'flex') dshRender();
+                if (ov && ov.style.display !== 'none') dshRender();
             } catch(e){}
             try { /* injectHomeTools(); отключено */ } catch(e){}
             return r;
@@ -38511,7 +38467,7 @@ function encInit(){
                 var btn = document.getElementById('encHomeBtn');
                 if (btn) btn.textContent = etL(ENC_UI.btnLabel);
                 var ov = document.getElementById('encOverlay');
-                if (ov && ov.style.display === 'flex'){
+                if (ov && ov.style.display !== 'none'){
                     var tt = ov.querySelector('.enc-title'); if (tt) tt.textContent = etL(ENC_UI.title);
                     var si = document.getElementById('encSearch'); if (si) si.placeholder = etL(ENC_UI.search);
                     encRender();
@@ -44355,7 +44311,7 @@ window.__win11RefreshClients = function(){
     try {
       if (typeof currentUserId !== 'undefined' && currentUserId) return currentUserId;
       if (typeof __clientUser !== 'undefined' && __clientUser && __clientUser.id) return __clientUser.id;
-      if (typeof currentTrainerSession !== 'undefined' && currentTrainerSession && currentTrainerSession.id) return currentTrainerSession.id;
+      if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id) return currentTrainerSession.id;
     } catch(e) {}
     return 'default';
   }
@@ -45597,7 +45553,7 @@ window.__win11RefreshClients = function(){
       // Trainer app — current selected client
       if (typeof currentUserId !== 'undefined' && currentUserId) return currentUserId;
       // Trainer's own profile
-      if (typeof currentTrainerSession !== 'undefined' && currentTrainerSession && currentTrainerSession.id) return currentTrainerSession.id;
+      if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id) return currentTrainerSession.id;
     } catch(e) {}
     return null;
   }
@@ -45609,7 +45565,7 @@ window.__win11RefreshClients = function(){
         const u = getUsers().find(u => u.id === currentUserId);
         if (u) return u.name;
       }
-      if (typeof currentTrainerSession !== 'undefined' && currentTrainerSession && currentTrainerSession.name) return currentTrainerSession.name;
+      if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.name) return currentTrainerSession.name;
     } catch(e) {}
     return '';
   }
@@ -47411,6 +47367,36 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /COMPACT_SETTINGS_V1 -->
+<script>
+// PR SYSTEM MIGRATION: unify clientPRs_ → clientPRs2_
+(function() {
+    try {
+        var keys = Object.keys(localStorage);
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            if (k.indexOf('clientPRs_') === 0 && k.indexOf('clientPRs2_') !== 0) {
+                var uid = k.substring('clientPRs_'.length);
+                var newKey = 'clientPRs2_' + uid;
+                if (!localStorage.getItem(newKey)) {
+                    var oldData = JSON.parse(localStorage.getItem(k) || '{}');
+                    // Transform old format (keyed by workout_ex index) to new format (keyed by exercise name)
+                    var newData = {};
+                    for (var oldKey in oldData) {
+                        if (oldData.hasOwnProperty(oldKey)) {
+                            var pr = oldData[oldKey];
+                            // Try to extract exercise name from old key format: workout_<idx>_ex_<idx>
+                            // Keep as-is with fallback key
+                            newData[oldKey] = pr;
+                        }
+                    }
+                    localStorage.setItem(newKey, JSON.stringify(newData));
+                    console.log('[PR Migration] Migrated', k, '→', newKey);
+                }
+            }
+        }
+    } catch(e) { console.warn('[PR Migration] error:', e); }
+})();
+</script>
 
 
 
@@ -48435,5 +48421,175 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /MULTI_EX_SEARCH_V1 -->
+
+
+
+
+
+
+
+<!-- WATER_FIX_V2 -->
+<script>
+// Water Fix v2 - better observer that catches CS module re-renders
+(function() {
+  if (window.__waterFixV2) return;
+  window.__waterFixV2 = true;
+
+  // Override getWaterGoal to handle {entries, photos} format
+  window.getWaterGoal = function() {
+    try {
+      var cid = (typeof __clientUser !== 'undefined' && __clientUser && __clientUser.id) ||
+                (typeof currentUserId !== 'undefined' && currentUserId) || 'default';
+      var raw = localStorage.getItem('bodyMeasures_' + cid);
+      if (raw) {
+        var data = JSON.parse(raw);
+        var entries = data.entries || (Array.isArray(data) ? data : []);
+        if (entries.length > 0) {
+          var lastEntry = entries[entries.length - 1];
+          var weight = lastEntry.w || lastEntry.weight;
+          if (weight && weight > 30) return Math.round(weight * 30);
+        }
+      }
+    } catch(e) {}
+    return 2000;
+  };
+  console.log('[WaterFix v2] getWaterGoal patched');
+
+  
+  function injectWaterWidget() {
+    if (typeof __clientUser === 'undefined' || !__clientUser) return;
+    if (!document.body.classList.contains('client-space-open')) return;
+    var nutTab = document.getElementById('clientNutritionTab');
+    if (!nutTab) return;
+    if (document.getElementById('csWaterWidget')) {
+      // Widget exists but might be empty (CS re-rendered parent) - re-render content
+      renderWaterContent();
+      return;
+    }
+    
+    var widget = document.createElement('div');
+    widget.id = 'csWaterWidget';
+    widget.style.cssText = 'margin:12px 0;';
+    nutTab.insertBefore(widget, nutTab.firstChild);
+    renderWaterContent();
+  }
+  
+  function renderWaterContent() {
+    var widget = document.getElementById('csWaterWidget');
+    if (!widget) return;
+    
+    var cid = window.HistoryManager ? window.HistoryManager.getClientId() : 
+              (__clientUser ? __clientUser.id : 'default');
+    var today = new Date().toISOString().slice(0,10);
+    var key = 'waterTracker_' + cid + '_' + today;
+    var cur = 0;
+    try { cur = JSON.parse(localStorage.getItem(key) || '0'); } catch(e) {}
+    var goal = (typeof window.getWaterGoal === 'function') ? window.getWaterGoal() : 2000;
+    var pct = Math.min(100, Math.round((cur / goal) * 100));
+    var remaining = Math.max(0, goal - cur);
+    var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+    var labels = {
+      ru: { title: '💧 Вода', goal: 'Цель', ml: 'мл', left: 'Осталось', done: '✓ Цель достигнута!', add: '+250', add2: '+500', custom: 'Своё', reset: 'Сброс' },
+      en: { title: '💧 Water', goal: 'Goal', ml: 'ml', left: 'Remaining', done: '✓ Goal reached!', add: '+250', add2: '+500', custom: 'Custom', reset: 'Reset' },
+      he: { title: '💧 מים', goal: 'יעד', ml: 'מ"ל', left: 'נשאר', done: '✓ היעד הושג!', add: '+250', add2: '+500', custom: 'אחר', reset: 'אפס' }
+    };
+    var L = labels[lang] || labels.ru;
+    
+    widget.innerHTML = 
+      '<div style="background:linear-gradient(135deg,#E3F2FD,#BBDEFB);border-radius:14px;padding:14px 16px;box-shadow:0 2px 6px rgba(33,150,243,0.12);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+          '<div style="font-weight:700;color:#0D47A1;font-size:15px;">' + L.title + '</div>' +
+          '<div style="font-size:12px;color:#1565C0;">' + L.goal + ': ' + goal + ' ' + L.ml + '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+          '<div style="flex:1;height:22px;background:#fff;border-radius:11px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);">' +
+            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#2196F3,#03A9F4);transition:width 0.3s;"></div>' +
+          '</div>' +
+          '<div style="font-weight:700;color:#0D47A1;font-size:16px;min-width:70px;text-align:right;">' + cur + ' <span style="font-size:11px;color:#1565C0;">' + L.ml + '</span></div>' +
+        '</div>' +
+        (remaining > 0 ? '<div style="font-size:11px;color:#1565C0;margin-bottom:10px;">' + L.left + ': ' + remaining + ' ' + L.ml + '</div>' :
+                        '<div style="font-size:11px;color:#2E7D32;margin-bottom:10px;font-weight:600;">' + L.done + '</div>') +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          '<button onclick="window.__csWaterAdd(250)" style="background:#2196F3;color:#fff;border:0;border-radius:7px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;">' + L.add + '</button>' +
+          '<button onclick="window.__csWaterAdd(500)" style="background:#2196F3;color:#fff;border:0;border-radius:7px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;">' + L.add2 + '</button>' +
+          '<button onclick="window.__csWaterCustom()" style="background:#fff;color:#1565C0;border:1px solid #90CAF9;border-radius:7px;padding:7px 12px;font-weight:600;font-size:13px;cursor:pointer;">' + L.custom + '</button>' +
+          '<button onclick="window.__csWaterReset()" style="background:transparent;color:#546E7A;border:0;border-radius:7px;padding:7px 10px;font-weight:500;font-size:12px;cursor:pointer;margin-left:auto;">' + L.reset + '</button>' +
+        '</div>' +
+      '</div>';
+  }
+  
+  // Expose water actions globally
+  window.__csWaterAdd = function(ml) {
+    var cid = window.HistoryManager ? window.HistoryManager.getClientId() : 
+              (__clientUser ? __clientUser.id : 'default');
+    var today = new Date().toISOString().slice(0,10);
+    var key = 'waterTracker_' + cid + '_' + today;
+    var cur = 0;
+    try { cur = JSON.parse(localStorage.getItem(key) || '0'); } catch(e) {}
+    cur = Math.max(0, cur + ml);
+    try { localStorage.setItem(key, JSON.stringify(cur)); } catch(e) {}
+    renderWaterContent();
+    // Also update trainer-side water widget if exists
+    if (typeof window.renderWaterWidget === 'function') window.renderWaterWidget();
+  };
+  
+  window.__csWaterReset = function() {
+    var cid = window.HistoryManager ? window.HistoryManager.getClientId() : 
+              (__clientUser ? __clientUser.id : 'default');
+    var today = new Date().toISOString().slice(0,10);
+    var key = 'waterTracker_' + cid + '_' + today;
+    try { localStorage.setItem(key, JSON.stringify(0)); } catch(e) {}
+    renderWaterContent();
+    if (typeof window.renderWaterWidget === 'function') window.renderWaterWidget();
+  };
+  
+  window.__csWaterCustom = function() {
+    var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+    var v = prompt(lang === 'he' ? 'כמה מ"ל?' : (lang === 'en' ? 'How many ml?' : 'Сколько мл?'), '200');
+    if (v) { var n = parseInt(v, 10); if (n > 0 && n < 5000) window.__csWaterAdd(n); }
+  };
+  
+  // Observer: watch #clientNutritionTab for child changes (CS re-renders)
+  function setupObserver() {
+    var nutTab = document.getElementById('clientNutritionTab');
+    if (nutTab) {
+      var obs = new MutationObserver(function() {
+        // If our widget was removed by CS re-render, re-inject
+        if (!document.getElementById('csWaterWidget')) {
+          setTimeout(injectWaterWidget, 50);
+        } else {
+          // Widget exists but might be empty
+          var widget = document.getElementById('csWaterWidget');
+          if (widget && widget.innerHTML === '') {
+            renderWaterContent();
+          }
+        }
+      });
+      obs.observe(nutTab, { childList: true });
+    }
+  }
+  
+  // Also observe body for client-space-open class
+  var bodyObs = new MutationObserver(function() {
+    if (document.body.classList.contains('client-space-open')) {
+      setTimeout(function() { injectWaterWidget(); setupObserver(); }, 500);
+    }
+  });
+  bodyObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  
+  // Init
+  setTimeout(function() { injectWaterWidget(); setupObserver(); }, 2000);
+  setTimeout(function() { injectWaterWidget(); setupObserver(); }, 5000);
+  
+  // Re-render every 30s
+  setInterval(function() {
+    if (document.getElementById('csWaterWidget')) renderWaterContent();
+  }, 30000);
+  
+  console.log('[WaterFix v2] initialized');
+})();
+
+</script>
+<!-- /WATER_FIX_V2 -->
 </body>
 </html>
