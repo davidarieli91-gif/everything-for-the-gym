@@ -87,7 +87,7 @@
                     writable: false,
                     configurable: true
                 });
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         /* Безопасные обёртки */
@@ -130,7 +130,7 @@
                     });
                 }
             }
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
     })();
     </script>
     <title>Fitness Client</title>
@@ -9664,7 +9664,7 @@
     </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:0;z-index:99999;background:#10B981;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:0 0 8px 0;pointer-events:all;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;max-width:280px;line-height:1.4;" onclick="this.style.display='none'">v20 ✅ загружено</div>
+<div id="verBadge" style="display:none;position:fixed;top:0;left:0;z-index:99999;background:#10B981;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:0 0 8px 0;pointer-events:all;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;max-width:280px;line-height:1.4;" onclick="this.style.display='none'">v20 ✅ загружено</div>
 <script>
 setTimeout(function(){
     var b=document.getElementById("verBadge");
@@ -9682,7 +9682,7 @@ setTimeout(function(){
     b.style.background=diag.indexOf("MISSING")>=0?"#EF4444":"#10B981";
 },3000);
 </script>
-<script>setTimeout(function(){var b=document.getElementById("verBadge");if(b)b.style.display="none";},6000);</script>
+<!-- verBadge auto-hide disabled (element already hidden) -->
     <!-- ===== ЭКРАН 1: ПОЛЬЗОВАТЕЛИ (РЕДИЗАЙН) ===== -->
     <div class="home-screen win11-desktop" id="homeScreen">
         <!-- Декоративные цветы бугенвиллии -->
@@ -12028,7 +12028,7 @@ setTimeout(function(){
                         try { const d = localStorage.getItem(k); if (d) JSON.parse(d); }
                         catch(e) { console.warn('[APP] Repairing key:', k); localStorage.setItem(k, '[]'); }
                     });
-                    try { localStorage.setItem(DATA_VERSION_KEY, APP_VERSION); } catch(e) {}
+                    try { localStorage.setItem(DATA_VERSION_KEY, APP_VERSION); } catch(e){console.warn("[ctx]",e);}
                 }
             } catch(e) { console.warn('[APP] Migration failed:', e); }
         }
@@ -15270,7 +15270,7 @@ setTimeout(function(){
             try {
                 if (typeof renderExercises === 'function') renderExercises();
                 if (typeof refreshWorkoutsLanguage === 'function') refreshWorkoutsLanguage();
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
             
             // Update language option active state
             document.querySelectorAll('.lang-option').forEach(opt => {
@@ -15305,7 +15305,7 @@ setTimeout(function(){
 
                 // Reload trainer list to update status text
                 if (typeof loadTrainers === 'function') loadTrainers();
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         // Перестроить выпадающие списки продуктов в приёмах пищи
@@ -15499,7 +15499,7 @@ setTimeout(function(){
                         // Show clients that: have no trainerId (legacy), OR match this trainer
                         result = result.filter(u => !u.trainerId || u.trainerId === currentTrainer.id);
                     }
-                } catch(e) {}
+                } catch(e){console.warn("[ctx]",e);}
                 return result;
             } catch (e) {
                 console.error('[APP] getUsers failed (corrupted data):', e);
@@ -15637,7 +15637,7 @@ setTimeout(function(){
         let clientsView = 'list'; // 'list' | 'grid'
         function setClientsView(v) {
             clientsView = v;
-            try { localStorage.setItem('clientsView', v); } catch(e){}
+            try { localStorage.setItem('clientsView', v); } catch(e){console.warn("[ctx]",e);}
             document.getElementById('cvList').classList.toggle('active', v === 'list');
             document.getElementById('cvGrid').classList.toggle('active', v === 'grid');
             renderClientsBase();
@@ -16139,16 +16139,16 @@ setTimeout(function(){
 
                 closeModal('addUserModal');
                 /* Безопасный re-render: если старые элементы скрыты — обновляем Win11 виджет */
-                try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
-                try { if (typeof updateLockBadges === 'function') updateLockBadges(); } catch(e){}
+                try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
+                try { if (typeof updateLockBadges === 'function') updateLockBadges(); } catch(e){console.warn("[ctx]",e);}
                 /* Обновить Win11 виджеты клиентов и сводки */
-                try { if (typeof window.__win11RefreshClients === 'function') window.__win11RefreshClients(); } catch(e){}
+                try { if (typeof window.__win11RefreshClients === 'function') window.__win11RefreshClients(); } catch(e){console.warn("[ctx]",e);}
                 try {
                     if (typeof window.__win11RenderSummary === 'function') {
                         var sw = document.querySelector('.win11-widget[data-widget-id="summary"]');
                         if (sw) window.__win11RenderSummary(sw.querySelector('.win11-widget-body'));
                     }
-                } catch(e){}
+                } catch(e){console.warn("[ctx]",e);}
             } catch(err) {
                 console.error('saveNewUser error:', err);
                 if (typeof showToast === 'function') showToast('⚠️ Ошибка: ' + err.message, 'error');
@@ -16185,7 +16185,7 @@ setTimeout(function(){
                 if (key.indexOf('clientNutriDone_' + userId + '_') === 0) keysToRemove.push(key);
                 if (key.indexOf('waterTracker_' + userId + '_') === 0) keysToRemove.push(key);
             }
-            keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+            keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e){console.warn("[ctx]",e);} });
             console.log('[deleteUser] Cleaned up ' + keysToRemove.length + ' keys for user ' + userId);
             renderUsers();
         }
@@ -16310,7 +16310,7 @@ setTimeout(function(){
                 } catch (e) {
                     console.error('[APP] Corrupted nutritionPlannerSettings, resetting:', e);
                     userSettings = {};
-                    try { localStorage.removeItem('nutritionPlannerSettings'); } catch(_){}
+                    try { localStorage.removeItem('nutritionPlannerSettings'); } catch(_){console.warn("[ctx]",_);}
                 }
                 if (!userSettings.language) userSettings.language = 'ru';
                 if (!userSettings.productPrimaryLang) userSettings.productPrimaryLang = 'ru';
@@ -16684,7 +16684,7 @@ setTimeout(function(){
                            сначала декодируем её. */
                         let dataStr = productData;
                         if (dataStr.trim().startsWith('%7B') || dataStr.trim().startsWith('%5B')) {
-                            try { dataStr = decodeURIComponent(dataStr); } catch(e){}
+                            try { dataStr = decodeURIComponent(dataStr); } catch(e){console.warn("[ctx]",e);}
                         }
                         product = JSON.parse(dataStr);
                     } catch(err) {
@@ -16767,13 +16767,13 @@ setTimeout(function(){
         // Отображение продуктов
         // Свернутость категорий продуктов (по умолчанию всё свернуто — как база упражнений)
         let prodGroupsCollapsed = {};
-        try { prodGroupsCollapsed = JSON.parse(localStorage.getItem('prodGroupsCollapsed') || '{}') || {}; } catch(e) {}
+        try { prodGroupsCollapsed = JSON.parse(localStorage.getItem('prodGroupsCollapsed') || '{}') || {}; } catch(e){console.warn("[ctx]",e);}
         function isProdGroupCollapsed(cat) {
             return prodGroupsCollapsed[cat] !== false; // default: collapsed
         }
         function toggleProdGroup(cat) {
             prodGroupsCollapsed[cat] = isProdGroupCollapsed(cat) ? false : true;
-            try { localStorage.setItem('prodGroupsCollapsed', JSON.stringify(prodGroupsCollapsed)); } catch(e) {}
+            try { localStorage.setItem('prodGroupsCollapsed', JSON.stringify(prodGroupsCollapsed)); } catch(e){console.warn("[ctx]",e);}
             displayProducts();
         }
 
@@ -16786,7 +16786,7 @@ setTimeout(function(){
 
             card.addEventListener('dragstart', function(e) {
                 draggedProduct = product;
-                try { e.dataTransfer.setData('text/plain', JSON.stringify(product)); } catch(err) {}
+                try { e.dataTransfer.setData('text/plain', JSON.stringify(product)); } catch(err){console.warn("[ctx]",err);}
                 e.dataTransfer.effectAllowed = 'copy';
                 this.classList.add('dragging');
             });
@@ -18093,20 +18093,20 @@ setTimeout(function(){
         // Открытие модальных окон
         function openSettingsModal() {
             document.getElementById('settingsModal').style.display = 'flex';
-            __modalOpened();
+            if (typeof __modalOpened === 'function') __modalOpened();
         }
 
         function openAddProductModal() {
             document.getElementById('addProductModal').style.display = 'flex';
             document.getElementById('unitsContainer').innerHTML = '';
             addUnitRow();
-            __modalOpened();
+            if (typeof __modalOpened === 'function') __modalOpened();
         }
 
         // Закрытие модальных окон
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
-            __modalClosed();
+            if (typeof __modalClosed === 'function') __modalClosed();
         }
 
         /* BUG-015: Global Escape handler for all modals.
@@ -18213,7 +18213,7 @@ setTimeout(function(){
             buildEditUnits(p.units || {});
             
             document.getElementById('editProductModal').style.display = 'flex';
-            __modalOpened();
+            if (typeof __modalOpened === 'function') __modalOpened();
         }
 
         function buildEditUnits(units) {
@@ -18400,7 +18400,7 @@ setTimeout(function(){
                     });
                     localStorage.setItem(planKey, JSON.stringify(plan));
                 }
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         function saveCustomProducts() {
@@ -18421,7 +18421,7 @@ setTimeout(function(){
                         }
                     }
                 }
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
 
@@ -19160,7 +19160,7 @@ setTimeout(function(){
             if (s1) exercisesCollapsedState = JSON.parse(s1) || {};
             const s2 = localStorage.getItem('exSubgroupsCollapsed');
             if (s2) subgroupsCollapsedState = JSON.parse(s2) || {};
-        } catch(e) {}
+        } catch(e){console.warn("[ctx]",e);}
 
         // ---------- РЕНДЕР ЛЕВОЙ ПАНЕЛИ ----------
         // Цвета групп мышц
@@ -19259,7 +19259,7 @@ setTimeout(function(){
                         if (n) return n;
                     }
                 }
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
             return (ex && ex.name) || '';
         };
 
@@ -19291,7 +19291,7 @@ setTimeout(function(){
         let dragExData = null;
         function onExDragStart(ev, exJson) {
             dragExData = exJson;
-            try { ev.dataTransfer.setData('text/plain', exJson); } catch(e){}
+            try { ev.dataTransfer.setData('text/plain', exJson); } catch(e){console.warn("[ctx]",e);}
             ev.dataTransfer.effectAllowed = 'copy';
         }
         function onWorkoutDragOver(ev) {
@@ -19308,7 +19308,7 @@ setTimeout(function(){
             ev.preventDefault();
             workoutEl.classList.remove('drag-over');
             let data = null;
-            try { data = ev.dataTransfer.getData('text/plain'); } catch(e){}
+            try { data = ev.dataTransfer.getData('text/plain'); } catch(e){console.warn("[ctx]",e);}
             if (!data) data = dragExData;
             if (!data) return;
             /* Защита от двойных drop-событий (некоторые браузеры firing дважды) */
@@ -19595,7 +19595,7 @@ setTimeout(function(){
             }
             const data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);
             const key = currentUserId ? ('workoutPlan_' + currentUserId) : 'workoutPlan';
-            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
+            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){console.warn("[ctx]",e);}
             updateWorkoutTotals();
         }
 
@@ -19631,11 +19631,11 @@ setTimeout(function(){
                     if (__deduped > 0) {
                         console.log('[APP] Removed ' + __deduped + ' duplicate exercise(s) during load');
                         /* Сохраняем очищенные данные обратно в localStorage */
-                        try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){}
+                        try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){console.warn("[ctx]",e);}
                     }
                     data.forEach(d => addWorkout(d));
                 }
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             updateWorkoutTotals();
         }
 
@@ -19701,14 +19701,14 @@ setTimeout(function(){
                 var bn2=document.getElementById('modeBtnNutrition');if(bn2)bn2.classList.add('active');
                 var bw2=document.getElementById('modeBtnWorkout');if(bw2)bw2.classList.remove('active');
             }
-            try { safeSetItem('appMode', mode); } catch(e){}
-            try { localStorage.setItem('appMode', mode); } catch(e){}
+            try { safeSetItem('appMode', mode); } catch(e){console.warn("[ctx]",e);}
+            try { localStorage.setItem('appMode', mode); } catch(e){console.warn("[ctx]",e);}
 
         /* BUG-007 fixed: setInterval modal-flex hack removed.
            openXxxModal functions now set display='flex' directly (BUG-014). */
-        __modalStack = 0;
-        function __modalOpened() { __modalStack++; document.body.style.overflow = 'hidden'; }
-        function __modalClosed() { __modalStack = Math.max(0, __modalStack - 1); if (!__modalStack) document.body.style.overflow = ''; }
+        window.__modalStack = 0;
+        window.__modalOpened = function() { window.__modalStack++; document.body.style.overflow = 'hidden'; };
+        window.__modalClosed = function() { window.__modalStack = Math.max(0, window.__modalStack - 1); if (!window.__modalStack) document.body.style.overflow = ''; };
 
         /* BUG-039: cleanup all background intervals (called on logout) */
         window.__intervalManager = window.__intervalManager || [];
@@ -19716,7 +19716,7 @@ setTimeout(function(){
             if (!window.__intervalManager) return;
             while (window.__intervalManager.length) {
                 var id = window.__intervalManager.pop();
-                try { clearInterval(id); } catch(e){}
+                try { clearInterval(id); } catch(e){console.warn("[ctx]",e);}
             }
         };
 
@@ -19823,7 +19823,7 @@ setTimeout(function(){
                     if (ov.genderMark.nx != null) L.genderMark.nx = parseFloat(ov.genderMark.nx);
                     if (ov.genderMark.y != null)  L.genderMark.y  = parseFloat(ov.genderMark.y);
                 }
-            } catch(err) {}
+            } catch(err){console.warn("[ctx]",err);}
             return L;
         }
         // ─── Экранирование HTML для ячеек печати (используется в cell()) ───
@@ -19853,7 +19853,7 @@ setTimeout(function(){
 
             // Калибровка: позиция + поворот + масштаб всего листа
             let cal = { x: 0, y: 0, rot: 0, scale: 1 };
-            try { cal = Object.assign({x:0,y:0,rot:0,scale:1}, JSON.parse(localStorage.getItem('pgPrintCal') || '{}')); } catch(err) {}
+            try { cal = Object.assign({x:0,y:0,rot:0,scale:1}, JSON.parse(localStorage.getItem('pgPrintCal') || '{}')); } catch(err){console.warn("[ctx]",err);}
 
             const L = pgGetLayout();
             const cell = (x, y, w, txt, opts) => {
@@ -20140,7 +20140,7 @@ setTimeout(function(){
                     'var sc=parseFloat(document.getElementById("scl").value)||1;' +
                     'sheet.style.transformOrigin="105mm 148.5mm";' +
                     'sheet.style.transform="translate("+x+"mm,"+y+"mm) rotate("+rot+"deg) scale("+sc+")";' +
-                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintCal", JSON.stringify({x:x,y:y,rot:rot,scale:sc})); }catch(e){}' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintCal", JSON.stringify({x:x,y:y,rot:rot,scale:sc})); }catch(e){console.warn("[ctx]",e);}' +
                     'var rv=document.getElementById("rotVal"); if(rv) rv.textContent=rot+"°";' +
                     'var sv=document.getElementById("sclVal"); if(sv) sv.textContent=Math.round(sc*100)+"%";' +
                 '}' +
@@ -20151,7 +20151,7 @@ setTimeout(function(){
                     'document.documentElement.style.setProperty("--bar-opacity", o);' +
                     'document.documentElement.style.setProperty("--panel-opacity", o);' +
                     'var ov=document.getElementById("opaVal"); if(ov) ov.textContent=Math.round(o*100)+"%";' +
-                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintOpacity", String(o)); }catch(e){}' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintOpacity", String(o)); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── ВКЛ/ВЫКЛ БЛОКОВ 1/2/3 ─── */
                 'function applyBlockToggles(){' +
@@ -20167,7 +20167,7 @@ setTimeout(function(){
                     'document.getElementById("blk1ToggleLbl").classList.toggle("off", !b1);' +
                     'document.getElementById("blk2ToggleLbl").classList.toggle("off", !b2);' +
                     'document.getElementById("blk3ToggleLbl").classList.toggle("off", !b3);' +
-                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintBlocks", JSON.stringify({b1:b1,b2:b2,b3:b3})); }catch(e){}' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintBlocks", JSON.stringify({b1:b1,b2:b2,b3:b3})); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── БЛОКИ: каждый со своим X/Y/шириной/высотой/поворотом ─── */
                 'function applyBlocks(){' +
@@ -20188,7 +20188,7 @@ setTimeout(function(){
                     'var i=applyOne("bi","blockInfo");' +
                     'var m=applyOne("bm","blockMain");' +
                     'var a=applyOne("ba","blockAero");' +
-                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.blockInfo=i; ov.blockMain=m; ov.blockAero=a; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.blockInfo=i; ov.blockMain=m; ov.blockAero=a; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── КОЛОНКИ основной таблицы (масштаб + сдвиг) ─── */
                 'function applyCols(){' +
@@ -20200,7 +20200,7 @@ setTimeout(function(){
                         'el.style.left=(ol*s+ox)+"mm";' +
                         'el.style.width=(ow*s)+"mm";' +
                     '});' +
-                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.cols={scale:s,offsetX:ox}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.cols={scale:s,offsetX:ox}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── АЭРО: сдвиг X/Y всей группы ─── */
                 'function applyAero(){' +
@@ -20212,7 +20212,7 @@ setTimeout(function(){
                         'el.style.left=(ol+ax)+"mm";' +
                         'el.style.top=(oy+ay)+"mm";' +
                     '});' +
-                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.aero={offsetX:ax,offsetY:ay}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.aero={offsetX:ax,offsetY:ay}; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── ПОЛЯ АНКЕТЫ: каждое поле отдельно (X/Y/W/Font) ─── */
                 'function applyFields(){' +
@@ -20232,7 +20232,7 @@ setTimeout(function(){
                         'var el=document.querySelector("[data-field=\'"+fid+"\']");' +
                         'if(el){ el.style.left=x+"mm"; el.style.top=y+"mm"; el.style.width=w+"mm"; if(fs>0) el.style.fontSize=fs+"pt"; }' +
                     '});' +
-                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.fields=fields; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){}' +
+                    'try{ var ov=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); ov.fields=fields; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(ov)); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── СЕКЦИИ: верх/шаг/строк/ширина каждой секции ─── */
                 'function applySections(){' +
@@ -20251,10 +20251,10 @@ setTimeout(function(){
                             'else { el.style.top=(top+r*rh+(rh-4.2)/2)+"mm"; }' +
                         '});' +
                     '});' +
-                    'try{ var full=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); full.sections=ov.sections; full.table=ov.table; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(full)); }catch(e){}' +
+                    'try{ var full=JSON.parse(window.opener.localStorage.getItem("pgLayoutOv")||"{}"); full.sections=ov.sections; full.table=ov.table; window.opener.localStorage.setItem("pgLayoutOv",JSON.stringify(full)); }catch(e){console.warn("[ctx]",e);}' +
                 '}' +
                 /* ─── СБРОС ─── */
-                'function resetTune(){ try{ if(window.opener){ window.opener.localStorage.removeItem("pgLayoutOv"); window.opener.localStorage.removeItem("pgPrintCal"); } }catch(e){} alert("Сброшено. Закройте и откройте печать заново."); }' +
+                'function resetTune(){ try{ if(window.opener){ window.opener.localStorage.removeItem("pgLayoutOv"); window.opener.localStorage.removeItem("pgPrintCal"); } }catch(e){console.warn("[ctx]",e);} alert("Сброшено. Закройте и откройте печать заново."); }' +
                 /* ─── Слушатели верхней панели ─── */
                 '["offX","offY","rot","scl"].forEach(function(id){' +
                     'document.getElementById(id).addEventListener("input",apply);' +
@@ -20273,13 +20273,13 @@ setTimeout(function(){
                     'var b=document.getElementById("bar"); var p=document.getElementById("tunePanel");' +
                     'if(this.checked){ b.classList.add("with-blur"); p.classList.add("with-blur"); }' +
                     'else { b.classList.remove("with-blur"); p.classList.remove("with-blur"); }' +
-                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintBlur", this.checked ? "1" : "0"); }catch(e){}' +
+                    'try{ if(window.opener) window.opener.localStorage.setItem("pgPrintBlur", this.checked ? "1" : "0"); }catch(e){console.warn("[ctx]",e);}' +
                 '});' +
                 /* ─── Восстановить сохранённое состояние blur ─── */
                 'try{' +
                     'var savedBlur=window.opener ? window.opener.localStorage.getItem("pgPrintBlur") : null;' +
                     'if(savedBlur==="1"){ document.getElementById("blurChk").checked=true; document.getElementById("bar").classList.add("with-blur"); document.getElementById("tunePanel").classList.add("with-blur"); }' +
-                '}catch(e){}' +
+                '}catch(e){console.warn("[ctx]",e);}' +
                 /* ─── Восстановить сохранённые значения прозрачности и блоков ─── */
                 'try{' +
                     'var savedOpa=window.opener ? window.opener.localStorage.getItem("pgPrintOpacity") : null;' +
@@ -20290,7 +20290,7 @@ setTimeout(function(){
                         'document.getElementById("blk2Chk").checked=sb.b2!==false;' +
                         'document.getElementById("blk3Chk").checked=sb.b3!==false;' +
                     '}' +
-                '}catch(e){}' +
+                '}catch(e){console.warn("[ctx]",e);}' +
                 /* ─── Слушатели блоков ─── */
                 '["bix","biy","biw","bih","bir","bifs","bmx","bmy","bmw","bmh","bmr","bax","bay","baw","bah","bar"].forEach(function(id){' +
                     'document.getElementById(id).addEventListener("input",applyBlocks);' +
@@ -20361,7 +20361,7 @@ setTimeout(function(){
                     var u = getUsers().find(function(x){ return x.id === currentUserId; });
                     if (u) return (u.name || '') + (u.lastName ? ' ' + u.lastName : '');
                 }
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return '';
         }
 
@@ -20679,7 +20679,7 @@ setTimeout(function(){
             try {
                 var d = JSON.parse(localStorage.getItem('programTemplates') || 'null');
                 if (d && d.workouts && d.meals) return d;
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return { workouts: [], meals: [] };
         }
         function tplSave(d){
@@ -20861,10 +20861,10 @@ setTimeout(function(){
                         if (typeof updateProductRow === 'function') updateProductRow(lastRow.querySelector('.product-select'));
                     });
                 });
-                if (typeof refreshMealTargets === 'function') try { refreshMealTargets(); } catch(e){}
+                if (typeof refreshMealTargets === 'function') try { refreshMealTargets(); } catch(e){console.warn("[ctx]",e);}
                 if (typeof updateTotalNutrition === 'function') updateTotalNutrition();
                 if (typeof updateProgressBars === 'function') updateProgressBars();
-                if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+                if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
             }
             closeTplManager();
             if (document.body.classList.contains('mp-active') && typeof mpRenderAll === 'function') mpRenderAll();
@@ -23694,7 +23694,7 @@ setTimeout(function(){
         // Миниатюра упражнения: своя картинка/GIF > SVG-сцена
         // Папка с GIF-анимациями упражнений (рядом с index.html на сайте).
         // Файлы должны называться по id упражнения: например gifs/bb_bench_press.gif
-        window.EX_GIF_BASE = window.EX_GIF_BASE || 'gifs/';
+        window.EX_GIF_BASE = window.EX_GIF_BASE || ''; // [Sprint4] disabled — gifs/ folder not deployed
         window.__exGifMiss = window.__exGifMiss || {};
 
         // ===== ФОТО-ДЕМОНСТРАЦИИ из открытой базы free-exercise-db (MIT/Public Domain) =====
@@ -23795,7 +23795,7 @@ setTimeout(function(){
                 addExImgHint: 'תמונות נדחסות אוטומטית. GIF שומר על האנימציה (עד 1.5 MB). התמונה תחליף את האייקון הסטנדרטי.',
                 addExImgTooBig: 'ה-GIF גדול מדי (מקס׳ 1.5 MB)'
             });
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
 
 
         function openExerciseInfo(payloadJson, readonly) {
@@ -24037,7 +24037,7 @@ setTimeout(function(){
         function selectExEquip(key) {
             renderEquipPicker(key);
             // обновим превью
-            try { updateExIconPreview(); } catch(e){}
+            try { updateExIconPreview(); } catch(e){console.warn("[ctx]",e);}
         }
 
         function updateNewExSubgroups() {
@@ -24057,7 +24057,7 @@ setTimeout(function(){
         try {
             const ovd = localStorage.getItem('systemExOverrides');
             if (ovd) SYS_EX_OVERRIDES = JSON.parse(ovd) || {};
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
         function saveSysExOverrides() {
             safeSetItem('systemExOverrides', JSON.stringify(SYS_EX_OVERRIDES))
         }
@@ -24104,7 +24104,7 @@ setTimeout(function(){
             selectExEquip('none');
             updateExIconPreview();
             modal.style.display = 'flex';
-            __modalOpened();
+            if (typeof __modalOpened === 'function') __modalOpened();
             // обновлять превью при вводе
             ['newExEmoji','newExGroup','newExNameRu','newExNameEn','newExNameHe'].forEach(id => {
                 const el = document.getElementById(id);
@@ -24174,7 +24174,7 @@ setTimeout(function(){
             }
 
             modal.style.display = 'flex';
-            __modalOpened();
+            if (typeof __modalOpened === 'function') __modalOpened();
             ['newExEmoji','newExGroup','newExNameRu','newExNameEn','newExNameHe'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && !el.__previewBound) {
@@ -24359,7 +24359,7 @@ setTimeout(function(){
                 if (!resizing) return;
                 resizing = false;
                 document.body.classList.remove('sidebar-resizing');
-                try { localStorage.setItem('sidebarWidth', parseInt(sidebar.style.width, 10) || 350); } catch(e){}
+                try { localStorage.setItem('sidebarWidth', parseInt(sidebar.style.width, 10) || 350); } catch(e){console.warn("[ctx]",e);}
                 document.removeEventListener('mousemove', mouseMove);
                 document.removeEventListener('mouseup', onUp);
                 document.removeEventListener('touchmove', touchMove);
@@ -24389,7 +24389,7 @@ setTimeout(function(){
             // Двойной клик по ручке — сброс к 350
             handle.addEventListener('dblclick', () => {
                 sidebar.style.width = '350px';
-                try { localStorage.setItem('sidebarWidth', 350); } catch(e){}
+                try { localStorage.setItem('sidebarWidth', 350); } catch(e){console.warn("[ctx]",e);}
             });
         }
 
@@ -24409,7 +24409,7 @@ setTimeout(function(){
             }
             const valEl = document.getElementById('uiScaleVal');
             if (valEl) valEl.textContent = Math.round(v * 100) + '%';
-            try { localStorage.setItem('uiScale', v); } catch(e) {}
+            try { localStorage.setItem('uiScale', v); } catch(e){console.warn("[ctx]",e);}
         }
         function adjustUIScale(delta) {
             applyUIScale(currentUIScale + delta);
@@ -24435,7 +24435,7 @@ setTimeout(function(){
             if (valEl) valEl.textContent = v + '%';
             const slider = document.getElementById('fs' + key.charAt(0).toUpperCase() + key.slice(1));
             if (slider && parseInt(slider.value, 10) !== v) slider.value = v;
-            try { localStorage.setItem('panelFs_' + key, v); } catch(e){}
+            try { localStorage.setItem('panelFs_' + key, v); } catch(e){console.warn("[ctx]",e);}
         }
         function resetAllPanelFontSizes() {
             PANEL_FS_KEYS.forEach(k => setPanelFontSize(k, 100));
@@ -24453,7 +24453,7 @@ setTimeout(function(){
            ========================================================= */
         function toggleExAnim(enabled) {
             document.body.classList.toggle('no-anim', !enabled);
-            try { localStorage.setItem('exAnimEnabled', enabled ? '1' : '0'); } catch(e){}
+            try { localStorage.setItem('exAnimEnabled', enabled ? '1' : '0'); } catch(e){console.warn("[ctx]",e);}
         }
         function initExAnim() {
             const saved = localStorage.getItem('exAnimEnabled');
@@ -24484,7 +24484,7 @@ setTimeout(function(){
             if (valEl) valEl.textContent = v;
             const slider = document.getElementById('productCardSizeSlider');
             if (slider && slider.value != v) slider.value = v;
-            try { localStorage.setItem('productCardSize', v); } catch(e) {}
+            try { localStorage.setItem('productCardSize', v); } catch(e){console.warn("[ctx]",e);}
             // Принудительно перерисовать продукты через 100мс (на случай если DOM пересоздался)
             setTimeout(function(){
                 document.querySelectorAll('.products-list, .pr-group-body').forEach(function(list){
@@ -24507,7 +24507,7 @@ setTimeout(function(){
             if (valEl) valEl.textContent = v;
             const slider = document.getElementById('exerciseCardSizeSlider');
             if (slider && slider.value != v) slider.value = v;
-            try { localStorage.setItem('exerciseCardSize', v); } catch(e) {}
+            try { localStorage.setItem('exerciseCardSize', v); } catch(e){console.warn("[ctx]",e);}
         }
         function adjustExerciseCardSize(dir) {
             const slider = document.getElementById('exerciseCardSizeSlider');
@@ -24588,8 +24588,8 @@ setTimeout(function(){
 
         async function startScanner(cameraId) {
             if (__scanner) {
-                try { await __scanner.stop(); } catch(e){}
-                try { await __scanner.clear(); } catch(e){}
+                try { await __scanner.stop(); } catch(e){console.warn("[ctx]",e);}
+                try { await __scanner.clear(); } catch(e){console.warn("[ctx]",e);}
             }
             __scanner = new Html5Qrcode("qrReader", { verbose: false });
             __scannerBusy = false;
@@ -24646,7 +24646,7 @@ setTimeout(function(){
             __scannerBusy = true;
             setScannerStatus('✓ ' + (t('scanFound') || 'Найден') + ': ' + code);
             // Вибрация на телефонах
-            if (navigator.vibrate) { try { navigator.vibrate(80); } catch(e){} }
+            if (navigator.vibrate) { try { navigator.vibrate(80); } catch(e){console.warn("[ctx]",e);} }
             lookupBarcode(code);
         }
 
@@ -24801,9 +24801,9 @@ setTimeout(function(){
                 brand: product.brand || ''
             };
             productsDatabase[cat].push(newP);
-            try { saveCustomProducts(); } catch(e){}
-            try { loadAllProducts(); } catch(e){}
-            try { displayProducts(); } catch(e){}
+            try { saveCustomProducts(); } catch(e){console.warn("[ctx]",e);}
+            try { loadAllProducts(); } catch(e){console.warn("[ctx]",e);}
+            try { displayProducts(); } catch(e){console.warn("[ctx]",e);}
             showToast('✅ ' + (t('scanAdded') || 'Добавлено в базу') + ': ' + product.name);
             return newP;
         }
@@ -24845,8 +24845,8 @@ setTimeout(function(){
             modal.classList.remove('open');
             document.body.style.overflow = '';
             if (__scanner) {
-                try { await __scanner.stop(); } catch(e){}
-                try { await __scanner.clear(); } catch(e){}
+                try { await __scanner.stop(); } catch(e){console.warn("[ctx]",e);}
+                try { await __scanner.clear(); } catch(e){console.warn("[ctx]",e);}
                 __scanner = null;
             }
             __scannerBusy = false;
@@ -24990,7 +24990,7 @@ setTimeout(function(){
 
         function setCalendarView(v) {
             __calView = v;
-            try { localStorage.setItem('calView', v); } catch(e){}
+            try { localStorage.setItem('calView', v); } catch(e){console.warn("[ctx]",e);}
             updateCalViewSwitchUI();
             renderCalendar();
         }
@@ -25001,12 +25001,12 @@ setTimeout(function(){
         }
         function setCalendarFirstDay(v) {
             __calFirstDay = parseInt(v, 10) || 1;
-            try { localStorage.setItem('calFirstDay', __calFirstDay); } catch(e){}
+            try { localStorage.setItem('calFirstDay', __calFirstDay); } catch(e){console.warn("[ctx]",e);}
             renderCalendar();
         }
         function setCalendarSlotMinutes(v) {
             __calSlotMinutes = parseInt(v, 10) || 15;
-            try { localStorage.setItem('calSlotMinutes', __calSlotMinutes); } catch(e){}
+            try { localStorage.setItem('calSlotMinutes', __calSlotMinutes); } catch(e){console.warn("[ctx]",e);}
             renderCalendar();
         }
         function toggleCalSettings(e) {
@@ -25675,13 +25675,13 @@ setTimeout(function(){
             closeCalendarModal();
             openUser(userId);
             // переключиться на питание
-            try { if (typeof switchAppMode === 'function') switchAppMode('nutrition'); } catch(e){}
+            try { if (typeof switchAppMode === 'function') switchAppMode('nutrition'); } catch(e){console.warn("[ctx]",e);}
         }
         function goToUserWorkout(userId) {
             closeCalDayModal();
             closeCalendarModal();
             openUser(userId);
-            try { if (typeof switchAppMode === 'function') switchAppMode('workout'); } catch(e){}
+            try { if (typeof switchAppMode === 'function') switchAppMode('workout'); } catch(e){console.warn("[ctx]",e);}
         }
         function goToUserFromCalendar(userId) {
             closeCalDayModal();
@@ -25873,7 +25873,7 @@ setTimeout(function(){
             const L = all.find(x => x.id === id);
             if (L) { L.status = 'converted'; L.updatedAt = Date.now(); saveLeads(all); }
             renderLeads();
-            try { renderUsers(); } catch(e){}
+            try { renderUsers(); } catch(e){console.warn("[ctx]",e);}
             showToast('✅ ' + (t('leadConverted') || 'Стал клиентом'));
         }
 
@@ -26176,7 +26176,7 @@ setTimeout(function(){
             if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
             const tasks=getTasks().filter(t=>!t.done&&t.due&&t.time);const now=new Date();const {todayStr}=getTasksDateRange();const nowMin=now.getHours()*60+now.getMinutes();
             tasks.forEach(t=>{if(t.due!==todayStr)return;const parts=t.time.split(':').map(Number);const taskMin=parts[0]*60+(parts[1]||0);const diff=taskMin-nowMin;const reminder=t.reminder||15;
-            if(diff>0&&diff<=reminder){const key='tn_'+t.id+'_'+t.due+'_'+t.time;if(!localStorage.getItem(key)){try{new Notification('📋 '+t.title,{body:'Через '+diff+' мин'});}catch(e){}playNotifSound();safeSetItem(key,'1');}}});
+            if(diff>0&&diff<=reminder){const key='tn_'+t.id+'_'+t.due+'_'+t.time;if(!localStorage.getItem(key)){try{new Notification('📋 '+t.title,{body:'Через '+diff+' мин'});}catch(e){console.warn("[ctx]",e);}playNotifSound();safeSetItem(key,'1');}}});
         }
         /* BUG-012: reuse single AudioContext to avoid hitting browser cap (Chrome: 6) */
         var __notifAudioCtx = null;
@@ -26184,7 +26184,7 @@ setTimeout(function(){
             try{
                 if (!__notifAudioCtx) __notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 var ctx = __notifAudioCtx;
-                if (ctx.state === 'suspended') { try { ctx.resume(); } catch(_){} }
+                if (ctx.state === 'suspended') { try { ctx.resume(); } catch(_){console.warn("[ctx]",_);} }
                 var o = ctx.createOscillator();
                 var g = ctx.createGain();
                 o.connect(g); g.connect(ctx.destination);
@@ -26193,7 +26193,7 @@ setTimeout(function(){
                 o.start();
                 g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
                 o.stop(ctx.currentTime + 0.4);
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         function updateOverdueBadge() {
@@ -26716,7 +26716,7 @@ setTimeout(function(){
             try {
                 var saved = JSON.parse(localStorage.getItem('logoEditorState'));
                 if (saved) Object.assign(logoEditorState, saved);
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             var ov = document.getElementById('logoEditorOverlay');
             if (!ov){
                 ov = document.createElement('div');
@@ -27103,20 +27103,20 @@ setTimeout(function(){
                     /* Обновить Win11 рабочий стол: виджеты, ярлыки, имя в меню Пуск */
                     try {
                         if (typeof window.__win11RefreshClients === 'function') window.__win11RefreshClients();
-                    } catch(e) {}
+                    } catch(e){console.warn("[ctx]",e);}
                     try {
                         if (typeof window.__win11RenderSummary === 'function') {
                             var sw = document.querySelector('.win11-widget[data-widget-id="summary"]');
                             if (sw) window.__win11RenderSummary(sw.querySelector('.win11-widget-body'));
                         }
-                    } catch(e) {}
+                    } catch(e){console.warn("[ctx]",e);}
                     /* Обновить имя тренера в меню Пуск */
                     try {
                         var nameEl = document.getElementById('win11StartUserName');
                         if (nameEl && currentTrainer) {
                             nameEl.textContent = currentTrainer.name + (currentTrainer.lastName ? ' ' + currentTrainer.lastName : '');
                         }
-                    } catch(e) {}
+                    } catch(e){console.warn("[ctx]",e);}
                 } else {
                     alert(t('trLoginWrongPass'));
                     document.getElementById('trainerPasswordInput').value = '';
@@ -27214,7 +27214,7 @@ setTimeout(function(){
                             return true;
                         }
                     }
-                } catch(e) {}
+                } catch(e){console.warn("[ctx]",e);}
             }
             // Показать экран входа
             document.getElementById('trainerLoginOverlay').style.display = 'block';
@@ -27277,26 +27277,26 @@ setTimeout(function(){
             try { initPhase2(); } catch(e) { console.error('[Phase2] init:', e); }
             try { loadCustomExercises(); } catch(e) { console.error('[APP] init:', e); }
             try { mergeCustomIntoDB(); } catch(e) { console.error('[APP] merge:', e); }
-            try { applySysExOverrides(); } catch(e){}
+            try { applySysExOverrides(); } catch(e){console.warn("[ctx]",e);}
             try { renderExercises(); } catch(e) { console.error('[APP] render:', e); }
-            try { initSidebarResizer(); } catch(e) {}
+            try { initSidebarResizer(); } catch(e){console.warn("[ctx]",e);}
             initUIScale();
             initCardSizes();
             initPanelFontSizes();
             initExAnim();
-            try { refreshSidePanelBadges(); } catch(e) {}
-            try { loadCustomLogo(); } catch(e) {}
+            try { refreshSidePanelBadges(); } catch(e){console.warn("[ctx]",e);}
+            try { loadCustomLogo(); } catch(e){console.warn("[ctx]",e);}
             try { 
                 // Боковая панель «Инструменты» удалена — инструменты перенесены на главный экран.
                 // Гарантируем нулевую ширину, чтобы не было пустого места справа.
                 document.documentElement.style.setProperty('--side-panel-width', '0px');
-            } catch(e) {}
-            try { migrateTrainerPasswords().then(() => { loadTrainers(); }); } catch(e) { try { loadTrainers(); } catch(e2) {} }
-            try { if (!localStorage.getItem('taskTemplates')) { localStorage.setItem('taskTemplates', JSON.stringify(getDefaultTaskTemplates())); } } catch(e) {}
-            try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e) {}
-            try { checkTrainerSession(); } catch(e) {}
-            try { if (typeof switchLoginTab === 'function') switchLoginTab('client'); } catch(e) {}
-            try { if (typeof switchLoginTab === 'function') switchLoginTab('trainer'); } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
+            try { migrateTrainerPasswords().then(() => { loadTrainers(); }); } catch(e) { try { loadTrainers(); } catch(e2){console.warn("[ctx]",e2);} }
+            try { if (!localStorage.getItem('taskTemplates')) { localStorage.setItem('taskTemplates', JSON.stringify(getDefaultTaskTemplates())); } } catch(e){console.warn("[ctx]",e);}
+            try { updateOverdueBadge(); setInterval(updateOverdueBadge, 600000); } catch(e){console.warn("[ctx]",e);}
+            try { checkTrainerSession(); } catch(e){console.warn("[ctx]",e);}
+            try { if (typeof switchLoginTab === 'function') switchLoginTab('client'); } catch(e){console.warn("[ctx]",e);}
+            try { if (typeof switchLoginTab === 'function') switchLoginTab('trainer'); } catch(e){console.warn("[ctx]",e);}
             // восстановить режим (PWA-shortcut из manifest имеет приоритет)
             const savedMode = safeGetItem('appMode');
             try {
@@ -27314,7 +27314,7 @@ setTimeout(function(){
                     window.openUser = function(){
                         let r;
                         try { r = orig.apply(this, arguments); } catch(e) { console.error('[APP] openUser:', e); }
-                        try { if (typeof loadWorkoutPlan === 'function') loadWorkoutPlan(); } catch(e) {}
+                        try { if (typeof loadWorkoutPlan === 'function') loadWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
                         return r;
                     };
                     window.openUser.__patchedForWorkouts = true;
@@ -27324,7 +27324,7 @@ setTimeout(function(){
                 if (typeof window.goHome === 'function' && !window.goHome.__patchedForWorkouts) {
                     const orig = window.goHome;
                     window.goHome = function(){
-                        try { if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan(); } catch(e) {}
+                        try { if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
                         try { return orig.apply(this, arguments); } catch(e) { console.error('[APP] goHome:', e); }
                     };
                     window.goHome.__patchedForWorkouts = true;
@@ -27949,7 +27949,7 @@ setTimeout(function(){
             let added = 0;
             const promises = [];
             let curUsage = 0;
-            try { existing.forEach(f => { curUsage += (f.data || '').length; }); } catch(e) {}
+            try { existing.forEach(f => { curUsage += (f.data || '').length; }); } catch(e){console.warn("[ctx]",e);}
             if (curUsage > maxTotalMB * 1024 * 1024) { showToast('⚠️ Лимит файлов превышен'); event.target.value=''; return; }
             if (existing.length >= maxFiles) { showToast('⚠️ Макс. '+maxFiles+' файлов'); event.target.value=''; return; }
             for (let i = 0; i < files.length; i++) {
@@ -28547,7 +28547,7 @@ setTimeout(function(){
             if (!__clientUser) return;
             const logKey = 'clientWorkoutLog_' + __clientUser.id;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
             
             const list = document.getElementById('clientWorkoutList');
             if (!list || !logs.length) return;
@@ -28614,7 +28614,7 @@ setTimeout(function(){
             const key = 'workoutPlan_' + __clientUser.id;
             const raw = localStorage.getItem(key);
             let workouts = [];
-            try { workouts = raw ? JSON.parse(raw) : []; } catch(e) {}
+            try { workouts = raw ? JSON.parse(raw) : []; } catch(e){console.warn("[ctx]",e);}
 
             if (!workouts.length) {
                 container.innerHTML = `
@@ -28672,7 +28672,7 @@ setTimeout(function(){
             const key = 'workoutPlan_' + __clientUser.id;
             const raw = localStorage.getItem(key);
             let workouts = [];
-            try { workouts = raw ? JSON.parse(raw) : []; } catch(e) {}
+            try { workouts = raw ? JSON.parse(raw) : []; } catch(e){console.warn("[ctx]",e);}
             const w = workouts[idx];
             if (!w) return;
 
@@ -28692,7 +28692,7 @@ setTimeout(function(){
             try {
                 const saved = JSON.parse(localStorage.getItem(progressKey) || 'null');
                 if (saved && saved.length === exercises.length) __clientExerciseState = saved;
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
 
             renderClientActiveWorkout(w);
         }
@@ -28840,7 +28840,7 @@ setTimeout(function(){
                         showToast('🏆 ' + (t('clientNewPR')||'Новый рекорд!') + ' ' + displayW + ' ' + (__weightUnit === 'lbs' ? 'lbs' : 'kg') + '!', 'success');
                     }
                 }
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         function toggleExDone(idx) {
@@ -28849,7 +28849,7 @@ setTimeout(function(){
 
             const key = 'workoutPlan_' + __clientUser.id;
             let workouts = [];
-            try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+            try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){console.warn("[ctx]",e);}
             if (workouts[__clientActiveWorkoutIdx]) {
                 renderClientActiveWorkout(workouts[__clientActiveWorkoutIdx]);
             }
@@ -28865,7 +28865,7 @@ setTimeout(function(){
         function saveClientProgress() {
             if (!__clientUser) return;
             const key = 'clientProgress_' + __clientUser.id + '_' + __clientActiveWorkoutIdx;
-            try { localStorage.setItem(key, JSON.stringify(__clientExerciseState)); } catch(e) {}
+            try { localStorage.setItem(key, JSON.stringify(__clientExerciseState)); } catch(e){console.warn("[ctx]",e);}
         }
 
         function closeClientWorkout() {
@@ -28886,7 +28886,7 @@ setTimeout(function(){
                     completedAt: Date.now()
                 });
                 localStorage.setItem(logKey, JSON.stringify(logs));
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
 
             // Clear progress
             const progressKey = 'clientProgress_' + __clientUser.id + '_' + __clientActiveWorkoutIdx;
@@ -28921,7 +28921,7 @@ setTimeout(function(){
             const key = 'workoutPlan_' + currentUserId;
             const raw = localStorage.getItem(key);
             let count = 0;
-            try { count = JSON.parse(raw || '[]').length; } catch(e) {}
+            try { count = JSON.parse(raw || '[]').length; } catch(e){console.warn("[ctx]",e);}
             showToast('📤 ' + (t('sendClientDone') || 'Тренировка отправлена') + ' ' + user.name + ' (' + count + ' ' + (t('clientExCount')||'упражнений') + ')');
         }
 
@@ -29023,7 +29023,7 @@ setTimeout(function(){
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + duration);
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         function playRestEndSound() {
@@ -29126,7 +29126,7 @@ setTimeout(function(){
             if (__clientActiveWorkoutIdx >= 0) {
                 const key = 'workoutPlan_' + __clientUser.id;
                 let workouts = [];
-                try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+                try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){console.warn("[ctx]",e);}
                 if (workouts[__clientActiveWorkoutIdx]) renderClientActiveWorkout(workouts[__clientActiveWorkoutIdx]);
             } else {
                 renderClientWorkoutList();
@@ -29215,7 +29215,7 @@ setTimeout(function(){
         function getClientStreak(userId) {
             const logKey = 'clientWorkoutLog_' + userId;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
             if (logs.length === 0) return { current: 0, best: 0 };
 
             const dates = [...new Set(logs.map(l => {
@@ -29288,13 +29288,13 @@ setTimeout(function(){
         function getPreviousWorkoutData(userId, exerciseName) {
             const logKey = 'clientWorkoutLog_' + userId;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
             if (logs.length < 2) return null;
 
             // Get the second-to-last log that contains this exercise
             const planKey = 'workoutPlan_' + userId;
             let workouts = [];
-            try { workouts = JSON.parse(localStorage.getItem(planKey) || '[]'); } catch(e) {}
+            try { workouts = JSON.parse(localStorage.getItem(planKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             for (let l = logs.length - 2; l >= 0; l--) {
                 const log = logs[l];
@@ -29419,11 +29419,11 @@ setTimeout(function(){
             if (!__clientUser) return;
             const logKey = 'clientWorkoutLog_' + __clientUser.id;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             const planKey = 'workoutPlan_' + __clientUser.id;
             let workouts = [];
-            try { workouts = JSON.parse(localStorage.getItem(planKey) || '[]'); } catch(e) {}
+            try { workouts = JSON.parse(localStorage.getItem(planKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             // Collect all exercise names
             const exNames = new Set();
@@ -29443,11 +29443,11 @@ setTimeout(function(){
 
             const logKey = 'clientWorkoutLog_' + __clientUser.id;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             const planKey = 'workoutPlan_' + __clientUser.id;
             let workouts = [];
-            try { workouts = JSON.parse(localStorage.getItem(planKey) || '[]'); } catch(e) {}
+            try { workouts = JSON.parse(localStorage.getItem(planKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             const now = Date.now();
             const periodMs = { '4w': 28*86400000, '8w': 56*86400000, '12w': 84*86400000, 'all': Infinity };
@@ -29635,11 +29635,11 @@ setTimeout(function(){
         function getClientAchievements(userId) {
             const logKey = 'clientWorkoutLog_' + userId;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             const prKey = 'clientPRs_' + userId;
             let prs = {};
-            try { prs = JSON.parse(localStorage.getItem(prKey) || '{}'); } catch(e) {}
+            try { prs = JSON.parse(localStorage.getItem(prKey) || '{}'); } catch(e){console.warn("[ctx]",e);}
 
             const { current: streak, best: bestStreak } = getClientStreak(userId);
 
@@ -29659,7 +29659,7 @@ setTimeout(function(){
             // Check for newly unlocked achievements
             const achKey = 'clientAchievements_' + userId;
             let unlocked = {};
-            try { unlocked = JSON.parse(localStorage.getItem(achKey) || '{}'); } catch(e) {}
+            try { unlocked = JSON.parse(localStorage.getItem(achKey) || '{}'); } catch(e){console.warn("[ctx]",e);}
 
             const defs = getAchievementDefs();
             defs.forEach(a => {
@@ -29681,7 +29681,7 @@ setTimeout(function(){
                     showToast('🏆 ' + a.name + '!', 'success');
                 }
             });
-            try { localStorage.setItem(achKey, JSON.stringify(unlocked)); } catch(e) {}
+            try { localStorage.setItem(achKey, JSON.stringify(unlocked)); } catch(e){console.warn("[ctx]",e);}
 
             return { defs, unlocked, stats: { workoutCount, bestStreak, prCount, totalVolume } };
         }
@@ -29746,7 +29746,7 @@ setTimeout(function(){
             if (!__clientUser) return;
             const logKey = 'clientWorkoutLog_' + __clientUser.id;
             let logs = [];
-            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+            try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
             const { current: streak, best: bestStreak } = getClientStreak(__clientUser.id);
             const { unlocked, stats } = getClientAchievements(__clientUser.id);
@@ -29897,7 +29897,7 @@ setTimeout(function(){
         function renderPrevComparison(userId, workoutIdx, exIdx) {
             const key = 'workoutPlan_' + userId;
             let workouts = [];
-            try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+            try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){console.warn("[ctx]",e);}
             const w = workouts[workoutIdx];
             if (!w || !w.exercises || !w.exercises[exIdx]) return '';
             const ex = w.exercises[exIdx];
@@ -29930,7 +29930,7 @@ setTimeout(function(){
                     u.lang = currentLang === 'ru' ? 'ru-RU' : currentLang === 'he' ? 'he-IL' : 'en-US';
                     u.rate = 1.0; u.volume = 0.8;
                     speechSynthesis.speak(u);
-                } catch(e) {}
+                } catch(e){console.warn("[ctx]",e);}
             }
             // Check achievements
             if (__clientUser) getClientAchievements(__clientUser.id);
@@ -29949,7 +29949,7 @@ setTimeout(function(){
                         const u = new SpeechSynthesisUtterance(text);
                         u.lang = voiceLang; u.rate = 1.2; u.volume = 0.7;
                         speechSynthesis.speak(u);
-                    } catch(e) {}
+                    } catch(e){console.warn("[ctx]",e);}
                 }
                 // Speak 3, 2, 1 at appropriate times, then GO when timer expires
                 if (seconds > 3) {
@@ -30000,7 +30000,7 @@ setTimeout(function(){
             if (__clientUser) {
                 const logKey = 'clientWorkoutLog_' + __clientUser.id;
                 let logs = [];
-                try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e) {}
+                try { logs = JSON.parse(localStorage.getItem(logKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
                 const today = new Date().toDateString();
                 const todayWorkout = logs.find(l => new Date(l.completedAt || l.date).toDateString() === today);
                 if (todayWorkout) return; // Already worked out today
@@ -30014,7 +30014,7 @@ setTimeout(function(){
                     requireInteraction: false
                 });
                 n.onclick = () => { window.focus(); n.close(); };
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         function startNotifScheduler() {
@@ -30058,9 +30058,9 @@ setTimeout(function(){
 
         // ===== INIT PHASE 2 =====
         function initPhase2() {
-            try { applyAutoTheme(); } catch(e) {}
-                        try { checkNotifPermission(); } catch(e) {}
-            try { if (__notifReminderEnabled) startNotifScheduler(); } catch(e) {}
+            try { applyAutoTheme(); } catch(e){console.warn("[ctx]",e);}
+                        try { checkNotifPermission(); } catch(e){console.warn("[ctx]",e);}
+            try { if (__notifReminderEnabled) startNotifScheduler(); } catch(e){console.warn("[ctx]",e);}
         }
 
         // запустить после загрузки DOM
@@ -32151,7 +32151,7 @@ function mpClientName(){
             var u = getUsers().find(function(x){ return x.id === currentUserId; });
             if (u) return (u.avatar || '👤') + ' ' + (u.name || '');
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     var lbl = document.getElementById('currentUserLabel');
     return lbl ? lbl.textContent : '';
 }
@@ -32199,7 +32199,7 @@ window.mpSaveCurrent = function(){
         if (mpIsWorkout()){ if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan(); }
         else { if (typeof savePlan === 'function') savePlan(); }
         if (typeof showToast === 'function') showToast(mt('saved'));
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 };
 
 function mpRenderBody(){
@@ -32266,7 +32266,7 @@ function mpNutritionHTML(){
                 if (p && typeof allProducts !== 'undefined'){
                     prodInfoPayload = String(parseInt(sel.value, 10));
                 }
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             rowsH += '<div class="mp-prow" onclick="mpOpenRowEditor(' + mi + ',' + ri + ')">' +
                 '<div class="mp-prow-main">' +
                     '<div class="mp-prow-name"' + (prodInfoPayload !== '' ? ' onclick="event.stopPropagation(); openProductInfo(allProducts[' + prodInfoPayload + '])" style="text-decoration:underline dotted; text-underline-offset:3px; cursor:pointer;"' : '') + '>' + esc(name) + '</div>' +
@@ -32297,7 +32297,7 @@ function mpNutritionHTML(){
 
 window.mpAddMeal = function(){
     if (typeof addMeal === 'function') addMeal();
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpRenderBody();
 };
 
@@ -32357,7 +32357,7 @@ window.mpDupMeal = function(mi){
             if (ls && typeof updateProductRow === 'function') updateProductRow(ls);
         }
     });
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
     if (typeof showToast === 'function') showToast(mt('added'));
@@ -32370,10 +32370,10 @@ window.mpCommitMealEditor = function(mi){
     if (tEl && meal.querySelector('.meal-title')) meal.querySelector('.meal-title').value = tEl.value;
     if (tgEl && meal.querySelector('.meal-target-input')){
         meal.querySelector('.meal-target-input').value = tgEl.value;
-        if (typeof onMealTargetChange === 'function') try { onMealTargetChange(meal); } catch(e){}
+        if (typeof onMealTargetChange === 'function') try { onMealTargetChange(meal); } catch(e){console.warn("[ctx]",e);}
     }
     if (nEl && meal.querySelector('.meal-notes')) meal.querySelector('.meal-notes').value = nEl.value;
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32386,7 +32386,7 @@ window.mpDeleteMeal = function(mi){
         if (typeof updateTotalNutrition === 'function') updateTotalNutrition();
         if (typeof updateProgressBars === 'function') updateProgressBars();
         if (typeof savePlan === 'function') savePlan();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32414,19 +32414,19 @@ window.mpTogglePickCat = function(c){
 function mpProductCardHtml(p, i){
     var name = (typeof getProductDualNameText === 'function') ? getProductDualNameText(p) : p.name;
     var thumb = '';
-    try { thumb = (typeof getProductThumbHtml === 'function') ? getProductThumbHtml(p) : ''; } catch(e){}
+    try { thumb = (typeof getProductThumbHtml === 'function') ? getProductThumbHtml(p) : ''; } catch(e){console.warn("[ctx]",e);}
     var brandTxt = '';
     try {
         if (typeof getProductBrand === 'function'){
             var bl = getProductBrand(p, (typeof productPrimaryLang !== 'undefined') ? productPrimaryLang : 'ru');
             if (bl) brandTxt = ' · ' + bl;
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     var nutriTag = '';
     try {
         if (p.nutriScore && typeof NUTRI_COLORS !== 'undefined' && NUTRI_COLORS[p.nutriScore])
             nutriTag = '<span style="display:inline-block; background:' + NUTRI_COLORS[p.nutriScore] + '; color:#fff; font-weight:800; font-size:.72em; padding:1px 6px; border-radius:5px; margin-inline-start:5px;">' + p.nutriScore + '</span>';
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     return '<div class="mp-pick-item" id="mpPickItem' + i + '" onclick="mpPickAdd(' + i + ')">' +
         (thumb ? '<div class="mp-pick-thumb">' + thumb + '</div>' : '') +
         '<div class="mp-pick-main">' +
@@ -32458,7 +32458,7 @@ window.mpFillPickList = function(){
                    (p.hebrew || '').toLowerCase().indexOf(q) >= 0 ||
                    (p.nameEn || '').toLowerCase().indexOf(q) >= 0;
         });
-        try { found = found.slice().sort(sortByName); } catch(e){}
+        try { found = found.slice().sort(sortByName); } catch(e){console.warn("[ctx]",e);}
         __mpPickArr = found;
         if (!found.length){ list.innerHTML = '<div class="mp-empty">' + mt('nothing') + '</div>'; return; }
         found.forEach(function(p, i){ h += mpProductCardHtml(p, i); });
@@ -32482,7 +32482,7 @@ window.mpFillPickList = function(){
         '</div>';
         if (!isOpen) return;
         var sorted = src2.slice();
-        try { sorted.sort(sortByName); } catch(e){}
+        try { sorted.sort(sortByName); } catch(e){console.warn("[ctx]",e);}
         sorted.forEach(function(p){
             var i = arr.length;
             arr.push(p);
@@ -32496,7 +32496,7 @@ window.mpPickAdd = function(i){
     var p = __mpPickArr[i]; if (!p) return;
     var meal = mpMeal(mpPick.mi); if (!meal) return;
     if (typeof addProductRow === 'function') addProductRow(p, meal);
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpRenderBody();
     var it = document.getElementById('mpPickItem' + i);
     if (it){ it.classList.add('justadded'); setTimeout(function(){ it.classList.remove('justadded'); }, 700); }
@@ -32556,7 +32556,7 @@ window.mpCommitRow = function(mi, ri){
     if (unitEl && tr.querySelector('.unit-select')) tr.querySelector('.unit-select').value = unitEl.value;
     var sel = tr.querySelector('.product-select');
     if (sel && typeof updateProductRow === 'function') updateProductRow(sel);
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32585,7 +32585,7 @@ window.mpMoveProdRow = function(mi, ri, dir){
     var tr = trs[ri]; if (!tr) return mpCloseSheet();
     if (dir < 0 && tr.previousElementSibling) tbody.insertBefore(tr, tr.previousElementSibling);
     else if (dir > 0 && tr.nextElementSibling) tbody.insertBefore(tr.nextElementSibling, tr);
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32608,7 +32608,7 @@ window.mpDupProdRow = function(mi, ri){
         if (ns && typeof updateProductRow === 'function') updateProductRow(ns);
         if (tr.nextElementSibling !== newRow) tbody.insertBefore(newRow, tr.nextElementSibling);
     }
-    if (typeof savePlan === 'function') try { savePlan(); } catch(e){}
+    if (typeof savePlan === 'function') try { savePlan(); } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
     if (typeof showToast === 'function') showToast(mt('added'));
@@ -32622,7 +32622,7 @@ window.mpDeleteRow = function(mi, ri){
         if (typeof updateTotalNutrition === 'function') updateTotalNutrition();
         if (typeof updateProgressBars === 'function') updateProgressBars();
         if (typeof savePlan === 'function') savePlan();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32740,7 +32740,7 @@ window.mpCommitWorkoutEditor = function(wi){
     try {
         if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
         if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32750,7 +32750,7 @@ window.mpDuplicateWorkout = function(wi){
         var data = serializeWorkout(w);
         data.title = (data.title || '') + ' ⎘';
         addWorkout(data);
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32761,7 +32761,7 @@ window.mpDeleteWorkout = function(wi){
     try {
         if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
         if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -32792,7 +32792,7 @@ function mpExCardHtml(ex, g, color, i, equip, name){
     try {
         if (typeof getExerciseThumbHtml === 'function') exThumb = getExerciseThumbHtml(ex, g, color);
         else if (typeof makeExerciseSceneSVG === 'function') exThumb = makeExerciseSceneSVG(ex, g, color);
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     return '<div class="mp-pick-item" id="mpExItem' + i + '" onclick="mpExInfo(' + i + ')">' +
         (exThumb ? '<div class="mp-pick-thumb">' + exThumb + '</div>' : '<div class="mp-exbar" style="background:' + escA(color) + '; height:30px;"></div>') +
         '<div class="mp-pick-main">' +
@@ -32961,7 +32961,7 @@ window.mpCommitExEditor = function(wi, ei){
     try {
         if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
         if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -33027,7 +33027,7 @@ window.mpDeleteExRow = function(wi, ei){
     try {
         if (typeof updateWorkoutTotals === 'function') updateWorkoutTotals();
         if (typeof saveWorkoutPlan === 'function') saveWorkoutPlan();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     mpCloseSheet();
     mpRenderBody();
 };
@@ -33091,7 +33091,7 @@ function wrapFn(name, after){
     if (typeof orig !== 'function') return;
     window[name] = function(){
         var r = orig.apply(this, arguments);
-        try { after(); } catch(e){}
+        try { after(); } catch(e){console.warn("[ctx]",e);}
         return r;
     };
 }
@@ -33118,7 +33118,7 @@ function mpAutoDetect(){
             if (typeof userSettings !== 'undefined') userSettings.layout = l;
             if (typeof applyLayout === 'function') applyLayout(l);
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 }
 
 if (document.readyState === 'loading'){
@@ -33256,7 +33256,7 @@ window.renderClientWorkoutList = function(){
 
     var key = 'workoutPlan_' + __clientUser.id;
     var workouts = [];
-    try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){}
+    try { workouts = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){console.warn("[ctx]",e);}
 
     if (!workouts.length){
         container.innerHTML =
@@ -33277,7 +33277,7 @@ window.renderClientWorkoutList = function(){
             new Date(parseInt(lastSync, 10)).toLocaleString(__uiLocale()) + '</div>';
     }
     if (typeof renderStreakBanner === 'function'){
-        try { html += renderStreakBanner(); } catch(e){}
+        try { html += renderStreakBanner(); } catch(e){console.warn("[ctx]",e);}
     }
     html += '<h3 style="color:var(--text-primary); margin:4px 2px 12px; font-size:1.05em;">' + ct('myWorkouts') + '</h3>';
 
@@ -33317,7 +33317,7 @@ window.renderClientWorkoutList = function(){
 
     container.innerHTML = html;
     if (typeof renderClientHistory === 'function'){
-        try { renderClientHistory(); } catch(e){}
+        try { renderClientHistory(); } catch(e){console.warn("[ctx]",e);}
     }
 };
 
@@ -33346,7 +33346,7 @@ function csGetDone(){
     try { return JSON.parse(localStorage.getItem(csDoneKey()) || '[]'); } catch(e){ return []; }
 }
 function csSetDone(arr){
-    try { localStorage.setItem(csDoneKey(), JSON.stringify(arr)); } catch(e){}
+    try { localStorage.setItem(csDoneKey(), JSON.stringify(arr)); } catch(e){console.warn("[ctx]",e);}
 }
 function csFindProduct(name, hebrew){
     if (typeof allProducts === 'undefined') return null;
@@ -33381,9 +33381,9 @@ function csProductLabel(p, fallbackName){
             var n = getProductName(p, currentLang);
             if (n) return n;
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     if (p && typeof getProductDualNameText === 'function'){
-        try { return getProductDualNameText(p); } catch(e){}
+        try { return getProductDualNameText(p); } catch(e){console.warn("[ctx]",e);}
     }
     return (p && p.name) || fallbackName || '—';
 }
@@ -33405,7 +33405,7 @@ window.csRenderNutrition = function(){
 
     var norms = { calories: 0, protein: 0, fat: 0, carbs: 0 };
     if (plan.params && typeof computeNorms === 'function'){
-        try { norms = computeNorms(plan.params); } catch(e){}
+        try { norms = computeNorms(plan.params); } catch(e){console.warn("[ctx]",e);}
     }
 
     var done = csGetDone();
@@ -33528,12 +33528,12 @@ window.csOpenFoodSheet = function(mi, ri){
     try {
         if (p && typeof getProductThumbHtml === 'function')
             thumb = '<div style="width:58px;height:58px;border-radius:12px;overflow:hidden;flex-shrink:0;">' + getProductThumbHtml(p) + '</div>';
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     var csNutri = '';
     try {
         if (p && p.nutriScore && typeof makeNutriScoreHtml === 'function')
             csNutri = '<div style="margin-top:4px;">' + makeNutriScoreHtml(p.nutriScore) + '</div>';
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 
     csOpenSheet(
         csSheetHead(cesc(csProductLabel(p, pr.productName))) +
@@ -33563,16 +33563,16 @@ window.csOpenFoodSheet = function(mi, ri){
 window.csOpenSettings = function(){
     var lang = (typeof currentLang !== 'undefined') ? currentLang : 'ru';
     var scale = 1.0;
-    try { scale = (typeof userSettings !== 'undefined' && userSettings.interfaceScale) || 1.0; } catch(e){}
+    try { scale = (typeof userSettings !== 'undefined' && userSettings.interfaceScale) || 1.0; } catch(e){console.warn("[ctx]",e);}
     var themeName = 'auto', themeIcon = '🎨';
     try {
         themeName = (typeof __clientTheme !== 'undefined') ? __clientTheme : 'auto';
         themeIcon = themeName === 'dark' ? '🌙' : themeName === 'light' ? '☀️' : '🎨';
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     var unitLbl = 'kg';
-    try { unitLbl = (typeof __weightUnit !== 'undefined') ? __weightUnit : 'kg'; } catch(e){}
+    try { unitLbl = (typeof __weightUnit !== 'undefined') ? __weightUnit : 'kg'; } catch(e){console.warn("[ctx]",e);}
     var voiceOn = true;
-    try { voiceOn = (typeof __voiceEnabled !== 'undefined') ? __voiceEnabled : true; } catch(e){}
+    try { voiceOn = (typeof __voiceEnabled !== 'undefined') ? __voiceEnabled : true; } catch(e){console.warn("[ctx]",e);}
 
     function langBtn(code, label){
         var on = lang === code;
@@ -33606,7 +33606,7 @@ window.csOpenSettings = function(){
     csOpenSheet(h);
     var s = document.getElementById('csSheet');
     if (s) s.style.height = '88vh';
-    try { if (typeof renderThemePresets === 'function') renderThemePresets(document.getElementById('csThemePresets')); } catch(e){}
+    try { if (typeof renderThemePresets === 'function') renderThemePresets(document.getElementById('csThemePresets')); } catch(e){console.warn("[ctx]",e);}
 };
 
 window.csOpenMore = function(){
@@ -33614,11 +33614,11 @@ window.csOpenMore = function(){
     try {
         themeName = (typeof __clientTheme !== 'undefined') ? __clientTheme : 'auto';
         themeIcon = themeName === 'dark' ? '🌙' : themeName === 'light' ? '☀️' : '🎨';
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     var unitLbl = 'kg';
-    try { unitLbl = (typeof __weightUnit !== 'undefined') ? __weightUnit : 'kg'; } catch(e){}
+    try { unitLbl = (typeof __weightUnit !== 'undefined') ? __weightUnit : 'kg'; } catch(e){console.warn("[ctx]",e);}
     var voiceOn = true;
-    try { voiceOn = (typeof __voiceEnabled !== 'undefined') ? __voiceEnabled : true; } catch(e){}
+    try { voiceOn = (typeof __voiceEnabled !== 'undefined') ? __voiceEnabled : true; } catch(e){console.warn("[ctx]",e);}
 
     var items = '';
     items += '<button class="mp-action-item" onclick="csCloseSheet(); cwShowHistory();"><span class="ico">📋</span>' + (typeof wt==='function'?wt('wkHistory'):'📋 История тренировок') + '</button>';
@@ -33663,26 +33663,26 @@ window.csCloseSheet = function(){
 function csAfterLanguage(){
     var cs = document.getElementById('clientSpace');
     if (!cs || cs.style.display === 'none') return;
-    try { csRenderNav(); } catch(e){}
-    try { if (typeof updateClientToolbar === 'function') updateClientToolbar(); } catch(e){}
+    try { csRenderNav(); } catch(e){console.warn("[ctx]",e);}
+    try { if (typeof updateClientToolbar === 'function') updateClientToolbar(); } catch(e){console.warn("[ctx]",e);}
     try {
         var skipBtn = document.getElementById('skipRestBtnEl');
         if (skipBtn && typeof t === 'function') skipBtn.innerHTML = '▶ ' + (t('skipRestBtn') || 'Skip');
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     try {
         var nt = document.getElementById('clientNutritionTab');
         if (nt && nt.style.display !== 'none') { csRenderNutrition(); return; }
         if (typeof __clientActiveWorkoutIdx !== 'undefined' && __clientActiveWorkoutIdx >= 0 &&
             typeof renderClientActiveWorkout === 'function') { renderClientActiveWorkout(); return; }
         if (typeof renderClientWorkoutList === 'function') renderClientWorkoutList();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 }
 (function(){
     var orig = window.applyLanguage;
     if (typeof orig === 'function'){
         window.applyLanguage = function(){
             var r = orig.apply(this, arguments);
-            try { csAfterLanguage(); } catch(e){}
+            try { csAfterLanguage(); } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -33788,7 +33788,7 @@ function cwCtx(){
 function cwWorkouts(ctx){ try{ return JSON.parse(localStorage.getItem(ctx.key)||'[]'); }catch(e){ return []; } }
 function cwWorkout(ctx){ return cwWorkouts(ctx)[ctx.idx] || null; }
 function cwContainer(){ return __cwLive.active ? document.getElementById('liveWorkoutBody') : document.getElementById('clientActiveWorkout'); }
-function cwSaveProgress(ctx){ try{ localStorage.setItem('clientProgress_'+ctx.uid+'_'+ctx.idx, JSON.stringify(__clientExerciseState)); }catch(e){} }
+function cwSaveProgress(ctx){ try{ localStorage.setItem('clientProgress_'+ctx.uid+'_'+ctx.idx, JSON.stringify(__clientExerciseState)); }catch(e){console.warn("[ctx]",e);} }
 function cwIsLbs(){ return (typeof __weightUnit!=='undefined' && __weightUnit==='lbs'); }
 function cwUnit(){ return cwIsLbs() ? 'lbs' : (wt('set')==='סט' ? 'ק"ג' : 'кг'); }
 function toKg(v){ v=parseFloat(v)||0; return cwIsLbs() ? v/KG_TO_LBS : v; }
@@ -33797,7 +33797,7 @@ function plannedVol(ex){ var rp=(typeof parseReps==='function')?parseReps(ex.rep
 
 function cwEnsureStart(ctx){
     var k='cwStart_'+ctx.uid+'_'+ctx.idx;
-    if(!localStorage.getItem(k)){ try{ localStorage.setItem(k,String(Date.now())); }catch(e){} }
+    if(!localStorage.getItem(k)){ try{ localStorage.setItem(k,String(Date.now())); }catch(e){console.warn("[ctx]",e);} }
     return parseInt(localStorage.getItem(k), 10)||Date.now();
 }
 
@@ -33828,7 +33828,7 @@ function cwPrevLog(ctx){
     try{
         var logs = JSON.parse(localStorage.getItem('clientWorkoutLog_'+ctx.uid)||'[]');
         for (var i=logs.length-1;i>=0;i--){ if (logs[i].workoutIdx===ctx.idx) return logs[i]; }
-    }catch(e){}
+    }catch(e){console.warn("[ctx]",e);}
     return null;
 }
 function cwPrevSets(prev, exName, exIdx){
@@ -34032,21 +34032,21 @@ window.cwToggleSet = function(i,s){
                     prs[ex.name] = kg;
                     localStorage.setItem(pk, JSON.stringify(prs));
                     if (old > 0){
-                        if (typeof playPRSound==='function') try{ playPRSound(); }catch(e){}
+                        if (typeof playPRSound==='function') try{ playPRSound(); }catch(e){console.warn("[ctx]",e);}
                         var disp = cwIsLbs()? Math.round(kg*KG_TO_LBS*10)/10 : Math.round(kg*10)/10;
                         if (typeof showToast==='function') showToast(wt('newPR')+' '+disp+' '+cwUnit());
                     }
                 }
             }
-        }catch(e){}
+        }catch(e){console.warn("[ctx]",e);}
         /* отдых после каждого подхода (кроме самого последнего во всей тренировке) */
         var totalLeft = 0;
         __clientExerciseState.forEach(function(q){ (q.setsDone||[]).forEach(function(x){ if(!x.done) totalLeft++; }); });
         if (totalLeft > 0 && ex){
             var rest = parseInt(ex.rest, 10)||60;
-            if (typeof startRestTimer==='function') try{ startRestTimer(rest); }catch(e){}
+            if (typeof startRestTimer==='function') try{ startRestTimer(rest); }catch(e){console.warn("[ctx]",e);}
         } else if (totalLeft === 0){
-            if (typeof playCompleteSound==='function') try{ playCompleteSound(); }catch(e){}
+            if (typeof playCompleteSound==='function') try{ playCompleteSound(); }catch(e){console.warn("[ctx]",e);}
         }
     }
     cwRenderInner();
@@ -34055,7 +34055,7 @@ window.cwToggleSet = function(i,s){
 /* ---------- ЗАВЕРШЕНИЕ + ОТЧЁТ ---------- */
 window.cwFinish = function(){
     if (!confirm(wt('finishConfirm'))) return;
-    if (typeof skipRest==='function') try{ skipRest(); }catch(e){}
+    if (typeof skipRest==='function') try{ skipRest(); }catch(e){console.warn("[ctx]",e);}
     cwShowReport();
 };
 window.cwBackToWorkout = function(){ cwRenderInner(); };
@@ -34189,13 +34189,13 @@ window.cwSaveExit = function(){
             volumeKg: Math.round(stats.vol)
         });
         localStorage.setItem(logKey, JSON.stringify(logs));
-    }catch(e){}
-    try{ localStorage.removeItem('clientProgress_'+ctx.uid+'_'+ctx.idx); }catch(e){}
-    try{ localStorage.removeItem('cwStart_'+ctx.uid+'_'+ctx.idx); }catch(e){}
+    }catch(e){console.warn("[ctx]",e);}
+    try{ localStorage.removeItem('clientProgress_'+ctx.uid+'_'+ctx.idx); }catch(e){console.warn("[ctx]",e);}
+    try{ localStorage.removeItem('cwStart_'+ctx.uid+'_'+ctx.idx); }catch(e){console.warn("[ctx]",e);}
     if (typeof showToast==='function') showToast(wt('savedToast'));
     if (full){
-        if (typeof launchConfetti==='function') try{ launchConfetti(); }catch(e){}
-        if (typeof playCompleteSound==='function') try{ playCompleteSound(); }catch(e){}
+        if (typeof launchConfetti==='function') try{ launchConfetti(); }catch(e){console.warn("[ctx]",e);}
+        if (typeof playCompleteSound==='function') try{ playCompleteSound(); }catch(e){console.warn("[ctx]",e);}
     }
     if (ctx.live){
         cwCloseLiveFinal();
@@ -34215,7 +34215,7 @@ window.startTrainerWorkout = function(arg){
             document.querySelectorAll('#workoutsContainer .workout').length > 0){
             saveWorkoutPlan();
         }
-    }catch(e){}
+    }catch(e){console.warn("[ctx]",e);}
     var key = (typeof currentUserId!=='undefined' && currentUserId) ? ('workoutPlan_'+currentUserId) : 'workoutPlan';
     var idx = 0;
     if (typeof arg === 'number'){ idx = arg; }
@@ -34240,7 +34240,7 @@ window.startTrainerWorkout = function(arg){
     try{
         var saved = JSON.parse(localStorage.getItem('clientProgress_'+__cwLive.uid+'_'+idx)||'null');
         if (saved && saved.length === w.exercises.length) __clientExerciseState = saved;
-    }catch(e){}
+    }catch(e){console.warn("[ctx]",e);}
 
     var ov = document.getElementById('liveWorkoutOverlay');
     if (ov) { ov.style.display = 'flex'; ov.classList.add('show'); }
@@ -34254,7 +34254,7 @@ window.startTrainerWorkout = function(arg){
                 var u = getUsers().find(function(x){ return x.id===currentUserId; });
                 if (u) uname = (u.avatar||'')+' '+(u.name||'');
             }
-        }catch(e){}
+        }catch(e){console.warn("[ctx]",e);}
         sub.textContent = uname || wt('liveTitle');
     }
     cwRenderInner();
@@ -34265,10 +34265,10 @@ function cwCloseLiveFinal(){
     __cwLive.active = false;
     var ov = document.getElementById('liveWorkoutOverlay');
     if (ov) { ov.style.display = 'none'; ov.classList.remove('show'); }
-    if (typeof csCloseSheet==='function') try{ csCloseSheet(); }catch(e){}
-    if (typeof skipRest==='function') try{ skipRest(); }catch(e){}
-    try{ if (typeof loadWorkoutPlan==='function') loadWorkoutPlan(); }catch(e){}
-    try{ if (document.body.classList.contains('mp-active') && typeof mpRenderAll==='function') mpRenderAll(); }catch(e){}
+    if (typeof csCloseSheet==='function') try{ csCloseSheet(); }catch(e){console.warn("[ctx]",e);}
+    if (typeof skipRest==='function') try{ skipRest(); }catch(e){console.warn("[ctx]",e);}
+    try{ if (typeof loadWorkoutPlan==='function') loadWorkoutPlan(); }catch(e){console.warn("[ctx]",e);}
+    try{ if (document.body.classList.contains('mp-active') && typeof mpRenderAll==='function') mpRenderAll(); }catch(e){console.warn("[ctx]",e);}
 }
 
 /* изменение плана из live-режима */
@@ -34277,8 +34277,8 @@ function cwUpdatePlan(mutator){
     var ws = cwWorkouts(ctx);
     var w = ws[ctx.idx]; if (!w) return;
     mutator(w);
-    try{ localStorage.setItem(ctx.key, JSON.stringify(ws)); }catch(e){}
-    try{ localStorage.setItem('clientLastSync_'+ctx.uid, String(Date.now())); }catch(e){}
+    try{ localStorage.setItem(ctx.key, JSON.stringify(ws)); }catch(e){console.warn("[ctx]",e);}
+    try{ localStorage.setItem('clientLastSync_'+ctx.uid, String(Date.now())); }catch(e){console.warn("[ctx]",e);}
 }
 
 window.cwOpenExMenu = function(i){
@@ -34324,9 +34324,8 @@ function getArchivedWorkouts(userId){
 }
 function saveArchivedWorkouts(userId, archive){
         // MIGRATED: saves to new clientWorkoutHistory_* key
-        try { localStorage.setItem('clientWorkoutHistory_' + userId, JSON.stringify(archive)); } catch(e) {}
+        try { localStorage.setItem('clientWorkoutHistory_' + userId, JSON.stringify(archive)); } catch(e){console.warn("[ctx]",e);}
     }
-}
 window.cwArchiveWorkouts = function(){
         // MIGRATED: delegates to HistoryManager
         if (window.HistoryManager && typeof window.HistoryManager.archiveCurrent === 'function') {
@@ -34445,7 +34444,7 @@ function cwPickCardHtml(e, g, color, j, name){
     try {
         if (typeof getExerciseThumbHtml === 'function') thumb = getExerciseThumbHtml(e, g, color);
         else if (typeof makeExerciseSceneSVG === 'function') thumb = makeExerciseSceneSVG(e, g, color);
-    } catch(err){}
+    } catch(err){console.warn("[ctx]",err);}
     var equip = e.equip && typeof getEquipName === 'function' ? getEquipName(e.equip) : '';
     return '<div class="mp-pick-item" onclick="cwPickerChoose('+j+')">'+
         (thumb ? '<div class="mp-pick-thumb">'+thumb+'</div>' : '<div class="cw-pick-bar" style="background:'+color+';"></div>')+
@@ -34582,14 +34581,14 @@ window.cwExitLeave = function(){
     window.__allowExit = true;
     var ov = document.getElementById('exitConfirmOverlay');
     if (ov) ov.remove();
-    try { window.close(); } catch(e){}
+    try { window.close(); } catch(e){console.warn("[ctx]",e);}
     /* уйти за пределы наших guard-состояний */
-    try { history.go(-(history.length)); } catch(e){ try{ history.back(); }catch(e2){} }
+    try { history.go(-(history.length)); } catch(e){ try{ history.back(); }catch(e2){console.warn("[ctx]",e2);} }
     /* через секунду снова включаем защиту (если выйти не получилось) */
     setTimeout(function(){ window.__allowExit = false; guardPush(); }, 1200);
 };
 
-function guardPush(){ try{ history.pushState({cw:1}, ''); }catch(e){} }
+function guardPush(){ try{ history.pushState({cw:1}, ''); }catch(e){console.warn("[ctx]",e);} }
 /* двойной стек, чтобы свайп «назад» не выбрасывал с первого раза */
 guardPush(); guardPush();
 
@@ -34619,7 +34618,7 @@ window.addEventListener('popstate', function(){
         }
         /* нечего закрывать → подтверждение выхода */
         cwShowExitConfirm();
-    }catch(e){}
+    }catch(e){console.warn("[ctx]",e);}
 });
 
 /* подтверждение при закрытии вкладки / обновлении (компьютер и планшет в браузере) */
@@ -34760,7 +34759,7 @@ window.applyThemePreset = function(id){
         userSettings.bgColor = pr.bg;
         if (typeof saveSettings === 'function') saveSettings();
         if (typeof applySettings === 'function') applySettings();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     applyThemePresetExtras();
 };
 
@@ -34817,7 +34816,7 @@ function tpMigrate(){
         if (userSettings.themePreset) return;
         var k = (userSettings.theme === 'dark' ? 'classic-dark-' : 'classic-light-') + (userSettings.color || 'green');
         if (tpFind(k)) userSettings.themePreset = k;
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 }
 
 /* ---------------- ДЕСКТОП / ПИТАНИЕ: ПАНЕЛИ ---------------- */
@@ -34826,13 +34825,13 @@ function tpMigrate(){
 window.toggleSidebarSide = function(){
     var right = !document.body.classList.contains('sidebar-right');
     document.body.classList.toggle('sidebar-right', right);
-    try { localStorage.setItem('sidebarSide', right ? 'right' : 'left'); } catch(e){}
+    try { localStorage.setItem('sidebarSide', right ? 'right' : 'left'); } catch(e){console.warn("[ctx]",e);}
 };
 
 function tpInitSidebarSide(){
     try {
         if (localStorage.getItem('sidebarSide') === 'right') document.body.classList.add('sidebar-right');
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     /* кнопка ⇄ в шапку панели продуктов */
     var actions = document.querySelector('.products-sidebar .sidebar-actions');
     if (actions && !document.getElementById('sidebarSideBtn')){
@@ -34854,7 +34853,7 @@ function tpInitMealsResizer(){
     try {
         var saved = parseInt(localStorage.getItem('mealsWidth'), 10);
         if (saved && saved >= 480) cont.style.maxWidth = saved + 'px';
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     var h = document.createElement('div');
     h.id = 'mealsResizer';
     h.className = 'meals-resizer';
@@ -34873,7 +34872,7 @@ function tpInitMealsResizer(){
         if (!on) return;
         on = false;
         document.body.classList.remove('sidebar-resizing');
-        try { localStorage.setItem('mealsWidth', parseInt(cont.style.maxWidth, 10) || ''); } catch(e){}
+        try { localStorage.setItem('mealsWidth', parseInt(cont.style.maxWidth, 10) || ''); } catch(e){console.warn("[ctx]",e);}
         document.removeEventListener('mousemove', mm);
         document.removeEventListener('mouseup', up);
     }
@@ -34888,7 +34887,7 @@ function tpInitMealsResizer(){
     });
     h.addEventListener('dblclick', function(){
         cont.style.maxWidth = '';
-        try { localStorage.removeItem('mealsWidth'); } catch(e){}
+        try { localStorage.removeItem('mealsWidth'); } catch(e){console.warn("[ctx]",e);}
     });
 }
 
@@ -34898,7 +34897,7 @@ function tpWrap(name, after){
     if (typeof orig !== 'function') return;
     window[name] = function(){
         var r = orig.apply(this, arguments);
-        try { after(); } catch(e){}
+        try { after(); } catch(e){console.warn("[ctx]",e);}
         return r;
     };
 }
@@ -34987,7 +34986,7 @@ var pendingKeys = {};
 var flushTimer = null;
 var metaKey = '__syncMeta';
 function getMeta(){ try{ return JSON.parse(localStorage.getItem(metaKey)||'{}'); }catch(e){ return {}; } }
-function setMeta(m){ try{ localStorage.setItem(metaKey, JSON.stringify(m)); }catch(e){} }
+function setMeta(m){ try{ localStorage.setItem(metaKey, JSON.stringify(m)); }catch(e){console.warn("[ctx]",e);} }
 
 function cfgOk(){
     var c = window.FIREBASE_CONFIG;
@@ -35018,7 +35017,7 @@ function initFirebase(){
         fb.app = firebase.initializeApp(window.FIREBASE_CONFIG);
         fb.auth = firebase.auth();
         fb.db = firebase.firestore();
-        try { fb.db.enablePersistence({ synchronizeTabs:true }).catch(function(){}); } catch(e){}
+        try { fb.db.enablePersistence({ synchronizeTabs:true }).catch(function(){}); } catch(e){console.warn("[ctx]",e);}
         fb.ready = true;
         fb.auth.onAuthStateChanged(function(user){
             fb.user = user || null;
@@ -35028,7 +35027,7 @@ function initFirebase(){
                 try {
                     var pr = localStorage.getItem('pendingAuthRole');
                     if (pr){ localStorage.removeItem('pendingAuthRole'); cloudFinishRoleAuth(pr, user); }
-                } catch(e){}
+                } catch(e){console.warn("[ctx]",e);}
             } else { onSignedOut(); }
             updateCloudUI();
         });
@@ -35071,7 +35070,7 @@ window.cloudAuthRegister = function(role){
             if (gu) cloudFinishRoleAuth(role, gu);
         }).catch(function(err){
             if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request')){
-                try { localStorage.setItem('pendingAuthRole', role); } catch(e){}
+                try { localStorage.setItem('pendingAuthRole', role); } catch(e){console.warn("[ctx]",e);}
                 fb.auth.signInWithRedirect(provider);
             } else if (err && err.code === 'auth/popup-closed-by-user'){
                 /* пользователь передумал */
@@ -35105,7 +35104,7 @@ function cloudFinishRoleAuth(role, gu){
             document.body.classList.remove('trainer-locked');
             var ov = document.getElementById('trainerLoginOverlay');
             if (ov) ov.style.display = 'none';
-            if (typeof loadTrainers === 'function') try { loadTrainers(); } catch(e){}
+            if (typeof loadTrainers === 'function') try { loadTrainers(); } catch(e){console.warn("[ctx]",e);}
         } else {
             var users = (typeof getUsers === 'function') ? getUsers() : [];
             var u = users.find(function(x){ return (x.googleUid && x.googleUid === gu.uid) || (email && (x.email||'').toLowerCase() === email); });
@@ -35123,7 +35122,7 @@ function cloudFinishRoleAuth(role, gu){
                 if (typeof showToast === 'function') showToast(t('googleLinked'));
             }
             window.__clientUser = u;
-            try { localStorage.setItem('clientSession', JSON.stringify({ userId: u.id, ts: Date.now(), viaGoogle: true })); } catch(e){}
+            try { localStorage.setItem('clientSession', JSON.stringify({ userId: u.id, ts: Date.now(), viaGoogle: true })); } catch(e){console.warn("[ctx]",e);}
             var ov2 = document.getElementById('trainerLoginOverlay');
             if (ov2) ov2.style.display = 'none';
             if (typeof enterClientSpace === 'function') enterClientSpace(u);
@@ -35133,7 +35132,7 @@ function cloudFinishRoleAuth(role, gu){
 
 window.cloudSignOut = function(){
     if (!fb.auth) return;
-    if (fb.unsub){ try{ fb.unsub(); }catch(e){} fb.unsub = null; }
+    if (fb.unsub){ try{ fb.unsub(); }catch(e){console.warn("[ctx]",e);} fb.unsub = null; }
     fb.auth.signOut().then(function(){
         if (typeof showToast === 'function') showToast(cl('signedOut'));
     });
@@ -35162,7 +35161,7 @@ function onSignedIn(user){
                     else localStorage.setItem(k, remote[k].v);
                     meta[k] = remote[k].t;
                     gotRemote++;
-                } catch(e){}
+                } catch(e){console.warn("[ctx]",e);}
             }
         });
         fb.applying = false;
@@ -35192,7 +35191,7 @@ function onSignedIn(user){
 }
 
 function onSignedOut(){
-    if (fb.unsub){ try{ fb.unsub(); }catch(e){} fb.unsub = null; }
+    if (fb.unsub){ try{ fb.unsub(); }catch(e){console.warn("[ctx]",e);} fb.unsub = null; }
     setCloudState(cfgOk() ? 'local' : 'nocfg');
 }
 
@@ -35211,7 +35210,7 @@ function startLive(){
                 if (ch.type === 'removed' || d.v === null) localStorage.removeItem(k);
                 else localStorage.setItem(k, d.v);
                 meta[k] = t; changed++;
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             fb.applying = false;
         });
         if (changed > 0){
@@ -35224,7 +35223,7 @@ function startLive(){
 
 /* обновить открытые экраны после применения удалённых данных */
 function refreshOpenViews(){
-    try { if (typeof chatOnRemoteUpdate === 'function') chatOnRemoteUpdate(); } catch(e){}
+    try { if (typeof chatOnRemoteUpdate === 'function') chatOnRemoteUpdate(); } catch(e){console.warn("[ctx]",e);}
     try {
         if (typeof loadWorkoutPlan === 'function' && document.querySelector('#workoutsContainer')) loadWorkoutPlan();
         if (document.body.classList.contains('mp-active') && typeof mpRenderAll === 'function') mpRenderAll();
@@ -35235,8 +35234,8 @@ function refreshOpenViews(){
         }
         var lw = document.getElementById('liveWorkoutOverlay');
         if (lw && lw.style.display !== 'none' && typeof renderClientActiveWorkout === 'function') renderClientActiveWorkout();
-        if (typeof renderHomeScreen === 'function' && !document.getElementById('homeScreen').classList.contains('hidden')) { try { renderHomeScreen(); } catch(e){} }
-    } catch(e){}
+        if (typeof renderHomeScreen === 'function' && !document.getElementById('homeScreen').classList.contains('hidden')) { try { renderHomeScreen(); } catch(e){console.warn("[ctx]",e);} }
+    } catch(e){console.warn("[ctx]",e);}
 }
 
 /* ---------- отправка изменений ---------- */
@@ -35256,7 +35255,7 @@ function flushPending(){
     var now = Date.now();
     keys.forEach(function(k){
         var v = null;
-        try { v = localStorage.getItem(k); } catch(e){}
+        try { v = localStorage.getItem(k); } catch(e){console.warn("[ctx]",e);}
         meta[k] = now;
         var ref = colRef().doc(encKey(k));
         if (v === null) batch.delete(ref);
@@ -35293,7 +35292,7 @@ function flushPending(){
 })();
 
 /* добить очередь при уходе со страницы */
-window.addEventListener('beforeunload', function(){ try{ flushPending(); }catch(e){} });
+window.addEventListener('beforeunload', function(){ try{ flushPending(); }catch(e){console.warn("[ctx]",e);} });
 window.addEventListener('online', function(){ if (fb.user) scheduleFlush(500); updateCloudUI(); });
 window.addEventListener('offline', function(){ if (fb.user) setCloudState('offline'); });
 
@@ -35429,7 +35428,7 @@ function fieldLabel(f){ return bt(f.id === 'w' ? 'weight' : f.id); }
 
 function bmKey(uid){ return 'bodyMeasures_' + uid; }
 function bmLoad(uid){
-    try { var d = JSON.parse(localStorage.getItem(bmKey(uid)) || 'null'); if (d && d.entries) return d; } catch(e){}
+    try { var d = JSON.parse(localStorage.getItem(bmKey(uid)) || 'null'); if (d && d.entries) return d; } catch(e){console.warn("[ctx]",e);}
     return { entries: [], photos: [] };
 }
 function bmSave(uid, data){
@@ -35618,7 +35617,7 @@ window.bmSaveEntry = function(idx){
             var u = users.find(function(x){ return x.id === bmUid(); });
             if (u){ u.weight = e.w; localStorage.setItem('nutritionUsers', JSON.stringify(users)); }
         }
-    } catch(err){}
+    } catch(err){console.warn("[ctx]",err);}
     bmCloseForm();
     bmRender();
     if (typeof showToast === 'function') showToast(bt('saved'));
@@ -35746,7 +35745,7 @@ function bmInjectButtons(){
             };
             var first = body.firstChild;
             body.insertBefore(btn, first);
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
     };
 })();
 
@@ -35804,7 +35803,7 @@ function bmInit(){
                 if (ov && ov.style.display !== 'none') bmRender();
                 var btn = document.getElementById('bmTrainerBtn');
                 if (btn) btn.title = bt('title');
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -35851,7 +35850,7 @@ function chatLoad(uid){
 function chatStore(uid, arr){
     /* держим максимум 500 последних сообщений */
     if (arr.length > 500) arr = arr.slice(-500);
-    try { localStorage.setItem(chatKey(uid), JSON.stringify(arr)); } catch(e){}
+    try { localStorage.setItem(chatKey(uid), JSON.stringify(arr)); } catch(e){console.warn("[ctx]",e);}
 }
 
 window.__chatCtx = { uid: null, role: null };
@@ -35930,7 +35929,7 @@ function chatUpdateHead(){
         try {
             var u = getUsers().find(function(x){ return x.id === c.uid; });
             if (u) name = (u.avatar || '👤') + ' ' + (u.name || '') + (u.lastName ? ' ' + u.lastName : '');
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
         titleEl.textContent = cht('title');
         if (subEl) subEl.textContent = name;
     } else {
@@ -36019,7 +36018,7 @@ function chatUpdateBadges(){
                 b.textContent = n > 9 ? '9+' : n;
             } else if (b) b.remove();
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     /* клиент: бейдж в нижней навигации */
     try {
         var navB = document.querySelector('#csNav .cht-nav-badge');
@@ -36035,7 +36034,7 @@ function chatUpdateBadges(){
                 } else if (b2) b2.remove();
             }
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 }
 window.chatUpdateBadges = chatUpdateBadges;
 
@@ -36076,7 +36075,7 @@ function chatInjectTrainerBtn(){
             };
             el.insertBefore(btn, moreBtn);
             chatUpdateBadges();
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
     };
 })();
 
@@ -36094,7 +36093,7 @@ window.chatOnRemoteUpdate = function(){
             }
         }
         chatUpdateBadges();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 };
 /* BUG-039a: chat refresh — tracked for cleanup */
 (function(){ var id = setInterval(window.chatOnRemoteUpdate, 12000); (window.__intervalManager = window.__intervalManager || []).push(id); })();
@@ -36115,7 +36114,7 @@ function chatInit(){
                 if (ov && ov.style.display !== 'none') chatRender(false);
                 var btn = document.getElementById('chtTrainerBtn');
                 if (btn) btn.title = cht('title');
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -36189,11 +36188,11 @@ function se(s){ return (typeof escapeHtml === 'function') ? escapeHtml(String(s 
 
 function subKey(uid){ return 'subscriptions_' + uid; }
 function subLoad(uid){
-    try { var d = JSON.parse(localStorage.getItem(subKey(uid)) || 'null'); if (d && d.plans) return d; } catch(e){}
+    try { var d = JSON.parse(localStorage.getItem(subKey(uid)) || 'null'); if (d && d.plans) return d; } catch(e){console.warn("[ctx]",e);}
     return { plans: [] };
 }
 function subStore(uid, d){
-    try { localStorage.setItem(subKey(uid), JSON.stringify(d)); } catch(e){}
+    try { localStorage.setItem(subKey(uid), JSON.stringify(d)); } catch(e){console.warn("[ctx]",e);}
 }
 function todayISO(){
     var d = new Date();
@@ -36246,7 +36245,7 @@ window.subDeductSession = function(uid, info){
         if (leftN <= 0) showToast(st('expireToast'));
         else showToast(st('deductToast') + leftN);
     }
-    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
 };
 
 /* ---------- менеджер (тренер) / просмотр (клиент) ---------- */
@@ -36338,7 +36337,7 @@ window.subRender = function(){
     try {
         var u = getUsers().find(function(x){ return x.id === uid; });
         if (u) name = (u.avatar || '') + ' ' + (u.name || '');
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     if (titleEl) titleEl.textContent = (readonly ? st('myPlan') : st('title')) + (name && !readonly ? ' · ' + name : '');
 
     var d = subLoad(uid);
@@ -36431,7 +36430,7 @@ window.subSaveForm = function(){
     subStore(uid, d);
     subRender();
     if (typeof showToast === 'function') showToast(st('saved'));
-    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
 };
 
 window.subManualDeduct = function(idx){
@@ -36442,7 +36441,7 @@ window.subManualDeduct = function(idx){
     p.history.push({ ts: Date.now(), action: 'deduct', info: '' });
     subStore(window.__subUid, d);
     subRender();
-    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
 };
 window.subRefund = function(idx){
     var d = subLoad(window.__subUid);
@@ -36452,7 +36451,7 @@ window.subRefund = function(idx){
     p.history.push({ ts: Date.now(), action: 'refund', info: '' });
     subStore(window.__subUid, d);
     subRender();
-    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
 };
 window.subToggleHistory = function(idx){
     var el = document.getElementById('subHist' + idx);
@@ -36464,7 +36463,7 @@ window.subArchive = function(idx){
     p.closed = true;
     subStore(window.__subUid, d);
     subRender();
-    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
 };
 window.subDelete = function(idx){
     if (!confirm(st('confirmDel'))) return;
@@ -36472,7 +36471,7 @@ window.subDelete = function(idx){
     d.plans.splice(idx, 1);
     subStore(window.__subUid, d);
     subRender();
-    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){}
+    try { if (typeof renderUsers === 'function') renderUsers(); } catch(e){console.warn("[ctx]",e);}
 };
 
 /* ---------- мини-бейдж для карточек клиентов (главный экран) ---------- */
@@ -36503,9 +36502,9 @@ window.subBadgeHtml = function(uid){
         try {
             if (window.__cwLive && __cwLive.active) uid = __cwLive.uid;
             else if (typeof __clientUser !== 'undefined' && __clientUser) uid = __clientUser.id;
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
         var r = orig.apply(this, arguments);
-        try { if (uid && uid !== 'trainer_self') subDeductSession(uid); } catch(e){}
+        try { if (uid && uid !== 'trainer_self') subDeductSession(uid); } catch(e){console.warn("[ctx]",e);}
         return r;
     };
 })();
@@ -36545,7 +36544,7 @@ function subInjectTrainerBtn(){
                 if (typeof __clientUser !== 'undefined' && __clientUser) openSubscriptions(__clientUser.id, true);
             };
             body.insertBefore(btn, body.firstChild);
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
     };
 })();
 
@@ -36561,7 +36560,7 @@ function subInit(){
                 if (ov && ov.style.display !== 'none') subRender();
                 var btn = document.getElementById('subTrainerBtn');
                 if (btn) btn.title = st('title');
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -36628,7 +36627,7 @@ function ntfLog(){
 }
 function ntfStore(a){
     if (a.length > 100) a = a.slice(-100);
-    try { localStorage.setItem('ntfLog', JSON.stringify(a)); } catch(e){}
+    try { localStorage.setItem('ntfLog', JSON.stringify(a)); } catch(e){console.warn("[ctx]",e);}
 }
 function ntfSeen(){
     try { return JSON.parse(localStorage.getItem('ntfSeen') || '{}'); } catch(e){ return {}; }
@@ -36639,7 +36638,7 @@ function ntfMarkSeen(key){
     /* подчистка старых ключей (старше 14 дней) */
     var cut = Date.now() - 14 * 86400000;
     Object.keys(s).forEach(function(k){ if (s[k] < cut) delete s[k]; });
-    try { localStorage.setItem('ntfSeen', JSON.stringify(s)); } catch(e){}
+    try { localStorage.setItem('ntfSeen', JSON.stringify(s)); } catch(e){console.warn("[ctx]",e);}
 }
 
 /* ---------- добавление уведомления ---------- */
@@ -36659,9 +36658,9 @@ window.ntfPush = function(key, icon, title, body, action){
                 icon: 'icon-192.png',
                 tag: key
             });
-            n.onclick = function(){ try { window.focus(); openNtfCenter(); n.close(); } catch(e){} };
+            n.onclick = function(){ try { window.focus(); openNtfCenter(); n.close(); } catch(e){console.warn("[ctx]",e);} };
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     return true;
 };
 
@@ -36670,8 +36669,8 @@ function ntfRole(){
     try {
         var cs = document.getElementById('clientSpace');
         if (cs && cs.style.display !== 'none' && typeof __clientUser !== 'undefined' && __clientUser) return 'client';
-    } catch(e){}
-    try { if (typeof currentTrainer !== 'undefined' && currentTrainer) return 'trainer'; } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
+    try { if (typeof currentTrainer !== 'undefined' && currentTrainer) return 'trainer'; } catch(e){console.warn("[ctx]",e);}
     return null;
 }
 function remEnabled(){ return (typeof safeGetItem === 'function' ? safeGetItem('notifReminder') : localStorage.getItem('notifReminder')) !== '0'; }
@@ -36689,10 +36688,10 @@ window.ntfCheckAll = function(){
             /* 1) напоминание о тренировке */
             if (remEnabled() && now.getHours() >= remHour()){
                 var plans = [];
-                try { plans = JSON.parse(localStorage.getItem('workoutPlan_' + uid) || '[]'); } catch(e){}
+                try { plans = JSON.parse(localStorage.getItem('workoutPlan_' + uid) || '[]'); } catch(e){console.warn("[ctx]",e);}
                 if (plans.length){
                     var logs = [];
-                    try { logs = JSON.parse(localStorage.getItem('clientWorkoutLog_' + uid) || '[]'); } catch(e){}
+                    try { logs = JSON.parse(localStorage.getItem('clientWorkoutLog_' + uid) || '[]'); } catch(e){console.warn("[ctx]",e);}
                     var doneToday = logs.some(function(l){ return new Date(l.completedAt || l.date).toDateString() === now.toDateString(); });
                     if (!doneToday) ntfPush('wk_' + uid + '_' + ds, '🏋️', nt('wkRemTitle'), nt('wkRemBody'), 'wk');
                 }
@@ -36700,11 +36699,11 @@ window.ntfCheckAll = function(){
             /* 2) питание не отмечено */
             if (remEnabled() && now.getHours() >= Math.min(23, remHour() + 2)){
                 var np = null;
-                try { np = JSON.parse(localStorage.getItem('nutritionPlan_' + uid) || 'null'); } catch(e){}
+                try { np = JSON.parse(localStorage.getItem('nutritionPlan_' + uid) || 'null'); } catch(e){console.warn("[ctx]",e);}
                 if (np && np.meals && np.meals.length){
                     var dKey = 'clientNutriDone_' + uid + '_' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
                     var done = [];
-                    try { done = JSON.parse(localStorage.getItem(dKey) || '[]'); } catch(e){}
+                    try { done = JSON.parse(localStorage.getItem(dKey) || '[]'); } catch(e){console.warn("[ctx]",e);}
                     if (!done.length) ntfPush('nut_' + uid + '_' + ds, '🍽️', nt('ntRemTitle'), nt('ntRemBody'), 'nut');
                 }
             }
@@ -36719,7 +36718,7 @@ window.ntfCheckAll = function(){
                             if (stt === 'finished' || stt === 'expired') ntfPush('sub_end_' + uid + '_' + p.id, '💰', nt('subEndT'), nt('subSoonB'), 'subro:' + uid);
                         });
                     }
-                } catch(e){}
+                } catch(e){console.warn("[ctx]",e);}
             }
             /* 4) новое сообщение от тренера */
             try {
@@ -36727,7 +36726,7 @@ window.ntfCheckAll = function(){
                 var lastIn = null;
                 msgs.forEach(function(m){ if (m.from === 'trainer' && !m.read) lastIn = m; });
                 if (lastIn) ntfPush('chat_' + uid + '_' + lastIn.ts, '💬', nt('chatT'), nt('chatFromTr') + ': ' + String(lastIn.text).slice(0, 60), 'chat:' + uid);
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         /* === ТРЕНЕР === */
@@ -36739,13 +36738,13 @@ window.ntfCheckAll = function(){
                     var li = null;
                     ms.forEach(function(m){ if (m.from === 'client' && !m.read) li = m; });
                     if (li) ntfPush('tchat_' + u.id + '_' + li.ts, '💬', nt('chatT') + ' — ' + (u.name || ''), nt('chatFromCl') + ': ' + String(li.text).slice(0, 60), 'chat:' + u.id);
-                } catch(e){}
+                } catch(e){console.warn("[ctx]",e);}
                 /* клиент выполнил тренировку сегодня */
                 try {
                     var lg = JSON.parse(localStorage.getItem('clientWorkoutLog_' + u.id) || '[]');
                     var td = lg.filter(function(l){ return new Date(l.completedAt || l.date).toDateString() === now.toDateString(); });
                     if (td.length) ntfPush('tdone_' + u.id + '_' + ds, '✅', nt('tDoneT'), (u.avatar || '') + ' ' + (u.name || ''), 'chat:' + u.id);
-                } catch(e){}
+                } catch(e){console.warn("[ctx]",e);}
                 /* абонементы */
                 if (typeof subPlanStatus === 'function'){
                     try {
@@ -36757,11 +36756,11 @@ window.ntfCheckAll = function(){
                                 if (stt === 'finished' || stt === 'expired') ntfPush('tsub_end_' + u.id + '_' + p.id, '💰', nt('subEndT') + ' — ' + (u.name || ''), nt('tSubEndB'), 'sub:' + u.id);
                             });
                         }
-                    } catch(e){}
+                    } catch(e){console.warn("[ctx]",e);}
                 }
             });
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     ntfUpdateBell();
 };
 
@@ -36880,7 +36879,7 @@ window.ntfAct = function(action){
         } else if (action.indexOf('subro:') === 0){
             if (typeof openSubscriptions === 'function') openSubscriptions(action.slice(6), true);
         }
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 };
 window.ntfClearAll = function(){
     ntfStore([]);
@@ -36913,7 +36912,7 @@ function ntfInit(){
         window.__ntfRemHook = true;
         window.chatOnRemoteUpdate = function(){
             var r = origRem.apply(this, arguments);
-            try { ntfCheckAll(); } catch(e){}
+            try { ntfCheckAll(); } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -36928,7 +36927,7 @@ function ntfInit(){
                 if (bell) bell.title = nt('title');
                 var ov = document.getElementById('ntfOverlay');
                 if (ov && ov.style.display !== 'none') ntfRender();
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -36991,12 +36990,12 @@ function dshCollect(){
         var iso = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
         out.events = evs.filter(function(e){ return e.date === iso; })
             .sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); }).slice(0, 8);
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 
     var activeSet = {};
     users.forEach(function(u){
         var logs = [];
-        try { logs = JSON.parse(localStorage.getItem('clientWorkoutLog_' + u.id) || '[]'); } catch(e){}
+        try { logs = JSON.parse(localStorage.getItem('clientWorkoutLog_' + u.id) || '[]'); } catch(e){console.warn("[ctx]",e);}
         var last = null;
         logs.forEach(function(l){
             var d = new Date(l.completedAt || l.date);
@@ -37007,7 +37006,7 @@ function dshCollect(){
         });
         /* молчуны: есть план, но нет тренировок 7+ дней */
         var hasPlan = false;
-        try { hasPlan = (JSON.parse(localStorage.getItem('workoutPlan_' + u.id) || '[]')).length > 0; } catch(e){}
+        try { hasPlan = (JSON.parse(localStorage.getItem('workoutPlan_' + u.id) || '[]')).length > 0; } catch(e){console.warn("[ctx]",e);}
         if (hasPlan && (!last || (now - last) >= 7 * 86400000)) out.silent.push(u);
 
         /* дни рождения (поле birthday / dob: YYYY-MM-DD) */
@@ -37037,7 +37036,7 @@ function dshCollect(){
                         }
                     });
                 }
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
         }
 
         /* непрочитанные сообщения */
@@ -37045,7 +37044,7 @@ function dshCollect(){
             var ms = JSON.parse(localStorage.getItem('chatMessages_' + u.id) || '[]');
             var n = ms.filter(function(x){ return x.from === 'client' && !x.read; }).length;
             if (n > 0) out.msgs.push({ u: u, n: n });
-        } catch(e){}
+        } catch(e){console.warn("[ctx]",e);}
     });
     out.active7 = Object.keys(activeSet).length;
     out.bdays.sort(function(a,b){ return a.days - b.days; });
@@ -37258,7 +37257,7 @@ function bkrAutoBackup(){
             }
         }
         var hist = [];
-        try { hist = JSON.parse(localStorage.getItem('autoBackups') || '[]'); } catch(e){}
+        try { hist = JSON.parse(localStorage.getItem('autoBackups') || '[]'); } catch(e){console.warn("[ctx]",e);}
         hist.push(snap);
         if (hist.length > 3) hist = hist.slice(-3);
         localStorage.setItem('autoBackups', JSON.stringify(hist));
@@ -37331,7 +37330,7 @@ window.bkrSetRole = function(trainerId, role){
         if (tr){ tr.role = role; localStorage.setItem('trainersList', JSON.stringify(trainers)); }
         if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id === trainerId) currentTrainer.role = role;
         bkrApplyViewerMode();
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 };
 
 /* ---------- init ---------- */
@@ -37350,8 +37349,8 @@ function dashInit(){
                 if (b) b.textContent = dt('dashBtn');
                 var ov = document.getElementById('dshOverlay');
                 if (ov && ov.style.display !== 'none') dshRender();
-            } catch(e){}
-            try { /* injectHomeTools(); отключено */ } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
+            try { /* injectHomeTools(); отключено */ } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -37361,8 +37360,8 @@ function dashInit(){
         window.__dshRuHook = true;
         window.renderUsers = function(){
             var r = origRU.apply(this, arguments);
-            try { /* dshInjectBtn(); отключено */ } catch(e){}
-            try { /* injectHomeTools(); отключено */ } catch(e){}
+            try { /* dshInjectBtn(); отключено */ } catch(e){console.warn("[ctx]",e);}
+            try { /* injectHomeTools(); отключено */ } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -38011,7 +38010,7 @@ function encInit(){
                     var si = document.getElementById('encSearch'); if (si) si.placeholder = etL(ENC_UI.search);
                     encRender();
                 }
-            } catch(e){}
+            } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -38021,7 +38020,7 @@ function encInit(){
         window.__encRuHook = true;
         window.renderUsers = function(){
             var r = origRU.apply(this, arguments);
-            try { /* encInjectBtn(); отключено */ } catch(e){}
+            try { /* encInjectBtn(); отключено */ } catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -38087,10 +38086,10 @@ W.WG=WG;
 /* pos содержит ВСЕ элементы: панели и виджеты в одном пространстве */
 var DEF={editing:false,hidden:[],pos:{},widgets:[]};
 function loadS(){
-    try{var s=JSON.parse(localStorage.getItem('heState5'));if(s)return Object.assign({},JSON.parse(JSON.stringify(DEF)),s)}catch(e){}
+    try{var s=JSON.parse(localStorage.getItem('heState5'));if(s)return Object.assign({},JSON.parse(JSON.stringify(DEF)),s)}catch(e){console.warn("[ctx]",e);}
     return JSON.parse(JSON.stringify(DEF));
 }
-function saveS(s){try{localStorage.setItem('heState5',JSON.stringify(s))}catch(e){}}
+function saveS(s){try{localStorage.setItem('heState5',JSON.stringify(s))}catch(e){console.warn("[ctx]",e);}}
 
 /* ====================== ВСЕ ПЕРЕТАСКИВАЕМЫЕ ЭЛЕМЕНТЫ ====================== */
 function getPanels(){
@@ -38295,7 +38294,7 @@ function renderWidgets(){
     });
     c.innerHTML=h;
     /* инициализация */
-    s.widgets.forEach(function(wi){var d=WG[wi.id];if(d)try{d.init()}catch(e){}});
+    s.widgets.forEach(function(wi){var d=WG[wi.id];if(d)try{d.init()}catch(e){console.warn("[ctx]",e);}});
     /* удаление */
     c.querySelectorAll('[data-rmwi]').forEach(function(b){
         b.addEventListener('click',function(e){e.stopPropagation();var i=parseInt(b.getAttribute('data-rmwi'), 10);var s2=loadS();s2.widgets.splice(i,1);delete s2.pos['w_'+i];saveS(s2);renderWidgets();});
@@ -38448,7 +38447,7 @@ function init(){
         }
         applyAll();
     },1200);
-    var o=window.applyLanguage;if(typeof o==='function'&&!window.__heL5H){window.__heL5H=true;window.applyLanguage=function(){var r=o.apply(this,arguments);try{var b=document.getElementById('heToolBtn');if(b){b.style.display='none';}var bar=document.getElementById('heBar');if(bar){bar.querySelector('.he-i').textContent=ht('hint');bar.querySelector('.he-b-a').textContent=ht('addWidget');bar.querySelector('.he-b-r').textContent=ht('reset');bar.querySelector('.he-b-d').textContent=ht('done');}}catch(e){}return r;};}
+    var o=window.applyLanguage;if(typeof o==='function'&&!window.__heL5H){window.__heL5H=true;window.applyLanguage=function(){var r=o.apply(this,arguments);try{var b=document.getElementById('heToolBtn');if(b){b.style.display='none';}var bar=document.getElementById('heBar');if(bar){bar.querySelector('.he-i').textContent=ht('hint');bar.querySelector('.he-b-a').textContent=ht('addWidget');bar.querySelector('.he-b-r').textContent=ht('reset');bar.querySelector('.he-b-d').textContent=ht('done');}}catch(e){console.warn("[ctx]",e);}return r;};}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,1300);});
 else setTimeout(init,1300);
@@ -38606,7 +38605,7 @@ function executeCtx(act){
         case 'newCalendar':if(W.heAddW)W.heAddW('calendarWidget');break;
         case 'newClock':if(W.heAddW)W.heAddW('clock');break;
         case 'newCalculator':if(W.heAddW)W.heAddW('calc');break;
-        case 'addWidget':if(typeof win11CtxAddWidget==='function'){try{win11CtxAddWidget('summary')}catch(e){}break;}
+        case 'addWidget':if(typeof win11CtxAddWidget==='function'){try{win11CtxAddWidget('summary')}catch(e){console.warn("[ctx]",e);}break;}
         case 'editScreen':if(W.heToggle)W.heToggle();break;
         case 'goClients':if(W.renderUsers)W.renderUsers();if(W.openUser)W.openUser();break;
         case 'goCalendar':if(W.openCalendarModal)W.openCalendarModal();break;
@@ -38787,10 +38786,10 @@ var CustomPanels,CP;CP=CustomPanels={
     panels:[],
     nextId:1,
     load:function(){
-        try{var d=JSON.parse(localStorage.getItem('customPanels'));if(d){this.panels=d.panels||[];this.nextId=d.nextId||1;}}catch(e){}
+        try{var d=JSON.parse(localStorage.getItem('customPanels'));if(d){this.panels=d.panels||[];this.nextId=d.nextId||1;}}catch(e){console.warn("[ctx]",e);}
     },
     save:function(){
-        try{localStorage.setItem('customPanels',JSON.stringify({panels:this.panels,nextId:this.nextId}));}catch(e){}
+        try{localStorage.setItem('customPanels',JSON.stringify({panels:this.panels,nextId:this.nextId}));}catch(e){console.warn("[ctx]",e);}
     },
     create:function(type,pos){
         var id='cp_'+(this.nextId++);
@@ -38962,7 +38961,7 @@ function init(){
         window.__cmLH=true;
         window.applyLanguage=function(){
             var r=origAL.apply(this,arguments);
-            try{L=(typeof currentLang!=='undefined')?currentLang:'ru';CP.render();CW.render();}catch(e){}
+            try{L=(typeof currentLang!=='undefined')?currentLang:'ru';CP.render();CW.render();}catch(e){console.warn("[ctx]",e);}
             return r;
         };
     }
@@ -39029,10 +39028,10 @@ var ALL_BUTTONS={
 
 /* ====================== СОСТОЯНИЕ ====================== */
 function loadBtns(){
-    try{var b=JSON.parse(localStorage.getItem('tbButtons'));if(Array.isArray(b))return b;}catch(e){}
+    try{var b=JSON.parse(localStorage.getItem('tbButtons'));if(Array.isArray(b))return b;}catch(e){console.warn("[ctx]",e);}
     return['mode','search','edit','clients','calendar','tasks','shop','encyclopedia','dashboard','settings'];
 }
-function saveBtns(b){try{localStorage.setItem('tbButtons',JSON.stringify(b));}catch(e){}}
+function saveBtns(b){try{localStorage.setItem('tbButtons',JSON.stringify(b));}catch(e){console.warn("[ctx]",e);}}
 
 /* ====================== CSS ====================== */
 function injectCSS(){
@@ -39153,7 +39152,7 @@ W.tbShowCtx=function(e){
     m.style.bottom='56px';
     m.classList.add('open');
 };
-W.tbAlign=function(pos){var tb=E("osTaskbar");if(!tb)return;tb.classList.remove("tb-left","tb-center","tb-right");tb.classList.add("tb-"+pos);try{localStorage.setItem("tbAlign",pos);}catch(e){}E("tbCtxMenu").classList.remove("open");};
+W.tbAlign=function(pos){var tb=E("osTaskbar");if(!tb)return;tb.classList.remove("tb-left","tb-center","tb-right");tb.classList.add("tb-"+pos);try{localStorage.setItem("tbAlign",pos);}catch(e){console.warn("[ctx]",e);}E("tbCtxMenu").classList.remove("open");};
 W.tbToggleBtn=function(id){
     var btns=loadBtns();
     var b=ALL_BUTTONS[id];if(!b)return;
@@ -39198,16 +39197,16 @@ function osSearchRender(q){
     try{JSON.parse(localStorage.getItem('nutritionUsers')||'[]').forEach(function(u){
         if(((u.name||'')+(u.lastName||'')+(u.phone||'')).toLowerCase().indexOf(q)>=0)
             results.push({cat:'Клиенты',ico:u.avatar||'👤',name:(u.name||'')+' '+(u.lastName||''),sub:u.phone||'',uid:u.id});
-    });}catch(e){}
+    });}catch(e){console.warn("[ctx]",e);}
     try{JSON.parse(localStorage.getItem('tasksList')||'[]').forEach(function(t){
         if((t.title||'').toLowerCase().indexOf(q)>=0)results.push({cat:'Задачи',ico:'✅',name:t.title||'',sub:''});
-    });}catch(e){}
+    });}catch(e){console.warn("[ctx]",e);}
     try{JSON.parse(localStorage.getItem('leadsList')||'[]').forEach(function(l){
         if((l.name||'').toLowerCase().indexOf(q)>=0)results.push({cat:'Лиды',ico:'🌟',name:l.name||'',sub:l.phone||''});
-    });}catch(e){}
+    });}catch(e){console.warn("[ctx]",e);}
     try{JSON.parse(localStorage.getItem('shopItems')||'[]').forEach(function(i){
         if((i.name||'').toLowerCase().indexOf(q)>=0)results.push({cat:'Магазин',ico:'🛒',name:i.name||'',sub:i.brand||''});
-    });}catch(e){}
+    });}catch(e){console.warn("[ctx]",e);}
     results=results.slice(0,20);
     if(!results.length){box.innerHTML='<div class="os-search-empty">'+tt('noRes')+'</div>';return;}
     var cur='';var h='';
@@ -39264,7 +39263,7 @@ else setTimeout(init,1200);
         var t = document.createElement('div');
         t.style.zoom = '0.5';
         hasZoom = (t.style.zoom === '0.5');
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
 
     function apply(){
         var s = Z.s;
@@ -39355,7 +39354,7 @@ else setTimeout(init,1200);
             }
         }
 
-        try { localStorage.setItem('pgAppZoom', String(s)); } catch(e){}
+        try { localStorage.setItem('pgAppZoom', String(s)); } catch(e){console.warn("[ctx]",e);}
     }
 
     window.pgZoomStep = function(dir){
@@ -39392,7 +39391,7 @@ else setTimeout(init,1200);
     try {
         var sv = parseFloat(localStorage.getItem('pgAppZoom'));
         if (!isNaN(sv) && sv >= Z.min && sv <= Z.max) Z.s = sv;
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 
     /* Плавный переход масштаба */
     if (!document.getElementById('pgZoomTrans')) {
@@ -39596,7 +39595,7 @@ else setTimeout(init,1200);
                 document.body.scrollHeight > window.innerHeight + 50) {
                 return document.body;
             }
-        } catch(e) {}
+        } catch(e){console.warn("[ctx]",e);}
         return null;
     }
 
@@ -39887,7 +39886,7 @@ function loadPositions(){
     } catch(e) { widgetPositions = {}; }
 }
 function savePositions(){
-    try { localStorage.setItem('win11_widget_layout', JSON.stringify(widgetPositions)); } catch(e){}
+    try { localStorage.setItem('win11_widget_layout', JSON.stringify(widgetPositions)); } catch(e){console.warn("[ctx]",e);}
 }
 
 /* ============================================================
@@ -40159,7 +40158,7 @@ window.__win11CloseWidget = function(id){
         if (typeof saveDesktopPages === 'function') saveDesktopPages();
     }
     /* Сохранить активные виджеты */
-    try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){}
+    try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){console.warn("[ctx]",e);}
 };
 
 window.__win11AddWidget = function(id, x, y){
@@ -40189,7 +40188,7 @@ window.__win11AddWidget = function(id, x, y){
     var snapped = snapToGrid(x, y);
     addDesktopItem('widget', id, currentPage, snapped.col, snapped.row);
     showDesktopPage(currentPage);
-    try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){}
+    try { localStorage.setItem('win11_active_widgets', JSON.stringify(activeWidgets)); } catch(e){console.warn("[ctx]",e);}
 };
 /* Алиас для обратной совместимости */
 window.win11AddWidget = function(id, x, y){ return window.__win11AddWidget(id, x, y); };
@@ -40236,7 +40235,7 @@ window.__win11ResetLayout = function(){
     try {
         localStorage.removeItem('win11_widget_layout');
         localStorage.removeItem('win11_active_widgets');
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     /* Удалить все виджеты */
     var area = document.getElementById('win11DesktopArea');
     if (area) area.innerHTML = '';
@@ -40255,7 +40254,7 @@ window.__win11ResetLayout = function(){
 
 function initDefaultWidgets(){
     var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('win11_active_widgets')); } catch(e){}
+    try { saved = JSON.parse(localStorage.getItem('win11_active_widgets')); } catch(e){console.warn("[ctx]",e);}
     var widgetsToLoad = [];
     if (saved && Array.isArray(saved) && saved.length > 0) {
         widgetsToLoad = saved.map(function(id){ return { id: id }; });
@@ -40290,7 +40289,7 @@ window.__win11RenderClients = function(filter){
     var users = [];
     try {
         if (typeof getUsers === 'function') users = getUsers();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
 
     if (!users.length) {
         list.innerHTML = '<div class="win11-clients-empty">👥 Нет клиентов.<br>Добавьте через «Новый клиент».</div>';
@@ -40372,7 +40371,8 @@ window.__win11UpdateClock = function(){
     if (trayTime) trayTime.textContent = time;
     if (trayDate) trayDate.textContent = dateStr;
 };
-setInterval(window.__win11UpdateClock, 1000);
+/* [Sprint4] Win11 clock interval disabled — element is display:none */
+// setInterval(window.__win11UpdateClock, 1000);
 
 /* ============================================================
    ВИДЖЕТ: СВОДКА ДНЯ
@@ -40381,12 +40381,12 @@ window.__win11RenderSummary = function(body){
     var users = [];
     var tasks = [];
     var leads = [];
-    try { if (typeof getUsers === 'function') users = getUsers(); } catch(e){}
-    try { if (typeof getTasks === 'function') tasks = getTasks(); } catch(e){}
+    try { if (typeof getUsers === 'function') users = getUsers(); } catch(e){console.warn("[ctx]",e);}
+    try { if (typeof getTasks === 'function') tasks = getTasks(); } catch(e){console.warn("[ctx]",e);}
     try {
         var leadsRaw = localStorage.getItem('leadsList');
         if (leadsRaw) leads = JSON.parse(leadsRaw) || [];
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
 
     var today = new Date().toISOString().slice(0, 10);
     var todayTasks = tasks.filter(function(t){
@@ -40462,7 +40462,7 @@ window.__win11RenderCalendar = function(body){
    ============================================================ */
 window.__win11RenderWeather = function(body){
     var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('win11_weather_cache')); } catch(e){}
+    try { saved = JSON.parse(localStorage.getItem('win11_weather_cache')); } catch(e){console.warn("[ctx]",e);}
     var city = (saved && saved.city) || 'Tel Aviv';
     body.innerHTML =
         '<div style="padding:10px;">' +
@@ -40506,7 +40506,7 @@ window.__win11WeatherLoad = function(){
                 };
                 var desc = codeMap[w.current.weather_code] || '—';
                 var data = { city: g.name, temp: w.current.temperature_2m, desc: desc, wind: w.current.wind_speed_10m };
-                try { localStorage.setItem('win11_weather_cache', JSON.stringify(data)); } catch(e){}
+                try { localStorage.setItem('win11_weather_cache', JSON.stringify(data)); } catch(e){console.warn("[ctx]",e);}
                 if (info) info.innerHTML =
                     '<div style="font-size:.85em; opacity:.7;">' + g.name + '</div>' +
                     '<div style="font-size:2.4em; margin:4px 0;">' + Math.round(data.temp) + '°C</div>' +
@@ -40703,7 +40703,7 @@ function win11ToggleStartMenu(e, forceClose){
                     var trainer = trainers.find(function(t){ return t.id === session.id; });
                     if (trainer) nameEl.textContent = trainer.name + (trainer.lastName ? ' ' + trainer.lastName : '');
                     else nameEl.textContent = 'Тренер';
-                } catch(e) {}
+                } catch(e){console.warn("[ctx]",e);}
             }
         }
     }
@@ -40745,22 +40745,22 @@ window.win11OpenApp = function(app){
             } catch(e) { console.error(e); }
             break;
         case 'calendar':
-            try { if (typeof openCalendarModal === 'function') openCalendarModal(); } catch(e){}
+            try { if (typeof openCalendarModal === 'function') openCalendarModal(); } catch(e){console.warn("[ctx]",e);}
             break;
         case 'tasks':
-            try { if (typeof openTasksModal === 'function') openTasksModal(); } catch(e){}
+            try { if (typeof openTasksModal === 'function') openTasksModal(); } catch(e){console.warn("[ctx]",e);}
             break;
         case 'shop':
-            try { if (typeof openShopModal === 'function') openShopModal(); } catch(e){}
+            try { if (typeof openShopModal === 'function') openShopModal(); } catch(e){console.warn("[ctx]",e);}
             break;
         case 'leads':
-            try { if (typeof openLeadsModal === 'function') openLeadsModal(); } catch(e){}
+            try { if (typeof openLeadsModal === 'function') openLeadsModal(); } catch(e){console.warn("[ctx]",e);}
             break;
         case 'chat':
-            try { if (typeof openChat === 'function') openChat(currentUserId, 'trainer'); } catch(e){}
+            try { if (typeof openChat === 'function') openChat(currentUserId, 'trainer'); } catch(e){console.warn("[ctx]",e);}
             break;
         case 'trainer':
-            try { if (typeof openTrainerProfile === 'function') openTrainerProfile(); } catch(e){}
+            try { if (typeof openTrainerProfile === 'function') openTrainerProfile(); } catch(e){console.warn("[ctx]",e);}
             break;
     }
 };
@@ -40775,7 +40775,7 @@ window.win11Logout = function(){
     try {
         localStorage.removeItem('currentTrainerSession');
         localStorage.removeItem('guestMode');
-    } catch(e){}
+    } catch(e){console.warn("[ctx]",e);}
     location.reload();
 };
 
@@ -40908,7 +40908,7 @@ function savePlanToExplorerFile(name, format){
         if (typeof currentUserId !== 'undefined' && currentUserId) {
             data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null');
         }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     if (!data) {
         if (typeof showToast === 'function') showToast('⚠️ Нет активного плана питания', 'error');
         return;
@@ -40945,7 +40945,7 @@ function saveWorkoutToExplorerFile(name, format){
     var data = null;
     try {
         data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     if (!data || !data.length) {
         if (typeof showToast === 'function') showToast('⚠️ Нет данных тренировки', 'error');
         return;
@@ -41075,7 +41075,7 @@ window.win11CtxSavePlanPDF = function(){
     savePlanToExplorerFile(name, 'pdf');
     /* Также открыть для печати */
     var data = null;
-    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e) {}
+    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e){console.warn("[ctx]",e);}
     if (data) {
         var html = generatePlanHTML(data, name);
         var win = window.open('', '_blank');
@@ -41088,7 +41088,7 @@ window.win11CtxSaveWorkoutPDF = function(){
     if (!name) return;
     saveWorkoutToExplorerFile(name, 'pdf');
     var data = null;
-    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e) {}
+    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e){console.warn("[ctx]",e);}
     if (data && data.length) {
         var html = generateWorkoutHTML(data, name);
         var win = window.open('', '_blank');
@@ -41102,7 +41102,7 @@ window.win11CtxSavePlanExcel = function(){
     savePlanToExplorerFile(name, 'excel');
     /* Скачать CSV */
     var data = null;
-    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e) {}
+    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e){console.warn("[ctx]",e);}
     if (data) {
         var csv = generatePlanCSV(data);
         var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
@@ -41117,7 +41117,7 @@ window.win11CtxSaveWorkoutExcel = function(){
     if (!name) return;
     saveWorkoutToExplorerFile(name, 'excel');
     var data = null;
-    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e) {}
+    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e){console.warn("[ctx]",e);}
     if (data && data.length) {
         var csv = generateWorkoutCSV(data);
         var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
@@ -41133,7 +41133,7 @@ window.win11CtxSavePlanImage = function(){
     savePlanToExplorerFile(name, 'image');
     /* Открыть HTML для скриншота */
     var data = null;
-    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e) {}
+    try { if (typeof currentUserId !== 'undefined' && currentUserId) data = JSON.parse(localStorage.getItem('nutritionPlan_' + currentUserId) || 'null'); } catch(e){console.warn("[ctx]",e);}
     if (data) {
         var html = generatePlanHTML(data, name);
         var win = window.open('', '_blank');
@@ -41147,7 +41147,7 @@ window.win11CtxSaveWorkoutImage = function(){
     if (!name) return;
     saveWorkoutToExplorerFile(name, 'image');
     var data = null;
-    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e) {}
+    try { data = Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout); } catch(e){console.warn("[ctx]",e);}
     if (data && data.length) {
         var html = generateWorkoutHTML(data, name);
         var win = window.open('', '_blank');
@@ -41273,7 +41273,7 @@ function attachWidgetResize(widget, id){
             var sizes = JSON.parse(localStorage.getItem('win11_widget_sizes') || '{}');
             sizes[id] = { w: widget.offsetWidth, h: widget.offsetHeight };
             localStorage.setItem('win11_widget_sizes', JSON.stringify(sizes));
-        } catch(e) {}
+        } catch(e){console.warn("[ctx]",e);}
         rInfo = null;
     }
 
@@ -41323,7 +41323,7 @@ initDefaultWidgets = function(){
                 widget.style.height = sizes[id].h + 'px';
             }
         });
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
 };
 window.win11CtxAddShortcut = function(){
     hideContextMenu();
@@ -41518,7 +41518,7 @@ function loadPinned(){
     try { widgetPinned = JSON.parse(localStorage.getItem('win11_pinned_widgets')) || []; } catch(e) { widgetPinned = []; }
 }
 function savePinned(){
-    try { localStorage.setItem('win11_pinned_widgets', JSON.stringify(widgetPinned)); } catch(e) {}
+    try { localStorage.setItem('win11_pinned_widgets', JSON.stringify(widgetPinned)); } catch(e){console.warn("[ctx]",e);}
 }
 window.__win11CycleWidgetSize = function(id){
     var widget = document.querySelector('.win11-widget[data-widget-id="' + id + '"]');
@@ -41538,7 +41538,7 @@ window.__win11CycleWidgetSize = function(id){
         var saved = JSON.parse(localStorage.getItem('win11_widget_size_class') || '{}');
         saved[id] = next;
         localStorage.setItem('win11_widget_size_class', JSON.stringify(saved));
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     if (typeof showToast === 'function') showToast('Размер: ' + next, 'info');
 };
 window.__win11PinWidget = function(id){
@@ -41846,7 +41846,7 @@ function loadFiles(){
     }
 }
 function saveFiles(){
-    try { localStorage.setItem('win11_files', JSON.stringify(win11Files)); } catch(e) {}
+    try { localStorage.setItem('win11_files', JSON.stringify(win11Files)); } catch(e){console.warn("[ctx]",e);}
 }
 
 function openFileExplorer(folderId){
@@ -42124,7 +42124,7 @@ window.__win11TextSave = function(eid, fileId){
 window.__win11TextDownload = function(fileId){ var f=win11Files[fileId]; if(f) downloadFile(f); };
 window.__win11ExplorerSavePlan = function(winId){
     var name=prompt('Название:','Программа питания '+new Date().toLocaleDateString(__uiLocale())); if(!name) return;
-    var data=null; try{if(typeof currentUserId!=='undefined'&&currentUserId) data=JSON.parse(localStorage.getItem('nutritionPlan_'+currentUserId)||'null');}catch(e){}
+    var data=null; try{if(typeof currentUserId!=='undefined'&&currentUserId) data=JSON.parse(localStorage.getItem('nutritionPlan_'+currentUserId)||'null');}catch(e){console.warn("[ctx]",e);}
     if(!data){showToast('⚠️ Нет активного плана. Откройте клиент и создайте план.','error');return;}
     var json=JSON.stringify({type:'nutrition',name:name,data:data,savedAt:new Date().toISOString()},null,2);
     var fid='file_'+Date.now(); win11Files[fid]={type:'txt',name:name+'.json',content:'data:application/json;base64,'+btoa(unescape(encodeURIComponent(json))),size:json.length,_created:Date.now()};
@@ -42132,7 +42132,7 @@ window.__win11ExplorerSavePlan = function(winId){
 };
 window.__win11ExplorerSaveWorkout = function(winId){
     var name=prompt('Название:','Программа тренировок '+new Date().toLocaleDateString(__uiLocale())); if(!name) return;
-    var data=null; try{data=Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);}catch(e){}
+    var data=null; try{data=Array.from(document.querySelectorAll('#workoutsContainer .workout')).map(serializeWorkout);}catch(e){console.warn("[ctx]",e);}
     if(!data||!data.length){showToast('⚠️ Нет данных тренировки. Откройте планировщик.','error');return;}
     var json=JSON.stringify({type:'workout',name:name,data:data,savedAt:new Date().toISOString()},null,2);
     var fid='file_'+Date.now(); win11Files[fid]={type:'txt',name:name+'.json',content:'data:application/json;base64,'+btoa(unescape(encodeURIComponent(json))),size:json.length,_created:Date.now()};
@@ -42201,7 +42201,7 @@ function renderDocContent(item, container){
             try {
                 var base64 = text.split(',')[1];
                 text = atob(base64);
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
         var pre = document.createElement('pre');
         pre.textContent = text;
@@ -42259,7 +42259,7 @@ function loadShortcuts(){
     }
 }
 function saveShortcuts(){
-    try { localStorage.setItem('win11_shortcuts', JSON.stringify(desktopShortcuts)); } catch(e) {}
+    try { localStorage.setItem('win11_shortcuts', JSON.stringify(desktopShortcuts)); } catch(e){console.warn("[ctx]",e);}
 }
 function renderShortcuts(){
     var area = document.getElementById('win11DesktopArea');
@@ -42437,7 +42437,7 @@ function loadAlarms(){
     try { win11Alarms = JSON.parse(localStorage.getItem('win11_alarms')) || []; } catch(e) { win11Alarms = []; }
 }
 function saveAlarms(){
-    try { localStorage.setItem('win11_alarms', JSON.stringify(win11Alarms)); } catch(e) {}
+    try { localStorage.setItem('win11_alarms', JSON.stringify(win11Alarms)); } catch(e){console.warn("[ctx]",e);}
 }
 function openClockApp(){
     var id = 'clockApp';
@@ -42532,7 +42532,7 @@ function checkAlarms(now){
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
             try {
                 if (typeof playNotifSound === 'function') playNotifSound();
-            } catch(e) {}
+            } catch(e){console.warn("[ctx]",e);}
         }
     });
 }
@@ -42574,7 +42574,7 @@ function renderNotifications(){
                 notifs.push({ title: '⚠️ Просрочена', text: t.title, time: 'Просрочено' });
             }
         });
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     /* Абонементы истекающие */
     try {
         var users = getUsers();
@@ -42591,7 +42591,7 @@ function renderNotifications(){
                 }
             });
         });
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     if (!notifs.length) {
         body.innerHTML = '<div class="win11-notif-empty">🔔 Нет новых уведомлений</div>';
         return;
@@ -42763,7 +42763,7 @@ function savePlanToTarget(target, name, json, kind){
             return;
         }
         var key = kind === 'nutrition' ? ('nutritionPlan_' + currentUserId) : ('workoutPlan_' + currentUserId);
-        try { localStorage.setItem(key, kind === 'nutrition' ? localStorage.getItem('nutritionPlan_' + currentUserId) : JSON.stringify(getWorkoutData())); } catch(e) {}
+        try { localStorage.setItem(key, kind === 'nutrition' ? localStorage.getItem('nutritionPlan_' + currentUserId) : JSON.stringify(getWorkoutData())); } catch(e){console.warn("[ctx]",e);}
         if (typeof showToast === 'function') showToast('👤 Программа привязана к клиенту', 'success');
     }
     /* Закрыть диалог */
@@ -42777,7 +42777,7 @@ window.win11CtxChangeWallpaper = function(){
 };
 window.win11CtxResetWallpaper = function(){
     hideContextMenu();
-    try { localStorage.removeItem('win11_wallpaper'); } catch(e){}
+    try { localStorage.removeItem('win11_wallpaper'); } catch(e){console.warn("[ctx]",e);}
     var desktop = document.getElementById('homeScreen');
     if (desktop) {
         desktop.classList.remove('custom-wallpaper');
@@ -42846,7 +42846,7 @@ function applySavedWallpaper(){
                 desktop.style.setProperty('--win11-wallpaper', 'url(' + saved + ')');
             }
         }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
 }
 
 /* ============================================================
@@ -42879,7 +42879,7 @@ window.__win11OpenTrainerProfile = function(){
    ============================================================ */
 window.__win11RenderTasks = function(body){
     var tasks = [];
-    try { if (typeof getTasks === 'function') tasks = getTasks(); } catch(e){}
+    try { if (typeof getTasks === 'function') tasks = getTasks(); } catch(e){console.warn("[ctx]",e);}
     var today = new Date().toISOString().slice(0, 10);
     var todayTasks = tasks.filter(function(t){
         return t.due === today;
@@ -42905,14 +42905,14 @@ window.__win11ToggleTask = function(taskId){
         } else {
             /* Fallback: вручную */
             var tasks = [];
-            try { tasks = getTasks(); } catch(e){}
+            try { tasks = getTasks(); } catch(e){console.warn("[ctx]",e);}
             var t = tasks.find(function(x){ return x.id === taskId; });
             if (t) {
                 t.done = !t.done;
-                try { localStorage.setItem('tasksList', JSON.stringify(tasks)); } catch(e){}
+                try { localStorage.setItem('tasksList', JSON.stringify(tasks)); } catch(e){console.warn("[ctx]",e);}
             }
         }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     /* Ре-рендер */
     var widget = document.querySelector('.win11-widget[data-widget-id="tasks"]');
     if (widget) {
@@ -42926,7 +42926,7 @@ window.__win11ToggleTask = function(taskId){
    ============================================================ */
 window.__win11RenderSubscriptions = function(body){
     var users = [];
-    try { users = getUsers(); } catch(e){}
+    try { users = getUsers(); } catch(e){console.warn("[ctx]",e);}
     var soon = [];
     var expired = [];
     users.forEach(function(u){
@@ -42950,7 +42950,7 @@ window.__win11RenderSubscriptions = function(body){
                     }
                 }
             });
-        } catch(e) {}
+        } catch(e){console.warn("[ctx]",e);}
     });
     if (!soon.length && !expired.length) {
         body.innerHTML = '<div class="win11-tasks-empty">✅ Все абонементы активны</div>';
@@ -42985,7 +42985,7 @@ window.__win11RenderSubscriptions = function(body){
    ============================================================ */
 window.__win11RenderMessages = function(body){
     var users = [];
-    try { users = getUsers(); } catch(e){}
+    try { users = getUsers(); } catch(e){console.warn("[ctx]",e);}
     var chats = [];
     users.forEach(function(u){
         try {
@@ -42995,7 +42995,7 @@ window.__win11RenderMessages = function(body){
             if (!Array.isArray(msgs) || !msgs.length) return;
             var last = msgs[msgs.length - 1];
             chats.push({ user: u, lastMsg: last, count: msgs.length });
-        } catch(e) {}
+        } catch(e){console.warn("[ctx]",e);}
     });
     if (!chats.length) {
         body.innerHTML = '<div class="win11-tasks-empty">💬 Нет сообщений</div>';
@@ -43082,7 +43082,7 @@ function getGridCols(){ return isMobileLayout() ? GRID_COLS_MOBILE : (isTabletLa
 function getGridRows(){ return isMobileLayout() ? GRID_ROWS_MOBILE : (isTabletLayout() ? GRID_ROWS_TABLET : 8); }
 
 function loadDesktopPages(){
-    try { var saved = localStorage.getItem('win11_desktop_pages'); if (saved) desktopPages = JSON.parse(saved); } catch(e) {}
+    try { var saved = localStorage.getItem('win11_desktop_pages'); if (saved) desktopPages = JSON.parse(saved); } catch(e){console.warn("[ctx]",e);}
     /* ФИКСИРОВАННО 3 страницы */
     while (desktopPages.length < 3) {
         desktopPages.push({ id: 'page_' + desktopPages.length, items: [] });
@@ -43095,7 +43095,7 @@ function loadDesktopPages(){
     }
     saveDesktopPages();
 }
-function saveDesktopPages(){ try { localStorage.setItem('win11_desktop_pages', JSON.stringify(desktopPages)); } catch(e) {} }
+function saveDesktopPages(){ try { localStorage.setItem('win11_desktop_pages', JSON.stringify(desktopPages)); } catch(e){console.warn("[ctx]",e);} }
 
 function getCellSize(){
     var area = document.getElementById('win11DesktopArea') || document.getElementById('win11DesktopPages');
@@ -43316,13 +43316,13 @@ var TASKBAR_APPS = [
 ];
 function loadTaskbarConfig(){
     var pinned = null;
-    try { pinned = JSON.parse(localStorage.getItem('win11_taskbar_pinned')); } catch(e){}
+    try { pinned = JSON.parse(localStorage.getItem('win11_taskbar_pinned')); } catch(e){console.warn("[ctx]",e);}
     if (!pinned || !Array.isArray(pinned) || !pinned.length) {
         pinned = ['planner','workout','calendar','tasks','shop','leads','chat','notifications','files','trainer','settings'];
     }
     return pinned;
 }
-function saveTaskbarConfig(pinned){ try { localStorage.setItem('win11_taskbar_pinned', JSON.stringify(pinned)); } catch(e){} }
+function saveTaskbarConfig(pinned){ try { localStorage.setItem('win11_taskbar_pinned', JSON.stringify(pinned)); } catch(e){console.warn("[ctx]",e);} }
 function renderTaskbar(){
     var container = document.querySelector('.win11-taskbar-apps');
     if (!container) return;
@@ -43401,7 +43401,7 @@ window.__win11OpenTaskbarEditor = function(){
 function loadStartMenuCustom(){
     try { return JSON.parse(localStorage.getItem('win11_startmenu_custom')) || []; } catch(e){ return []; }
 }
-function saveStartMenuCustom(items){ try { localStorage.setItem('win11_startmenu_custom', JSON.stringify(items)); } catch(e){} }
+function saveStartMenuCustom(items){ try { localStorage.setItem('win11_startmenu_custom', JSON.stringify(items)); } catch(e){console.warn("[ctx]",e);} }
 function getStartMenuApps(){
     return startMenuApps.concat(loadStartMenuCustom().map(function(c){
         return { id: 'custom_' + c.name, icon: c.icon, name: c.name, action: (function(url){ return function(){ window.open(url, '_blank'); }; })(c.url) };
@@ -43480,7 +43480,7 @@ setInterval(function(){
                         else if (id === 'tasks') window.__win11RenderTasks(body);
                         else if (id === 'subscriptions') window.__win11RenderSubscriptions(body);
                         else if (id === 'messages') window.__win11RenderMessages(body);
-                    } catch(e) {}
+                    } catch(e){console.warn("[ctx]",e);}
                 }
             }
         }
@@ -43545,7 +43545,7 @@ window.__win11RefreshClients = function(){
   }
   window.__nutritionUpgradesV1_1 = true;
   // Remove v1.0 flag to avoid double-init issues
-  try { delete window.__nutritionUpgradesV1; } catch(e) {}
+  try { delete window.__nutritionUpgradesV1; } catch(e){console.warn("[ctx]",e);}
 
   // ----- i18n strings -----
   const I18N = {
@@ -43750,7 +43750,7 @@ window.__win11RefreshClients = function(){
     try {
       if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
       if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 'ru';
   }
 
@@ -43770,7 +43770,7 @@ window.__win11RefreshClients = function(){
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
   }
   function lsSet(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){console.warn("[ctx]",e);}
   }
 
   function getUserId() {
@@ -43778,7 +43778,7 @@ window.__win11RefreshClients = function(){
       if (typeof currentUserId !== 'undefined' && currentUserId) return currentUserId;
       if (typeof __clientUser !== 'undefined' && __clientUser && __clientUser.id) return __clientUser.id;
       if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id) return currentTrainerSession.id;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 'default';
   }
 
@@ -43891,7 +43891,7 @@ window.__win11RefreshClients = function(){
         const lastWeight = measures[measures.length - 1].weight;
         if (lastWeight && lastWeight > 30) return Math.round(lastWeight * 30);
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 2000;
   }
 
@@ -44034,9 +44034,9 @@ window.__win11RefreshClients = function(){
       const clientName = (typeof getClientName === 'function') ? (getClientName() || '') : '';
 
       let cal = 0, prot = 0, fat = 0, carb = 0;
-      try { cal = gv('calories'); prot = gv('protein'); fat = gv('fat'); carb = gv('carbs'); } catch(e) {}
+      try { cal = gv('calories'); prot = gv('protein'); fat = gv('fat'); carb = gv('carbs'); } catch(e){console.warn("[ctx]",e);}
       let tc = 0, tp = 0, tf = 0, tcb = 0;
-      try { tc = gv('totalCalories'); tp = gv('totalProtein'); tf = gv('totalFat'); tcb = gv('totalCarbs'); } catch(e) {}
+      try { tc = gv('totalCalories'); tp = gv('totalProtein'); tf = gv('totalFat'); tcb = gv('totalCarbs'); } catch(e){console.warn("[ctx]",e);}
 
       doc.setFillColor(33, 150, 243); doc.rect(0, 0, 210, 30, 'F');
       doc.setTextColor(255, 255, 255);
@@ -44082,7 +44082,7 @@ window.__win11RefreshClients = function(){
         try {
           const el = meal.querySelector('[data-type="calories"]');
           mcal = el ? (parseFloat(el.textContent) || 0) : 0;
-        } catch(e) {}
+        } catch(e){console.warn("[ctx]",e);}
         doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
         doc.text(title, 14, y);
         doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
@@ -44159,7 +44159,7 @@ window.__win11RefreshClients = function(){
       voiceListening = false;
       if (btn) { btn.classList.remove('listening'); btn.textContent = t('voiceBtn'); }
     };
-    try { voiceRecognition.start(); voiceListening = true; } catch(e) {}
+    try { voiceRecognition.start(); voiceListening = true; } catch(e){console.warn("[ctx]",e);}
   }
 
   window.__nuVoice = startVoiceSearch;
@@ -44217,7 +44217,7 @@ window.__win11RefreshClients = function(){
           title: 'Nutrition App',
           text: 'Sync health data'
         }).catch(() => {});
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
     }
     // Always allow manual entry as primary path
     window.__nuHealthManual();
@@ -44988,7 +44988,7 @@ window.__win11RefreshClients = function(){
     try {
       if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
       if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 'ru';
   }
 
@@ -45008,7 +45008,7 @@ window.__win11RefreshClients = function(){
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
   }
   function lsSet(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){console.warn("[ctx]",e);}
   }
 
   // Get the current client ID — works in both trainer and client apps
@@ -45020,7 +45020,7 @@ window.__win11RefreshClients = function(){
       if (typeof currentUserId !== 'undefined' && currentUserId) return currentUserId;
       // Trainer's own profile
       if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id) return currentTrainerSession.id;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return null;
   }
 
@@ -45032,7 +45032,7 @@ window.__win11RefreshClients = function(){
         if (u) return u.name;
       }
       if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.name) return currentTrainerSession.name;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return '';
   }
 
@@ -45134,13 +45134,13 @@ window.__win11RefreshClients = function(){
     try {
       const raw = localStorage.getItem('workoutPlan_' + cid);
       if (raw) current = JSON.parse(raw);
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     if (!Array.isArray(current) || !current.length) {
       // Also check if there's a non-per-client key
       try {
         const raw = localStorage.getItem('workoutPlan');
         if (raw) current = JSON.parse(raw);
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
     }
     if (!current.length) {
       if (typeof showToast === 'function') showToast(t('archiveEmpty'));
@@ -45170,22 +45170,22 @@ window.__win11RefreshClients = function(){
 
     if (!isClientApp) {
       // Trainer app: clear current workout plan so trainer can build a new one
-      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify([])); } catch(e) {}
+      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify([])); } catch(e){console.warn("[ctx]",e);}
       // Also clear the DOM workouts so saveWorkoutPlan doesn't re-save them
       const workoutsContainer = document.getElementById('workoutsContainer');
       if (workoutsContainer) workoutsContainer.querySelectorAll('.workout').forEach(w => w.remove());
-      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
+      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
     } else {
       // Client app: just keep the plan (read-only). User can view it but not edit.
       // The archive is a snapshot for reference.
     }
 
     if (typeof showToast === 'function') showToast(t('archiveSuccess'));
-    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
-    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
-    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
-    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e){console.warn("[ctx]",e);}
   }
 
   function archiveCurrentNutrition() {
@@ -45196,7 +45196,7 @@ window.__win11RefreshClients = function(){
     try {
       const raw = localStorage.getItem('nutritionPlan_' + cid);
       if (raw) current = JSON.parse(raw);
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
 
     if (!current || !current.meals || !current.meals.length) {
       if (typeof showToast === 'function') showToast(t('archiveEmpty'));
@@ -45226,7 +45226,7 @@ window.__win11RefreshClients = function(){
 
     if (!isClientApp) {
       // Trainer app: clear current nutrition plan
-      try { localStorage.removeItem('nutritionPlan_' + cid); } catch(e) {}
+      try { localStorage.removeItem('nutritionPlan_' + cid); } catch(e){console.warn("[ctx]",e);}
       // Clear UI
       const container = document.getElementById('mealsContainer');
       if (container) container.querySelectorAll('.meal').forEach(m => m.remove());
@@ -45241,9 +45241,9 @@ window.__win11RefreshClients = function(){
     }
 
     if (typeof showToast === 'function') showToast(t('archiveSuccess'));
-    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
-    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
-    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e){console.warn("[ctx]",e);}
   }
 
   // ============================================================
@@ -45274,11 +45274,11 @@ window.__win11RefreshClients = function(){
             type: 'workout'
           });
         }
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
       // Restore the entry
-      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify(entry.plan)); } catch(e) {}
-      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify(entry.plan)); } catch(e){console.warn("[ctx]",e);}
+      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
+      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
     } else {
       try {
         const raw = localStorage.getItem('nutritionPlan_' + cid);
@@ -45294,10 +45294,10 @@ window.__win11RefreshClients = function(){
             type: 'nutrition'
           });
         }
-      } catch(e) {}
-      try { localStorage.setItem('nutritionPlan_' + cid, JSON.stringify(entry.plan)); } catch(e) {}
-      if (typeof loadUserPlan === 'function') try { loadUserPlan(cid); } catch(e) {}
-      if (typeof loadPlan === 'function') try { loadPlan(); } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
+      try { localStorage.setItem('nutritionPlan_' + cid, JSON.stringify(entry.plan)); } catch(e){console.warn("[ctx]",e);}
+      if (typeof loadUserPlan === 'function') try { loadUserPlan(cid); } catch(e){console.warn("[ctx]",e);}
+      if (typeof loadPlan === 'function') try { loadPlan(); } catch(e){console.warn("[ctx]",e);}
     }
 
     // Remove restored entry from history
@@ -45305,10 +45305,10 @@ window.__win11RefreshClients = function(){
     saveHistory(type, newHistory);
 
     if (typeof showToast === 'function') showToast(t('restoreSuccess'));
-    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
-    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
-    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
-    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e){console.warn("[ctx]",e);}
   }
 
   // ============================================================
@@ -45327,24 +45327,24 @@ window.__win11RefreshClients = function(){
       try {
         const raw = localStorage.getItem('workoutPlan_' + cid);
         if (raw) current = JSON.parse(raw);
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
       if (!Array.isArray(current)) current = [];
       const newPlan = entry.plan.map(w => ({...w, id: 'wk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)}));
       const combined = current.concat(newPlan);
-      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify(combined)); } catch(e) {}
-      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+      try { localStorage.setItem('workoutPlan_' + cid, JSON.stringify(combined)); } catch(e){console.warn("[ctx]",e);}
+      if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
+      if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
     } else {
       // For nutrition: replace current (only one plan at a time)
-      try { localStorage.setItem('nutritionPlan_' + cid, JSON.stringify(entry.plan)); } catch(e) {}
-      if (typeof loadUserPlan === 'function') try { loadUserPlan(cid); } catch(e) {}
+      try { localStorage.setItem('nutritionPlan_' + cid, JSON.stringify(entry.plan)); } catch(e){console.warn("[ctx]",e);}
+      if (typeof loadUserPlan === 'function') try { loadUserPlan(cid); } catch(e){console.warn("[ctx]",e);}
     }
 
     if (typeof showToast === 'function') showToast(t('restoreSuccess'));
-    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e) {}
-    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e) {}
-    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
-    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+    if (typeof csCloseSheet === 'function') try { csCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpCloseSheet === 'function') try { mpCloseSheet(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e){console.warn("[ctx]",e);}
+    if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e){console.warn("[ctx]",e);}
   }
 
   // ============================================================
@@ -45484,7 +45484,7 @@ window.__win11RefreshClients = function(){
           const cur = JSON.parse(raw);
           if (Array.isArray(cur) && cur.length) activeSummary = summarizeWorkout(cur);
         }
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
     } else {
       try {
         const raw = localStorage.getItem('nutritionPlan_' + cid);
@@ -45492,7 +45492,7 @@ window.__win11RefreshClients = function(){
           const cur = JSON.parse(raw);
           if (cur && cur.meals && cur.meals.length) activeSummary = summarizeNutrition(cur);
         }
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
     }
 
     let html = '';
@@ -46102,7 +46102,7 @@ window.__win11RefreshClients = function(){
     try {
       if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
       if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 'ru';
   }
 
@@ -46177,7 +46177,7 @@ window.__win11RefreshClients = function(){
   function gs() {
     try {
       if (typeof userSettings !== 'undefined') return userSettings;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return {
       language: 'ru', theme: 'light', color: 'green', font: 'inter',
       interfaceScale: 1.0, modalScale: 1.0,
@@ -46591,14 +46591,14 @@ window.__win11RefreshClients = function(){
     });
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
-    if (typeof __modalOpened === 'function') try { __modalOpened(); } catch(e) {}
+    if (typeof __modalOpened === 'function') try { __modalOpened(); } catch(e){console.warn("[ctx]",e);}
   }
 
   function close() {
     const overlay = document.getElementById('csSettingsOverlay');
     if (overlay) overlay.remove();
     document.body.style.overflow = '';
-    if (typeof __modalClosed === 'function') try { __modalClosed(); } catch(e) {}
+    if (typeof __modalClosed === 'function') try { __modalClosed(); } catch(e){console.warn("[ctx]",e);}
   }
 
   // ---- Toggle sections ----
@@ -46644,7 +46644,7 @@ window.__win11RefreshClients = function(){
         document.documentElement.style.setProperty('--interface-scale', val);
         if (typeof saveSettings === 'function') saveSettings();
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     const valEl = document.getElementById('csInterfaceScaleVal');
     if (valEl) valEl.textContent = Math.round(val * 100) + '%';
   }
@@ -46656,7 +46656,7 @@ window.__win11RefreshClients = function(){
       userSettings.fsModals = Math.round(val * 100);
       if (typeof setPanelFontSize === 'function') setPanelFontSize('modals', Math.round(val * 100));
       else if (typeof saveSettings === 'function') saveSettings();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     const valEl = document.getElementById('csModalScaleVal');
     if (valEl) valEl.textContent = Math.round(val * 100) + '%';
   }
@@ -46672,7 +46672,7 @@ window.__win11RefreshClients = function(){
         if (typeof applySettings === 'function') applySettings();
         if (typeof saveSettings === 'function') saveSettings();
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     const row = event && event.target && event.target.closest ? event.target.closest('.cs-color-row') : null;
     if (row) {
       const picker = row.querySelector('.cs-color-picker');
@@ -46693,7 +46693,7 @@ window.__win11RefreshClients = function(){
         if (typeof applySettings === 'function') applySettings();
         if (typeof saveSettings === 'function') saveSettings();
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     const inputs = document.querySelectorAll('.cs-color-row');
     if (inputs.length >= 4) {
       const vals = [primary, secondary, accent, bg];
@@ -46766,7 +46766,7 @@ window.__win11RefreshClients = function(){
       const panelMap = { fsLeft: 'left', fsMeals: 'meals', fsHeader: 'header', fsModals: 'modals', fsTools: 'tools' };
       if (typeof setPanelFontSize === 'function') setPanelFontSize(panelMap[panelKey], pct);
       else if (typeof saveSettings === 'function') saveSettings();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     const row = btnEl.closest('.cs-fontsize-row');
     if (row) {
       const valEl = row.querySelector('.cs-fontsize-val');
@@ -46794,14 +46794,14 @@ window.__win11RefreshClients = function(){
         localStorage.removeItem('nutritionPlannerSettings');
         location.reload();
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     close();
   }
 
   function save() {
     try {
       if (typeof saveSettings === 'function') saveSettings();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     close();
     if (typeof showToast === 'function') showToast('✓');
   }
@@ -46967,7 +46967,7 @@ window.__win11RefreshClients = function(){
       try {
         if (typeof userSettings !== 'undefined') userSettings.interfaceScale = val;
         if (typeof saveSettings === 'function') saveSettings();
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
     };
   }
 
@@ -47104,7 +47104,7 @@ window.__win11RefreshClients = function(){
     try {
       if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
       if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 'ru';
   }
 
@@ -47543,9 +47543,9 @@ window.__win11RefreshClients = function(){
         }
         if (workoutEl) {
           addExerciseRow(workoutEl, newEx);
-          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
+          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
+          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e){console.warn("[ctx]",e);}
           return true;
         }
       }
@@ -47561,8 +47561,8 @@ window.__win11RefreshClients = function(){
           if (!plan[0].exercises) plan[0].exercises = [];
           plan[0].exercises.push(newEx);
           localStorage.setItem('workoutPlan_' + cid, JSON.stringify(plan));
-          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
+          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e){console.warn("[ctx]",e);}
           return true;
         }
       }
@@ -47916,7 +47916,7 @@ window.__win11RefreshClients = function(){
           if (weight && weight > 30) return Math.round(weight * 30);
         }
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 2000;
   };
   console.log('[WaterFix v2] getWaterGoal patched');
@@ -47949,7 +47949,7 @@ window.__win11RefreshClients = function(){
     var today = new Date().toISOString().slice(0,10);
     var key = 'waterTracker_' + cid + '_' + today;
     var cur = 0;
-    try { cur = JSON.parse(localStorage.getItem(key) || '0'); } catch(e) {}
+    try { cur = JSON.parse(localStorage.getItem(key) || '0'); } catch(e){console.warn("[ctx]",e);}
     var goal = (typeof window.getWaterGoal === 'function') ? window.getWaterGoal() : 2000;
     var pct = Math.min(100, Math.round((cur / goal) * 100));
     var remaining = Math.max(0, goal - cur);
@@ -47991,9 +47991,9 @@ window.__win11RefreshClients = function(){
     var today = new Date().toISOString().slice(0,10);
     var key = 'waterTracker_' + cid + '_' + today;
     var cur = 0;
-    try { cur = JSON.parse(localStorage.getItem(key) || '0'); } catch(e) {}
+    try { cur = JSON.parse(localStorage.getItem(key) || '0'); } catch(e){console.warn("[ctx]",e);}
     cur = Math.max(0, cur + ml);
-    try { localStorage.setItem(key, JSON.stringify(cur)); } catch(e) {}
+    try { localStorage.setItem(key, JSON.stringify(cur)); } catch(e){console.warn("[ctx]",e);}
     renderWaterContent();
     // Also update trainer-side water widget if exists
     if (typeof window.renderWaterWidget === 'function') window.renderWaterWidget();
@@ -48004,7 +48004,7 @@ window.__win11RefreshClients = function(){
               (__clientUser ? __clientUser.id : 'default');
     var today = new Date().toISOString().slice(0,10);
     var key = 'waterTracker_' + cid + '_' + today;
-    try { localStorage.setItem(key, JSON.stringify(0)); } catch(e) {}
+    try { localStorage.setItem(key, JSON.stringify(0)); } catch(e){console.warn("[ctx]",e);}
     renderWaterContent();
     if (typeof window.renderWaterWidget === 'function') window.renderWaterWidget();
   };
@@ -48076,24 +48076,24 @@ window.__win11RefreshClients = function(){
       if (typeof window.injectTopBarButtons === 'function') window.injectTopBarButtons();
       if (typeof window.injectBodyWidgets === 'function') window.injectBodyWidgets();
       if (typeof window.injectVoiceSearch === 'function') window.injectVoiceSearch();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     
     try {
       // HistoryManager
       if (typeof window.injectButtons === 'function') window.injectButtons();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     
     try {
       // MultiExSearch
       if (window.ExerciseSearch && typeof window.ExerciseSearch.injectButtons === 'function') {
         window.ExerciseSearch.injectButtons();
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     
     try {
       // WaterFix v2
       if (typeof window.injectWaterWidget === 'function') window.injectWaterWidget();
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
   }
   
   // Debounced wrapper — replaces multiple setTimeout cascades
@@ -48198,7 +48198,7 @@ window.__win11RefreshClients = function(){
     try {
       if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
       if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return 'ru';
   }
 
@@ -48260,7 +48260,7 @@ window.__win11RefreshClients = function(){
       for (const key in PRODUCT_MICRONUTRIENTS) {
         if (key.indexOf(productName) >= 0 || productName.indexOf(key) >= 0) return PRODUCT_MICRONUTRIENTS[key];
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
     return null;
   }
 
@@ -48455,7 +48455,7 @@ window.__win11RefreshClients = function(){
           } else break;
         }
       }
-    } catch(e) {}
+    } catch(e){console.warn("[ctx]",e);}
 
     const lang = uiLang();
     const banner = document.createElement('div');
@@ -48572,9 +48572,9 @@ window.__win11RefreshClients = function(){
                 document.body.style.background = preset.grad || preset.bg;
               }
             }
-          } catch(e) {}
+          } catch(e){console.warn("[ctx]",e);}
         }
-      } catch(e) {}
+      } catch(e){console.warn("[ctx]",e);}
       return result;
     };
     window.__s3ThemePatched = true;
@@ -48655,5 +48655,92 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /SPRINT3_UX -->
+
+
+<!-- CROSS_TAB_SYNC -->
+<script>
+// Cross-tab synchronization — when localStorage changes in another tab,
+// refresh open views to show updated data
+(function() {
+  if (window.__crossTabSync) return;
+  window.__crossTabSync = true;
+  
+  window.addEventListener('storage', function(e) {
+    if (!e.key) return;
+    
+    // Skip non-data keys (settings, theme, etc.)
+    var dataPrefixes = ['workoutPlan_', 'nutritionPlan_', 'clientWorkoutHistory_', 
+                        'clientNutritionHistory_', 'chatMessages_', 'bodyMeasures_',
+                        'subscriptions_', 'clientWorkoutLog_', 'clientPRs2_',
+                        'clientProgress_', 'clientNutriDone_', 'waterTracker_',
+                        'nutritionUsers'];
+    var isDataKey = false;
+    for (var i = 0; i < dataPrefixes.length; i++) {
+      if (e.key.indexOf(dataPrefixes[i]) === 0) { isDataKey = true; break; }
+    }
+    if (!isDataKey) return;
+    
+    console.log('[CrossTab] Storage changed:', e.key);
+    
+    // Refresh open views
+    try {
+      // Trainer: refresh mobile planner if active
+      if (document.body.classList.contains('mp-active')) {
+        if (typeof mpRenderBody === 'function') mpRenderBody();
+      }
+      
+      // Client: refresh workout list or nutrition
+      if (typeof __clientUser !== 'undefined' && __clientUser) {
+        if (typeof renderClientWorkoutList === 'function') {
+          // Check which tab is active
+          var wl = document.getElementById('clientWorkoutList');
+          var nt = document.getElementById('clientNutritionTab');
+          if (wl && getComputedStyle(wl).display !== 'none') renderClientWorkoutList();
+          if (nt && getComputedStyle(nt).display !== 'none' && typeof csRenderNutrition === 'function') csRenderNutrition();
+        }
+        // Refresh chat if open
+        if (typeof chatUpdateBadges === 'function') chatUpdateBadges();
+        // Refresh water widget
+        if (typeof renderWaterContent === 'function') renderWaterContent();
+      }
+      
+      // Refresh history if open
+      if (e.key.indexOf('clientWorkoutHistory_') === 0 || e.key.indexOf('clientNutritionHistory_') === 0) {
+        // Just re-render the history sheet if it's open
+        var sheet = document.getElementById('mpSheet') || document.getElementById('csSheet');
+        if (sheet && sheet.classList.contains('open')) {
+          // Don't auto-refresh to avoid disrupting user interaction
+        }
+      }
+    } catch(e) { console.warn('[CrossTab] refresh error:', e); }
+  });
+  
+  console.log('[CrossTabSync] initialized');
+})();
+</script>
+<!-- /CROSS_TAB_SYNC -->
+
+
+<!-- SEARCH_DEBOUNCE -->
+<script>
+// Debounce wrapper for search inputs
+(function() {
+  if (window.__searchDebounce) return;
+  window.__searchDebounce = true;
+  
+  var debounceTimers = {};
+  
+  window.__debouncedSearch = function(source, delay) {
+    delay = delay || 250;
+    if (debounceTimers[source]) clearTimeout(debounceTimers[source]);
+    debounceTimers[source] = setTimeout(function() {
+      if (typeof window.__mesSearch === 'function') window.__mesSearch(source);
+    }, delay);
+  };
+  
+  console.log('[SearchDebounce] initialized');
+})();
+</script>
+<!-- /SEARCH_DEBOUNCE -->
 </body>
 </html>
