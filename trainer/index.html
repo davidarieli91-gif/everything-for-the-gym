@@ -47290,5 +47290,912 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /HISTORY_MANAGER_V1 -->
+
+
+
+<!-- COMPACT_SETTINGS_V1 -->
+<script>
+// ============================================================
+// COMPACT SETTINGS v1.0
+// Replaces the bloated settingsModal with a clean, collapsible UI.
+// Order:
+//   1. Language switchers (RU/EN/HE) — always visible at top
+//   2. Interface scale + Modal scale — two sliders, always visible
+//   3. Theme — collapsed, with sub-sections (Light/Dark, Time-of-day, Custom colors)
+//   4. Fonts — collapsed, 20 fonts grid
+//   5. Font size — collapsed, numeric sizes (2, 4, 6, 8, ...)
+// All sections use accordion pattern (click header to expand/collapse)
+// ============================================================
+
+(function() {
+  'use strict';
+
+  if (window.__compactSettingsV1) return;
+  window.__compactSettingsV1 = true;
+
+  // ---- i18n ----
+  const I18N = {
+    ru: {
+      title: '⚙️ Настройки',
+      language: '🌐 Язык интерфейса',
+      scaleSection: '🔍 Масштаб',
+      interfaceScale: 'Масштаб интерфейса',
+      modalScale: 'Масштаб модальных окон',
+      themeSection: '🌓 Тема оформления',
+      themeBasic: 'Основные темы',
+      themeTimeOfDay: 'По времени суток',
+      themeCustom: 'Кастомные цвета',
+      fontSection: '🔤 Шрифты',
+      fontChoose: 'Выберите шрифт',
+      fontSizeSection: '🔠 Размер шрифта',
+      fontSizeHint: 'Подстройте под смартфон или планшет',
+      fontSizeProducts: '📚 База продуктов/упражнений',
+      fontSizeMeals: '🍽 Приёмы пищи/тренировки',
+      fontSizeHeader: '🔝 Шапка приложения',
+      fontSizeModals: '🪟 Модальные окна',
+      fontSizeTools: '⬜ Кнопки на главном',
+      reset: '↺ Сбросить',
+      save: '💾 Сохранить',
+      close: 'Закрыть',
+      lightTheme: 'Светлая',
+      darkTheme: 'Тёмная',
+      green: 'Зелёная',
+      blue: 'Синяя',
+      purple: 'Фиолетовая',
+      orange: 'Оранжевая',
+      morning: 'Утро',
+      day: 'День',
+      evening: 'Вечер',
+      night: 'Ночь',
+      primary: 'Основной',
+      secondary: 'Вторичный',
+      accent: 'Акцент',
+      background: 'Фон',
+      presets: 'Готовые схемы',
+      resetAll: '🔄 Сбросить все настройки',
+      expand: 'Открыть',
+      collapse: 'Закрыть'
+    },
+    en: {
+      title: '⚙️ Settings',
+      language: '🌐 Interface language',
+      scaleSection: '🔍 Scale',
+      interfaceScale: 'Interface scale',
+      modalScale: 'Modal windows scale',
+      themeSection: '🌓 Theme',
+      themeBasic: 'Basic themes',
+      themeTimeOfDay: 'By time of day',
+      themeCustom: 'Custom colors',
+      fontSection: '🔤 Fonts',
+      fontChoose: 'Choose a font',
+      fontSizeSection: '🔠 Font size',
+      fontSizeHint: 'Adjust for your phone or tablet',
+      fontSizeProducts: '📚 Products/exercises database',
+      fontSizeMeals: '🍽 Meals/workouts',
+      fontSizeHeader: '🔝 App header',
+      fontSizeModals: '🪟 Modal windows',
+      fontSizeTools: '⬜ Home buttons',
+      reset: '↺ Reset',
+      save: '💾 Save',
+      close: 'Close',
+      lightTheme: 'Light',
+      darkTheme: 'Dark',
+      green: 'Green',
+      blue: 'Blue',
+      purple: 'Purple',
+      orange: 'Orange',
+      morning: 'Morning',
+      day: 'Day',
+      evening: 'Evening',
+      night: 'Night',
+      primary: 'Primary',
+      secondary: 'Secondary',
+      accent: 'Accent',
+      background: 'Background',
+      presets: 'Preset schemes',
+      resetAll: '🔄 Reset all settings',
+      expand: 'Open',
+      collapse: 'Close'
+    },
+    he: {
+      title: '⚙️ הגדרות',
+      language: '🌐 שפת ממשק',
+      scaleSection: '🔍 קנה מידה',
+      interfaceScale: 'קנה מידה של ממשק',
+      modalScale: 'קנה מידה של חלונות',
+      themeSection: '🌓 ערכת נושא',
+      themeBasic: 'ערכות נושא בסיסיות',
+      themeTimeOfDay: 'לפי שעה ביום',
+      themeCustom: 'צבעים מותאמים',
+      fontSection: '🔤 גופנים',
+      fontChoose: 'בחר גופן',
+      fontSizeSection: '🔠 גודל גופן',
+      fontSizeHint: 'התאם לטלפון או לטאבלט',
+      fontSizeProducts: '📚 מסד מוצרים/תרגילים',
+      fontSizeMeals: '🍽 ארוחות/אימונים',
+      fontSizeHeader: '🔝 כותרת אפליקציה',
+      fontSizeModals: '🪟 חלונות',
+      fontSizeTools: '⬜ כפתורים ראשיים',
+      reset: '↺ איפוס',
+      save: '💾 שמור',
+      close: 'סגור',
+      lightTheme: 'בהיר',
+      darkTheme: 'כהה',
+      green: 'ירוק',
+      blue: 'כחול',
+      purple: 'סגול',
+      orange: 'כתום',
+      morning: 'בוקר',
+      day: 'יום',
+      evening: 'ערב',
+      night: 'לילה',
+      primary: 'ראשי',
+      secondary: 'משני',
+      accent: 'הדגשה',
+      background: 'רקע',
+      presets: 'סכמות מוכנות',
+      resetAll: '🔄 אפס הכל',
+      expand: 'פתח',
+      collapse: 'סגור'
+    }
+  };
+
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
+
+  function t(key) {
+    const lang = uiLang();
+    return (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  // 20 popular system-safe fonts (with web-safe fallbacks)
+  const FONTS = [
+    { id: 'inter',     name: 'Inter',         stack: "'Inter', sans-serif" },
+    { id: 'roboto',    name: 'Roboto',        stack: "'Roboto', sans-serif" },
+    { id: 'system',    name: 'System',        stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+    { id: 'arial',     name: 'Arial',         stack: "Arial, sans-serif" },
+    { id: 'helvetica', name: 'Helvetica',     stack: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
+    { id: 'verdana',   name: 'Verdana',       stack: "Verdana, Geneva, sans-serif" },
+    { id: 'tahoma',    name: 'Tahoma',        stack: "Tahoma, Geneva, sans-serif" },
+    { id: 'trebuchet', name: 'Trebuchet MS',  stack: "'Trebuchet MS', Helvetica, sans-serif" },
+    { id: 'calibri',   name: 'Calibri',       stack: "Calibri, Candara, Segoe, sans-serif" },
+    { id: 'cambria',   name: 'Cambria',       stack: "Cambria, Georgia, serif" },
+    { id: 'georgia',   name: 'Georgia',       stack: "Georgia, 'Times New Roman', serif" },
+    { id: 'times',     name: 'Times New Roman', stack: "'Times New Roman', Times, serif" },
+    { id: 'garamond',  name: 'Garamond',      stack: "Garamond, 'EB Garamond', serif" },
+    { id: 'palatino',  name: 'Palatino',      stack: "'Palatino Linotype', Palatino, serif" },
+    { id: 'courier',   name: 'Courier New',   stack: "'Courier New', Courier, monospace" },
+    { id: 'consolas',  name: 'Consolas',      stack: "Consolas, 'Lucida Console', monospace" },
+    { id: 'lucida',    name: 'Lucida Sans',   stack: "'Lucida Sans Unicode', 'Lucida Grande', sans-serif" },
+    { id: 'optima',    name: 'Optima',        stack: "Optima, Segoe, sans-serif" },
+    { id: 'baskerville', name: 'Baskerville', stack: "Baskerville, 'Libre Baskerville', serif" },
+    { id: 'didot',     name: 'Didot',         stack: "Didot, 'Bodoni MT', serif" }
+  ];
+
+  // ---- Helper: get current settings ----
+  function gs() {
+    try {
+      if (typeof userSettings !== 'undefined') return userSettings;
+    } catch(e) {}
+    return {
+      language: 'ru', theme: 'light', color: 'green', font: 'inter',
+      interfaceScale: 1.0, modalScale: 1.0,
+      primaryColor: '#4CAF50', secondaryColor: '#2196F3', accentColor: '#FF9800', bgColor: '#f0f2f5',
+      productPrimaryLang: 'ru', productSecondaryLang: 'en',
+      fsLeft: 100, fsMeals: 100, fsHeader: 100, fsModals: 100, fsTools: 100
+    };
+  }
+
+  // ---- Build compact settings modal HTML ----
+  function buildSettingsHtml() {
+    const s = gs();
+    const lang = uiLang();
+    const isRtl = lang === 'he';
+
+    let h = '';
+    h += '<div class="cs-modal" id="csSettingsModal" dir="' + (isRtl ? 'rtl' : 'ltr') + '">';
+
+    // Header
+    h += '<div class="cs-header">';
+    h += '<h2>' + esc(t('title')) + '</h2>';
+    h += '<button class="cs-close" onclick="window.__csClose()">×</button>';
+    h += '</div>';
+
+    // Body (scrollable)
+    h += '<div class="cs-body">';
+
+    // ===== 1. LANGUAGE (always visible at top) =====
+    h += '<div class="cs-section cs-section-open">';
+    h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
+    h += '<span class="cs-section-icon">🌐</span>';
+    h += '<span class="cs-section-title">' + esc(t('language')) + '</span>';
+    h += '<span class="cs-current" id="csCurrentLang">' + (s.language === 'ru' ? '🇷🇺' : (s.language === 'en' ? '🇬🇧' : '🇮🇱')) + '</span>';
+    h += '<span class="cs-chevron">▾</span>';
+    h += '</div>';
+    h += '<div class="cs-section-body">';
+    h += '<div class="cs-lang-grid">';
+    h += '<button class="cs-lang-btn' + (s.language === 'ru' ? ' active' : '') + '" onclick="window.__csSetLang(\'ru\')">🇷🇺 Русский</button>';
+    h += '<button class="cs-lang-btn' + (s.language === 'en' ? ' active' : '') + '" onclick="window.__csSetLang(\'en\')">🇬🇧 English</button>';
+    h += '<button class="cs-lang-btn' + (s.language === 'he' ? ' active' : '') + '" onclick="window.__csSetLang(\'he\')">🇮🇱 עברית</button>';
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+
+    // ===== 2. SCALE (always visible — interface + modal) =====
+    h += '<div class="cs-section cs-section-open">';
+    h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
+    h += '<span class="cs-section-icon">🔍</span>';
+    h += '<span class="cs-section-title">' + esc(t('scaleSection')) + '</span>';
+    h += '<span class="cs-chevron">▾</span>';
+    h += '</div>';
+    h += '<div class="cs-section-body">';
+    // Interface scale
+    h += '<div class="cs-slider-row">';
+    h += '<div class="cs-slider-label"><span>' + esc(t('interfaceScale')) + '</span><span id="csInterfaceScaleVal">' + Math.round((s.interfaceScale || 1) * 100) + '%</span></div>';
+    h += '<input type="range" class="cs-slider" min="0.7" max="1.3" step="0.05" value="' + (s.interfaceScale || 1) + '" oninput="window.__csSetInterfaceScale(this.value)">';
+    h += '</div>';
+    // Modal scale
+    const modalScaleVal = s.modalScale || (s.fsModals ? s.fsModals / 100 : 1);
+    h += '<div class="cs-slider-row">';
+    h += '<div class="cs-slider-label"><span>' + esc(t('modalScale')) + '</span><span id="csModalScaleVal">' + Math.round(modalScaleVal * 100) + '%</span></div>';
+    h += '<input type="range" class="cs-slider" min="0.7" max="1.5" step="0.05" value="' + modalScaleVal + '" oninput="window.__csSetModalScale(this.value)">';
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+
+    // ===== 3. THEME (collapsed by default) =====
+    h += '<div class="cs-section">';
+    h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
+    h += '<span class="cs-section-icon">🌓</span>';
+    h += '<span class="cs-section-title">' + esc(t('themeSection')) + '</span>';
+    h += '<span class="cs-chevron">▸</span>';
+    h += '</div>';
+    h += '<div class="cs-section-body">';
+
+    // 3a. Basic themes
+    h += '<div class="cs-subsection">';
+    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>' + esc(t('themeBasic')) + '</span><span class="cs-chevron">▸</span></div>';
+    h += '<div class="cs-subsection-body">';
+    h += '<div class="cs-theme-grid">';
+    const themes = [
+      ['light','green',  '☀️', t('lightTheme'), t('green')],
+      ['dark','green',   '🌙', t('darkTheme'),  t('green')],
+      ['light','blue',   '☀️', t('lightTheme'), t('blue')],
+      ['dark','blue',    '🌙', t('darkTheme'),  t('blue')],
+      ['light','purple', '☀️', t('lightTheme'), t('purple')],
+      ['dark','purple',  '🌙', t('darkTheme'),  t('purple')],
+      ['light','orange', '☀️', t('lightTheme'), t('orange')],
+      ['dark','orange',  '🌙', t('darkTheme'),  t('orange')]
+    ];
+    themes.forEach(th => {
+      const isActive = s.theme === th[0] && s.color === th[1];
+      h += '<button class="cs-theme-btn' + (isActive ? ' active' : '') + '" onclick="window.__csSetTheme(\'' + th[0] + '\',\'' + th[1] + '\')" title="' + esc(th[3] + ' ' + th[4]) + '"><span class="cs-theme-icon">' + th[2] + '</span><span class="cs-theme-name">' + esc(th[3]) + '</span><span class="cs-theme-color">' + esc(th[4]) + '</span></button>';
+    });
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+
+    // 3b. Time of day
+    h += '<div class="cs-subsection">';
+    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>🕐 ' + esc(t('themeTimeOfDay')) + '</span><span class="cs-chevron">▸</span></div>';
+    h += '<div class="cs-subsection-body">';
+    h += '<div class="cs-tod-grid">';
+    const tods = [
+      ['morning', '🌅', t('morning')],
+      ['day',     '☀️', t('day')],
+      ['evening', '🌆', t('evening')],
+      ['night',   '🌃', t('night')]
+    ];
+    tods.forEach(td => {
+      h += '<button class="cs-tod-btn" onclick="window.__csSetTimeOfDay(\'' + td[0] + '\')"><span class="cs-tod-icon">' + td[1] + '</span><span>' + esc(td[2]) + '</span></button>';
+    });
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+
+    // 3c. Custom colors
+    h += '<div class="cs-subsection">';
+    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>🎨 ' + esc(t('themeCustom')) + '</span><span class="cs-chevron">▸</span></div>';
+    h += '<div class="cs-subsection-body">';
+    const colors = [
+      ['primaryColor', t('primary'), s.primaryColor],
+      ['secondaryColor', t('secondary'), s.secondaryColor],
+      ['accentColor', t('accent'), s.accentColor],
+      ['bgColor', t('background'), s.bgColor]
+    ];
+    colors.forEach(c => {
+      h += '<div class="cs-color-row">';
+      h += '<label>' + esc(c[1]) + '</label>';
+      h += '<div class="cs-color-inputs">';
+      h += '<input type="color" value="' + c[2] + '" oninput="window.__csSetColor(\'' + c[0] + '\', this.value)" class="cs-color-picker">';
+      h += '<input type="text" value="' + c[2] + '" oninput="window.__csSetColor(\'' + c[0] + '\', this.value)" class="cs-color-text">';
+      h += '</div>';
+      h += '</div>';
+    });
+    // Presets
+    h += '<div class="cs-presets-label">' + esc(t('presets')) + ':</div>';
+    h += '<div class="cs-presets-grid">';
+    const presets = [
+      ['#4CAF50', '#2196F3', '#FF9800', '#f0f2f5'],
+      ['#2196F3', '#4CAF50', '#FF9800', '#f0f2f5'],
+      ['#9C27B0', '#4CAF50', '#FF9800', '#f0f2f5'],
+      ['#FF9800', '#4CAF50', '#9C27B0', '#f0f2f5'],
+      ['#F44336', '#4CAF50', '#2196F3', '#f0f2f5'],
+      ['#00BCD4', '#4CAF50', '#FF9800', '#f0f2f5'],
+      ['#673AB7', '#4CAF50', '#FF9800', '#f0f2f5'],
+      ['#8BC34A', '#4CAF50', '#FF9800', '#f0f2f5']
+    ];
+    presets.forEach(p => {
+      h += '<button class="cs-preset" style="background:' + p[0] + ';" onclick="window.__csApplyPreset(\'' + p.join("','") + '\')" title="' + p[0] + '"></button>';
+    });
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+
+    h += '</div>'; // end theme section body
+    h += '</div>'; // end theme section
+
+    // ===== 4. FONTS (collapsed) =====
+    h += '<div class="cs-section">';
+    h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
+    h += '<span class="cs-section-icon">🔤</span>';
+    h += '<span class="cs-section-title">' + esc(t('fontSection')) + '</span>';
+    h += '<span class="cs-current">' + esc((FONTS.find(f => f.id === s.font) || FONTS[0]).name) + '</span>';
+    h += '<span class="cs-chevron">▸</span>';
+    h += '</div>';
+    h += '<div class="cs-section-body">';
+    h += '<div class="cs-font-hint">' + esc(t('fontChoose')) + '</div>';
+    h += '<div class="cs-font-grid">';
+    FONTS.forEach(f => {
+      const isActive = s.font === f.id;
+      h += '<button class="cs-font-btn' + (isActive ? ' active' : '') + '" style="font-family:' + f.stack + ';" onclick="window.__csSetFont(\'' + f.id + '\')">';
+      h += '<span class="cs-font-name">' + esc(f.name) + '</span>';
+      h += '<span class="cs-font-sample" style="font-family:' + f.stack + ';">Aa Бб 123</span>';
+      h += '</button>';
+    });
+    h += '</div>';
+    h += '</div>';
+    h += '</div>';
+
+    // ===== 5. FONT SIZE (collapsed, numeric: 2,4,6,8,10,...,30) =====
+    h += '<div class="cs-section">';
+    h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
+    h += '<span class="cs-section-icon">🔠</span>';
+    h += '<span class="cs-section-title">' + esc(t('fontSizeSection')) + '</span>';
+    h += '<span class="cs-chevron">▸</span>';
+    h += '</div>';
+    h += '<div class="cs-section-body">';
+    h += '<div class="cs-fontsize-hint">' + esc(t('fontSizeHint')) + '</div>';
+
+    // Generate sizes: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+    const sizes = [];
+    for (let i = 2; i <= 30; i += 2) sizes.push(i);
+
+    const panels = [
+      ['fsLeft',   t('fontSizeProducts')],
+      ['fsMeals',  t('fontSizeMeals')],
+      ['fsHeader', t('fontSizeHeader')],
+      ['fsModals', t('fontSizeModals')],
+      ['fsTools',  t('fontSizeTools')]
+    ];
+    panels.forEach(p => {
+      const cur = s[p[0]] || 100;
+      h += '<div class="cs-fontsize-row">';
+      h += '<div class="cs-fontsize-label">' + esc(p[1]) + ' <span class="cs-fontsize-val">' + cur + '%</span></div>';
+      h += '<div class="cs-fontsize-buttons">';
+      sizes.forEach(sz => {
+        // Map size to percentage: 2→70%, 16→100%, 30→130%
+        const pct = 70 + ((sz - 2) / 28) * 60;
+        const isActive = Math.abs(pct - cur) < 3;
+        h += '<button class="cs-fontsize-btn' + (isActive ? ' active' : '') + '" onclick="window.__csSetFontSize(\'' + p[0] + '\',' + Math.round(pct) + ',this)" title="' + sz + 'pt">' + sz + '</button>';
+      });
+      h += '</div>';
+      h += '</div>';
+    });
+
+    h += '<button class="cs-reset-btn" onclick="window.__csResetFontSizes()">' + esc(t('reset')) + '</button>';
+    h += '</div>';
+    h += '</div>';
+
+    // ===== Reset all =====
+    h += '<div class="cs-section">';
+    h += '<div class="cs-section-header" onclick="window.__csResetAll()">';
+    h += '<span class="cs-section-icon">🔄</span>';
+    h += '<span class="cs-section-title">' + esc(t('resetAll')) + '</span>';
+    h += '</div>';
+    h += '</div>';
+
+    h += '</div>'; // end body
+
+    // Footer
+    h += '<div class="cs-footer">';
+    h += '<button class="cs-btn cs-btn-primary" onclick="window.__csSave()">' + esc(t('save')) + '</button>';
+    h += '<button class="cs-btn cs-btn-secondary" onclick="window.__csClose()">' + esc(t('close')) + '</button>';
+    h += '</div>';
+
+    h += '</div>'; // end modal
+
+    return h;
+  }
+
+  // ---- CSS ----
+  function injectStyles() {
+    if (document.getElementById('csSettingsStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'csSettingsStyles';
+    style.textContent = `
+#csSettingsOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000;
+  display: flex; align-items: center; justify-content: center; padding: 12px;
+  animation: csFadeIn 0.2s ease-out;
+}
+@keyframes csFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.cs-modal {
+  background: var(--surface-color, #fff);
+  color: var(--text-primary, #212121);
+  border-radius: 16px;
+  max-width: 520px; width: 100%; max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  overflow: hidden;
+  font-family: inherit;
+}
+.cs-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--border-color, #E0E0E0);
+  background: var(--primary-color, #4CAF50); color: #fff;
+}
+.cs-header h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.cs-close {
+  background: transparent; border: 0; color: #fff;
+  font-size: 28px; cursor: pointer; line-height: 1; padding: 0; margin: 0;
+  width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.cs-close:hover { background: rgba(255,255,255,0.2); }
+.cs-body {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.cs-section {
+  border-bottom: 1px solid var(--border-color, #EEEEEE);
+}
+.cs-section:last-child { border-bottom: 0; }
+.cs-section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px; cursor: pointer; user-select: none;
+  transition: background 0.15s;
+}
+.cs-section-header:hover { background: rgba(0,0,0,0.03); }
+.cs-section-icon { font-size: 18px; width: 24px; text-align: center; }
+.cs-section-title { flex: 1; font-weight: 600; font-size: 14px; }
+.cs-current { font-size: 12px; color: var(--text-secondary, #757575); font-weight: 500; }
+.cs-chevron { font-size: 14px; color: var(--text-secondary, #757575); transition: transform 0.2s; }
+.cs-section-open .cs-chevron { transform: rotate(180deg); }
+.cs-section-body {
+  max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
+  padding: 0 20px;
+}
+.cs-section-open > .cs-section-body { max-height: 2000px; padding: 0 20px 16px; }
+
+/* Sub-sections (inside theme) */
+.cs-subsection { margin-top: 8px; border: 1px solid var(--border-color, #EEEEEE); border-radius: 10px; overflow: hidden; }
+.cs-subsection:first-child { margin-top: 0; }
+.cs-subsection-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; cursor: pointer; user-select: none;
+  background: rgba(0,0,0,0.02); font-size: 13px; font-weight: 600;
+}
+.cs-subsection-header:hover { background: rgba(0,0,0,0.05); }
+.cs-subsection-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; padding: 0 14px; }
+.cs-subsection-open > .cs-subsection-body { max-height: 1000px; padding: 12px 14px; }
+
+/* Language grid */
+.cs-lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cs-lang-btn {
+  padding: 12px 8px; border: 2px solid var(--border-color, #E0E0E0);
+  background: var(--surface-color, #fff); color: var(--text-primary, #212121);
+  border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+  transition: all 0.15s;
+}
+.cs-lang-btn:hover { border-color: var(--primary-color, #4CAF50); }
+.cs-lang-btn.active { border-color: var(--primary-color, #4CAF50); background: var(--primary-color, #4CAF50); color: #fff; }
+
+/* Sliders */
+.cs-slider-row { margin-bottom: 16px; }
+.cs-slider-row:last-child { margin-bottom: 0; }
+.cs-slider-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; margin-bottom: 6px;
+}
+.cs-slider-label span:last-child { font-weight: 700; color: var(--primary-color, #4CAF50); }
+.cs-slider { width: 100%; height: 6px; cursor: pointer; }
+
+/* Theme grid */
+.cs-theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.cs-theme-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 4px; border: 2px solid var(--border-color, #E0E0E0);
+  background: var(--surface-color, #fff); border-radius: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.cs-theme-btn:hover { border-color: var(--primary-color, #4CAF50); }
+.cs-theme-btn.active { border-color: var(--primary-color, #4CAF50); background: rgba(76,175,80,0.1); }
+.cs-theme-icon { font-size: 20px; }
+.cs-theme-name { font-size: 10px; font-weight: 600; }
+.cs-theme-color { font-size: 9px; color: var(--text-secondary, #757575); }
+
+/* Time of day */
+.cs-tod-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.cs-tod-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 12px 4px; border: 2px solid var(--border-color, #E0E0E0);
+  background: var(--surface-color, #fff); border-radius: 10px;
+  cursor: pointer; font-size: 11px; font-weight: 600;
+}
+.cs-tod-btn:hover { border-color: var(--primary-color, #4CAF50); }
+.cs-tod-icon { font-size: 22px; }
+
+/* Color pickers */
+.cs-color-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; font-size: 13px;
+}
+.cs-color-inputs { display: flex; gap: 6px; align-items: center; }
+.cs-color-picker { width: 36px; height: 36px; border: 1px solid var(--border-color, #E0E0E0); border-radius: 8px; cursor: pointer; padding: 2px; background: transparent; }
+.cs-color-text { width: 90px; padding: 6px 8px; border: 1px solid var(--border-color, #E0E0E0); border-radius: 8px; font-size: 12px; font-family: monospace; }
+.cs-presets-label { font-size: 12px; color: var(--text-secondary, #757575); margin: 12px 0 8px; }
+.cs-presets-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.cs-preset { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color, #E0E0E0); cursor: pointer; transition: transform 0.15s; }
+.cs-preset:hover { transform: scale(1.15); }
+
+/* Fonts grid */
+.cs-font-hint { font-size: 12px; color: var(--text-secondary, #757575); margin-bottom: 10px; }
+.cs-font-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.cs-font-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 8px; border: 2px solid var(--border-color, #E0E0E0);
+  background: var(--surface-color, #fff); border-radius: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.cs-font-btn:hover { border-color: var(--primary-color, #4CAF50); }
+.cs-font-btn.active { border-color: var(--primary-color, #4CAF50); background: rgba(76,175,80,0.1); }
+.cs-font-name { font-size: 12px; font-weight: 700; }
+.cs-font-sample { font-size: 13px; color: var(--text-secondary, #757575); }
+
+/* Font sizes */
+.cs-fontsize-hint { font-size: 12px; color: var(--text-secondary, #757575); margin-bottom: 12px; }
+.cs-fontsize-row { margin-bottom: 16px; }
+.cs-fontsize-label { font-size: 12px; font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.cs-fontsize-val { color: var(--primary-color, #4CAF50); font-weight: 700; }
+.cs-fontsize-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+.cs-fontsize-btn {
+  min-width: 32px; height: 32px; padding: 0 6px;
+  border: 1px solid var(--border-color, #E0E0E0);
+  background: var(--surface-color, #fff); color: var(--text-primary, #212121);
+  border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600;
+  transition: all 0.1s;
+}
+.cs-fontsize-btn:hover { border-color: var(--primary-color, #4CAF50); }
+.cs-fontsize-btn.active { background: var(--primary-color, #4CAF50); color: #fff; border-color: var(--primary-color, #4CAF50); }
+.cs-reset-btn {
+  width: 100%; padding: 10px; margin-top: 8px;
+  background: rgba(0,0,0,0.05); border: 1px solid var(--border-color, #E0E0E0);
+  border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text-primary, #212121);
+}
+
+/* Footer */
+.cs-footer {
+  display: flex; gap: 8px; padding: 14px 20px;
+  border-top: 1px solid var(--border-color, #E0E0E0);
+}
+.cs-btn {
+  flex: 1; padding: 12px; border: 0; border-radius: 10px;
+  cursor: pointer; font-size: 14px; font-weight: 700;
+}
+.cs-btn-primary { background: var(--primary-color, #4CAF50); color: #fff; }
+.cs-btn-secondary { background: rgba(0,0,0,0.05); color: var(--text-primary, #212121); }
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .cs-modal { max-width: 100%; max-height: 100vh; border-radius: 12px; }
+  .cs-theme-grid, .cs-tod-grid { grid-template-columns: repeat(2, 1fr); }
+  .cs-font-grid { grid-template-columns: 1fr; }
+  .cs-lang-grid { grid-template-columns: 1fr; }
+  .cs-fontsize-btn { min-width: 28px; height: 28px; font-size: 10px; }
+}
+`;
+    document.head.appendChild(style);
+  }
+
+  // ---- Open/close ----
+  function open() {
+    injectStyles();
+    // Remove existing
+    const existing = document.getElementById('csSettingsOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'csSettingsOverlay';
+    overlay.innerHTML = buildSettingsHtml();
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) close();
+    });
+    document.body.appendChild(overlay);
+
+    // Disable body scroll
+    document.body.style.overflow = 'hidden';
+
+    if (typeof __modalOpened === 'function') try { __modalOpened(); } catch(e) {}
+  }
+
+  function close() {
+    const overlay = document.getElementById('csSettingsOverlay');
+    if (overlay) overlay.remove();
+    document.body.style.overflow = '';
+    if (typeof __modalClosed === 'function') try { __modalClosed(); } catch(e) {}
+  }
+
+  // ---- Toggle sections ----
+  function toggle(headerEl) {
+    const section = headerEl.parentElement;
+    section.classList.toggle('cs-section-open');
+  }
+
+  function toggleSub(headerEl) {
+    const sub = headerEl.parentElement;
+    sub.classList.toggle('cs-subsection-open');
+    const chevron = headerEl.querySelector('.cs-chevron');
+    if (chevron) {
+      chevron.textContent = sub.classList.contains('cs-subsection-open') ? '▾' : '▸';
+    }
+  }
+
+  // ---- Settings actions ----
+  function setLang(lang) {
+    try {
+      if (typeof setLanguage === 'function') setLanguage(lang);
+      else if (typeof window.setLanguage === 'function') window.setLanguage(lang);
+      else {
+        userSettings.language = lang;
+        if (typeof saveSettings === 'function') saveSettings();
+        if (typeof applyLanguage === 'function') applyLanguage();
+      }
+    } catch(e) { console.warn('setLang error:', e); }
+    // Update current lang display
+    const cur = document.getElementById('csCurrentLang');
+    if (cur) cur.textContent = lang === 'ru' ? '🇷🇺' : (lang === 'en' ? '🇬🇧' : '🇮🇱');
+    // Update active button
+    document.querySelectorAll('.cs-lang-btn').forEach(b => b.classList.remove('active'));
+    const btn = Array.from(document.querySelectorAll('.cs-lang-btn')).find(b => b.textContent.includes(lang === 'ru' ? 'Русский' : (lang === 'en' ? 'English' : 'עברית')));
+    if (btn) btn.classList.add('active');
+    // Rebuild the whole modal to update translations
+    setTimeout(() => { const o = document.getElementById('csSettingsOverlay'); if (o) o.innerHTML = buildSettingsHtml(); }, 100);
+  }
+
+  function setInterfaceScale(val) {
+    val = parseFloat(val);
+    try {
+      userSettings.interfaceScale = val;
+      if (typeof updateInterfaceScale === 'function') updateInterfaceScale(val);
+      else {
+        document.documentElement.style.setProperty('--interface-scale', val);
+        if (typeof saveSettings === 'function') saveSettings();
+      }
+    } catch(e) { console.warn(e); }
+    const valEl = document.getElementById('csInterfaceScaleVal');
+    if (valEl) valEl.textContent = Math.round(val * 100) + '%';
+  }
+
+  function setModalScale(val) {
+    val = parseFloat(val);
+    try {
+      userSettings.modalScale = val;
+      userSettings.fsModals = Math.round(val * 100);
+      if (typeof setPanelFontSize === 'function') setPanelFontSize('modals', Math.round(val * 100));
+      else if (typeof saveSettings === 'function') saveSettings();
+    } catch(e) { console.warn(e); }
+    const valEl = document.getElementById('csModalScaleVal');
+    if (valEl) valEl.textContent = Math.round(val * 100) + '%';
+  }
+
+  function setTheme(theme, color) {
+    try {
+      // Use window.setTheme if it's a DIFFERENT function (the original app's)
+      const origSetTheme = window.setTheme;
+      if (typeof origSetTheme === 'function' && origSetTheme !== setTheme) {
+        origSetTheme(theme, color);
+      } else {
+        userSettings.theme = theme;
+        userSettings.color = color;
+        if (typeof applySettings === 'function') applySettings();
+        if (typeof saveSettings === 'function') saveSettings();
+      }
+    } catch(e) { console.warn(e); }
+    // Update active
+    document.querySelectorAll('.cs-theme-btn').forEach(b => b.classList.remove('active'));
+    if (event && event.target && event.target.closest) {
+      const btn = event.target.closest('.cs-theme-btn');
+      if (btn) btn.classList.add('active');
+    }
+  }
+
+  function setTimeOfDay(tod) {
+    // Map time-of-day to theme+color
+    const presets = {
+      morning: ['light', 'orange'],
+      day:     ['light', 'blue'],
+      evening: ['dark', 'purple'],
+      night:   ['dark', 'blue']
+    };
+    const p = presets[tod] || presets.day;
+    setTheme(p[0], p[1]);
+  }
+
+  function setColor(key, value) {
+    try {
+      userSettings[key] = value;
+      if (key === 'primaryColor' && typeof updatePrimaryColor === 'function') updatePrimaryColor();
+      else if (key === 'secondaryColor' && typeof updateSecondaryColor === 'function') updateSecondaryColor();
+      else if (key === 'accentColor' && typeof updateAccentColor === 'function') updateAccentColor();
+      else if (key === 'bgColor' && typeof updateBackgroundColor === 'function') updateBackgroundColor();
+      else {
+        if (typeof applySettings === 'function') applySettings();
+        if (typeof saveSettings === 'function') saveSettings();
+      }
+    } catch(e) { console.warn(e); }
+    // Sync the other input (color picker ↔ text)
+    const row = event && event.target && event.target.closest ? event.target.closest('.cs-color-row') : null;
+    if (row) {
+      const picker = row.querySelector('.cs-color-picker');
+      const text = row.querySelector('.cs-color-text');
+      if (picker && picker !== event.target) picker.value = value;
+      if (text && text !== event.target) text.value = value;
+    }
+  }
+
+  function applyPreset(primary, secondary, accent, bg) {
+    try {
+      if (typeof applyPresetColor === 'function') applyPresetColor(primary, secondary, accent, bg);
+      else {
+        userSettings.primaryColor = primary;
+        userSettings.secondaryColor = secondary;
+        userSettings.accentColor = accent;
+        userSettings.bgColor = bg;
+        if (typeof applySettings === 'function') applySettings();
+        if (typeof saveSettings === 'function') saveSettings();
+      }
+    } catch(e) { console.warn(e); }
+    // Update all color inputs
+    const inputs = document.querySelectorAll('.cs-color-row');
+    if (inputs.length >= 4) {
+      const vals = [primary, secondary, accent, bg];
+      inputs.forEach((row, i) => {
+        const picker = row.querySelector('.cs-color-picker');
+        const text = row.querySelector('.cs-color-text');
+        if (picker) picker.value = vals[i];
+        if (text) text.value = vals[i];
+      });
+    }
+  }
+
+  function setFont(fontId) {
+    const f = FONTS.find(x => x.id === fontId) || FONTS[0];
+    try {
+      // Use window.setFont if it's a DIFFERENT function (the original app's)
+      const origSetFont = window.setFont;
+      if (typeof origSetFont === 'function' && origSetFont !== setFont) {
+        origSetFont(fontId);
+      } else {
+        userSettings.font = fontId;
+        document.documentElement.style.setProperty('--app-font', f.stack);
+        document.body.style.fontFamily = f.stack;
+        if (typeof saveSettings === 'function') saveSettings();
+      }
+    } catch(e) {
+      console.warn('setFont error:', e);
+      userSettings.font = fontId;
+      document.documentElement.style.setProperty('--app-font', f.stack);
+      document.body.style.fontFamily = f.stack;
+      if (typeof saveSettings === 'function') saveSettings();
+    }
+    // Update active button
+    document.querySelectorAll('.cs-font-btn').forEach(b => b.classList.remove('active'));
+    const btn = Array.from(document.querySelectorAll('.cs-font-btn')).find(b => b.querySelector('.cs-font-name').textContent === f.name);
+    if (btn) btn.classList.add('active');
+    // Update current display (fonts section is the 4th section, index 3)
+    const sections = document.querySelectorAll('.cs-section');
+    if (sections[3]) {
+      const cur = sections[3].querySelector('.cs-current');
+      if (cur) cur.textContent = f.name;
+    }
+  }
+
+  function setFontSize(panelKey, pct, btnEl) {
+    try {
+      userSettings[panelKey] = pct;
+      const panelMap = { fsLeft: 'left', fsMeals: 'meals', fsHeader: 'header', fsModals: 'modals', fsTools: 'tools' };
+      if (typeof setPanelFontSize === 'function') setPanelFontSize(panelMap[panelKey], pct);
+      else if (typeof saveSettings === 'function') saveSettings();
+    } catch(e) { console.warn(e); }
+    // Update value display
+    const row = btnEl.closest('.cs-fontsize-row');
+    if (row) {
+      const valEl = row.querySelector('.cs-fontsize-val');
+      if (valEl) valEl.textContent = pct + '%';
+      // Update active button
+      row.querySelectorAll('.cs-fontsize-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+    }
+  }
+
+  function resetFontSizes() {
+    ['fsLeft', 'fsMeals', 'fsHeader', 'fsModals', 'fsTools'].forEach(k => {
+      userSettings[k] = 100;
+    });
+    if (typeof resetAllPanelFontSizes === 'function') resetAllPanelFontSizes();
+    else if (typeof saveSettings === 'function') saveSettings();
+    // Rebuild to reset UI
+    const o = document.getElementById('csSettingsOverlay');
+    if (o) o.innerHTML = buildSettingsHtml();
+  }
+
+  function resetAll() {
+    if (!confirm('Reset all settings?')) return;
+    try {
+      if (typeof resetSettings === 'function') resetSettings();
+      else {
+        localStorage.removeItem('nutritionPlannerSettings');
+        location.reload();
+      }
+    } catch(e) { console.warn(e); }
+    close();
+  }
+
+  function save() {
+    try {
+      if (typeof saveSettings === 'function') saveSettings();
+    } catch(e) { console.warn(e); }
+    close();
+    if (typeof showToast === 'function') showToast('✓');
+  }
+
+  // ---- Public API ----
+  window.__csOpen = open;
+  window.__csClose = close;
+  window.__csToggle = toggle;
+  window.__csToggleSub = toggleSub;
+  window.__csSetLang = setLang;
+  window.__csSetInterfaceScale = setInterfaceScale;
+  window.__csSetModalScale = setModalScale;
+  window.__csSetTheme = setTheme;
+  window.__csSetTimeOfDay = setTimeOfDay;
+  window.__csSetColor = setColor;
+  window.__csApplyPreset = applyPreset;
+  window.__csSetFont = setFont;
+  window.__csSetFontSize = setFontSize;
+  window.__csResetFontSizes = resetFontSizes;
+  window.__csResetAll = resetAll;
+  window.__csSave = save;
+
+  // Override openSettingsModal to use our compact version
+  window.openSettingsModal = open;
+
+  console.log('[CompactSettings v1.0] initialized');
+
+})();
+
+</script>
+<!-- /COMPACT_SETTINGS_V1 -->
 </body>
 </html>
