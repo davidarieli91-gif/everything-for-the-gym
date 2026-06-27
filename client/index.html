@@ -33135,13 +33135,22 @@ window.csRenderNav = function(){
     if (!el) return;
     var tab = window.csActiveTab;
     el.innerHTML =
-        '<button class="mp-nav-item' + (tab === 'workouts' ? ' active' : '') + '" onclick="csShowWorkouts()">' +
+        '<button class="mp-nav-item" onclick="csGoHome()"><span class="mp-nav-ico">🏠</span><span>Home</span></button><button class="mp-nav-item' + (tab === 'workouts' ? ' active' : '') + '" onclick="csShowWorkouts()">' +
             '<span class="mp-nav-ico">🏋️</span><span>' + ct('workouts') + '</span></button>' +
         '<button class="mp-nav-item' + (tab === 'nutrition' ? ' active-nutri' : '') + '" onclick="csShowNutrition()">' +
             '<span class="mp-nav-ico">🍽️</span><span>' + ct('nutrition') + '</span></button>' +
+        '<button class="mp-nav-item" onclick="if(typeof openSettingsModal===\'function\')openSettingsModal()">' +
+            '<span class="mp-nav-ico">⚙️</span><span>' + ct('settings') + '</span></button>' +
         '<button class="mp-nav-item" onclick="csOpenMore()">' +
             '<span class="mp-nav-ico">☰</span><span>' + ct('more') + '</span></button>';
 };
+
+window.csGoHome = function(){
+    /* Client goes back to workout list (home) */
+    if (typeof csShowWorkouts === 'function') csShowWorkouts();
+    else if (typeof renderClientWorkoutList === 'function') renderClientWorkoutList();
+};
+
 
 /* ===================== ВКЛАДКИ ===================== */
 window.csShowWorkouts = function(){
@@ -46643,24 +46652,28 @@ window.__win11RefreshClients = function(){
 
 
 
+
+
+
+
 <!-- COMPACT_SETTINGS_V1 -->
 <script>
 // ============================================================
-// COMPACT SETTINGS v1.0
-// Replaces the bloated settingsModal with a clean, collapsible UI.
-// Order:
-//   1. Language switchers (RU/EN/HE) — always visible at top
-//   2. Interface scale + Modal scale — two sliders, always visible
-//   3. Theme — collapsed, with sub-sections (Light/Dark, Time-of-day, Custom colors)
-//   4. Fonts — collapsed, 20 fonts grid
-//   5. Font size — collapsed, numeric sizes (2, 4, 6, 8, ...)
-// All sections use accordion pattern (click header to expand/collapse)
+// COMPACT SETTINGS v1.1
+// Changes from v1.0:
+//   - Time-of-day themes now have sub-menus (morning/day/evening/night)
+//     each containing all 25 theme presets (7 morning, 6 day, 6 evening, 6 night)
+//   - Removed "basic themes" 8-grid (replaced by time-of-day sub-menus)
+//   - Custom colors kept as a separate sub-section
 // ============================================================
 
 (function() {
   'use strict';
 
-  if (window.__compactSettingsV1) return;
+  if (window.__compactSettingsV1) {
+    setTimeout(window.__csOpen && function(){ if (document.getElementById('csSettingsOverlay')) { document.getElementById('csSettingsOverlay').innerHTML = buildSettingsHtml(); } }, 100);
+    return;
+  }
   window.__compactSettingsV1 = true;
 
   // ---- i18n ----
@@ -46672,9 +46685,12 @@ window.__win11RefreshClients = function(){
       interfaceScale: 'Масштаб интерфейса',
       modalScale: 'Масштаб модальных окон',
       themeSection: '🌓 Тема оформления',
-      themeBasic: 'Основные темы',
-      themeTimeOfDay: 'По времени суток',
-      themeCustom: 'Кастомные цвета',
+      themeTimeOfDay: '🕐 Темы по времени суток',
+      themeCustom: '🎨 Кастомные цвета',
+      morning: '🌅 Утро',
+      day: '☀️ День',
+      evening: '🌆 Вечер',
+      night: '🌃 Ночь',
       fontSection: '🔤 Шрифты',
       fontChoose: 'Выберите шрифт',
       fontSizeSection: '🔠 Размер шрифта',
@@ -46687,24 +46703,12 @@ window.__win11RefreshClients = function(){
       reset: '↺ Сбросить',
       save: '💾 Сохранить',
       close: 'Закрыть',
-      lightTheme: 'Светлая',
-      darkTheme: 'Тёмная',
-      green: 'Зелёная',
-      blue: 'Синяя',
-      purple: 'Фиолетовая',
-      orange: 'Оранжевая',
-      morning: 'Утро',
-      day: 'День',
-      evening: 'Вечер',
-      night: 'Ночь',
       primary: 'Основной',
       secondary: 'Вторичный',
       accent: 'Акцент',
       background: 'Фон',
       presets: 'Готовые схемы',
-      resetAll: '🔄 Сбросить все настройки',
-      expand: 'Открыть',
-      collapse: 'Закрыть'
+      resetAll: '🔄 Сбросить все настройки'
     },
     en: {
       title: '⚙️ Settings',
@@ -46713,9 +46717,12 @@ window.__win11RefreshClients = function(){
       interfaceScale: 'Interface scale',
       modalScale: 'Modal windows scale',
       themeSection: '🌓 Theme',
-      themeBasic: 'Basic themes',
-      themeTimeOfDay: 'By time of day',
-      themeCustom: 'Custom colors',
+      themeTimeOfDay: '🕐 Time-of-day themes',
+      themeCustom: '🎨 Custom colors',
+      morning: '🌅 Morning',
+      day: '☀️ Day',
+      evening: '🌆 Evening',
+      night: '🌃 Night',
       fontSection: '🔤 Fonts',
       fontChoose: 'Choose a font',
       fontSizeSection: '🔠 Font size',
@@ -46728,24 +46735,12 @@ window.__win11RefreshClients = function(){
       reset: '↺ Reset',
       save: '💾 Save',
       close: 'Close',
-      lightTheme: 'Light',
-      darkTheme: 'Dark',
-      green: 'Green',
-      blue: 'Blue',
-      purple: 'Purple',
-      orange: 'Orange',
-      morning: 'Morning',
-      day: 'Day',
-      evening: 'Evening',
-      night: 'Night',
       primary: 'Primary',
       secondary: 'Secondary',
       accent: 'Accent',
       background: 'Background',
       presets: 'Preset schemes',
-      resetAll: '🔄 Reset all settings',
-      expand: 'Open',
-      collapse: 'Close'
+      resetAll: '🔄 Reset all settings'
     },
     he: {
       title: '⚙️ הגדרות',
@@ -46754,39 +46749,30 @@ window.__win11RefreshClients = function(){
       interfaceScale: 'קנה מידה של ממשק',
       modalScale: 'קנה מידה של חלונות',
       themeSection: '🌓 ערכת נושא',
-      themeBasic: 'ערכות נושא בסיסיות',
-      themeTimeOfDay: 'לפי שעה ביום',
-      themeCustom: 'צבעים מותאמים',
+      themeTimeOfDay: '🕐 ערכות לפי שעה',
+      themeCustom: '🎨 צבעים מותאמים',
+      morning: '🌅 בוקר',
+      day: '☀️ יום',
+      evening: '🌆 ערב',
+      night: '🌃 לילה',
       fontSection: '🔤 גופנים',
       fontChoose: 'בחר גופן',
       fontSizeSection: '🔠 גודל גופן',
       fontSizeHint: 'התאם לטלפון או לטאבלט',
       fontSizeProducts: '📚 מסד מוצרים/תרגילים',
       fontSizeMeals: '🍽 ארוחות/אימונים',
-      fontSizeHeader: '🔝 כותרת אפליקציה',
+      fontSizeHeader: '🔝 כותרת',
       fontSizeModals: '🪟 חלונות',
       fontSizeTools: '⬜ כפתורים ראשיים',
       reset: '↺ איפוס',
       save: '💾 שמור',
       close: 'סגור',
-      lightTheme: 'בהיר',
-      darkTheme: 'כהה',
-      green: 'ירוק',
-      blue: 'כחול',
-      purple: 'סגול',
-      orange: 'כתום',
-      morning: 'בוקר',
-      day: 'יום',
-      evening: 'ערב',
-      night: 'לילה',
       primary: 'ראשי',
       secondary: 'משני',
       accent: 'הדגשה',
       background: 'רקע',
       presets: 'סכמות מוכנות',
-      resetAll: '🔄 אפס הכל',
-      expand: 'פתח',
-      collapse: 'סגור'
+      resetAll: '🔄 אפס הכל'
     }
   };
 
@@ -46808,7 +46794,7 @@ window.__win11RefreshClients = function(){
     return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
 
-  // 20 popular system-safe fonts (with web-safe fallbacks)
+  // 20 popular system-safe fonts
   const FONTS = [
     { id: 'inter',     name: 'Inter',         stack: "'Inter', sans-serif" },
     { id: 'roboto',    name: 'Roboto',        stack: "'Roboto', sans-serif" },
@@ -46832,7 +46818,40 @@ window.__win11RefreshClients = function(){
     { id: 'didot',     name: 'Didot',         stack: "Didot, 'Bodoni MT', serif" }
   ];
 
-  // ---- Helper: get current settings ----
+  // Time-of-day theme presets (25 total, matching THEME_PRESETS in the app)
+  // Each: { id, g (group), name (multilingual), colors }
+  const TOD_PRESETS = [
+    // MORNING (7)
+    { id:'sunrise', g:'morning', name:{ru:'Рассвет',en:'Sunrise',he:'זריחה'}, p:'#F97316', s:'#F43F5E', a:'#FBBF24', bg:'#FFF7ED' },
+    { id:'fresh-mint', g:'morning', name:{ru:'Свежая мята',en:'Fresh Mint',he:'מנטה רעננה'}, p:'#10B981', s:'#06B6D4', a:'#84CC16', bg:'#ECFDF5' },
+    { id:'dawn-sky', g:'morning', name:{ru:'Утреннее небо',en:'Dawn Sky',he:'שמי שחר'}, p:'#0EA5E9', s:'#818CF8', a:'#F472B6', bg:'#F0F9FF' },
+    { id:'citrus', g:'morning', name:{ru:'Цитрус',en:'Citrus',he:'הדרים'}, p:'#F59E0B', s:'#84CC16', a:'#FB7185', bg:'#FFFBEB' },
+    { id:'lavender-milk', g:'morning', name:{ru:'Лаванда',en:'Lavender',he:'לבנדר'}, p:'#8B5CF6', s:'#EC4899', a:'#38BDF8', bg:'#FAF5FF' },
+    { id:'classic-light-green', g:'morning', name:{ru:'Классика зелёная',en:'Classic Green',he:'ירוק קלאסי'}, p:'#10B981', s:'#3B82F6', a:'#F59E0B', bg:'#F8FAFC' },
+    { id:'classic-light-orange', g:'morning', name:{ru:'Классика оранжевая',en:'Classic Orange',he:'כתום קלאסי'}, p:'#F59E0B', s:'#3B82F6', a:'#10B981', bg:'#F8FAFC' },
+    // DAY (6)
+    { id:'ocean', g:'day', name:{ru:'Океан',en:'Ocean',he:'אוקיינוס'}, p:'#0284C7', s:'#0D9488', a:'#F59E0B', bg:'#F0F9FF' },
+    { id:'emerald-day', g:'day', name:{ru:'Изумруд',en:'Emerald',he:'אזמרגד'}, p:'#059669', s:'#2563EB', a:'#D97706', bg:'#F0FDF4' },
+    { id:'sand-dune', g:'day', name:{ru:'Песчаные дюны',en:'Sand Dunes',he:'דיונות חול'}, p:'#B45309', s:'#0EA5E9', a:'#DC2626', bg:'#FEFCE8' },
+    { id:'coral-reef', g:'day', name:{ru:'Коралловый риф',en:'Coral Reef',he:'שונית אלמוגים'}, p:'#F43F5E', s:'#FB923C', a:'#14B8A6', bg:'#FFF1F2' },
+    { id:'classic-light-blue', g:'day', name:{ru:'Классика синяя',en:'Classic Blue',he:'כחול קלאסי'}, p:'#3B82F6', s:'#10B981', a:'#F59E0B', bg:'#F8FAFC' },
+    { id:'classic-light-purple', g:'day', name:{ru:'Классика фиолетовая',en:'Classic Purple',he:'סגול קלאסי'}, p:'#8B5CF6', s:'#3B82F6', a:'#F59E0B', bg:'#F8FAFC' },
+    // EVENING (6)
+    { id:'sunset', g:'evening', name:{ru:'Закат',en:'Sunset',he:'שקיעה'}, p:'#FB923C', s:'#F472B6', a:'#FBBF24', bg:'#2A1B3D' },
+    { id:'dusk-blue', g:'evening', name:{ru:'Сумерки',en:'Dusk',he:'בין ערביים'}, p:'#60A5FA', s:'#A78BFA', a:'#F59E0B', bg:'#1E293B' },
+    { id:'rosewood', g:'evening', name:{ru:'Розовое дерево',en:'Rosewood',he:'עץ ורד'}, p:'#FB7185', s:'#E879F9', a:'#FCD34D', bg:'#2B1622' },
+    { id:'amber-night', g:'evening', name:{ru:'Янтарный вечер',en:'Amber Evening',he:'ערב ענברי'}, p:'#F59E0B', s:'#FB923C', a:'#34D399', bg:'#1F1408' },
+    { id:'classic-dark-orange', g:'evening', name:{ru:'Классика тёмно-оранжевая',en:'Classic Dark Orange',he:'כתום כהה קלאסי'}, p:'#F59E0B', s:'#3B82F6', a:'#10B981', bg:'#1F2937' },
+    { id:'classic-dark-purple', g:'evening', name:{ru:'Классика тёмно-фиолетовая',en:'Classic Dark Purple',he:'סגול כהה קלאסי'}, p:'#8B5CF6', s:'#3B82F6', a:'#F59E0B', bg:'#1F2937' },
+    // NIGHT (6)
+    { id:'midnight', g:'night', name:{ru:'Полночь',en:'Midnight',he:'חצות'}, p:'#6366F1', s:'#8B5CF6', a:'#F59E0B', bg:'#0F0F23' },
+    { id:'deep-space', g:'night', name:{ru:'Глубокий космос',en:'Deep Space',he:'חלל עמוק'}, p:'#3B82F6', s:'#6366F1', a:'#10B981', bg:'#09090B' },
+    { id:'forest-night', g:'night', name:{ru:'Ночной лес',en:'Forest Night',he:'יער לילי'}, p:'#10B981', s:'#059669', a:'#F59E0B', bg:'#0A1F14' },
+    { id:'graphite', g:'night', name:{ru:'Графит',en:'Graphite',he:'גרפיט'}, p:'#6B7280', s:'#9CA3AF', a:'#F59E0B', bg:'#18181B' },
+    { id:'classic-dark-green', g:'night', name:{ru:'Классика тёмно-зелёная',en:'Classic Dark Green',he:'ירוק כהה קלאסי'}, p:'#10B981', s:'#3B82F6', a:'#F59E0B', bg:'#1F2937' },
+    { id:'classic-dark-blue', g:'night', name:{ru:'Классика тёмно-синяя',en:'Classic Dark Blue',he:'כחול כהה קלאסי'}, p:'#3B82F6', s:'#10B981', a:'#F59E0B', bg:'#1F2937' }
+  ];
+
   function gs() {
     try {
       if (typeof userSettings !== 'undefined') return userSettings;
@@ -46841,7 +46860,6 @@ window.__win11RefreshClients = function(){
       language: 'ru', theme: 'light', color: 'green', font: 'inter',
       interfaceScale: 1.0, modalScale: 1.0,
       primaryColor: '#4CAF50', secondaryColor: '#2196F3', accentColor: '#FF9800', bgColor: '#f0f2f5',
-      productPrimaryLang: 'ru', productSecondaryLang: 'en',
       fsLeft: 100, fsMeals: 100, fsHeader: 100, fsModals: 100, fsTools: 100
     };
   }
@@ -46853,7 +46871,7 @@ window.__win11RefreshClients = function(){
     const isRtl = lang === 'he';
 
     let h = '';
-    h += '<div class="cs-modal" id="csSettingsModal" dir="' + (isRtl ? 'rtl' : 'ltr') + '">';
+    h += '<div class="cs-modal" id="csSettingsModalInner" dir="' + (isRtl ? 'rtl' : 'ltr') + '">';
 
     // Header
     h += '<div class="cs-header">';
@@ -46861,10 +46879,10 @@ window.__win11RefreshClients = function(){
     h += '<button class="cs-close" onclick="window.__csClose()">×</button>';
     h += '</div>';
 
-    // Body (scrollable)
+    // Body
     h += '<div class="cs-body">';
 
-    // ===== 1. LANGUAGE (always visible at top) =====
+    // ===== 1. LANGUAGE (always open) =====
     h += '<div class="cs-section cs-section-open">';
     h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
     h += '<span class="cs-section-icon">🌐</span>';
@@ -46881,7 +46899,7 @@ window.__win11RefreshClients = function(){
     h += '</div>';
     h += '</div>';
 
-    // ===== 2. SCALE (always visible — interface + modal) =====
+    // ===== 2. SCALE (always open — interface + modal) =====
     h += '<div class="cs-section cs-section-open">';
     h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
     h += '<span class="cs-section-icon">🔍</span>';
@@ -46889,12 +46907,10 @@ window.__win11RefreshClients = function(){
     h += '<span class="cs-chevron">▾</span>';
     h += '</div>';
     h += '<div class="cs-section-body">';
-    // Interface scale
     h += '<div class="cs-slider-row">';
     h += '<div class="cs-slider-label"><span>' + esc(t('interfaceScale')) + '</span><span id="csInterfaceScaleVal">' + Math.round((s.interfaceScale || 1) * 100) + '%</span></div>';
     h += '<input type="range" class="cs-slider" min="0.7" max="1.3" step="0.05" value="' + (s.interfaceScale || 1) + '" oninput="window.__csSetInterfaceScale(this.value)">';
     h += '</div>';
-    // Modal scale
     const modalScaleVal = s.modalScale || (s.fsModals ? s.fsModals / 100 : 1);
     h += '<div class="cs-slider-row">';
     h += '<div class="cs-slider-label"><span>' + esc(t('modalScale')) + '</span><span id="csModalScaleVal">' + Math.round(modalScaleVal * 100) + '%</span></div>';
@@ -46903,7 +46919,7 @@ window.__win11RefreshClients = function(){
     h += '</div>';
     h += '</div>';
 
-    // ===== 3. THEME (collapsed by default) =====
+    // ===== 3. THEME (collapsed) =====
     h += '<div class="cs-section">';
     h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
     h += '<span class="cs-section-icon">🌓</span>';
@@ -46912,50 +46928,43 @@ window.__win11RefreshClients = function(){
     h += '</div>';
     h += '<div class="cs-section-body">';
 
-    // 3a. Basic themes
+    // 3a. Time-of-day themes (with sub-menus for each: morning/day/evening/night)
     h += '<div class="cs-subsection">';
-    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>' + esc(t('themeBasic')) + '</span><span class="cs-chevron">▸</span></div>';
+    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>' + esc(t('themeTimeOfDay')) + '</span><span class="cs-chevron">▸</span></div>';
     h += '<div class="cs-subsection-body">';
-    h += '<div class="cs-theme-grid">';
-    const themes = [
-      ['light','green',  '☀️', t('lightTheme'), t('green')],
-      ['dark','green',   '🌙', t('darkTheme'),  t('green')],
-      ['light','blue',   '☀️', t('lightTheme'), t('blue')],
-      ['dark','blue',    '🌙', t('darkTheme'),  t('blue')],
-      ['light','purple', '☀️', t('lightTheme'), t('purple')],
-      ['dark','purple',  '🌙', t('darkTheme'),  t('purple')],
-      ['light','orange', '☀️', t('lightTheme'), t('orange')],
-      ['dark','orange',  '🌙', t('darkTheme'),  t('orange')]
-    ];
-    themes.forEach(th => {
-      const isActive = s.theme === th[0] && s.color === th[1];
-      h += '<button class="cs-theme-btn' + (isActive ? ' active' : '') + '" onclick="window.__csSetTheme(\'' + th[0] + '\',\'' + th[1] + '\')" title="' + esc(th[3] + ' ' + th[4]) + '"><span class="cs-theme-icon">' + th[2] + '</span><span class="cs-theme-name">' + esc(th[3]) + '</span><span class="cs-theme-color">' + esc(th[4]) + '</span></button>';
-    });
-    h += '</div>';
-    h += '</div>';
-    h += '</div>';
 
-    // 3b. Time of day
-    h += '<div class="cs-subsection">';
-    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>🕐 ' + esc(t('themeTimeOfDay')) + '</span><span class="cs-chevron">▸</span></div>';
-    h += '<div class="cs-subsection-body">';
-    h += '<div class="cs-tod-grid">';
-    const tods = [
-      ['morning', '🌅', t('morning')],
-      ['day',     '☀️', t('day')],
-      ['evening', '🌆', t('evening')],
-      ['night',   '🌃', t('night')]
+    // For each time of day, create a nested sub-menu
+    const todGroups = [
+      { id: 'morning', label: t('morning') },
+      { id: 'day',     label: t('day') },
+      { id: 'evening', label: t('evening') },
+      { id: 'night',   label: t('night') }
     ];
-    tods.forEach(td => {
-      h += '<button class="cs-tod-btn" onclick="window.__csSetTimeOfDay(\'' + td[0] + '\')"><span class="cs-tod-icon">' + td[1] + '</span><span>' + esc(td[2]) + '</span></button>';
+    todGroups.forEach(g => {
+      const presets = TOD_PRESETS.filter(p => p.g === g.id);
+      h += '<div class="cs-sub2">';
+      h += '<div class="cs-sub2-header" onclick="window.__csToggleSub2(this)"><span>' + esc(g.label) + ' <span style="color:var(--text-secondary,#757575);font-size:11px;">(' + presets.length + ')</span></span><span class="cs-chevron">▸</span></div>';
+      h += '<div class="cs-sub2-body">';
+      h += '<div class="cs-tod-themes-grid">';
+      presets.forEach(p => {
+        const name = p.name[lang] || p.name.ru;
+        const isDark = g.id === 'evening' || g.id === 'night';
+        h += '<button class="cs-tod-theme-btn" onclick="window.__csApplyTodPreset(\'' + p.id + '\',\'' + p.p + '\',\'' + p.s + '\',\'' + p.a + '\',\'' + p.bg + '\')" title="' + esc(name) + '">';
+        h += '<div class="cs-tod-theme-swatch" style="background:linear-gradient(135deg,' + p.p + ',' + p.bg + ');"></div>';
+        h += '<div class="cs-tod-theme-name">' + esc(name) + '</div>';
+        h += '</button>';
+      });
+      h += '</div>';
+      h += '</div>';
+      h += '</div>';
     });
-    h += '</div>';
-    h += '</div>';
-    h += '</div>';
 
-    // 3c. Custom colors
+    h += '</div>'; // end theme-time-of-day sub-body
+    h += '</div>'; // end theme-time-of-day subsection
+
+    // 3b. Custom colors
     h += '<div class="cs-subsection">';
-    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>🎨 ' + esc(t('themeCustom')) + '</span><span class="cs-chevron">▸</span></div>';
+    h += '<div class="cs-subsection-header" onclick="window.__csToggleSub(this)"><span>' + esc(t('themeCustom')) + '</span><span class="cs-chevron">▸</span></div>';
     h += '<div class="cs-subsection-body">';
     const colors = [
       ['primaryColor', t('primary'), s.primaryColor],
@@ -46972,7 +46981,6 @@ window.__win11RefreshClients = function(){
       h += '</div>';
       h += '</div>';
     });
-    // Presets
     h += '<div class="cs-presets-label">' + esc(t('presets')) + ':</div>';
     h += '<div class="cs-presets-grid">';
     const presets = [
@@ -47017,7 +47025,7 @@ window.__win11RefreshClients = function(){
     h += '</div>';
     h += '</div>';
 
-    // ===== 5. FONT SIZE (collapsed, numeric: 2,4,6,8,10,...,30) =====
+    // ===== 5. FONT SIZE (collapsed, numeric 2-30) =====
     h += '<div class="cs-section">';
     h += '<div class="cs-section-header" onclick="window.__csToggle(this)">';
     h += '<span class="cs-section-icon">🔠</span>';
@@ -47026,11 +47034,8 @@ window.__win11RefreshClients = function(){
     h += '</div>';
     h += '<div class="cs-section-body">';
     h += '<div class="cs-fontsize-hint">' + esc(t('fontSizeHint')) + '</div>';
-
-    // Generate sizes: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
     const sizes = [];
     for (let i = 2; i <= 30; i += 2) sizes.push(i);
-
     const panels = [
       ['fsLeft',   t('fontSizeProducts')],
       ['fsMeals',  t('fontSizeMeals')],
@@ -47044,7 +47049,6 @@ window.__win11RefreshClients = function(){
       h += '<div class="cs-fontsize-label">' + esc(p[1]) + ' <span class="cs-fontsize-val">' + cur + '%</span></div>';
       h += '<div class="cs-fontsize-buttons">';
       sizes.forEach(sz => {
-        // Map size to percentage: 2→70%, 16→100%, 30→130%
         const pct = 70 + ((sz - 2) / 28) * 60;
         const isActive = Math.abs(pct - cur) < 3;
         h += '<button class="cs-fontsize-btn' + (isActive ? ' active' : '') + '" onclick="window.__csSetFontSize(\'' + p[0] + '\',' + Math.round(pct) + ',this)" title="' + sz + 'pt">' + sz + '</button>';
@@ -47052,7 +47056,6 @@ window.__win11RefreshClients = function(){
       h += '</div>';
       h += '</div>';
     });
-
     h += '<button class="cs-reset-btn" onclick="window.__csResetFontSizes()">' + esc(t('reset')) + '</button>';
     h += '</div>';
     h += '</div>';
@@ -47073,7 +47076,7 @@ window.__win11RefreshClients = function(){
     h += '<button class="cs-btn cs-btn-secondary" onclick="window.__csClose()">' + esc(t('close')) + '</button>';
     h += '</div>';
 
-    h += '</div>'; // end modal
+    h += '</div>';
 
     return h;
   }
@@ -47117,9 +47120,7 @@ window.__win11RefreshClients = function(){
   flex: 1; overflow-y: auto; padding: 8px 0;
   -webkit-overflow-scrolling: touch;
 }
-.cs-section {
-  border-bottom: 1px solid var(--border-color, #EEEEEE);
-}
+.cs-section { border-bottom: 1px solid var(--border-color, #EEEEEE); }
 .cs-section:last-child { border-bottom: 0; }
 .cs-section-header {
   display: flex; align-items: center; gap: 10px;
@@ -47136,9 +47137,9 @@ window.__win11RefreshClients = function(){
   max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
   padding: 0 20px;
 }
-.cs-section-open > .cs-section-body { max-height: 2000px; padding: 0 20px 16px; }
+.cs-section-open > .cs-section-body { max-height: 3000px; padding: 0 20px 16px; }
 
-/* Sub-sections (inside theme) */
+/* Sub-sections */
 .cs-subsection { margin-top: 8px; border: 1px solid var(--border-color, #EEEEEE); border-radius: 10px; overflow: hidden; }
 .cs-subsection:first-child { margin-top: 0; }
 .cs-subsection-header {
@@ -47148,7 +47149,19 @@ window.__win11RefreshClients = function(){
 }
 .cs-subsection-header:hover { background: rgba(0,0,0,0.05); }
 .cs-subsection-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; padding: 0 14px; }
-.cs-subsection-open > .cs-subsection-body { max-height: 1000px; padding: 12px 14px; }
+.cs-subsection-open > .cs-subsection-body { max-height: 2000px; padding: 12px 14px; }
+
+/* Sub-sub-sections (time-of-day groups: morning/day/evening/night) */
+.cs-sub2 { margin-top: 8px; border: 1px solid var(--border-color, #F0F0F0); border-radius: 8px; overflow: hidden; }
+.cs-sub2:first-child { margin-top: 0; }
+.cs-sub2-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; cursor: pointer; user-select: none;
+  background: rgba(0,0,0,0.02); font-size: 12px; font-weight: 600;
+}
+.cs-sub2-header:hover { background: rgba(0,0,0,0.04); }
+.cs-sub2-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; padding: 0 12px; }
+.cs-sub2-open > .cs-sub2-body { max-height: 1000px; padding: 10px 12px; }
 
 /* Language grid */
 .cs-lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -47164,43 +47177,24 @@ window.__win11RefreshClients = function(){
 /* Sliders */
 .cs-slider-row { margin-bottom: 16px; }
 .cs-slider-row:last-child { margin-bottom: 0; }
-.cs-slider-label {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; margin-bottom: 6px;
-}
+.cs-slider-label { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 6px; }
 .cs-slider-label span:last-child { font-weight: 700; color: var(--primary-color, #4CAF50); }
 .cs-slider { width: 100%; height: 6px; cursor: pointer; }
 
-/* Theme grid */
-.cs-theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.cs-theme-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 10px 4px; border: 2px solid var(--border-color, #E0E0E0);
+/* Time-of-day themes grid */
+.cs-tod-themes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+.cs-tod-theme-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px; border: 2px solid var(--border-color, #E0E0E0);
   background: var(--surface-color, #fff); border-radius: 10px;
   cursor: pointer; transition: all 0.15s;
 }
-.cs-theme-btn:hover { border-color: var(--primary-color, #4CAF50); }
-.cs-theme-btn.active { border-color: var(--primary-color, #4CAF50); background: rgba(76,175,80,0.1); }
-.cs-theme-icon { font-size: 20px; }
-.cs-theme-name { font-size: 10px; font-weight: 600; }
-.cs-theme-color { font-size: 9px; color: var(--text-secondary, #757575); }
-
-/* Time of day */
-.cs-tod-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.cs-tod-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 12px 4px; border: 2px solid var(--border-color, #E0E0E0);
-  background: var(--surface-color, #fff); border-radius: 10px;
-  cursor: pointer; font-size: 11px; font-weight: 600;
-}
-.cs-tod-btn:hover { border-color: var(--primary-color, #4CAF50); }
-.cs-tod-icon { font-size: 22px; }
+.cs-tod-theme-btn:hover { border-color: var(--primary-color, #4CAF50); transform: translateY(-2px); }
+.cs-tod-theme-swatch { width: 100%; height: 40px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1); }
+.cs-tod-theme-name { font-size: 10px; font-weight: 600; text-align: center; color: var(--text-primary, #212121); }
 
 /* Color pickers */
-.cs-color-row {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 10px; font-size: 13px;
-}
+.cs-color-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
 .cs-color-inputs { display: flex; gap: 6px; align-items: center; }
 .cs-color-picker { width: 36px; height: 36px; border: 1px solid var(--border-color, #E0E0E0); border-radius: 8px; cursor: pointer; padding: 2px; background: transparent; }
 .cs-color-text { width: 90px; padding: 6px 8px; border: 1px solid var(--border-color, #E0E0E0); border-radius: 8px; font-size: 12px; font-family: monospace; }
@@ -47209,7 +47203,7 @@ window.__win11RefreshClients = function(){
 .cs-preset { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color, #E0E0E0); cursor: pointer; transition: transform 0.15s; }
 .cs-preset:hover { transform: scale(1.15); }
 
-/* Fonts grid */
+/* Fonts */
 .cs-font-hint { font-size: 12px; color: var(--text-secondary, #757575); margin-bottom: 10px; }
 .cs-font-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .cs-font-btn {
@@ -47245,24 +47239,17 @@ window.__win11RefreshClients = function(){
 }
 
 /* Footer */
-.cs-footer {
-  display: flex; gap: 8px; padding: 14px 20px;
-  border-top: 1px solid var(--border-color, #E0E0E0);
-}
-.cs-btn {
-  flex: 1; padding: 12px; border: 0; border-radius: 10px;
-  cursor: pointer; font-size: 14px; font-weight: 700;
-}
+.cs-footer { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border-color, #E0E0E0); }
+.cs-btn { flex: 1; padding: 12px; border: 0; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; }
 .cs-btn-primary { background: var(--primary-color, #4CAF50); color: #fff; }
 .cs-btn-secondary { background: rgba(0,0,0,0.05); color: var(--text-primary, #212121); }
 
-/* Mobile adjustments */
 @media (max-width: 600px) {
   .cs-modal { max-width: 100%; max-height: 100vh; border-radius: 12px; }
-  .cs-theme-grid, .cs-tod-grid { grid-template-columns: repeat(2, 1fr); }
   .cs-font-grid { grid-template-columns: 1fr; }
   .cs-lang-grid { grid-template-columns: 1fr; }
   .cs-fontsize-btn { min-width: 28px; height: 28px; font-size: 10px; }
+  .cs-tod-themes-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
 }
 `;
     document.head.appendChild(style);
@@ -47271,7 +47258,6 @@ window.__win11RefreshClients = function(){
   // ---- Open/close ----
   function open() {
     injectStyles();
-    // Remove existing
     const existing = document.getElementById('csSettingsOverlay');
     if (existing) existing.remove();
 
@@ -47282,10 +47268,7 @@ window.__win11RefreshClients = function(){
       if (e.target === overlay) close();
     });
     document.body.appendChild(overlay);
-
-    // Disable body scroll
     document.body.style.overflow = 'hidden';
-
     if (typeof __modalOpened === 'function') try { __modalOpened(); } catch(e) {}
   }
 
@@ -47306,30 +47289,27 @@ window.__win11RefreshClients = function(){
     const sub = headerEl.parentElement;
     sub.classList.toggle('cs-subsection-open');
     const chevron = headerEl.querySelector('.cs-chevron');
-    if (chevron) {
-      chevron.textContent = sub.classList.contains('cs-subsection-open') ? '▾' : '▸';
-    }
+    if (chevron) chevron.textContent = sub.classList.contains('cs-subsection-open') ? '▾' : '▸';
+  }
+
+  function toggleSub2(headerEl) {
+    const sub = headerEl.parentElement;
+    sub.classList.toggle('cs-sub2-open');
+    const chevron = headerEl.querySelector('.cs-chevron');
+    if (chevron) chevron.textContent = sub.classList.contains('cs-sub2-open') ? '▾' : '▸';
   }
 
   // ---- Settings actions ----
   function setLang(lang) {
     try {
-      if (typeof setLanguage === 'function') setLanguage(lang);
-      else if (typeof window.setLanguage === 'function') window.setLanguage(lang);
+      const origSetLanguage = window.setLanguage;
+      if (typeof origSetLanguage === 'function') origSetLanguage(lang);
       else {
         userSettings.language = lang;
         if (typeof saveSettings === 'function') saveSettings();
         if (typeof applyLanguage === 'function') applyLanguage();
       }
     } catch(e) { console.warn('setLang error:', e); }
-    // Update current lang display
-    const cur = document.getElementById('csCurrentLang');
-    if (cur) cur.textContent = lang === 'ru' ? '🇷🇺' : (lang === 'en' ? '🇬🇧' : '🇮🇱');
-    // Update active button
-    document.querySelectorAll('.cs-lang-btn').forEach(b => b.classList.remove('active'));
-    const btn = Array.from(document.querySelectorAll('.cs-lang-btn')).find(b => b.textContent.includes(lang === 'ru' ? 'Русский' : (lang === 'en' ? 'English' : 'עברית')));
-    if (btn) btn.classList.add('active');
-    // Rebuild the whole modal to update translations
     setTimeout(() => { const o = document.getElementById('csSettingsOverlay'); if (o) o.innerHTML = buildSettingsHtml(); }, 100);
   }
 
@@ -47342,7 +47322,7 @@ window.__win11RefreshClients = function(){
         document.documentElement.style.setProperty('--interface-scale', val);
         if (typeof saveSettings === 'function') saveSettings();
       }
-    } catch(e) { console.warn(e); }
+    } catch(e) {}
     const valEl = document.getElementById('csInterfaceScaleVal');
     if (valEl) valEl.textContent = Math.round(val * 100) + '%';
   }
@@ -47354,42 +47334,9 @@ window.__win11RefreshClients = function(){
       userSettings.fsModals = Math.round(val * 100);
       if (typeof setPanelFontSize === 'function') setPanelFontSize('modals', Math.round(val * 100));
       else if (typeof saveSettings === 'function') saveSettings();
-    } catch(e) { console.warn(e); }
+    } catch(e) {}
     const valEl = document.getElementById('csModalScaleVal');
     if (valEl) valEl.textContent = Math.round(val * 100) + '%';
-  }
-
-  function setTheme(theme, color) {
-    try {
-      // Use window.setTheme if it's a DIFFERENT function (the original app's)
-      const origSetTheme = window.setTheme;
-      if (typeof origSetTheme === 'function' && origSetTheme !== setTheme) {
-        origSetTheme(theme, color);
-      } else {
-        userSettings.theme = theme;
-        userSettings.color = color;
-        if (typeof applySettings === 'function') applySettings();
-        if (typeof saveSettings === 'function') saveSettings();
-      }
-    } catch(e) { console.warn(e); }
-    // Update active
-    document.querySelectorAll('.cs-theme-btn').forEach(b => b.classList.remove('active'));
-    if (event && event.target && event.target.closest) {
-      const btn = event.target.closest('.cs-theme-btn');
-      if (btn) btn.classList.add('active');
-    }
-  }
-
-  function setTimeOfDay(tod) {
-    // Map time-of-day to theme+color
-    const presets = {
-      morning: ['light', 'orange'],
-      day:     ['light', 'blue'],
-      evening: ['dark', 'purple'],
-      night:   ['dark', 'blue']
-    };
-    const p = presets[tod] || presets.day;
-    setTheme(p[0], p[1]);
   }
 
   function setColor(key, value) {
@@ -47403,8 +47350,7 @@ window.__win11RefreshClients = function(){
         if (typeof applySettings === 'function') applySettings();
         if (typeof saveSettings === 'function') saveSettings();
       }
-    } catch(e) { console.warn(e); }
-    // Sync the other input (color picker ↔ text)
+    } catch(e) {}
     const row = event && event.target && event.target.closest ? event.target.closest('.cs-color-row') : null;
     if (row) {
       const picker = row.querySelector('.cs-color-picker');
@@ -47425,8 +47371,7 @@ window.__win11RefreshClients = function(){
         if (typeof applySettings === 'function') applySettings();
         if (typeof saveSettings === 'function') saveSettings();
       }
-    } catch(e) { console.warn(e); }
-    // Update all color inputs
+    } catch(e) {}
     const inputs = document.querySelectorAll('.cs-color-row');
     if (inputs.length >= 4) {
       const vals = [primary, secondary, accent, bg];
@@ -47439,10 +47384,35 @@ window.__win11RefreshClients = function(){
     }
   }
 
+  function applyTodPreset(presetId, primary, secondary, accent, bg) {
+    // Apply the time-of-day theme preset colors
+    applyPreset(primary, secondary, accent, bg);
+    // Also try to use the app's THEME_PRESETS if available (for gradients/dark vars)
+    try {
+      if (typeof THEME_PRESETS !== 'undefined') {
+        const preset = THEME_PRESETS.find(p => p.id === presetId);
+        if (preset && typeof applyThemePreset === 'function') {
+          applyThemePreset(preset);
+        } else if (preset) {
+          // Apply gradient as background
+          if (preset.grad) {
+            document.body.style.background = preset.grad;
+          }
+          // Apply dark mode vars if dark theme
+          if (preset.dark && preset.vars) {
+            Object.keys(preset.vars).forEach(k => {
+              document.documentElement.style.setProperty(k, preset.vars[k]);
+            });
+          }
+        }
+      }
+    } catch(e) { console.warn('Theme preset application:', e); }
+    if (typeof showToast === 'function') showToast('✓');
+  }
+
   function setFont(fontId) {
     const f = FONTS.find(x => x.id === fontId) || FONTS[0];
     try {
-      // Use window.setFont if it's a DIFFERENT function (the original app's)
       const origSetFont = window.setFont;
       if (typeof origSetFont === 'function' && origSetFont !== setFont) {
         origSetFont(fontId);
@@ -47453,17 +47423,14 @@ window.__win11RefreshClients = function(){
         if (typeof saveSettings === 'function') saveSettings();
       }
     } catch(e) {
-      console.warn('setFont error:', e);
       userSettings.font = fontId;
       document.documentElement.style.setProperty('--app-font', f.stack);
       document.body.style.fontFamily = f.stack;
       if (typeof saveSettings === 'function') saveSettings();
     }
-    // Update active button
     document.querySelectorAll('.cs-font-btn').forEach(b => b.classList.remove('active'));
     const btn = Array.from(document.querySelectorAll('.cs-font-btn')).find(b => b.querySelector('.cs-font-name').textContent === f.name);
     if (btn) btn.classList.add('active');
-    // Update current display (fonts section is the 4th section, index 3)
     const sections = document.querySelectorAll('.cs-section');
     if (sections[3]) {
       const cur = sections[3].querySelector('.cs-current');
@@ -47477,13 +47444,11 @@ window.__win11RefreshClients = function(){
       const panelMap = { fsLeft: 'left', fsMeals: 'meals', fsHeader: 'header', fsModals: 'modals', fsTools: 'tools' };
       if (typeof setPanelFontSize === 'function') setPanelFontSize(panelMap[panelKey], pct);
       else if (typeof saveSettings === 'function') saveSettings();
-    } catch(e) { console.warn(e); }
-    // Update value display
+    } catch(e) {}
     const row = btnEl.closest('.cs-fontsize-row');
     if (row) {
       const valEl = row.querySelector('.cs-fontsize-val');
       if (valEl) valEl.textContent = pct + '%';
-      // Update active button
       row.querySelectorAll('.cs-fontsize-btn').forEach(b => b.classList.remove('active'));
       btnEl.classList.add('active');
     }
@@ -47495,7 +47460,6 @@ window.__win11RefreshClients = function(){
     });
     if (typeof resetAllPanelFontSizes === 'function') resetAllPanelFontSizes();
     else if (typeof saveSettings === 'function') saveSettings();
-    // Rebuild to reset UI
     const o = document.getElementById('csSettingsOverlay');
     if (o) o.innerHTML = buildSettingsHtml();
   }
@@ -47508,14 +47472,14 @@ window.__win11RefreshClients = function(){
         localStorage.removeItem('nutritionPlannerSettings');
         location.reload();
       }
-    } catch(e) { console.warn(e); }
+    } catch(e) {}
     close();
   }
 
   function save() {
     try {
       if (typeof saveSettings === 'function') saveSettings();
-    } catch(e) { console.warn(e); }
+    } catch(e) {}
     close();
     if (typeof showToast === 'function') showToast('✓');
   }
@@ -47525,23 +47489,23 @@ window.__win11RefreshClients = function(){
   window.__csClose = close;
   window.__csToggle = toggle;
   window.__csToggleSub = toggleSub;
+  window.__csToggleSub2 = toggleSub2;
   window.__csSetLang = setLang;
   window.__csSetInterfaceScale = setInterfaceScale;
   window.__csSetModalScale = setModalScale;
-  window.__csSetTheme = setTheme;
-  window.__csSetTimeOfDay = setTimeOfDay;
   window.__csSetColor = setColor;
   window.__csApplyPreset = applyPreset;
+  window.__csApplyTodPreset = applyTodPreset;
   window.__csSetFont = setFont;
   window.__csSetFontSize = setFontSize;
   window.__csResetFontSizes = resetFontSizes;
   window.__csResetAll = resetAll;
   window.__csSave = save;
 
-  // Override openSettingsModal to use our compact version
+  // Override openSettingsModal
   window.openSettingsModal = open;
 
-  console.log('[CompactSettings v1.0] initialized');
+  console.log('[CompactSettings v1.1] initialized');
 
 })();
 
