@@ -43435,6 +43435,34 @@ window.__win11RefreshClients = function(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!-- NUTRITION_UPGRADES_V1_1 -->
 <script>
 // ============================================================
@@ -44527,35 +44555,100 @@ window.__win11RefreshClients = function(){
     // Find the visible .mp-topbar
     const topbar = document.querySelector('.mp-topbar');
     if (!topbar) return;
-    if (topbar.querySelector('#nuTopBarButtons')) return; // already injected
 
-    const btns = document.createElement('div');
-    btns.id = 'nuTopBarButtons';
-    btns.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
-    btns.innerHTML =
-      '<button onclick="window.__nuOffOpen(0)" title="Open Food Facts" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
-      '<button onclick="window.__nuAi()" title="AI Photo" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
-      '<button onclick="window.__nuPdf(\'day\')" title="PDF Report" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
-    topbar.appendChild(btns);
+    // ONLY inject OFF and AI buttons in NUTRITION mode (not workout mode)
+    // In workout mode, the exercise search button (from exercise_search.js) is shown instead
+    const isWorkoutMode = document.body.classList.contains('mode-workout');
+    
+    let btns = document.getElementById('nuTopBarButtons');
+    if (!btns) {
+      btns = document.createElement('div');
+      btns.id = 'nuTopBarButtons';
+      btns.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+      topbar.appendChild(btns);
+    }
+
+    // Find or create OFF button
+    let offBtn = btns.querySelector('button[onclick*="__nuOffOpen"]');
+    if (isWorkoutMode) {
+      // Hide/remove OFF button in workout mode
+      if (offBtn) offBtn.remove();
+    } else {
+      // Show OFF button in nutrition mode
+      if (!offBtn) {
+        offBtn = document.createElement('button');
+        offBtn.setAttribute('onclick', "window.__nuOffOpen(0)");
+        offBtn.title = 'Open Food Facts';
+        offBtn.style.cssText = 'background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        offBtn.textContent = '🌐 OFF';
+        // Insert at the beginning (before exercise search button if present)
+        btns.insertBefore(offBtn, btns.firstChild);
+      }
+    }
+
+    // Find or create AI button
+    let aiBtn = btns.querySelector('button[onclick*="__nuAi"]');
+    if (isWorkoutMode) {
+      // Hide/remove AI button in workout mode
+      if (aiBtn) aiBtn.remove();
+    } else {
+      // Show AI button in nutrition mode
+      if (!aiBtn) {
+        aiBtn = document.createElement('button');
+        aiBtn.setAttribute('onclick', "window.__nuAi()");
+        aiBtn.title = 'AI Photo';
+        aiBtn.style.cssText = 'background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        aiBtn.textContent = '🤖 AI';
+        // Insert after OFF button
+        if (offBtn) {
+          btns.insertBefore(aiBtn, offBtn.nextSibling);
+        } else {
+          btns.insertBefore(aiBtn, btns.firstChild);
+        }
+      }
+    }
+
+    // PDF button — show in both modes (useful for both nutrition and workout reports)
+    let pdfBtn = btns.querySelector('button[onclick*="__nuPdf"]');
+    if (!pdfBtn) {
+      pdfBtn = document.createElement('button');
+      pdfBtn.setAttribute('onclick', "window.__nuPdf('day')");
+      pdfBtn.title = 'PDF Report';
+      pdfBtn.style.cssText = 'background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+      pdfBtn.textContent = '📄 PDF';
+      btns.appendChild(pdfBtn);
+    }
   }
 
   function injectBodyWidgets() {
     // #mpBody is the actual visible body container
     const mpBody = document.getElementById('mpBody') || document.querySelector('.mp-body');
     if (!mpBody) return;
-    if (mpBody.querySelector('#nuBodyWidgets')) return; // already injected
 
-    // Insert widgets at the END of mpBody (after the summary and meals)
-    const widgets = document.createElement('div');
-    widgets.id = 'nuBodyWidgets';
-    widgets.style.cssText = 'margin-top:16px;padding:0 12px 16px;';
-    widgets.innerHTML =
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
-        '<div id="waterTrackerWidget"></div>' +
-        '<div id="healthWidget"></div>' +
-      '</div>' +
-      '<div id="recentProductsWidget"></div>';
-    mpBody.appendChild(widgets);
+    // ONLY show widgets (Water, Health, Recent) in NUTRITION mode
+    // In workout mode, these are not relevant
+    const isWorkoutMode = document.body.classList.contains('mode-workout');
+    
+    let widgets = document.getElementById('nuBodyWidgets');
+    if (isWorkoutMode) {
+      // Remove widgets if they exist in workout mode
+      if (widgets) widgets.remove();
+      return;
+    }
+    
+    // In nutrition mode, create or update widgets
+    if (!widgets) {
+      widgets = document.createElement('div');
+      widgets.id = 'nuBodyWidgets';
+      widgets.style.cssText = 'margin-top:16px;padding:0 12px 16px;';
+      widgets.innerHTML =
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+          '<div id="waterTrackerWidget"></div>' +
+          '<div id="healthWidget"></div>' +
+        '</div>' +
+        '<div id="recentProductsWidget"></div>';
+      mpBody.appendChild(widgets);
+    }
 
     renderWaterWidget();
     renderHealthWidget();
@@ -44672,30 +44765,740 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /NUTRITION_UPGRADES_V1_1 -->
+<!-- EXERCISE_SEARCH_V1 -->
+<script>
+// ============================================================
+// EXERCISE SEARCH v1.1 — Multilingual (RU/EN/HE)
+// Searches wger.de exercise database (859 exercises)
+// - Searches across ALL translations (EN, RU, HE)
+// - Shows all available translations for each exercise
+// - Caches results for fast subsequent searches
+// Works in trainer app (where mp-active + mode-workout is active)
+// ============================================================
 
+(function() {
+  'use strict';
 
+  if (window.__exerciseSearchV1) {
+    setTimeout(window.ExerciseSearch && ExerciseSearch.injectButtons, 100);
+    return;
+  }
+  window.__exerciseSearchV1 = true;
 
+  // ---- i18n ----
+  const I18N = {
+    ru: {
+      title: '🔎 Поиск упражнений в интернете',
+      hint: 'База wger.de — 859 упражнений. Поиск работает на русском, иврите и английском',
+      searchPh: 'Введите название (RU/EN/HE)...',
+      searchBtn: 'Искать',
+      loading: 'Поиск по 859 упражнениям...',
+      noResults: 'Ничего не найдено. Попробуйте другой запрос.',
+      error: 'Ошибка поиска. Проверьте интернет.',
+      addBtn: '+ Добавить',
+      addAllBtn: '+ Добавить все',
+      added: 'Добавлено в тренировку',
+      addedAll: 'Добавлено: {n} упражнений',
+      saveToDb: '💾 В общую базу',
+      savedToDb: 'Сохранено в общую базу ({n} упражнений всего)',
+      alreadyInDb: 'Уже в базе',
+      muscleLabel: 'Мышцы',
+      equipLabel: 'Оборудование',
+      catLabel: 'Категория',
+      resultsCount: 'Найдено: {n}',
+      closeBtn: 'Закрыть',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 Слушаю...',
+      voiceNotSupported: 'Голосовой ввод не поддерживается',
+      addToWorkoutBtn: '🏋️ В тренировку',
+      addToDbBtn: '📚 В базу',
+      alsoIn: 'Также на:',
+      langLabels: { en: 'Англ.', ru: 'Рус.', he: 'Ивр.' }
+    },
+    en: {
+      title: '🔎 Search exercises online',
+      hint: 'wger.de database — 859 exercises. Search works in Russian, Hebrew and English',
+      searchPh: 'Enter name (RU/EN/HE)...',
+      searchBtn: 'Search',
+      loading: 'Searching 859 exercises...',
+      noResults: 'Nothing found. Try another query.',
+      error: 'Search error. Check your internet.',
+      addBtn: '+ Add',
+      addAllBtn: '+ Add all',
+      added: 'Added to workout',
+      addedAll: 'Added: {n} exercises',
+      saveToDb: '💾 Save to database',
+      savedToDb: 'Saved to database ({n} exercises total)',
+      alreadyInDb: 'Already in DB',
+      muscleLabel: 'Muscles',
+      equipLabel: 'Equipment',
+      catLabel: 'Category',
+      resultsCount: 'Found: {n}',
+      closeBtn: 'Close',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 Listening...',
+      voiceNotSupported: 'Voice input not supported',
+      addToWorkoutBtn: '🏋️ To workout',
+      addToDbBtn: '📚 To database',
+      alsoIn: 'Also in:',
+      langLabels: { en: 'EN', ru: 'RU', he: 'HE' }
+    },
+    he: {
+      title: '🔎 חיפוש תרגילים באינטרנט',
+      hint: 'מסד נתונים wger.de — 859 תרגילים. חיפוש ברוסית, עברית ואנגלית',
+      searchPh: 'הקלד שם (RU/EN/HE)...',
+      searchBtn: 'חיפוש',
+      loading: 'מחפש ב-859 תרגילים...',
+      noResults: 'לא נמצא. נסה שאילתה אחרת.',
+      error: 'שגיאת חיפוש. בדוק אינטרנט.',
+      addBtn: '+ הוסף',
+      addAllBtn: '+ הוסף הכל',
+      added: 'נוסף לאימון',
+      addedAll: 'נוסף: {n} תרגילים',
+      saveToDb: '💾 שמור למסד',
+      savedToDb: 'נשמר למסד ({n} תרגילים סה"כ)',
+      alreadyInDb: 'כבר במסד',
+      muscleLabel: 'שרירים',
+      equipLabel: 'ציוד',
+      catLabel: 'קטגוריה',
+      resultsCount: 'נמצאו: {n}',
+      closeBtn: 'סגור',
+      voiceBtn: '🎤',
+      voiceListening: '🔴 מקשיב...',
+      voiceNotSupported: 'קלט קולי לא נתמך',
+      addToWorkoutBtn: '🏋️ לאימון',
+      addToDbBtn: '📚 למסד',
+      alsoIn: 'גם ב:',
+      langLabels: { en: 'אנג', ru: 'רוס', he: 'עבר' }
+    }
+  };
 
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
 
+  function t(key, vars) {
+    const lang = uiLang();
+    let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+    return s;
+  }
 
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
 
+  // ---- wger.de API ----
+  const WGER_BASE = 'https://wger.de/api/v2';
+  // Language code map (wger id → our code)
+  const WGER_LANG_IDS = { en: 2, ru: 5, he: 21 };
+  const WGER_LANG_BY_ID = { 2: 'en', 5: 'ru', 21: 'he' };
 
+  // Cache: all exercises with all translations (fetched once per session)
+  let allExercisesCache = null;
+  let cacheLoading = false;
+  let cacheLoadPromise = null;
 
+  // Map wger categories to our EXERCISE_DB groups
+  const CATEGORY_MAP = {
+    'Abs': 'abs',
+    'Arms': 'biceps',
+    'Back': 'back',
+    'Calves': 'calves',
+    'Chest': 'chest',
+    'Glutes': 'glutes',
+    'Legs': 'quads',
+    'Shoulders': 'shoulders',
+    'Cardio': 'cardio'
+  };
 
+  // Fetch ALL exercises with all translations (cached)
+  async function fetchAllExercises() {
+    if (allExercisesCache) return allExercisesCache;
+    if (cacheLoadPromise) return cacheLoadPromise;
+    
+    cacheLoading = true;
+    cacheLoadPromise = (async () => {
+      const all = [];
+      let url = WGER_BASE + '/exerciseinfo/?format=json&limit=100';
+      let pagesFetched = 0;
+      const maxPages = 12; // ~1200 exercises max
+      
+      while (url && pagesFetched < maxPages) {
+        pagesFetched++;
+        try {
+          const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+          
+          for (const ex of (data.results || [])) {
+            const norm = normalizeWgerExercise(ex);
+            if (norm) all.push(norm);
+          }
+          
+          url = data.next;
+        } catch(e) {
+          console.warn('Fetch page error:', e);
+          break;
+        }
+      }
+      
+      console.log('[ExerciseSearch] Fetched', all.length, 'exercises across', pagesFetched, 'pages');
+      allExercisesCache = all;
+      cacheLoading = false;
+      return all;
+    })();
+    
+    return cacheLoadPromise;
+  }
 
+  // Multilingual search across all cached exercises
+  async function searchExercises(query) {
+    if (!query || query.trim().length < 2) return [];
+    const q = query.toLowerCase().trim();
+    const all = await fetchAllExercises();
+    
+    const matches = [];
+    const seenIds = new Set();
+    
+    for (const ex of all) {
+      if (seenIds.has(ex.wgerId)) continue;
+      
+      // Search in all available translations
+      let matched = false;
+      let matchedLang = null;
+      
+      for (const lang of ['en', 'ru', 'he']) {
+        const name = (ex.translations[lang] || '').toLowerCase();
+        if (name && name.includes(q)) {
+          matched = true;
+          matchedLang = lang;
+          break;
+        }
+      }
+      
+      // Also search in description
+      if (!matched) {
+        const desc = (ex.description || '').toLowerCase();
+        if (desc.includes(q)) {
+          matched = true;
+          matchedLang = 'desc';
+        }
+      }
+      
+      if (matched) {
+        seenIds.add(ex.wgerId);
+        matches.push({ ...ex, _matchedLang: matchedLang });
+      }
+    }
+    
+    return matches.slice(0, 50); // Limit to 50 results
+  }
 
+  function normalizeWgerExercise(ex) {
+    if (!ex) return null;
+    
+    // Extract translations for EN, RU, HE
+    const translations = { en: '', ru: '', he: '' };
+    let description = '';
+    
+    for (const tr of (ex.translations || [])) {
+      const langCode = WGER_LANG_BY_ID[tr.language];
+      if (!langCode) continue;
+      
+      if (!translations[langCode]) {
+        translations[langCode] = tr.name || '';
+      }
+      // Take description from English (or first available)
+      if (tr.language === 2 && tr.description) {
+        description = tr.description.replace(/<[^>]+>/g, '').trim().substring(0, 300);
+      } else if (!description && tr.description) {
+        description = tr.description.replace(/<[^>]+>/g, '').trim().substring(0, 300);
+      }
+    }
+    
+    // Fallback name: prefer current UI lang, then EN, then any
+    const ui = uiLang();
+    const name = translations[ui] || translations.en || translations.ru || translations.he || '';
+    if (!name) return null;
+    
+    const muscles = (ex.muscles || []).map(m => m.name).filter(n => n);
+    const secondary = (ex.muscles_secondary || []).map(m => m.name).filter(n => n);
+    const equipment = (ex.equipment || []).map(e => e.name).filter(n => n);
+    const category = ex.category ? ex.category.name : '';
+    
+    // Map to our group system
+    let groupId = 'fullbody';
+    if (category && CATEGORY_MAP[category]) groupId = CATEGORY_MAP[category];
+    
+    return {
+      wgerId: ex.id,
+      name: name,
+      translations: translations,
+      description: description,
+      muscles: muscles,
+      musclesSecondary: secondary,
+      equipment: equipment,
+      category: category,
+      groupId: groupId,
+      images: (ex.images || []).slice(0, 3).map(img => img.image)
+    };
+  }
 
+  // ---- Add exercise to current workout ----
+  function addExerciseToWorkout(wgerEx) {
+    try {
+      // Use the name in the current UI language if available
+      const ui = uiLang();
+      const displayName = wgerEx.translations[ui] || wgerEx.translations.en || wgerEx.name;
+      
+      const newEx = {
+        name: displayName,
+        sets: 3,
+        reps: 10,
+        weight: '',
+        rest: 60,
+        time: '',
+        note: wgerEx.description ? wgerEx.description.substring(0, 100) : '',
+        exId: '',
+        groupId: wgerEx.groupId,
+        subId: '',
+        equip: wgerEx.equipment && wgerEx.equipment.length ? wgerEx.equipment[0] : '',
+        _wgerSource: true
+      };
 
+      // Method 1: Use addExerciseRow — signature is (workoutEl, ex, skipSave)
+      if (typeof addExerciseRow === 'function') {
+        const workoutsContainer = document.getElementById('workoutsContainer');
+        const workouts = workoutsContainer
+          ? workoutsContainer.querySelectorAll('.workout')
+          : document.querySelectorAll('.workout');
+        let workoutEl = null;
+        for (const w of workouts) {
+          if (w.querySelector('.workout-body')) {
+            workoutEl = w;
+            break;
+          }
+        }
+        if (workoutEl) {
+          try {
+            addExerciseRow(workoutEl, newEx);
+            if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+            if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+            if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+            return true;
+          } catch(e) {
+            console.warn('addExerciseRow failed, trying alternative:', e);
+          }
+        }
+      }
 
+      // Method 2: Directly append to workoutPlan in localStorage
+      const cid = window.HistoryManager ? window.HistoryManager.getClientId() : (typeof currentUserId !== 'undefined' ? currentUserId : null);
+      if (cid) {
+        const raw = localStorage.getItem('workoutPlan_' + cid);
+        const plan = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(plan)) {
+          if (plan.length === 0) {
+            plan.push({
+              id: 'wk_' + Date.now(),
+              title: 'New Workout',
+              date: new Date().toISOString().slice(0, 10),
+              duration: 60,
+              exercises: []
+            });
+          }
+          if (!plan[0].exercises) plan[0].exercises = [];
+          plan[0].exercises.push(newEx);
+          localStorage.setItem('workoutPlan_' + cid, JSON.stringify(plan));
+          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
+          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
+          if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
+          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
+          return true;
+        }
+      }
 
+      // Method 3: Dispatch event
+      window.dispatchEvent(new CustomEvent('exercise:addExternal', {
+        detail: { exercise: newEx, wgerExercise: wgerEx }
+      }));
+      return true;
+    } catch(e) {
+      console.error('addExerciseToWorkout error:', e);
+      return false;
+    }
+  }
 
+  // ---- Add exercise to local EXERCISE_DB ----
+  function addExerciseToDb(wgerEx) {
+    try {
+      if (typeof EXERCISE_DB === 'undefined') {
+        console.warn('EXERCISE_DB not available');
+        return false;
+      }
 
+      // Check if already exists (by name in any language)
+      for (const group of EXERCISE_DB) {
+        for (const sub of (group.subgroups || [])) {
+          for (const ex of (sub.exercises || [])) {
+            const exNames = [ex.en, ex.ru, ex.he].filter(Boolean).map(n => n.toLowerCase());
+            const wgerNames = [wgerEx.translations.en, wgerEx.translations.ru, wgerEx.translations.he].filter(Boolean).map(n => n.toLowerCase());
+            for (const wn of wgerNames) {
+              if (exNames.includes(wn)) return 'exists';
+            }
+          }
+        }
+      }
 
+      let group = EXERCISE_DB.find(g => g.id === wgerEx.groupId);
+      if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
+      if (!group) return false;
 
+      let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
+      if (!sub) {
+        sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
+        if (!group.subgroups) group.subgroups = [];
+        group.subgroups.push(sub);
+      }
 
+      const newEx = {
+        id: 'wger_' + wgerEx.wgerId,
+        equip: wgerEx.equipment && wgerEx.equipment.length ? mapEquipment(wgerEx.equipment[0]) : 'bw',
+        ru: wgerEx.translations.ru || wgerEx.translations.en,
+        en: wgerEx.translations.en || wgerEx.translations.ru,
+        he: wgerEx.translations.he || wgerEx.translations.en,
+        _wgerImported: true,
+        _wgerMuscles: wgerEx.muscles.join(', '),
+        _wgerCategory: wgerEx.category,
+        _wgerDescription: wgerEx.description
+      };
+      sub.exercises.push(newEx);
 
+      const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
+      imported.push({ ...newEx, groupId: wgerEx.groupId, wgerId: wgerEx.wgerId, ts: Date.now() });
+      localStorage.setItem('wgerImportedExercises', JSON.stringify(imported));
 
+      return true;
+    } catch(e) {
+      console.error('addExerciseToDb error:', e);
+      return false;
+    }
+  }
 
+  function mapEquipment(wgerEquip) {
+    const map = {
+      'Barbell': 'barbell',
+      'Dumbbell': 'dumbbell',
+      'Machine': 'machine',
+      'Cable': 'cable',
+      'Kettlebell': 'kettlebell',
+      'Bodyweight': 'bw',
+      'none (bodyweight exercise)': 'bw',
+      'Bands': 'band',
+      'Medicine Ball': 'medicine-ball',
+      'Exercise Ball': 'fitball',
+      'Foam Roller': 'foam-roller',
+      'EZ-Bar': 'ezbar',
+      'Smith Machine': 'smith',
+      'TRX': 'trx',
+      'Plates': 'plates'
+    };
+    return map[wgerEquip] || 'bw';
+  }
+
+  // ---- Modal UI ----
+  async function openExerciseSearchModal() {
+    const existing = document.getElementById('exSearchModal');
+    if (existing) existing.remove();
+
+    const lang = uiLang();
+    const modal = document.createElement('div');
+    modal.id = 'exSearchModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML =
+      '<div style="background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
+          '<div>' +
+            '<h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(t('title')) + '</h3>' +
+            '<p style="margin:4px 0 0;font-size:12px;color:#616161;">' + esc(t('hint')) + '</p>' +
+          '</div>' +
+          '<button onclick="this.closest(\'#exSearchModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+          '<input type="text" id="exSearchInput" placeholder="' + esc(t('searchPh')) + '" style="flex:1;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;" onkeydown="if(event.key===\'Enter\')window.__exSearch()">' +
+          '<button onclick="window.__exVoiceSearch()" id="exVoiceBtn" style="background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:0 12px;cursor:pointer;font-weight:600;">' + esc(t('voiceBtn')) + '</button>' +
+          '<button onclick="window.__exSearch()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:0 16px;cursor:pointer;font-weight:600;">' + esc(t('searchBtn')) + '</button>' +
+        '</div>' +
+        '<div id="exSearchResults" style="min-height:80px;">' +
+          '<div style="text-align:center;padding:30px;color:#757575;font-size:13px;">' +
+            '<div style="font-size:40px;margin-bottom:10px;">🏋️</div>' +
+            '<p>' + esc(t('hint')) + '</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    setTimeout(() => {
+      const inp = document.getElementById('exSearchInput');
+      if (inp) inp.focus();
+    }, 100);
+    
+    // Pre-fetch all exercises in background for fast searches
+    if (!allExercisesCache && !cacheLoading) {
+      fetchAllExercises().catch(e => console.warn('Pre-fetch failed:', e));
+    }
+  }
+
+  window.__exOpen = openExerciseSearchModal;
+
+  window.__exSearch = async function() {
+    const inp = document.getElementById('exSearchInput');
+    if (!inp) return;
+    const q = inp.value.trim();
+    if (q.length < 2) return;
+    const resultsEl = document.getElementById('exSearchResults');
+    
+    // Show loading state
+    resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #10B981;border-radius:50%;animation:exSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('loading')) + '</p></div><style>@keyframes exSpin{to{transform:rotate(360deg)}}</style>';
+    
+    try {
+      const results = await searchExercises(q);
+      if (!results.length) {
+        resultsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('noResults')) + '</div>';
+        return;
+      }
+      
+      const langLabels = t('langLabels');
+      let html = '<div style="font-size:12px;color:#616161;margin-bottom:10px;">' + esc(t('resultsCount', {n: results.length})) + '</div>';
+      html += '<div style="margin-bottom:12px;"><button onclick="window.__exAddAll()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('addAllBtn')) + '</button></div>';
+      
+      results.forEach((ex, i) => {
+        const muscles = ex.muscles.concat(ex.musclesSecondary).slice(0, 4);
+        const equip = ex.equipment.slice(0, 3);
+        const img = ex.images && ex.images.length ? ex.images[0] : '';
+        
+        // Build translations display
+        const ui = uiLang();
+        let translationsHtml = '';
+        const otherLangs = ['en', 'ru', 'he'].filter(l => l !== ui);
+        for (const langCode of otherLangs) {
+          if (ex.translations[langCode]) {
+            translationsHtml += '<span style="background:#F5F5F5;border-radius:4px;padding:2px 6px;font-size:10px;color:#616161;margin-right:4px;">' + esc(langLabels[langCode]) + ': ' + esc(ex.translations[langCode]) + '</span>';
+          }
+        }
+        
+        html += '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:8px;align-items:flex-start;">' +
+          (img ? '<img src="' + esc(img) + '" style="width:60px;height:60px;object-fit:contain;border-radius:6px;background:#fff;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:60px;height:60px;background:#E0E0E0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏋️</div>') +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:600;color:#212121;font-size:14px;">' + esc(ex.name) + '</div>' +
+            (translationsHtml ? '<div style="margin-top:3px;">' + esc(t('alsoIn')) + ' ' + translationsHtml + '</div>' : '') +
+            (ex.category ? '<div style="font-size:11px;color:#1565C0;margin-top:4px;">' + esc(t('catLabel')) + ': ' + esc(ex.category) + '</div>' : '') +
+            (muscles.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">💪 ' + esc(t('muscleLabel')) + ': ' + esc(muscles.join(', ')) + '</div>' : '') +
+            (equip.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">🛠 ' + esc(t('equipLabel')) + ': ' + esc(equip.join(', ')) + '</div>' : '') +
+            (ex.description ? '<div style="font-size:11px;color:#9E9E9E;margin-top:4px;line-height:1.4;">' + esc(ex.description.substring(0, 120)) + (ex.description.length > 120 ? '...' : '') + '</div>' : '') +
+            '<div style="display:flex;gap:6px;margin-top:8px;">' +
+              '<button onclick="window.__exAddToWorkout(' + i + ')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToWorkoutBtn')) + '</button>' +
+              '<button onclick="window.__exAddToDb(' + i + ')" style="background:#1565C0;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToDbBtn')) + '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      resultsEl.innerHTML = html;
+      window.__exSearchResults = results;
+    } catch(e) {
+      console.error('Search error:', e);
+      resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">⚠️ ' + esc(t('error')) + '</div>';
+    }
+  };
+
+  window.__exVoiceSearch = function() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { alert(t('voiceNotSupported')); return; }
+    const rec = new SR();
+    rec.lang = uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU');
+    rec.interimResults = false;
+    const btn = document.getElementById('exVoiceBtn');
+    if (btn) btn.textContent = t('voiceListening');
+    rec.onresult = function(ev) {
+      const text = ev.results[0][0].transcript;
+      const inp = document.getElementById('exSearchInput');
+      if (inp) {
+        inp.value = text;
+        window.__exSearch();
+      }
+      if (btn) btn.textContent = t('voiceBtn');
+    };
+    rec.onerror = function() { if (btn) btn.textContent = t('voiceBtn'); };
+    rec.onend = function() { if (btn) btn.textContent = t('voiceBtn'); };
+    rec.start();
+  };
+
+  window.__exAddToWorkout = function(i) {
+    const ex = window.__exSearchResults && window.__exSearchResults[i];
+    if (!ex) return;
+    const ok = addExerciseToWorkout(ex);
+    if (ok && typeof showToast === 'function') showToast('✓ ' + t('added'));
+  };
+
+  window.__exAddToDb = function(i) {
+    const ex = window.__exSearchResults && window.__exSearchResults[i];
+    if (!ex) return;
+    const result = addExerciseToDb(ex);
+    if (result === 'exists') {
+      if (typeof showToast === 'function') showToast(t('alreadyInDb'));
+    } else if (result) {
+      const count = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]').length;
+      if (typeof showToast === 'function') showToast(t('savedToDb', {n: count}));
+    } else {
+      alert('Save failed');
+    }
+  };
+
+  window.__exAddAll = function() {
+    if (!window.__exSearchResults || !window.__exSearchResults.length) return;
+    let added = 0;
+    window.__exSearchResults.forEach(ex => {
+      if (addExerciseToWorkout(ex)) added++;
+    });
+    if (typeof showToast === 'function') showToast(t('addedAll', {n: added}));
+  };
+
+  // ---- Inject button into topbar (workout mode only) ----
+  function injectButtons() {
+    if (!document.body.classList.contains('mp-active')) return;
+    if (!document.body.classList.contains('mode-workout')) return;
+
+    const topbar = document.querySelector('.mp-topbar');
+    if (!topbar) return;
+
+    let btnsContainer = document.getElementById('nuTopBarButtons');
+    if (!btnsContainer) {
+      btnsContainer = document.createElement('div');
+      btnsContainer.id = 'nuTopBarButtons';
+      btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+      topbar.appendChild(btnsContainer);
+    }
+
+    if (!document.getElementById('exSearchBtn')) {
+      const btn = document.createElement('button');
+      btn.id = 'exSearchBtn';
+      btn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+      btn.innerHTML = '🔎 wger';
+      btn.title = t('title');
+      btn.onclick = openExerciseSearchModal;
+      btnsContainer.insertBefore(btn, btnsContainer.firstChild);
+    }
+  }
+
+  // ---- Observer ----
+  function setupObserver() {
+    const obs = new MutationObserver(muts => {
+      for (const m of muts) {
+        if (m.attributeName === 'class') {
+          setTimeout(injectButtons, 200);
+        }
+      }
+    });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    const orig = window.mpRenderBody;
+    if (typeof orig === 'function' && !window.__exBodyWrapped) {
+      window.mpRenderBody = function() {
+        orig.apply(this, arguments);
+        setTimeout(injectButtons, 100);
+      };
+      window.__exBodyWrapped = true;
+    }
+  }
+
+  function init() {
+    console.log('[ExerciseSearch v1.1] init');
+    setupObserver();
+    setTimeout(injectButtons, 500);
+    let retries = 0;
+    const iv = setInterval(() => {
+      if (document.body.classList.contains('mp-active') && document.body.classList.contains('mode-workout')) {
+        injectButtons();
+      }
+      if (++retries > 15) clearInterval(iv);
+    }, 2000);
+
+    // Load imported exercises from localStorage into EXERCISE_DB on startup
+    setTimeout(() => {
+      try {
+        if (typeof EXERCISE_DB !== 'undefined') {
+          const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
+          if (imported.length) {
+            let loaded = 0;
+            imported.forEach(item => {
+              let exists = false;
+              for (const g of EXERCISE_DB) {
+                for (const sg of (g.subgroups || [])) {
+                  if (sg.exercises && sg.exercises.find(e => e.id === item.id)) {
+                    exists = true;
+                    break;
+                  }
+                }
+                if (exists) break;
+              }
+              if (!exists) {
+                let group = EXERCISE_DB.find(g => g.id === item.groupId);
+                if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
+                if (group) {
+                  let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
+                  if (!sub) {
+                    sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
+                    if (!group.subgroups) group.subgroups = [];
+                    group.subgroups.push(sub);
+                  }
+                  const { groupId, wgerId, ts, ...exData } = item;
+                  sub.exercises.push(exData);
+                  loaded++;
+                }
+              }
+            });
+            if (loaded > 0) console.log('[ExerciseSearch] Loaded', loaded, 'imported exercises');
+          }
+        }
+      } catch(e) {
+        console.warn('Failed to load imported exercises:', e);
+      }
+    }, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  document.addEventListener('click', function(e) {
+    const txt = (e.target && e.target.textContent) || '';
+    if (txt.match(/Тренировки|Workout|אימון/)) {
+      setTimeout(injectButtons, 500);
+    }
+  }, true);
+
+  window.ExerciseSearch = {
+    version: '1.1.0',
+    open: openExerciseSearchModal,
+    search: searchExercises,
+    addToWorkout: addExerciseToWorkout,
+    addToDb: addExerciseToDb,
+    injectButtons: injectButtons,
+    fetchAllExercises: fetchAllExercises
+  };
+
+})();
+
+</script>
+<!-- /EXERCISE_SEARCH_V1 -->
 <!-- HISTORY_MANAGER_V1 -->
 <script>
 // ============================================================
@@ -45837,690 +46640,5 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /HISTORY_MANAGER_V1 -->
-<!-- EXERCISE_SEARCH_V1 -->
-<script>
-// ============================================================
-// EXERCISE SEARCH v1.0
-// Searches wger.de exercise database (859 exercises with muscles/equipment)
-// Adds found exercises to current workout plan AND/OR to local EXERCISE_DB
-// Works in trainer app (where mp-active + mode-workout is active)
-// ============================================================
-
-(function() {
-  'use strict';
-
-  if (window.__exerciseSearchV1) {
-    setTimeout(window.ExerciseSearch && ExerciseSearch.injectButtons, 100);
-    return;
-  }
-  window.__exerciseSearchV1 = true;
-
-  // ---- i18n ----
-  const I18N = {
-    ru: {
-      title: '🔎 Поиск упражнений в интернете',
-      hint: 'База wger.de — 859 упражнений с мышцами и оборудованием (CC-BY-SA 4)',
-      searchPh: 'Введите название упражнения...',
-      searchBtn: 'Искать',
-      loading: 'Загрузка...',
-      noResults: 'Ничего не найдено. Попробуйте другой запрос.',
-      error: 'Ошибка поиска. Проверьте интернет.',
-      addBtn: '+ Добавить',
-      addAllBtn: '+ Добавить все',
-      added: 'Добавлено в тренировку',
-      addedAll: 'Добавлено: {n} упражнений',
-      saveToDb: '💾 В общую базу',
-      savedToDb: 'Сохранено в общую базу ({n} упражнений всего)',
-      alreadyInDb: 'Уже в базе',
-      muscleLabel: 'Мышцы',
-      equipLabel: 'Оборудование',
-      catLabel: 'Категория',
-      filterAll: 'Все',
-      filterMuscle: 'По мышцам',
-      filterEquip: 'По оборудованию',
-      resultsCount: 'Найдено: {n}',
-      closeBtn: 'Закрыть',
-      voiceBtn: '🎤',
-      voiceListening: '🔴 Слушаю...',
-      voiceNotSupported: 'Голосовой ввод не поддерживается',
-      addToWorkoutBtn: '🏋️ В тренировку',
-      addToDbBtn: '📚 В базу'
-    },
-    en: {
-      title: '🔎 Search exercises online',
-      hint: 'wger.de database — 859 exercises with muscles and equipment (CC-BY-SA 4)',
-      searchPh: 'Enter exercise name...',
-      searchBtn: 'Search',
-      loading: 'Loading...',
-      noResults: 'Nothing found. Try another query.',
-      error: 'Search error. Check your internet.',
-      addBtn: '+ Add',
-      addAllBtn: '+ Add all',
-      added: 'Added to workout',
-      addedAll: 'Added: {n} exercises',
-      saveToDb: '💾 Save to database',
-      savedToDb: 'Saved to database ({n} exercises total)',
-      alreadyInDb: 'Already in DB',
-      muscleLabel: 'Muscles',
-      equipLabel: 'Equipment',
-      catLabel: 'Category',
-      filterAll: 'All',
-      filterMuscle: 'By muscle',
-      filterEquip: 'By equipment',
-      resultsCount: 'Found: {n}',
-      closeBtn: 'Close',
-      voiceBtn: '🎤',
-      voiceListening: '🔴 Listening...',
-      voiceNotSupported: 'Voice input not supported',
-      addToWorkoutBtn: '🏋️ To workout',
-      addToDbBtn: '📚 To database'
-    },
-    he: {
-      title: '🔎 חיפוש תרגילים באינטרנט',
-      hint: 'מסד נתונים wger.de — 859 תרגילים עם שרירים וציוד (CC-BY-SA 4)',
-      searchPh: 'הקלד שם תרגיל...',
-      searchBtn: 'חיפוש',
-      loading: 'טוען...',
-      noResults: 'לא נמצא. נסה שאילתה אחרת.',
-      error: 'שגיאת חיפוש. בדוק אינטרנט.',
-      addBtn: '+ הוסף',
-      addAllBtn: '+ הוסף הכל',
-      added: 'נוסף לאימון',
-      addedAll: 'נוסף: {n} תרגילים',
-      saveToDb: '💾 שמור למסד',
-      savedToDb: 'נשמר למסד ({n} תרגילים סה"כ)',
-      alreadyInDb: 'כבר במסד',
-      muscleLabel: 'שרירים',
-      equipLabel: 'ציוד',
-      catLabel: 'קטגוריה',
-      filterAll: 'הכל',
-      filterMuscle: 'לפי שריר',
-      filterEquip: 'לפי ציוד',
-      resultsCount: 'נמצאו: {n}',
-      closeBtn: 'סגור',
-      voiceBtn: '🎤',
-      voiceListening: '🔴 מקשיב...',
-      voiceNotSupported: 'קלט קולי לא נתמך',
-      addToWorkoutBtn: '🏋️ לאימון',
-      addToDbBtn: '📚 למסד'
-    }
-  };
-
-  function uiLang() {
-    try {
-      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
-      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
-    } catch(e) {}
-    return 'ru';
-  }
-
-  function t(key, vars) {
-    const lang = uiLang();
-    let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
-    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
-    return s;
-  }
-
-  function esc(s) {
-    if (s == null) return '';
-    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  }
-
-  // ---- wger.de API ----
-  const WGER_BASE = 'https://wger.de/api/v2';
-  let searchCache = {};
-
-  // Map wger categories to our EXERCISE_DB groups
-  const CATEGORY_MAP = {
-    'Abs': 'abs',
-    'Arms': 'biceps', // could be biceps or triceps
-    'Back': 'back',
-    'Calves': 'calves',
-    'Chest': 'chest',
-    'Glutes': 'glutes',
-    'Legs': 'quads',
-    'Shoulders': 'shoulders',
-    'Cardio': 'cardio'
-  };
-
-  async function wgerSearchExercises(query, options) {
-    options = options || {};
-    if (!query || query.trim().length < 2) return [];
-    const cacheKey = 'q:' + query.toLowerCase().trim() + ':' + (options.muscle || '') + ':' + (options.equipment || '');
-    if (searchCache[cacheKey]) return searchCache[cacheKey];
-
-    // wger doesn't have a direct text search, so we fetch all and filter
-    // Use exerciseinfo endpoint which returns translations
-    const params = new URLSearchParams({
-      format: 'json',
-      limit: '100',
-      language: '2', // English
-      offset: '0'
-    });
-    if (options.muscle) params.set('muscles', options.muscle);
-    if (options.equipment) params.set('equipment', options.equipment);
-
-    const url = WGER_BASE + '/exerciseinfo/?' + params;
-    try {
-      const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const data = await resp.json();
-      const all = (data.results || []).map(ex => normalizeWgerExercise(ex)).filter(ex => ex);
-      // Filter by name (case insensitive)
-      const q = query.toLowerCase().trim();
-      let filtered = all.filter(ex => ex.name.toLowerCase().includes(q));
-      // If few results, fetch more pages
-      if (filtered.length < 5 && data.next) {
-        const moreResults = await fetchMorePages(query, data.next, 3);
-        filtered = filtered.concat(moreResults);
-      }
-      // Dedup by id
-      const seen = new Set();
-      filtered = filtered.filter(ex => {
-        if (seen.has(ex.wgerId)) return false;
-        seen.add(ex.wgerId);
-        return true;
-      });
-      searchCache[cacheKey] = filtered;
-      return filtered;
-    } catch(e) {
-      console.warn('wger search error:', e);
-      throw e;
-    }
-  }
-
-  async function fetchMorePages(query, nextUrl, maxPages) {
-    const results = [];
-    let url = nextUrl;
-    const q = query.toLowerCase().trim();
-    for (let i = 0; i < maxPages && url; i++) {
-      try {
-        const resp = await fetch(url, { headers: { 'User-Agent': 'NutritionApp/1.0' } });
-        if (!resp.ok) break;
-        const data = await resp.json();
-        for (const ex of (data.results || [])) {
-          const norm = normalizeWgerExercise(ex);
-          if (norm && norm.name.toLowerCase().includes(q)) {
-            results.push(norm);
-          }
-        }
-        url = data.next;
-      } catch(e) { break; }
-    }
-    return results;
-  }
-
-  function normalizeWgerExercise(ex) {
-    if (!ex) return null;
-    let name = '';
-    let description = '';
-    for (const tr of (ex.translations || [])) {
-      if (tr.language === 2) { // English
-        name = tr.name || '';
-        description = tr.description || '';
-        break;
-      }
-    }
-    if (!name) {
-      // Fallback to any translation
-      const tr = (ex.translations || [])[0];
-      if (tr) {
-        name = tr.name || '';
-        description = tr.description || '';
-      }
-    }
-    if (!name) return null;
-
-    const muscles = (ex.muscles || []).map(m => m.name).filter(n => n);
-    const secondary = (ex.muscles_secondary || []).map(m => m.name).filter(n => n);
-    const equipment = (ex.equipment || []).map(e => e.name).filter(n => n);
-    const category = ex.category ? ex.category.name : '';
-
-    // Map to our group system
-    let groupId = 'fullbody';
-    if (category && CATEGORY_MAP[category]) groupId = CATEGORY_MAP[category];
-
-    return {
-      wgerId: ex.id,
-      name: name,
-      description: description.replace(/<[^>]+>/g, '').trim().substring(0, 300),
-      muscles: muscles,
-      musclesSecondary: secondary,
-      equipment: equipment,
-      category: category,
-      groupId: groupId,
-      images: (ex.images || []).slice(0, 3).map(img => img.image)
-    };
-  }
-
-  // ---- Add exercise to current workout ----
-  function addExerciseToWorkout(wgerEx) {
-    try {
-      // Create exercise object matching our workout structure
-      const newEx = {
-        name: wgerEx.name,
-        sets: 3,
-        reps: 10,
-        weight: '',
-        rest: 60,
-        time: '',
-        note: wgerEx.description ? wgerEx.description.substring(0, 100) : '',
-        exId: '',
-        groupId: wgerEx.groupId,
-        subId: '',
-        equip: wgerEx.equipment && wgerEx.equipment.length ? wgerEx.equipment[0] : '',
-        _wgerSource: true
-      };
-
-      // Method 1: Use addExerciseRow — signature is (workoutEl, ex, skipSave)
-      if (typeof addExerciseRow === 'function') {
-        // Find the actual workout element (NOT the mode-switch button)
-        // Look inside #workoutsContainer for the .workout with .workout-body
-        const workoutsContainer = document.getElementById('workoutsContainer');
-        const workouts = workoutsContainer
-          ? workoutsContainer.querySelectorAll('.workout')
-          : document.querySelectorAll('.workout');
-        // Find the first workout that has a .workout-body
-        let workoutEl = null;
-        for (const w of workouts) {
-          if (w.querySelector('.workout-body')) {
-            workoutEl = w;
-            break;
-          }
-        }
-        if (workoutEl) {
-          try {
-            addExerciseRow(workoutEl, newEx);
-            if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-            if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-            if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
-            return true;
-          } catch(e) {
-            console.warn('addExerciseRow failed, trying alternative:', e);
-          }
-        }
-      }
-
-      // Method 2: Directly append to workoutPlan in localStorage and re-render
-      const cid = window.HistoryManager ? window.HistoryManager.getClientId() : (typeof currentUserId !== 'undefined' ? currentUserId : null);
-      if (cid) {
-        const raw = localStorage.getItem('workoutPlan_' + cid);
-        const plan = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(plan)) {
-          // If no workout exists, create one
-          if (plan.length === 0) {
-            plan.push({
-              id: 'wk_' + Date.now(),
-              title: 'New Workout',
-              date: new Date().toISOString().slice(0, 10),
-              duration: 60,
-              exercises: []
-            });
-          }
-          if (!plan[0].exercises) plan[0].exercises = [];
-          plan[0].exercises.push(newEx);
-          localStorage.setItem('workoutPlan_' + cid, JSON.stringify(plan));
-          if (typeof saveWorkoutPlan === 'function') try { saveWorkoutPlan(); } catch(e) {}
-          if (typeof loadWorkoutPlan === 'function') try { loadWorkoutPlan(); } catch(e) {}
-          if (typeof cwRenderInner === 'function') try { cwRenderInner(); } catch(e) {}
-          if (typeof mpRenderBody === 'function') try { mpRenderBody(); } catch(e) {}
-          return true;
-        }
-      }
-
-      // Method 3: Dispatch event for app to handle
-      window.dispatchEvent(new CustomEvent('exercise:addExternal', {
-        detail: { exercise: newEx, wgerExercise: wgerEx }
-      }));
-      return true;
-    } catch(e) {
-      console.error('addExerciseToWorkout error:', e);
-      return false;
-    }
-  }
-
-  // ---- Add exercise to local EXERCISE_DB ----
-  function addExerciseToDb(wgerEx) {
-    try {
-      if (typeof EXERCISE_DB === 'undefined') {
-        console.warn('EXERCISE_DB not available');
-        return false;
-      }
-
-      // Check if already exists (by name)
-      for (const group of EXERCISE_DB) {
-        for (const sub of (group.subgroups || [])) {
-          for (const ex of (sub.exercises || [])) {
-            if (ex.en && ex.en.toLowerCase() === wgerEx.name.toLowerCase()) {
-              return 'exists';
-            }
-          }
-        }
-      }
-
-      // Find or create group
-      let group = EXERCISE_DB.find(g => g.id === wgerEx.groupId);
-      if (!group) {
-        // Add to fullbody if no match
-        group = EXERCISE_DB.find(g => g.id === 'fullbody');
-      }
-      if (!group) return false;
-
-      // Find or create a subgroup for wger-sourced exercises
-      let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
-      if (!sub) {
-        sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
-        if (!group.subgroups) group.subgroups = [];
-        group.subgroups.push(sub);
-      }
-
-      // Add exercise with translations
-      const newEx = {
-        id: 'wger_' + wgerEx.wgerId,
-        equip: wgerEx.equipment && wgerEx.equipment.length ? mapEquipment(wgerEx.equipment[0]) : 'bw',
-        ru: wgerEx.name, // English name as fallback for all
-        en: wgerEx.name,
-        he: wgerEx.name,
-        _wgerImported: true,
-        _wgerMuscles: wgerEx.muscles.join(', '),
-        _wgerCategory: wgerEx.category,
-        _wgerDescription: wgerEx.description
-      };
-      sub.exercises.push(newEx);
-
-      // Save to localStorage for persistence
-      const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
-      imported.push({ ...newEx, groupId: wgerEx.groupId, wgerId: wgerEx.wgerId, ts: Date.now() });
-      localStorage.setItem('wgerImportedExercises', JSON.stringify(imported));
-
-      return true;
-    } catch(e) {
-      console.error('addExerciseToDb error:', e);
-      return false;
-    }
-  }
-
-  function mapEquipment(wgerEquip) {
-    const map = {
-      'Barbell': 'barbell',
-      'Dumbbell': 'dumbbell',
-      'Machine': 'machine',
-      'Cable': 'cable',
-      'Kettlebell': 'kettlebell',
-      'Bodyweight': 'bw',
-      'none (bodyweight exercise)': 'bw',
-      'Bands': 'band',
-      'Medicine Ball': 'medicine-ball',
-      'Exercise Ball': 'fitball',
-      'Foam Roller': 'foam-roller',
-      'EZ-Bar': 'ezbar',
-      'Smith Machine': 'smith',
-      'TRX': 'trx',
-      'Plates': 'plates'
-    };
-    return map[wgerEquip] || 'bw';
-  }
-
-  // ---- Modal UI ----
-  async function openExerciseSearchModal() {
-    const existing = document.getElementById('exSearchModal');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'exSearchModal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;';
-    modal.innerHTML =
-      '<div style="background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:20px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
-          '<div>' +
-            '<h3 style="margin:0;font-size:18px;color:#0A1628;">' + esc(t('title')) + '</h3>' +
-            '<p style="margin:4px 0 0;font-size:12px;color:#616161;">' + esc(t('hint')) + '</p>' +
-          '</div>' +
-          '<button onclick="this.closest(\'#exSearchModal\').remove()" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#757575;">×</button>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
-          '<input type="text" id="exSearchInput" placeholder="' + esc(t('searchPh')) + '" style="flex:1;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;" onkeydown="if(event.key===\'Enter\')window.__exSearch()">' +
-          '<button onclick="window.__exVoiceSearch()" id="exVoiceBtn" style="background:#5B8DB8;color:#fff;border:0;border-radius:8px;padding:0 12px;cursor:pointer;font-weight:600;">' + esc(t('voiceBtn')) + '</button>' +
-          '<button onclick="window.__exSearch()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:0 16px;cursor:pointer;font-weight:600;">' + esc(t('searchBtn')) + '</button>' +
-        '</div>' +
-        '<div id="exSearchResults" style="min-height:80px;"></div>' +
-      '</div>';
-    document.body.appendChild(modal);
-
-    setTimeout(() => {
-      const inp = document.getElementById('exSearchInput');
-      if (inp) inp.focus();
-    }, 100);
-  }
-
-  window.__exOpen = openExerciseSearchModal;
-
-  window.__exSearch = async function() {
-    const inp = document.getElementById('exSearchInput');
-    if (!inp) return;
-    const q = inp.value.trim();
-    if (q.length < 2) return;
-    const resultsEl = document.getElementById('exSearchResults');
-    resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#757575;"><div style="display:inline-block;width:30px;height:30px;border:3px solid #E3F2FD;border-top:3px solid #10B981;border-radius:50%;animation:exSpin 1s linear infinite;"></div><p style="margin-top:8px;font-size:13px;">' + esc(t('loading')) + '</p></div><style>@keyframes exSpin{to{transform:rotate(360deg)}}</style>';
-    try {
-      const results = await wgerSearchExercises(q);
-      if (!results.length) {
-        resultsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#757575;">' + esc(t('noResults')) + '</div>';
-        return;
-      }
-      let html = '<div style="font-size:12px;color:#616161;margin-bottom:10px;">' + esc(t('resultsCount', {n: results.length})) + '</div>';
-      // Add "Add all" button at top
-      html += '<div style="margin-bottom:12px;"><button onclick="window.__exAddAll()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:13px;">' + esc(t('addAllBtn')) + '</button></div>';
-      results.forEach((ex, i) => {
-        const muscles = ex.muscles.concat(ex.musclesSecondary).slice(0, 4);
-        const equip = ex.equipment.slice(0, 3);
-        const img = ex.images && ex.images.length ? ex.images[0] : '';
-        html += '<div style="display:flex;gap:10px;background:#FAFAFA;border-radius:10px;padding:12px;margin-bottom:8px;align-items:flex-start;">' +
-          (img ? '<img src="' + esc(img) + '" style="width:60px;height:60px;object-fit:contain;border-radius:6px;background:#fff;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '<div style="width:60px;height:60px;background:#E0E0E0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏋️</div>') +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-weight:600;color:#212121;font-size:14px;">' + esc(ex.name) + '</div>' +
-            (ex.category ? '<div style="font-size:11px;color:#1565C0;margin-top:2px;">' + esc(t('catLabel')) + ': ' + esc(ex.category) + '</div>' : '') +
-            (muscles.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">💪 ' + esc(t('muscleLabel')) + ': ' + esc(muscles.join(', ')) + '</div>' : '') +
-            (equip.length ? '<div style="font-size:11px;color:#757575;margin-top:2px;">🛠 ' + esc(t('equipLabel')) + ': ' + esc(equip.join(', ')) + '</div>' : '') +
-            (ex.description ? '<div style="font-size:11px;color:#9E9E9E;margin-top:4px;line-height:1.4;">' + esc(ex.description.substring(0, 120)) + (ex.description.length > 120 ? '...' : '') + '</div>' : '') +
-            '<div style="display:flex;gap:6px;margin-top:8px;">' +
-              '<button onclick="window.__exAddToWorkout(' + i + ')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToWorkoutBtn')) + '</button>' +
-              '<button onclick="window.__exAddToDb(' + i + ')" style="background:#1565C0;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">' + esc(t('addToDbBtn')) + '</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      });
-      resultsEl.innerHTML = html;
-      window.__exSearchResults = results;
-    } catch(e) {
-      resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#C62828;">⚠️ ' + esc(t('error')) + '</div>';
-    }
-  };
-
-  window.__exVoiceSearch = function() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert(t('voiceNotSupported')); return; }
-    const rec = new SR();
-    rec.lang = uiLang() === 'he' ? 'he-IL' : (uiLang() === 'en' ? 'en-US' : 'ru-RU');
-    rec.interimResults = false;
-    const btn = document.getElementById('exVoiceBtn');
-    if (btn) btn.textContent = t('voiceListening');
-    rec.onresult = function(ev) {
-      const text = ev.results[0][0].transcript;
-      const inp = document.getElementById('exSearchInput');
-      if (inp) {
-        inp.value = text;
-        window.__exSearch();
-      }
-      if (btn) btn.textContent = t('voiceBtn');
-    };
-    rec.onerror = function() { if (btn) btn.textContent = t('voiceBtn'); };
-    rec.onend = function() { if (btn) btn.textContent = t('voiceBtn'); };
-    rec.start();
-  };
-
-  window.__exAddToWorkout = function(i) {
-    const ex = window.__exSearchResults && window.__exSearchResults[i];
-    if (!ex) return;
-    const ok = addExerciseToWorkout(ex);
-    if (ok && typeof showToast === 'function') showToast('✓ ' + t('added'));
-  };
-
-  window.__exAddToDb = function(i) {
-    const ex = window.__exSearchResults && window.__exSearchResults[i];
-    if (!ex) return;
-    const result = addExerciseToDb(ex);
-    if (result === 'exists') {
-      if (typeof showToast === 'function') showToast(t('alreadyInDb'));
-    } else if (result) {
-      const count = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]').length;
-      if (typeof showToast === 'function') showToast(t('savedToDb', {n: count}));
-    } else {
-      alert('Save failed');
-    }
-  };
-
-  window.__exAddAll = function() {
-    if (!window.__exSearchResults || !window.__exSearchResults.length) return;
-    let added = 0;
-    window.__exSearchResults.forEach(ex => {
-      if (addExerciseToWorkout(ex)) added++;
-    });
-    if (typeof showToast === 'function') showToast(t('addedAll', {n: added}));
-  };
-
-  // ---- Inject button into topbar (workout mode only) ----
-  function injectButtons() {
-    // Only inject in trainer app workout mode
-    if (!document.body.classList.contains('mp-active')) return;
-    if (!document.body.classList.contains('mode-workout')) return;
-
-    const topbar = document.querySelector('.mp-topbar');
-    if (!topbar) return;
-
-    // Find or create button container
-    let btnsContainer = document.getElementById('nuTopBarButtons');
-    if (!btnsContainer) {
-      btnsContainer = document.createElement('div');
-      btnsContainer.id = 'nuTopBarButtons';
-      btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
-      topbar.appendChild(btnsContainer);
-    }
-
-    if (!document.getElementById('exSearchBtn')) {
-      const btn = document.createElement('button');
-      btn.id = 'exSearchBtn';
-      btn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-      btn.innerHTML = '🔎 ' + (uiLang() === 'he' ? 'wger' : (uiLang() === 'en' ? 'wger' : 'wger'));
-      btn.title = t('title');
-      btn.onclick = openExerciseSearchModal;
-      // Insert as FIRST button (before OFF)
-      btnsContainer.insertBefore(btn, btnsContainer.firstChild);
-    }
-  }
-
-  // ---- Observer ----
-  function setupObserver() {
-    const obs = new MutationObserver(muts => {
-      for (const m of muts) {
-        if (m.attributeName === 'class') {
-          setTimeout(injectButtons, 200);
-        }
-      }
-    });
-    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-    const orig = window.mpRenderBody;
-    if (typeof orig === 'function' && !window.__exBodyWrapped) {
-      window.mpRenderBody = function() {
-        orig.apply(this, arguments);
-        setTimeout(injectButtons, 100);
-      };
-      window.__exBodyWrapped = true;
-    }
-  }
-
-  function init() {
-    console.log('[ExerciseSearch v1.0] init');
-    setupObserver();
-    setTimeout(injectButtons, 500);
-    let retries = 0;
-    const iv = setInterval(() => {
-      if (document.body.classList.contains('mp-active') && document.body.classList.contains('mode-workout')) {
-        injectButtons();
-      }
-      if (++retries > 15) clearInterval(iv);
-    }, 2000);
-
-    // Load imported exercises from localStorage into EXERCISE_DB on startup
-    setTimeout(() => {
-      try {
-        if (typeof EXERCISE_DB !== 'undefined') {
-          const imported = JSON.parse(localStorage.getItem('wgerImportedExercises') || '[]');
-          if (imported.length) {
-            let loaded = 0;
-            imported.forEach(item => {
-              // Check if already in DB (by id)
-              let exists = false;
-              for (const g of EXERCISE_DB) {
-                for (const sg of (g.subgroups || [])) {
-                  if (sg.exercises && sg.exercises.find(e => e.id === item.id)) {
-                    exists = true;
-                    break;
-                  }
-                }
-                if (exists) break;
-              }
-              if (!exists) {
-                let group = EXERCISE_DB.find(g => g.id === item.groupId);
-                if (!group) group = EXERCISE_DB.find(g => g.id === 'fullbody');
-                if (group) {
-                  let sub = (group.subgroups || []).find(s => s.id === 'wger_imported');
-                  if (!sub) {
-                    sub = { id: 'wger_imported', name: '🌐 wger.de', exercises: [] };
-                    if (!group.subgroups) group.subgroups = [];
-                    group.subgroups.push(sub);
-                  }
-                  const { groupId, wgerId, ts, ...exData } = item;
-                  sub.exercises.push(exData);
-                  loaded++;
-                }
-              }
-            });
-            if (loaded > 0) console.log('[ExerciseSearch] Loaded', loaded, 'imported exercises');
-          }
-        }
-      } catch(e) {
-        console.warn('Failed to load imported exercises:', e);
-      }
-    }, 1500);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  document.addEventListener('click', function(e) {
-    const txt = (e.target && e.target.textContent) || '';
-    if (txt.match(/Тренировки|Workout|אימון/)) {
-      setTimeout(injectButtons, 500);
-    }
-  }, true);
-
-  window.ExerciseSearch = {
-    version: '1.0.0',
-    open: openExerciseSearchModal,
-    search: wgerSearchExercises,
-    addToWorkout: addExerciseToWorkout,
-    addToDb: addExerciseToDb,
-    injectButtons: injectButtons
-  };
-
-})();
-
-</script>
-<!-- /EXERCISE_SEARCH_V1 -->
 </body>
 </html>
