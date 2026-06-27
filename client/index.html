@@ -33636,7 +33636,7 @@ window.csOpenMore = function(){
         items += '<button class="mp-action-item" onclick="csCloseSheet(); showProgressChart();"><span class="ico">📈</span>' + ct('progress') + '</button>';
     if (typeof showReportModal === 'function')
         items += '<button class="mp-action-item" onclick="csCloseSheet(); showReportModal();"><span class="ico">📊</span>' + ct('report') + '</button>';
-    items += '<button class="mp-action-item" onclick="csOpenSettings()"><span class="ico">⚙️</span>' + ct('settings') + '</button>';
+    items += '<button class="mp-action-item" onclick="csCloseSheet(); if(typeof openSettingsModal===\'function\')openSettingsModal();"><span class="ico">⚙️</span>' + ct('settings') + '</button>';
     items += '<button class="mp-action-item danger" onclick="csCloseSheet(); clientLogout();"><span class="ico">🚪</span>' + ct('logout') + '</button>';
 
     csOpenSheet(
@@ -45153,5 +45153,680 @@ else setTimeout(init,1200);
 })();
 </script>
 <!-- /SPRINT5_FIXES -->
+
+<!-- SPRINT7_UI -->
+<script>
+// ============================================================
+// SPRINT 7 — UI FIXES
+// 1. Dark theme: apply to ALL UI elements (buttons, panels, nav, sheets)
+// 2. Top bar buttons: prevent flicker on mobile (debounce + stable position)
+// 3. Save buttons: show toast confirmation
+// 4. Live mode: add "Вес" and "Повторения" labels
+// 5. Exercise GIF: fullscreen view with close button
+// 6. Client: fix settings button + translate
+// 7. Client: shrink bottom nav to fit screen
+// 8. Client: deduplicate history menu items
+// ============================================================
+
+(function() {
+  'use strict';
+  if (window.__sprint7) return;
+  window.__sprint7 = true;
+
+  // ---- 1. DARK THEME: comprehensive CSS for ALL elements ----
+  function injectDarkThemeCSS() {
+    if (document.getElementById('s7darkTheme')) return;
+    const style = document.createElement('style');
+    style.id = 's7darkTheme';
+    style.textContent = `
+      /* ===== COMPREHENSIVE DARK THEME for mobile planner + client ===== */
+      
+      /* Dark theme applies when body has dark-theme class OR when a dark preset is active */
+      body.dark-theme,
+      body[data-dark="true"] {
+        --background-color: #121212 !important;
+        --surface-color: #1E1E1E !important;
+        --text-primary: #E0E0E0 !important;
+        --text-secondary: #B0B0B0 !important;
+        --text-light: #808080 !important;
+        --border-color: #333333 !important;
+        --shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+        --shadow-lg: 0 5px 15px rgba(0,0,0,0.4) !important;
+      }
+
+      /* Mobile planner top bar */
+      body.dark-theme .mp-topbar,
+      body[data-dark="true"] .mp-topbar {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+        border-bottom: 1px solid #333 !important;
+      }
+      body.dark-theme .mp-topbar button,
+      body[data-dark="true"] .mp-topbar button {
+        color: #E0E0E0 !important;
+      }
+
+      /* Mobile planner body */
+      body.dark-theme .mp-body,
+      body[data-dark="true"] .mp-body {
+        background: #121212 !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Cards */
+      body.dark-theme .mp-card,
+      body[data-dark="true"] .mp-card {
+        background: #1E1E1E !important;
+        border: 1px solid #333 !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Meal headers and rows */
+      body.dark-theme .mp-meal-head,
+      body[data-dark="true"] .mp-meal-head {
+        background: #252525 !important;
+        color: #E0E0E0 !important;
+      }
+      body.dark-theme .mp-prow,
+      body[data-dark="true"] .mp-prow {
+        background: #1A1A1A !important;
+        border-bottom: 1px solid #2A2A2A !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Add line buttons */
+      body.dark-theme .mp-addline,
+      body[data-dark="true"] .mp-addline {
+        background: rgba(255,255,255,0.05) !important;
+        color: #B0B0B0 !important;
+      }
+
+      /* Summary */
+      body.dark-theme .mp-summary,
+      body[data-dark="true"] .mp-summary {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Bottom navigation */
+      body.dark-theme .mp-nav,
+      body[data-dark="true"] .mp-nav {
+        background: #1E1E1E !important;
+        border-top: 1px solid #333 !important;
+      }
+      body.dark-theme .mp-nav-item,
+      body[data-dark="true"] .mp-nav-item {
+        color: #808080 !important;
+      }
+      body.dark-theme .mp-nav-item.active,
+      body[data-dark="true"] .mp-nav-item.active {
+        color: var(--primary-color, #4CAF50) !important;
+      }
+
+      /* Sheets (bottom sheets) */
+      body.dark-theme .mp-sheet,
+      body[data-dark="true"] .mp-sheet,
+      body.dark-theme .cs-sheet,
+      body[data-dark="true"] .cs-sheet {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+      }
+      body.dark-theme .mp-sheet-head,
+      body[data-dark="true"] .mp-sheet-head {
+        border-bottom: 1px solid #333 !important;
+      }
+      body.dark-theme .mp-action-item,
+      body[data-dark="true"] .mp-action-item {
+        color: #E0E0E0 !important;
+        border-bottom: 1px solid #333 !important;
+      }
+      body.dark-theme .mp-input,
+      body[data-dark="true"] .mp-input {
+        background: #2A2A2A !important;
+        border: 1px solid #444 !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Client top bar */
+      body.dark-theme .cs-topbar,
+      body[data-dark="true"] .cs-topbar {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+        border-bottom: 1px solid #333 !important;
+      }
+
+      /* Exercise cards (CW2) */
+      body.dark-theme .cw-card,
+      body[data-dark="true"] .cw-card {
+        background: #1E1E1E !important;
+        border: 1px solid #333 !important;
+        color: #E0E0E0 !important;
+      }
+      body.dark-theme .cw-set-row,
+      body[data-dark="true"] .cw-set-row {
+        background: #252525 !important;
+        border: 1px solid #333 !important;
+      }
+      body.dark-theme .cw-in,
+      body[data-dark="true"] .cw-in {
+        background: #2A2A2A !important;
+        color: #E0E0E0 !important;
+        border: 1px solid #444 !important;
+      }
+      body.dark-theme .cw-wbtn,
+      body[data-dark="true"] .cw-wbtn {
+        background: #2A2A2A !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Modals */
+      body.dark-theme .modal-content,
+      body[data-dark="true"] .modal-content,
+      body.dark-theme .info-modal-content,
+      body[data-dark="true"] .info-modal-content {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Compact settings */
+      body.dark-theme .cs-modal,
+      body[data-dark="true"] .cs-modal {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+      }
+      body.dark-theme .cs-header,
+      body[data-dark="true"] .cs-header {
+        background: var(--primary-color, #4CAF50) !important;
+      }
+      body.dark-theme .cs-section-header,
+      body[data-dark="true"] .cs-section-header {
+        color: #E0E0E0 !important;
+      }
+      body.dark-theme .cs-lang-btn,
+      body[data-dark="true"] .cs-lang-btn,
+      body.dark-theme .cs-font-btn,
+      body[data-dark="true"] .cs-font-btn,
+      body.dark-theme .cs-theme-btn,
+      body[data-dark="true"] .cs-theme-btn,
+      body.dark-theme .cs-tod-theme-btn,
+      body[data-dark="true"] .cs-tod-theme-btn {
+        background: #2A2A2A !important;
+        color: #E0E0E0 !important;
+        border-color: #444 !important;
+      }
+      body.dark-theme .cs-slider,
+      body[data-dark="true"] .cs-slider {
+        accent-color: var(--primary-color, #4CAF50) !important;
+      }
+
+      /* Water tracker widget */
+      body.dark-theme .nu-water-card,
+      body[data-dark="true"] .nu-water-card {
+        background: linear-gradient(135deg, #1A2332, #0F1929) !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Search modals */
+      body.dark-theme #offPickerModal > div,
+      body[data-dark="true"] #offPickerModal > div,
+      body.dark-theme #exSearchModal > div,
+      body[data-dark="true"] #exSearchModal > div,
+      body.dark-theme #multiExSearchModal > div,
+      body[data-dark="true"] #multiExSearchModal > div,
+      body.dark-theme #aiPhotoModal > div,
+      body[data-dark="true"] #aiPhotoModal > div {
+        background: #1E1E1E !important;
+        color: #E0E0E0 !important;
+      }
+
+      /* Scrollbars in dark mode */
+      body.dark-theme ::-webkit-scrollbar,
+      body[data-dark="true"] ::-webkit-scrollbar {
+        width: 8px;
+      }
+      body.dark-theme ::-webkit-scrollbar-track,
+      body[data-dark="true"] ::-webkit-scrollbar-track {
+        background: #1A1A1A;
+      }
+      body.dark-theme ::-webkit-scrollbar-thumb,
+      body[data-dark="true"] ::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 4px;
+      }
+    `;
+    document.head.appendChild(style);
+    console.log('[Sprint7] Dark theme CSS injected');
+  }
+
+  // Apply dark theme when a dark preset is selected
+  function applyDarkThemeFlag() {
+    try {
+      var settings = JSON.parse(localStorage.getItem('nutritionPlannerSettings') || '{}');
+      var isDark = false;
+      
+      // Check theme setting
+      if (settings.theme === 'dark') isDark = true;
+      
+      // Check theme preset
+      if (settings.themePreset && typeof THEME_PRESETS !== 'undefined') {
+        var preset = THEME_PRESETS.find(function(p) { return p.id === settings.themePreset; });
+        if (preset && preset.dark) isDark = true;
+      }
+      
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        document.body.setAttribute('data-dark', 'true');
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.body.removeAttribute('data-dark');
+      }
+    } catch(e) { console.warn('[Sprint7] dark theme flag:', e); }
+  }
+
+  // ---- 2. STABLE TOP BAR BUTTONS (prevent flicker) ----
+  function injectStableTopbarCSS() {
+    if (document.getElementById('s7stableTopbar')) return;
+    const style = document.createElement('style');
+    style.id = 's7stableTopbar';
+    style.textContent = `
+      /* Prevent top bar buttons from flickering on mobile */
+      .mp-topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+        min-height: 52px;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px;
+        padding: 0 8px !important;
+      }
+      #nuTopBarButtons {
+        position: absolute !important;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex !important;
+        gap: 4px;
+        align-items: center;
+      }
+      /* Hide buttons that are not relevant to current mode */
+      #nuTopBarButtons button {
+        display: flex !important;
+      }
+      /* On very small screens, use smaller buttons */
+      @media (max-width: 400px) {
+        #nuTopBarButtons button {
+          padding: 6px 8px !important;
+          font-size: 10px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ---- 3. SAVE BUTTONS — show toast ----
+  function patchSaveButtons() {
+    if (window.__s7savePatched) return;
+    
+    // Wrap mpSaveCurrent
+    const origSave = window.mpSaveCurrent;
+    if (typeof origSave === 'function') {
+      window.mpSaveCurrent = function() {
+        const result = origSave.apply(this, arguments);
+        if (typeof showToast === 'function') showToast('✅ Сохранено');
+        return result;
+      };
+    }
+
+    // Wrap savePlan
+    if (typeof window.savePlan === 'function') {
+      const origSavePlan = window.savePlan;
+      window.savePlan = function() {
+        const result = origSavePlan.apply(this, arguments);
+        // Don't show toast on every keystroke save (savePlan is called frequently)
+        return result;
+      };
+    }
+
+    window.__s7savePatched = true;
+  }
+
+  // ---- 4. LIVE MODE: labels for "Вес" and "Повторения" ----
+  function injectLiveModeLabels() {
+    if (document.getElementById('s7liveLabels')) return;
+    const style = document.createElement('style');
+    style.id = 's7liveLabels';
+    style.textContent = `
+      /* Add column headers in CW2 live mode */
+      .cw-head-row {
+        display: grid !important;
+        grid-template-columns: 30px 1fr 50px 55px 60px 40px 30px;
+        gap: 2px;
+        align-items: center;
+        font-size: 9px;
+        color: var(--text-light, #999);
+        text-transform: uppercase;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-bottom: 1px solid var(--border-color, #EEE);
+      }
+      .cw-head-row > div:nth-child(1)::before { content: '#'; }
+      .cw-head-row > div:nth-child(2)::before { content: '${uiLangLabel()}'; }
+      .cw-head-row > div:nth-child(3)::before { content: '${weightLabel()}'; }
+      .cw-head-row > div:nth-child(4)::before { content: '${repsLabel()}'; }
+      .cw-head-row > div:nth-child(5)::before { content: '⏱'; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function uiLangLabel() {
+    try {
+      var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+      if (lang === 'he') return 'תרגיל';
+      if (lang === 'en') return 'Exercise';
+      return 'Упражнение';
+    } catch(e) { return 'Упражнение'; }
+  }
+  function weightLabel() {
+    try {
+      var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+      if (lang === 'he') return 'משקל';
+      if (lang === 'en') return 'Weight';
+      return 'Вес';
+    } catch(e) { return 'Вес'; }
+  }
+  function repsLabel() {
+    try {
+      var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+      if (lang === 'he') return 'חזרות';
+      if (lang === 'en') return 'Reps';
+      return 'Повтор.';
+    } catch(e) { return 'Повтор.'; }
+  }
+
+  // ---- 5. EXERCISE GIF FULLSCREEN VIEWER ----
+  function injectGifViewer() {
+    if (document.getElementById('s7gifViewer')) return;
+    const style = document.createElement('style');
+    style.id = 's7gifViewer';
+    style.textContent = `
+      .s7-gif-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+        z-index: 99999; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; padding: 20px;
+        animation: s7fadeIn 0.2s ease;
+      }
+      @keyframes s7fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .s7-gif-close {
+        position: absolute; top: 16px; right: 16px;
+        background: rgba(255,255,255,0.15); border: 0;
+        color: #fff; font-size: 28px; cursor: pointer;
+        width: 44px; height: 44px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 100001;
+      }
+      .s7-gif-close:hover { background: rgba(255,255,255,0.25); }
+      .s7-gif-img {
+        max-width: 90vw; max-height: 70vh; object-fit: contain;
+        border-radius: 12px; background: #fff;
+      }
+      .s7-gif-title {
+        color: #fff; font-size: 18px; font-weight: 600;
+        margin-top: 16px; text-align: center;
+      }
+      .s7-gif-info {
+        color: rgba(255,255,255,0.7); font-size: 13px;
+        margin-top: 8px; text-align: center; max-width: 500px;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Add click handler for exercise thumbnails
+    document.addEventListener('click', function(e) {
+      // Find exercise thumbnail image
+      var img = e.target.closest('img');
+      if (!img) return;
+      var src = img.src || '';
+      // Check if it's an exercise image (from wger, burnfit, or photo map)
+      if (src.indexOf('wger-img/') >= 0 || src.indexOf('burnfit.io') >= 0 ||
+          src.indexOf('free-exercise-db') >= 0 || src.indexOf('githubusercontent') >= 0) {
+        // Don't intercept if it's inside a modal that's already fullscreen
+        if (e.target.closest('.s7-gif-overlay')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        showGifFullscreen(src, img);
+      }
+    }, true);
+  }
+
+  function showGifFullscreen(src, imgEl) {
+    // Get exercise name from context
+    var name = '';
+    try {
+      var card = imgEl.closest('.mp-card, .mp-pick-item, .ex-card, [data-ex-id]');
+      if (card) {
+        var nameEl = card.querySelector('.mp-prow-name, .mp-pick-name, .ex-name, [data-ex-name]');
+        if (nameEl) name = nameEl.textContent.trim();
+      }
+    } catch(e) {}
+
+    var overlay = document.createElement('div');
+    overlay.className = 's7-gif-overlay';
+    overlay.innerHTML =
+      '<button class="s7-gif-close" onclick="this.closest(\'.s7-gif-overlay\').remove()">×</button>' +
+      '<img class="s7-gif-img" src="' + src + '" onerror="this.style.display=\'none\'">' +
+      (name ? '<div class="s7-gif-title">' + name + '</div>' : '') +
+      '<div class="s7-gif-info">Нажмите × или в любом месте для закрытия</div>';
+    overlay.onclick = function(e) {
+      if (e.target === overlay) overlay.remove();
+    };
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    
+    // Restore overflow when removed
+    var observer = new MutationObserver(function() {
+      if (!document.querySelector('.s7-gif-overlay')) {
+        document.body.style.overflow = '';
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true });
+  }
+
+  // ---- 6. CLIENT SETTINGS BUTTON FIX ----
+  function fixClientSettingsButton() {
+    // The client nav has a settings button that calls openSettingsModal
+    // but it might not work because of scope issues
+    // Make sure it's properly wired
+    if (typeof window.__csOpen !== 'function') return;
+    
+    // Override the settings button onclick to use compact settings
+    function fixNavButtons() {
+      var nav = document.getElementById('csNav');
+      if (!nav) return;
+      var btns = nav.querySelectorAll('button');
+      btns.forEach(function(btn) {
+        var text = btn.textContent || '';
+        if (text.indexOf('⚙️') >= 0 || text.indexOf('settings') >= 0 || text.indexOf('Settings') >= 0) {
+          // Fix the text based on language
+          var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+          var label = lang === 'he' ? 'הגדרות' : (lang === 'en' ? 'Settings' : 'Настройки');
+          // Update the label span
+          var spans = btn.querySelectorAll('span');
+          if (spans.length >= 2) {
+            spans[1].textContent = label;
+          }
+          // Fix onclick
+          btn.onclick = function(e) {
+            e.preventDefault();
+            if (typeof window.__csOpen === 'function') {
+              window.__csOpen();
+            } else if (typeof openSettingsModal === 'function') {
+              openSettingsModal();
+            }
+          };
+        }
+      });
+    }
+    
+    // Call on init and after nav re-renders
+    setTimeout(fixNavButtons, 500);
+    setTimeout(fixNavButtons, 2000);
+    setTimeout(fixNavButtons, 5000);
+    
+    // Also wrap csRenderNav to fix buttons after each render
+    var orig = window.csRenderNav;
+    if (typeof orig === 'function' && !window.__s7navPatched) {
+      window.csRenderNav = function() {
+        orig.apply(this, arguments);
+        setTimeout(fixNavButtons, 50);
+      };
+      window.__s7navPatched = true;
+    }
+  }
+
+  // ---- 7. SHRINK BOTTOM NAV ----
+  function injectShrinkNav() {
+    if (document.getElementById('s7shrinkNav')) return;
+    const style = document.createElement('style');
+    style.id = 's7shrinkNav';
+    style.textContent = `
+      /* Shrink bottom nav to fit all buttons on mobile */
+      .mp-nav, .cs-nav {
+        display: flex !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        padding: 4px 0 !important;
+        padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .mp-nav-item {
+        flex: 0 1 auto !important;
+        min-width: 0 !important;
+        padding: 6px 6px !important;
+        font-size: 10px !important;
+      }
+      .mp-nav-ico {
+        font-size: 1.4em !important;
+      }
+      .mp-nav-item span:last-child {
+        font-size: 9px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 60px !important;
+      }
+      @media (max-width: 380px) {
+        .mp-nav-item {
+          padding: 4px 4px !important;
+          font-size: 9px !important;
+        }
+        .mp-nav-ico {
+          font-size: 1.2em !important;
+        }
+        .mp-nav-item span:last-child {
+          font-size: 8px !important;
+          max-width: 45px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ---- 8. DEDUPLICATE HISTORY MENU ITEMS ----
+  function deduplicateHistoryMenu() {
+    if (window.__s7historyDedup) return;
+    
+    // Wrap csOpenMore to remove duplicate history items
+    var orig = window.csOpenMore;
+    if (typeof orig !== 'function') return;
+    
+    window.csOpenMore = function() {
+      orig.apply(this, arguments);
+      setTimeout(function() {
+        var sheet = document.getElementById('csSheet');
+        if (!sheet) return;
+        var body = sheet.querySelector('.mp-sheet-body');
+        if (!body) return;
+        
+        // Wait a bit more for HistoryManager to inject its items
+        setTimeout(function() {
+        
+        // Remove ALL history-related duplicates: keep only ONE history button, remove archive buttons
+        var allBtns = body.querySelectorAll('.mp-action-item');
+        var historyKept = false;
+        allBtns.forEach(function(btn) {
+          var text = (btn.textContent || '').trim();
+          // Check for any history-related text
+          var isHistory = text.indexOf('История') >= 0 || text.indexOf('History') >= 0 || text.indexOf('היסטוריה') >= 0;
+          var isArchive = text.indexOf('В историю') >= 0 || text.indexOf('To history') >= 0 || text.indexOf('להיסטוריה') >= 0 || text.indexOf('בהיסטוריה') >= 0;
+          
+          if (isArchive) {
+            // Always remove archive buttons from More menu
+            btn.remove();
+          } else if (isHistory) {
+            // Keep only the first history button
+            if (historyKept) {
+              btn.remove();
+            } else {
+              historyKept = true;
+            }
+          }
+        });
+        
+        // Also fix any 'settings' text to proper translation
+        var settingsBtns = body.querySelectorAll('.mp-action-item');
+        settingsBtns.forEach(function(btn) {
+          var text = (btn.textContent || '').trim();
+          if (text === '⚙️settings' || text === '⚙️Settings') {
+            var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+            var label = lang === 'he' ? 'הגדרות' : (lang === 'en' ? 'Settings' : 'Настройки');
+            btn.innerHTML = '<span class="ico">⚙️</span>' + label;
+          }
+        });
+        
+        }, 100); // Inner timeout for HistoryManager
+      }, 50);
+    };
+    window.__s7historyDedup = true;
+  }
+
+  // ---- INIT ----
+  function init() {
+    console.log('[Sprint7] init');
+    injectDarkThemeCSS();
+    injectStableTopbarCSS();
+    injectGifViewer();
+    injectShrinkNav();
+    injectLiveModeLabels();
+    patchSaveButtons();
+    fixClientSettingsButton();
+    deduplicateHistoryMenu();
+    
+    // Apply dark theme on load and when settings change
+    applyDarkThemeFlag();
+    setInterval(applyDarkThemeFlag, 2000); // Check every 2s
+    
+    // Re-apply after settings change
+    var origApplySettings = window.applySettings;
+    if (typeof origApplySettings === 'function' && !window.__s7applyPatched) {
+      window.applySettings = function() {
+        var result = origApplySettings.apply(this, arguments);
+        applyDarkThemeFlag();
+        return result;
+      };
+      window.__s7applyPatched = true;
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+
+</script>
+<!-- /SPRINT7_UI -->
 </body>
 </html>
