@@ -15859,7 +15859,15 @@ setTimeout(function(){
             try {
                 const data = localStorage.getItem('nutritionUsers');
                 const parsed = data ? JSON.parse(data) : [];
-                return Array.isArray(parsed) ? parsed : [];
+                let result = Array.isArray(parsed) ? parsed : [];
+                // Filter by trainerId if in trainer mode
+                try {
+                    if (typeof currentTrainer !== 'undefined' && currentTrainer && currentTrainer.id) {
+                        // Show clients that: have no trainerId (legacy), OR match this trainer
+                        result = result.filter(u => !u.trainerId || u.trainerId === currentTrainer.id);
+                    }
+                } catch(e) {}
+                return result;
             } catch (e) {
                 console.error('[APP] getUsers failed (corrupted data):', e);
                 return [];
@@ -16519,7 +16527,32 @@ setTimeout(function(){
             users = getUsers();
             users = users.filter(u => u.id !== userId);
             saveUsers();
-            localStorage.removeItem('nutritionPlan_' + userId);
+            // Clean up ALL per-client localStorage keys
+            const prefixes = [
+                'nutritionPlan_', 'workoutPlan_', 'bodyMeasures_', 'chatMessages_',
+                'subscriptions_', 'clientWorkoutLog_', 'clientWorkoutHistory_',
+                'clientNutritionHistory_', 'clientPRs_', 'clientPRs2_',
+                'clientProgress_', 'clientNutriDone_', 'cwStart_', 'workoutArchive_',
+                'clientLastSync_', 'waterTracker_'
+            ];
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                for (const prefix of prefixes) {
+                    if (key.indexOf(prefix + userId) === 0) {
+                        keysToRemove.push(key);
+                        break;
+                    }
+                }
+                // Also check keys with pattern prefix_userId_*
+                if (key.indexOf('clientProgress_' + userId + '_') === 0) keysToRemove.push(key);
+                if (key.indexOf('cwStart_' + userId + '_') === 0) keysToRemove.push(key);
+                if (key.indexOf('clientNutriDone_' + userId + '_') === 0) keysToRemove.push(key);
+                if (key.indexOf('waterTracker_' + userId + '_') === 0) keysToRemove.push(key);
+            }
+            keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+            console.log('[deleteUser] Cleaned up ' + keysToRemove.length + ' keys for user ' + userId);
             renderUsers();
         }
 
@@ -18136,14 +18169,25 @@ setTimeout(function(){
                     plans: {},
                     workouts: {}
                 };
-                // Собираем планы и тренировки всех пользователей
+                // Собираем ВСЕ per-user ключи (планы, тренировки, история, замеры, чат, подписки, прогресс)
+                const userPrefixes = [
+                    'nutritionPlan_', 'workoutPlan_', 'bodyMeasures_', 'chatMessages_',
+                    'subscriptions_', 'clientWorkoutLog_', 'clientWorkoutHistory_',
+                    'clientNutritionHistory_', 'clientPRs_', 'clientPRs2_',
+                    'clientProgress_', 'clientNutriDone_', 'cwStart_', 'workoutArchive_',
+                    'clientLastSync_', 'waterTracker_'
+                ];
+                backup.perUserKeys = {};
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (key && key.indexOf('nutritionPlan') === 0) {
-                        try { backup.plans[key] = JSON.parse(localStorage.getItem(key)); } catch(e) {}
-                    }
-                    if (key && key.indexOf('workoutPlan') === 0) {
-                        try { backup.workouts[key] = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+                    if (!key) continue;
+                    for (const prefix of userPrefixes) {
+                        if (key.indexOf(prefix) === 0) {
+                            try { backup.perUserKeys[key] = JSON.parse(localStorage.getItem(key)); } catch(e) {
+                                backup.perUserKeys[key] = localStorage.getItem(key);
+                            }
+                            break;
+                        }
                     }
                 }
                 const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -18184,11 +18228,21 @@ setTimeout(function(){
                                 '\n\n' + (t('restoreUsersLabel') || 'Профилей в копии') + ': ' + userCount;
                     if (!confirm(msg)) return;
 
-                    // Чистим старые планы и тренировки
+                    // Чистим ВСЕ per-user ключи перед восстановлением
+                    const userPrefixes = [
+                        'nutritionPlan_', 'workoutPlan_', 'bodyMeasures_', 'chatMessages_',
+                        'subscriptions_', 'clientWorkoutLog_', 'clientWorkoutHistory_',
+                        'clientNutritionHistory_', 'clientPRs_', 'clientPRs2_',
+                        'clientProgress_', 'clientNutriDone_', 'cwStart_', 'workoutArchive_',
+                        'clientLastSync_', 'waterTracker_'
+                    ];
                     const keysToRemove = [];
                     for (let i = 0; i < localStorage.length; i++) {
                         const k = localStorage.key(i);
-                        if (k && (k.indexOf('nutritionPlan') === 0 || k.indexOf('workoutPlan') === 0)) keysToRemove.push(k);
+                        if (!k) continue;
+                        for (const prefix of userPrefixes) {
+                            if (k.indexOf(prefix) === 0) { keysToRemove.push(k); break; }
+                        }
                     }
                     keysToRemove.forEach(k => localStorage.removeItem(k));
 
@@ -18209,6 +18263,14 @@ setTimeout(function(){
                     if (data.workouts) {
                         Object.keys(data.workouts).forEach(k => {
                             localStorage.setItem(k, JSON.stringify(data.workouts[k]));
+                        });
+                    }
+                    // Restore ALL per-user keys (history, body measures, chat, subscriptions, etc.)
+                    if (data.perUserKeys) {
+                        Object.keys(data.perUserKeys).forEach(k => {
+                            const val = data.perUserKeys[k];
+                            if (typeof val === 'string') localStorage.setItem(k, val);
+                            else localStorage.setItem(k, JSON.stringify(val));
                         });
                     }
                     alert(t('alertRestoreSuccess') || '✅ Данные восстановлены. Страница будет перезагружена.');
@@ -35432,8 +35494,9 @@ function cl(k){ var l=(typeof currentLang!=='undefined')?currentLang:'ru'; retur
 var SYNC_EXACT = ['nutritionUsers','trainersList','tasksList','calendarEvents','shopItems','shopSales','leadsList',
     'customExercisesDatabase','customProductsDatabase','systemExOverrides','taskTemplates','customAppLogo','programTemplates',
     'workoutPlan','nutritionPlan'];
-var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','cwStart_','bodyMeasures_','chatMessages_','subscriptions_',
-    'clientNutriDone_','trainerProfile_','trainerFiles_','clientLastSync_'];
+var SYNC_PREFIX = ['workoutPlan_','nutritionPlan_','clientProgress_','clientWorkoutLog_','clientPRs','clientPRs2_','cwStart_','bodyMeasures_','chatMessages_','subscriptions_',
+    'clientNutriDone_','trainerProfile_','trainerFiles_','clientLastSync_',
+    'clientWorkoutHistory_','clientNutritionHistory_','workoutArchive_'];
 function isSyncKey(k){
     if (!k || k.charAt(0) === '_') return false;
     if (SYNC_EXACT.indexOf(k) >= 0) return true;
@@ -48591,5 +48654,603 @@ window.__win11RefreshClients = function(){
 
 </script>
 <!-- /WATER_FIX_V2 -->
+
+
+<!-- UNIFIED_RENDER_WRAPPER -->
+<script>
+// Unified render wrapper — replaces 3 separate mpRenderBody wrappers
+// with a single debounce-based wrapper that calls all injection functions
+(function() {
+  if (window.__unifiedRenderV1) return;
+  window.__unifiedRenderV1 = true;
+  
+  let renderTimeout = null;
+  
+  function unifiedInject() {
+    // Call all injection functions that the 3 separate wrappers were doing
+    try {
+      // NutritionUpgrades
+      if (typeof window.injectTopBarButtons === 'function') window.injectTopBarButtons();
+      if (typeof window.injectBodyWidgets === 'function') window.injectBodyWidgets();
+      if (typeof window.injectVoiceSearch === 'function') window.injectVoiceSearch();
+    } catch(e) {}
+    
+    try {
+      // HistoryManager
+      if (typeof window.injectButtons === 'function') window.injectButtons();
+    } catch(e) {}
+    
+    try {
+      // MultiExSearch
+      if (window.ExerciseSearch && typeof window.ExerciseSearch.injectButtons === 'function') {
+        window.ExerciseSearch.injectButtons();
+      }
+    } catch(e) {}
+    
+    try {
+      // WaterFix v2
+      if (typeof window.injectWaterWidget === 'function') window.injectWaterWidget();
+    } catch(e) {}
+  }
+  
+  // Debounced wrapper — replaces multiple setTimeout cascades
+  window.__unifiedRender = function() {
+    if (renderTimeout) clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(unifiedInject, 100);
+  };
+  
+  // Call on body class change (single observer instead of 3)
+  const observer = new MutationObserver(function(muts) {
+    for (const m of muts) {
+      if (m.attributeName === 'class') {
+        window.__unifiedRender();
+        break;
+      }
+    }
+  });
+  observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  
+  console.log('[UnifiedRender] initialized — replaced 3 separate wrappers');
+})();
+</script>
+<!-- /UNIFIED_RENDER_WRAPPER -->
+
+
+
+
+
+
+
+
+
+<!-- SPRINT3_UX -->
+<script>
+// ============================================================
+// SPRINT 3 — UX IMPROVEMENTS
+// 1. Daily micronutrients panel (aggregates all meals)
+// 2. Streak + achievements in client workout list
+// 3. Notification center in client "More" menu
+// 4. Touch targets increased to 48px
+// 5. Theme conflict fix (applySettings respects dark theme)
+// ============================================================
+
+(function() {
+  'use strict';
+  if (window.__sprint3UX) return;
+  window.__sprint3UX = true;
+
+  // ---- i18n ----
+  const I18N = {
+    ru: {
+      microTitle: '🧬 Витамины и минералы (за день)',
+      microHint: 'Суммарное содержание микронутриентов во всех приёмах пищи',
+      dailyValue: 'ДН',
+      fiber: 'Клетчатка',
+      omega3: 'Омега-3',
+      vitamins: 'Витамины',
+      minerals: 'Минералы',
+      other: 'Прочее',
+      notifications: '🔔 Уведомления',
+      noNotifications: 'Нет уведомлений',
+      streakTitle: '🔥 Серия тренировок',
+      achievementsTitle: '🏆 Достижения',
+      days: 'дн.',
+      noStreak: 'Начните тренироваться сегодня!'
+    },
+    en: {
+      microTitle: '🧬 Vitamins & Minerals (daily)',
+      microHint: 'Total micronutrients across all meals',
+      dailyValue: 'DV',
+      fiber: 'Fiber',
+      omega3: 'Omega-3',
+      vitamins: 'Vitamins',
+      minerals: 'Minerals',
+      other: 'Other',
+      notifications: '🔔 Notifications',
+      noNotifications: 'No notifications',
+      streakTitle: '🔥 Workout Streak',
+      achievementsTitle: '🏆 Achievements',
+      days: 'days',
+      noStreak: 'Start training today!'
+    },
+    he: {
+      microTitle: '🧬 ויטמינים ומינרלים (יומי)',
+      microHint: 'סך ויטמינים ומינרלים בכל הארוחות',
+      dailyValue: 'ערך יומי',
+      fiber: 'סיבים תזונתיים',
+      omega3: 'אומגה-3',
+      vitamins: 'ויטמינים',
+      minerals: 'מינרלים',
+      other: 'אחר',
+      notifications: '🔔 התראות',
+      noNotifications: 'אין התראות',
+      streakTitle: '🔥 רצף אימונים',
+      achievementsTitle: '🏆 הישגים',
+      days: 'ימים',
+      noStreak: 'התחל להתאמן היום!'
+    }
+  };
+
+  function uiLang() {
+    try {
+      if (typeof currentLang !== 'undefined' && currentLang) return currentLang;
+      if (typeof userSettings !== 'undefined' && userSettings.language) return userSettings.language;
+    } catch(e) {}
+    return 'ru';
+  }
+
+  function t(key) {
+    const lang = uiLang();
+    return (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+  }
+
+  function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  // ============================================================
+  // 1. DAILY MICRONUTRIENTS PANEL
+  // ============================================================
+
+  // Daily recommended values (FDA/EFSA)
+  const DV = {
+    fiber: 25, vitaminA: 900, vitaminC: 90, vitaminD: 20, vitaminE: 15,
+    vitaminK: 120, vitaminB1: 1.2, vitaminB2: 1.3, vitaminB3: 16, vitaminB6: 1.7,
+    vitaminB9: 400, vitaminB12: 2.4, calcium: 1300, iron: 18, magnesium: 420,
+    phosphorus: 1250, potassium: 4700, sodium: 2300, zinc: 11, selenium: 55, omega3: 1.6
+  };
+
+  const MICRO_CONFIG = [
+    { key: 'fiber', icon: '🌿', name: { ru: 'Клетчатка', en: 'Fiber', he: 'סיבים' }, unit: 'г', dv: 25, group: 'other' },
+    { key: 'vitaminA', icon: '🥕', name: { ru: 'A', en: 'A', he: 'A' }, unit: 'мкг', dv: 900, group: 'vitamin' },
+    { key: 'vitaminC', icon: '🍊', name: { ru: 'C', en: 'C', he: 'C' }, unit: 'мг', dv: 90, group: 'vitamin' },
+    { key: 'vitaminD', icon: '☀️', name: { ru: 'D', en: 'D', he: 'D' }, unit: 'мкг', dv: 20, group: 'vitamin' },
+    { key: 'vitaminE', icon: '🌾', name: { ru: 'E', en: 'E', he: 'E' }, unit: 'мг', dv: 15, group: 'vitamin' },
+    { key: 'vitaminK', icon: '🥬', name: { ru: 'K', en: 'K', he: 'K' }, unit: 'мкг', dv: 120, group: 'vitamin' },
+    { key: 'vitaminB1', icon: 'B1', name: { ru: 'B1', en: 'B1', he: 'B1' }, unit: 'мг', dv: 1.2, group: 'vitamin' },
+    { key: 'vitaminB2', icon: 'B2', name: { ru: 'B2', en: 'B2', he: 'B2' }, unit: 'мг', dv: 1.3, group: 'vitamin' },
+    { key: 'vitaminB3', icon: 'B3', name: { ru: 'B3', en: 'B3', he: 'B3' }, unit: 'мг', dv: 16, group: 'vitamin' },
+    { key: 'vitaminB6', icon: 'B6', name: { ru: 'B6', en: 'B6', he: 'B6' }, unit: 'мг', dv: 1.7, group: 'vitamin' },
+    { key: 'vitaminB9', icon: 'B9', name: { ru: 'B9', en: 'B9', he: 'B9' }, unit: 'мкг', dv: 400, group: 'vitamin' },
+    { key: 'vitaminB12', icon: 'B12', name: { ru: 'B12', en: 'B12', he: 'B12' }, unit: 'мкг', dv: 2.4, group: 'vitamin' },
+    { key: 'calcium', icon: '🦴', name: { ru: 'Ca', en: 'Ca', he: 'Ca' }, unit: 'мг', dv: 1300, group: 'mineral' },
+    { key: 'iron', icon: '🔩', name: { ru: 'Fe', en: 'Fe', he: 'Fe' }, unit: 'мг', dv: 18, group: 'mineral' },
+    { key: 'magnesium', icon: '⚡', name: { ru: 'Mg', en: 'Mg', he: 'Mg' }, unit: 'мг', dv: 420, group: 'mineral' },
+    { key: 'phosphorus', icon: '🧪', name: { ru: 'P', en: 'P', he: 'P' }, unit: 'мг', dv: 1250, group: 'mineral' },
+    { key: 'potassium', icon: '🍌', name: { ru: 'K', en: 'K', he: 'K' }, unit: 'мг', dv: 4700, group: 'mineral' },
+    { key: 'zinc', icon: '🔧', name: { ru: 'Zn', en: 'Zn', he: 'Zn' }, unit: 'мг', dv: 11, group: 'mineral' },
+    { key: 'selenium', icon: '🐟', name: { ru: 'Se', en: 'Se', he: 'Se' }, unit: 'мкг', dv: 55, group: 'mineral' },
+    { key: 'omega3', icon: '🐠', name: { ru: 'Ω-3', en: 'Ω-3', he: 'Ω-3' }, unit: 'г', dv: 1.6, group: 'other' }
+  ];
+
+  function getMicroForProduct(productName) {
+    try {
+      if (typeof PRODUCT_MICRONUTRIENTS === 'undefined') return null;
+      // Try exact name match
+      if (PRODUCT_MICRONUTRIENTS[productName]) return PRODUCT_MICRONUTRIENTS[productName];
+      // Try case-insensitive
+      for (const key in PRODUCT_MICRONUTRIENTS) {
+        if (key.toLowerCase() === productName.toLowerCase()) return PRODUCT_MICRONUTRIENTS[key];
+      }
+      // Try partial match
+      for (const key in PRODUCT_MICRONUTRIENTS) {
+        if (key.indexOf(productName) >= 0 || productName.indexOf(key) >= 0) return PRODUCT_MICRONUTRIENTS[key];
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  function calculateDailyMicros() {
+    const totals = {};
+    MICRO_CONFIG.forEach(c => { totals[c.key] = 0; });
+
+    try {
+      // Method 1: Read from DOM (if meals are rendered)
+      const meals = document.querySelectorAll('.meal, .mp-card');
+      meals.forEach(meal => {
+        const rows = meal.querySelectorAll('.meal-body tr, .mp-prow');
+        rows.forEach(row => {
+          const sel = row.querySelector('.product-select');
+          const weightInput = row.querySelector('.weight-input');
+          if (!sel || !weightInput) return;
+          const prodIdx = parseInt(sel.value, 10);
+          if (isNaN(prodIdx) || !prodIdx) return;
+          if (typeof allProducts === 'undefined' || !allProducts[prodIdx]) return;
+          const product = allProducts[prodIdx];
+          const grams = parseFloat(weightInput.value) || 0;
+          if (!grams) return;
+          const factor = grams / 100;
+          const micro = getMicroForProduct(product.name);
+          if (!micro) return;
+          for (const key in micro) {
+            if (totals.hasOwnProperty(key)) {
+              totals[key] += (micro[key] || 0) * factor;
+            }
+          }
+        });
+      });
+
+      // Method 2: Read from localStorage nutrition plan (fallback/complement)
+      const cid = window.HistoryManager ? window.HistoryManager.getClientId() : 
+                  (typeof currentUserId !== 'undefined' ? currentUserId : null);
+      if (cid) {
+        const raw = localStorage.getItem('nutritionPlan_' + cid);
+        if (raw) {
+          const plan = JSON.parse(raw);
+          if (plan && plan.meals) {
+            plan.meals.forEach(meal => {
+              if (meal.products) {
+                meal.products.forEach(p => {
+                  const productName = p.productName || p.name || '';
+                  const grams = parseFloat(p.weight) || 0;
+                  if (!productName || !grams) return;
+                  const factor = grams / 100;
+                  const micro = getMicroForProduct(productName);
+                  if (!micro) return;
+                  for (const key in micro) {
+                    if (totals.hasOwnProperty(key)) {
+                      totals[key] += (micro[key] || 0) * factor;
+                    }
+                  }
+                });
+              }
+            });
+          }
+        }
+      }
+    } catch(e) { console.warn('[Micro] calculate error:', e); }
+
+    return totals;
+  }
+
+  function buildDailyMicroPanel() {
+    const lang = uiLang();
+    const totals = calculateDailyMicros();
+    const hasData = Object.values(totals).some(v => v > 0);
+    if (!hasData) return ''; // Don't show empty panel
+
+    let h = '<div id="dailyMicroPanel" style="background:var(--surface-color,#fff);border-radius:14px;padding:14px 16px;margin:10px 0;border:1px solid var(--border-color,#EEE);">';
+    h += '<div style="font-weight:700;font-size:14px;color:var(--text-primary,#212121);margin-bottom:4px;">' + esc(t('microTitle')) + '</div>';
+    h += '<div style="font-size:11px;color:var(--text-light,#999);margin-bottom:12px;">' + esc(t('microHint')) + '</div>';
+
+    // Group by category
+    const groups = { vitamin: [], mineral: [], other: [] };
+    MICRO_CONFIG.forEach(c => {
+      const val = totals[c.key] || 0;
+      const dv = c.dv;
+      const pct = Math.min(100, Math.round((val / dv) * 100));
+      const name = c.name[lang] || c.name.ru;
+      groups[c.group].push({ icon: c.icon, name: name, val: val, unit: c.unit, dv: dv, pct: pct });
+    });
+
+    function renderGroup(title, items) {
+      if (!items.length) return '';
+      let gh = '<div style="margin-bottom:12px;">';
+      gh += '<div style="font-size:11px;font-weight:700;color:var(--text-secondary,#757575);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">' + esc(title) + '</div>';
+      gh += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;">';
+      items.forEach(item => {
+        const barColor = item.pct >= 100 ? '#2E7D32' : (item.pct >= 50 ? '#1565C0' : '#FF9800');
+        gh += '<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:6px 4px;text-align:center;">';
+        gh += '<div style="font-size:14px;margin-bottom:2px;">' + esc(item.icon) + '</div>';
+        gh += '<div style="font-size:10px;font-weight:600;color:var(--text-primary,#212121);">' + esc(item.name) + '</div>';
+        gh += '<div style="font-size:10px;color:var(--text-secondary,#757575);">' + (Math.round(item.val * 10) / 10) + item.unit + '</div>';
+        gh += '<div style="height:3px;background:rgba(0,0,0,0.06);border-radius:2px;margin-top:3px;overflow:hidden;">';
+        gh += '<div style="height:100%;width:' + item.pct + '%;background:' + barColor + ';transition:width 0.3s;"></div>';
+        gh += '</div>';
+        gh += '<div style="font-size:9px;color:' + barColor + ';font-weight:600;margin-top:1px;">' + item.pct + '%</div>';
+        gh += '</div>';
+      });
+      gh += '</div></div>';
+      return gh;
+    }
+
+    h += renderGroup(t('vitamins'), groups.vitamin);
+    h += renderGroup(t('minerals'), groups.mineral);
+    h += renderGroup(t('other'), groups.other);
+
+    h += '</div>';
+    return h;
+  }
+
+  // Inject micronutrients panel into nutrition planner
+  function injectMicroPanel() {
+    const html = buildDailyMicroPanel();
+    if (!html) {
+      const existing = document.getElementById('dailyMicroPanelContainer');
+      if (existing) existing.remove();
+      return;
+    }
+
+    // Trainer app: inject into #mpBody
+    if (document.body.classList.contains('mp-active') && !document.body.classList.contains('mode-workout')) {
+      const mpBody = document.getElementById('mpBody') || document.querySelector('.mp-body');
+      if (mpBody) {
+        let panel = document.getElementById('dailyMicroPanelContainer');
+        if (!panel) {
+          panel = document.createElement('div');
+          panel.id = 'dailyMicroPanelContainer';
+          mpBody.appendChild(panel);
+        }
+        panel.innerHTML = html;
+      }
+    }
+
+    // Client app: inject into #clientNutritionTab
+    if (typeof __clientUser !== 'undefined' && __clientUser) {
+      const nutTab = document.getElementById('clientNutritionTab');
+      if (nutTab) {
+        // Check if nutrition tab is visible
+        const nutStyle = getComputedStyle(nutTab);
+        if (nutStyle.display !== 'none') {
+          let panel = document.getElementById('dailyMicroPanelContainer');
+          if (!panel || !nutTab.contains(panel)) {
+            if (panel) panel.remove();
+            panel = document.createElement('div');
+            panel.id = 'dailyMicroPanelContainer';
+            panel.style.cssText = 'margin:10px 0;';
+            const firstChild = nutTab.children[0];
+            if (firstChild) {
+              nutTab.insertBefore(panel, firstChild.nextSibling);
+            } else {
+              nutTab.appendChild(panel);
+            }
+          }
+          panel.innerHTML = html;
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // 2. STREAK + ACHIEVEMENTS IN CLIENT WORKOUT LIST
+  // ============================================================
+  function injectStreakIntoClientWorkouts() {
+    if (typeof __clientUser === 'undefined' || !__clientUser) return;
+    if (!document.body.classList.contains('client-space-open')) return;
+
+    const list = document.getElementById('clientWorkoutList');
+    if (!list) return;
+    if (document.getElementById('csStreakBanner')) return; // already injected
+
+    // Calculate streak from clientWorkoutLog
+    let streak = 0;
+    try {
+      const cid = __clientUser.id;
+      const log = JSON.parse(localStorage.getItem('clientWorkoutLog_' + cid) || '{}');
+      const dates = Object.keys(log).sort().reverse();
+      if (dates.length > 0) {
+        let prev = new Date();
+        prev.setHours(0, 0, 0, 0);
+        for (let i = 0; i < dates.length; i++) {
+          const d = new Date(dates[i]);
+          d.setHours(0, 0, 0, 0);
+          const diff = Math.round((prev - d) / 86400000);
+          if (diff === 0 || diff === 1) {
+            streak++;
+            prev = d;
+          } else break;
+        }
+      }
+    } catch(e) {}
+
+    const lang = uiLang();
+    const banner = document.createElement('div');
+    banner.id = 'csStreakBanner';
+    banner.style.cssText = 'background:linear-gradient(135deg,#FF6B35,#F7931E);border-radius:14px;padding:14px 16px;margin:10px 0;color:#fff;box-shadow:0 2px 8px rgba(255,107,53,0.3);';
+    banner.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<div style="font-size:32px;">🔥</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700;font-size:16px;">' + esc(t('streakTitle')) + '</div>' +
+          '<div style="font-size:13px;opacity:0.9;">' + (streak > 0 ? streak + ' ' + esc(t('days')) : esc(t('noStreak'))) + '</div>' +
+        '</div>' +
+        (streak > 0 ? '<div style="font-size:28px;font-weight:800;">' + streak + '</div>' : '') +
+      '</div>';
+    list.insertBefore(banner, list.firstChild);
+  }
+
+  // ============================================================
+  // 3. NOTIFICATION CENTER IN CLIENT "MORE" MENU
+  // ============================================================
+  function patchCsOpenMoreForNotifications() {
+    if (window.__s3NotifPatched) return;
+    const orig = window.csOpenMore;
+    if (typeof orig !== 'function') return;
+
+    window.csOpenMore = function() {
+      orig.apply(this, arguments);
+      setTimeout(() => {
+        const sheet = document.getElementById('csSheet');
+        if (!sheet) return;
+        const body = sheet.querySelector('.mp-sheet-body');
+        if (!body) return;
+        if (body.querySelector('.s3-notif-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'mp-action-item s3-notif-btn';
+        btn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
+        btn.innerHTML = '<span class="ico" style="font-size:18px;">🔔</span><span>' + esc(t('notifications')) + '</span>';
+        btn.onclick = () => {
+          if (typeof csCloseSheet === 'function') csCloseSheet();
+          if (typeof openNtfCenter === 'function') openNtfCenter();
+          else alert(t('noNotifications'));
+        };
+        body.appendChild(btn);
+      }, 50);
+    };
+    window.__s3NotifPatched = true;
+  }
+
+  // ============================================================
+  // 4. TOUCH TARGETS — increase nav item height
+  // ============================================================
+  function injectTouchTargetStyles() {
+    if (document.getElementById('s3TouchStyles')) return;
+    const style = document.createElement('style');
+    style.id = 's3TouchStyles';
+    style.textContent = `
+      /* Increase touch targets to 48px minimum */
+      .mp-nav-item {
+        min-height: 48px !important;
+        padding: 8px 12px !important;
+      }
+      .mp-nav-ico { font-size: 1.6em !important; }
+      .cs-topbar { height: 56px !important; }
+      .mp-topbar { min-height: 52px !important; }
+      .mp-prow { min-height: 44px !important; }
+      .mp-action-item { min-height: 48px !important; padding: 14px 16px !important; }
+      .cs-lang-btn { min-height: 48px !important; padding: 14px 8px !important; }
+      .cs-font-btn { min-height: 48px !important; padding: 12px 8px !important; }
+      .cs-fontsize-btn { min-width: 36px !important; min-height: 36px !important; }
+      .cs-theme-btn { min-height: 56px !important; }
+      .cs-tod-theme-btn { min-height: 56px !important; }
+      .cs-btn { min-height: 48px !important; padding: 14px !important; }
+      /* Bottom nav buttons in trainer */
+      #mobileDesktop > div:last-child button {
+        min-width: 48px !important;
+        min-height: 48px !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ============================================================
+  // 5. THEME CONFLICT FIX — applySettings respects dark theme
+  // ============================================================
+  function patchApplySettings() {
+    if (window.__s3ThemePatched) return;
+    const orig = window.applySettings;
+    if (typeof orig !== 'function') return;
+
+    window.applySettings = function() {
+      const result = orig.apply(this, arguments);
+      // After applySettings runs, check if dark theme should be active
+      try {
+        if (typeof userSettings !== 'undefined' && userSettings.theme === 'dark') {
+          // Don't let applySettings override dark theme background
+          const darkBg = '#1a1a2e';
+          document.documentElement.style.setProperty('--background-color', darkBg);
+          document.documentElement.style.setProperty('--surface-color', '#252535');
+          document.documentElement.style.setProperty('--border-color', '#3a3a4a');
+          document.documentElement.style.setProperty('--text-primary', '#ffffff');
+          document.documentElement.style.setProperty('--text-secondary', '#b0b0c0');
+          document.documentElement.style.setProperty('--text-light', '#808090');
+        }
+        // Also check if a theme preset is active (time-of-day dark themes)
+        if (typeof userSettings !== 'undefined' && userSettings.themePreset) {
+          try {
+            if (typeof THEME_PRESETS !== 'undefined') {
+              const preset = THEME_PRESETS.find(p => p.id === userSettings.themePreset);
+              if (preset && preset.dark && preset.vars) {
+                Object.keys(preset.vars).forEach(k => {
+                  document.documentElement.style.setProperty(k, preset.vars[k]);
+                });
+                document.body.style.background = preset.grad || preset.bg;
+              }
+            }
+          } catch(e) {}
+        }
+      } catch(e) {}
+      return result;
+    };
+    window.__s3ThemePatched = true;
+    console.log('[Sprint3] applySettings patched for dark theme');
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  function init() {
+    console.log('[Sprint3 UX] init');
+    injectTouchTargetStyles();
+    patchApplySettings();
+    patchCsOpenMoreForNotifications();
+
+    // Inject micro panel + streak on render
+    function injectAll() {
+      injectMicroPanel();
+      injectStreakIntoClientWorkouts();
+    }
+
+    // Observer for body class changes
+    const observer = new MutationObserver(muts => {
+      for (const m of muts) {
+        if (m.attributeName === 'class') {
+          setTimeout(injectAll, 300);
+          break;
+        }
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Also inject after mpRenderBody
+    const orig = window.mpRenderBody;
+    if (typeof orig === 'function' && !window.__s3BodyWrapped) {
+      window.mpRenderBody = function() {
+        orig.apply(this, arguments);
+        setTimeout(injectAll, 200);
+      };
+      window.__s3BodyWrapped = true;
+    }
+
+    // Initial injection
+    setTimeout(injectAll, 1000);
+    setTimeout(injectAll, 3000);
+    setTimeout(injectAll, 5000);
+
+    // Re-inject micro panel every 5s (when products change)
+    setInterval(() => {
+      // Trainer app (nutrition mode)
+      if (document.body.classList.contains('mp-active') && !document.body.classList.contains('mode-workout')) {
+        injectMicroPanel();
+      }
+      // Client app (nutrition tab visible)
+      if (typeof __clientUser !== 'undefined' && __clientUser) {
+        var nutTab = document.getElementById('clientNutritionTab');
+        if (nutTab && getComputedStyle(nutTab).display !== 'none') {
+          injectMicroPanel();
+        }
+      }
+    }, 5000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.Sprint3UX = {
+    version: '1.0.0',
+    buildDailyMicroPanel: buildDailyMicroPanel,
+    injectMicroPanel: injectMicroPanel,
+    injectStreakIntoClientWorkouts: injectStreakIntoClientWorkouts
+  };
+
+})();
+
+</script>
+<!-- /SPRINT3_UX -->
 </body>
 </html>
