@@ -40283,6 +40283,44 @@ else setTimeout(init,1200);
 })();
 </script>
 <!-- Win11 Desktop code removed [Sprint 6] -->
+<script>
+// [Sprint7b] Replacement for deleted win11OpenApp function
+window.win11OpenApp = function(app) {
+  switch(app) {
+    case 'planner':
+      // Open nutrition planner
+      document.body.classList.remove('mode-workout');
+      document.body.classList.add('mp-active');
+      if (typeof mpRenderAll === 'function') mpRenderAll();
+      break;
+    case 'workout':
+      // Open workout planner
+      document.body.classList.add('mode-workout', 'mp-active');
+      if (typeof mpRenderAll === 'function') mpRenderAll();
+      break;
+    case 'calendar':
+      if (typeof openCalendarModal === 'function') openCalendarModal();
+      break;
+    case 'tasks':
+      if (typeof openTasksModal === 'function') openTasksModal();
+      break;
+    case 'shop':
+      if (typeof openShopModal === 'function') openShopModal();
+      break;
+    case 'leads':
+      if (typeof openLeadsModal === 'function') openLeadsModal();
+      break;
+    case 'chat':
+      if (typeof openChat === 'function') openChat(typeof currentUserId !== 'undefined' ? currentUserId : null, 'trainer');
+      break;
+    case 'trainer':
+      if (typeof openTrainerProfile === 'function') openTrainerProfile();
+      break;
+    default:
+      console.log('[win11OpenApp] Unknown app:', app);
+  }
+};
+</script>
 
 
 
@@ -46351,5 +46389,267 @@ else setTimeout(init,1200);
 
 </script>
 <!-- /SPRINT7_UI -->
+
+<!-- SPRINT7B -->
+<script>
+// ============================================================
+// SPRINT 7b — Fixed UI injection + GIF viewer + live mode labels
+// Replaces the broken separate injection modules with ONE unified function
+// ============================================================
+
+(function() {
+  'use strict';
+  if (window.__sprint7b) return;
+  window.__sprint7b = true;
+
+  // ============================================================
+  // UNIFIED TOP BAR BUTTONS — creates ALL buttons in ONE place
+  // ============================================================
+  window.__unifiedInjectTopBar = function() {
+    // Work in both trainer planner (mp-active) and client space (client-space-open)
+    var isTrainerPlanner = document.body.classList.contains('mp-active');
+    var isClientSpace = document.body.classList.contains('client-space-open');
+    if (!isTrainerPlanner && !isClientSpace) return;
+    
+    var topbar = document.querySelector('.mp-topbar') || document.querySelector('.cs-topbar');
+    if (!topbar) return;
+    
+    var isWorkout = document.body.classList.contains('mode-workout');
+    
+    // Get or create container
+    var container = document.getElementById('nuTopBarButtons');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'nuTopBarButtons';
+      container.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center;z-index:10;';
+      topbar.style.position = 'sticky';
+      topbar.appendChild(container);
+    }
+    
+    // Clear and rebuild based on mode
+    container.innerHTML = '';
+    
+    if (isWorkout) {
+      // Workout mode: 3 exercise search buttons + PDF
+      container.innerHTML = 
+        '<button id="mesBtnRu" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;" onclick="window.__mesOpen(\'ru\')">🇷🇺 RU</button>' +
+        '<button id="mesBtnHe" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;" onclick="window.__mesOpen(\'he\')">🇮🇱 עבר</button>' +
+        '<button id="mesBtnWger" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;" onclick="window.__mesOpen(\'wger\')">🇬🇧 EN</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
+    } else {
+      // Nutrition mode: OFF + AI + PDF
+      container.innerHTML = 
+        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
+        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
+    }
+    
+    // History button (both modes)
+    var histBtn = document.createElement('button');
+    histBtn.id = 'hmHistoryBtn';
+    histBtn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+    var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+    histBtn.textContent = lang === 'he' ? '📜 היסטוריה' : (lang === 'en' ? '📜 History' : '📜 История');
+    histBtn.onclick = function() {
+      if (window.HistoryManager) {
+        window.HistoryManager.showHistory(isWorkout ? 'workout' : 'nutrition');
+      }
+    };
+    container.appendChild(histBtn);
+  };
+  
+  // Also expose for client app
+  window.injectTopBarButtons = window.__unifiedInjectTopBar;
+  window.injectButtons = window.__unifiedInjectTopBar;
+  
+  // ============================================================
+  // GIF VIEWER — simplified, no event delegation conflicts
+  // ============================================================
+  // Remove old handler by using a simple data attribute approach
+  window.__s7OpenGif = function(src, name) {
+    // Remove any existing overlay
+    var existing = document.querySelector('.s7-gif-overlay');
+    if (existing) existing.remove();
+    
+    var overlay = document.createElement('div');
+    overlay.className = 's7-gif-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = 
+      '<button class="s7-gif-close" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100001;">×</button>' +
+      '<img style="max-width:90vw;max-height:70vh;object-fit:contain;border-radius:12px;background:#fff;" src="' + src + '" onerror="this.style.display=\'none\'">' +
+      (name ? '<div style="color:#fff;font-size:18px;font-weight:600;margin-top:16px;text-align:center;">' + name + '</div>' : '') +
+      '<div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:8px;">Нажмите × для закрытия</div>';
+    
+    // Close button handler
+    var closeBtn = overlay.querySelector('.s7-gif-close');
+    closeBtn.onclick = function(e) {
+      e.stopPropagation();
+      overlay.remove();
+      document.body.style.overflow = '';
+    };
+    
+    // Click outside to close
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        overlay.remove();
+        document.body.style.overflow = '';
+      }
+    };
+    
+    // ESC to close
+    var escHandler = function(e) {
+      if (e.key === 'Escape') {
+        overlay.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+    
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+  };
+  
+  // Use a SINGLE click handler with stopPropagation
+  document.addEventListener('click', function(e) {
+    // Only handle clicks on exercise thumbnail images
+    var img = e.target;
+    if (img.tagName !== 'IMG') return;
+    
+    var src = img.src || '';
+    // Check if it's an exercise image
+    var isExerciseImg = src.indexOf('wger-img/') >= 0 || 
+                        src.indexOf('burnfit.io') >= 0 ||
+                        src.indexOf('free-exercise-db') >= 0 ||
+                        src.indexOf('githubusercontent') >= 0 && src.indexOf('exercises') >= 0;
+    
+    if (!isExerciseImg) return;
+    
+    // Don't intercept if inside our overlay
+    if (img.closest('.s7-gif-overlay')) return;
+    
+    // Don't intercept if the image is already in a fullscreen modal
+    if (img.closest('.info-modal-content')) {
+      // Inside exercise info modal — add click to expand
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Get exercise name from the modal
+      var name = '';
+      var titleEl = document.querySelector('.info-modal-title');
+      if (titleEl) name = titleEl.textContent;
+      
+      window.__s7OpenGif(src, name);
+      return;
+    }
+    
+    // For thumbnail images in lists
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get exercise name from context
+    var name = '';
+    var card = img.closest('.mp-card, .mp-pick-item, .ex-card, .pr-card, [data-ex-id]');
+    if (card) {
+      var nameEl = card.querySelector('.mp-prow-name, .mp-pick-name, .ex-name, .pr-card-name, [data-ex-name]');
+      if (nameEl) name = nameEl.textContent.trim();
+    }
+    
+    window.__s7OpenGif(src, name);
+  }, true);
+  
+  // ============================================================
+  // LIVE MODE LABELS — add column headers
+  // ============================================================
+  window.__s7AddLiveLabels = function() {
+    // Find CW2 set rows and add headers
+    var setRows = document.querySelectorAll('.cw-set-row, .cw-set');
+    if (!setRows.length) return;
+    
+    // Check if headers already exist
+    if (document.querySelector('.cw-col-headers')) return;
+    
+    // Find the container that holds set rows
+    var container = setRows[0].parentElement;
+    if (!container) return;
+    
+    var lang = (typeof currentLang !== 'undefined' && currentLang) || 'ru';
+    var labels = {
+      ru: { set: '№', weight: 'Вес', reps: 'Повтор.', done: '✓' },
+      en: { set: '#', weight: 'Weight', reps: 'Reps', done: '✓' },
+      he: { set: '№', weight: 'משקל', reps: 'חזרות', done: '✓' }
+    };
+    var L = labels[lang] || labels.ru;
+    
+    var header = document.createElement('div');
+    header.className = 'cw-col-headers';
+    header.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 8px;font-size:10px;color:var(--text-light,#999);font-weight:600;text-transform:uppercase;border-bottom:1px solid var(--border-color,#EEE);';
+    
+    // Match the layout of set rows
+    header.innerHTML = 
+      '<span style="min-width:30px;">' + L.set + '</span>' +
+      '<span style="min-width:50px;">' + L.weight + '</span>' +
+      '<span style="min-width:45px;">' + L.reps + '</span>' +
+      '<span style="min-width:30px;">' + L.done + '</span>';
+    
+    container.insertBefore(header, container.firstChild);
+  };
+  
+  // ============================================================
+  // INIT
+  // ============================================================
+  function init() {
+    console.log('[Sprint7b] init');
+    
+    // Inject top bar buttons on load and on body class change
+    function injectAll() {
+      window.__unifiedInjectTopBar();
+    }
+    
+    // Single observer
+    var observer = new MutationObserver(function(muts) {
+      for (var m of muts) {
+        if (m.attributeName === 'class') {
+          setTimeout(injectAll, 100);
+          break;
+        }
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    
+    // Initial injection
+    setTimeout(injectAll, 500);
+    setTimeout(injectAll, 1500);
+    setTimeout(injectAll, 3000);
+    
+    // Also call after mpRenderBody
+    var orig = window.mpRenderBody;
+    if (typeof orig === 'function' && !window.__s7bBodyWrapped) {
+      window.mpRenderBody = function() {
+        orig.apply(this, arguments);
+        setTimeout(injectAll, 50);
+        setTimeout(window.__s7AddLiveLabels, 100);
+      };
+      window.__s7bBodyWrapped = true;
+    }
+    
+    // Add live labels periodically when in workout mode
+    setInterval(function() {
+      if (document.body.classList.contains('mp-active') && document.body.classList.contains('mode-workout')) {
+        window.__s7AddLiveLabels();
+      }
+    }, 2000);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  
+})();
+
+</script>
+<!-- /SPRINT7B -->
 </body>
 </html>
