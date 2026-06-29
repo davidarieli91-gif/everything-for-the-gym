@@ -45088,5 +45088,580 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
 
 </script>
 <!-- /P4_UNIFIED -->
+
+<!-- WIN11_OPENAPP_BASE -->
+<script>
+window.win11OpenApp = window.win11OpenApp || function(app) {
+  switch(app) {
+    case 'planner':
+      document.body.classList.remove('mode-workout');
+      document.body.classList.add('mp-active');
+      if (typeof mpRenderAll === 'function') mpRenderAll();
+      break;
+    case 'workout':
+      document.body.classList.add('mode-workout', 'mp-active');
+      if (typeof mpRenderAll === 'function') mpRenderAll();
+      break;
+    case 'calendar': if(typeof openCalendarModal==='function')openCalendarModal(); break;
+    case 'tasks': if(typeof openTasksModal==='function')openTasksModal(); break;
+    case 'shop': if(typeof openShopModal==='function')openShopModal(); break;
+    case 'leads': if(typeof openLeadsModal==='function')openLeadsModal(); break;
+    case 'chat': if(typeof openChat==='function')openChat(typeof currentUserId!=='undefined'?currentUserId:null,'trainer'); break;
+    case 'trainer': if(typeof openTrainerProfile==='function')openTrainerProfile(); break;
+  }
+};
+</script>
+<!-- /WIN11_OPENAPP_BASE -->
+
+<!-- P5_UNIFIED -->
+<script>
+// ============================================================
+// P5 UNIFIED — Orientation + Client Cards + Exercise DB Editor
+// 1. Screen orientation lock (portrait/landscape/auto) in settings
+// 2. Nutrition/Workout buttons work only through client card
+// 3. Client card with inline edit (pencil icon)
+// 4. "Add exercise" menu with edit pencil
+// 5. Full Exercise DB Editor — CRUD groups/subgroups/exercises
+// ============================================================
+
+(function() {
+  'use strict';
+  if (window.__p5unified) return;
+  window.__p5unified = true;
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function lang(){try{return(typeof currentLang!=='undefined'&&currentLang)||'ru';}catch(e){return'ru';}}
+
+  // ============================================================
+  // 1. ORIENTATION LOCK
+  // ============================================================
+  function injectOrientationCSS() {
+    if (document.getElementById('p5orientCSS')) return;
+    var s = document.createElement('style');
+    s.id = 'p5orientCSS';
+    s.textContent = `
+      /* Landscape mode adjustments */
+      @media (orientation: landscape) and (max-height: 500px) {
+        .mp-topbar { min-height: 44px !important; }
+        .mp-nav { padding: 2px 0 !important; }
+        .mp-nav-item { padding: 4px 6px !important; }
+        .mp-nav-ico { font-size: 1.1em !important; }
+        .mp-body { padding-bottom: 4px !important; }
+        .mp-summary { padding: 8px 12px !important; }
+        .mp-card { padding: 8px 12px !important; }
+        #p1topbar button { padding: 5px 8px !important; font-size: 10px !important; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function applyOrientation(mode) {
+    try {
+      if (mode === 'portrait' && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('portrait').catch(function(){});
+      } else if (mode === 'landscape' && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(function(){});
+      } else if (mode === 'auto' && screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch(e) {}
+    // Save preference
+    try {
+      var s = JSON.parse(localStorage.getItem('nutritionPlannerSettings') || '{}');
+      s.orientation = mode;
+      localStorage.setItem('nutritionPlannerSettings', JSON.stringify(s));
+    } catch(e){}
+    // Apply CSS class
+    document.body.classList.remove('force-portrait', 'force-landscape');
+    if (mode === 'portrait') document.body.classList.add('force-portrait');
+    if (mode === 'landscape') document.body.classList.add('force-landscape');
+  }
+
+  // Add orientation section to P1 compact settings
+  function addOrientationToSettings() {
+    var observer = new MutationObserver(function() {
+      var settings = document.getElementById('p1settings');
+      if (!settings) return;
+      if (settings.querySelector('.p5-orient')) return;
+      
+      var body = settings.querySelector('.p1body');
+      if (!body) return;
+      
+      var L = lang();
+      var labels = {
+        ru: { title: '📱 Ориентация', portrait: 'Вертикальная', landscape: 'Горизонтальная', auto: 'Авто' },
+        en: { title: '📱 Orientation', portrait: 'Portrait', landscape: 'Landscape', auto: 'Auto' },
+        he: { title: '📱 כיוון', portrait: 'אנכי', landscape: 'אופקי', auto: 'אוטו' }
+      }[L] || labels.ru;
+      
+      var currentMode = 'auto';
+      try { var s = JSON.parse(localStorage.getItem('nutritionPlannerSettings')||'{}'); currentMode = s.orientation || 'auto'; } catch(e){}
+      
+      var sec = document.createElement('div');
+      sec.className = 'p1sec p5-orient';
+      sec.innerHTML = 
+        '<div class="p1sechdr" onclick="this.parentElement.classList.toggle(\'open\')">' +
+          '<span class="p1secico">📱</span><span class="p1secttl">' + esc(labels.title) + '</span>' +
+          '<span class="p1seccur">' + esc(labels[currentMode]||labels.auto) + '</span><span class="p1chev">▸</span></div>' +
+        '<div class="p1secbd"><div class="p1lang">' +
+          '<button class="' + (currentMode==='portrait'?'active':'') + '" onclick="window.__p5orient(\'portrait\')">' + esc(labels.portrait) + '</button>' +
+          '<button class="' + (currentMode==='landscape'?'active':'') + '" onclick="window.__p5orient(\'landscape\')">' + esc(labels.landscape) + '</button>' +
+          '<button class="' + (currentMode==='auto'?'active':'') + '" onclick="window.__p5orient(\'auto\')">' + esc(labels.auto) + '</button>' +
+        '</div></div>';
+      
+      // Insert after scale section (2nd section)
+      var sections = body.querySelectorAll('.p1sec');
+      if (sections.length >= 2) {
+        body.insertBefore(sec, sections[2]);
+      } else {
+        body.appendChild(sec);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  window.__p5orient = function(mode) {
+    applyOrientation(mode);
+    // Update buttons
+    document.querySelectorAll('.p5-orient .p1lang button').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    // Update current label
+    var L = lang();
+    var labels = {portrait: L==='he'?'אנכי':(L==='en'?'Portrait':'Вертикальная'),landscape: L==='he'?'אופקי':(L==='en'?'Landscape':'Горизонтальная'),auto: L==='he'?'אוטו':(L==='en'?'Auto':'Авто')};
+    var cur = document.querySelector('.p5-orient .p1seccur');
+    if (cur) cur.textContent = labels[mode] || labels.auto;
+  };
+
+  // ============================================================
+  // 2. NUTRITION/WORKOUT BUTTONS — work only through client card
+  // ============================================================
+  function patchDesktopButtons() {
+    // Replace win11OpenApp to check for selected client
+    var orig = window.win11OpenApp;
+    if (typeof orig !== 'function' || window.__p5win11Wrapped) return;
+    window.win11OpenApp = function(app) {
+      if (app === 'planner' || app === 'workout') {
+        // Check if a client is selected
+        var hasClient = false;
+        try { hasClient = typeof currentUserId !== 'undefined' && currentUserId; } catch(e){}
+        if (!hasClient) {
+          var L = lang();
+          var msg = L === 'he' ? 'בחר לקוח תחילה' : (L === 'en' ? 'Select a client first' : 'Сначала выберите клиента');
+          if (typeof showToast === 'function') showToast('⚠️ ' + msg);
+          return;
+        }
+      }
+      return orig.apply(this, arguments);
+    };
+    window.__p5win11Wrapped = true;
+  }
+
+  // ============================================================
+  // 3. CLIENT CARD — inline edit with pencil
+  // ============================================================
+  function patchClientCards() {
+    var orig = window.mdRenderClients;
+    if (typeof orig !== 'function' || window.__p5clientsWrapped) return;
+    window.mdRenderClients = function(q) {
+      orig.apply(this, arguments);
+      // Add edit buttons to each client card
+      var cards = document.querySelectorAll('#mdClientList > div[onclick*="openUser"]');
+      cards.forEach(function(card) {
+        // Extract user ID from onclick
+        var onclickAttr = card.getAttribute('onclick') || '';
+        var match = onclickAttr.match(/openUser\('([^']+)'\)/);
+        if (!match) return;
+        var userId = match[1];
+        
+        // Remove the onclick from the card (we'll handle it ourselves)
+        card.removeAttribute('onclick');
+        card.style.cursor = 'pointer';
+        
+        // Add click handler to open user (but not when clicking edit button)
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.p5-edit-btn')) return;
+          if (typeof openUser === 'function') openUser(userId);
+        });
+        
+        // Add edit button
+        var editBtn = document.createElement('button');
+        editBtn.className = 'p5-edit-btn';
+        editBtn.style.cssText = 'background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;font-weight:600;flex-shrink:0;';
+        editBtn.innerHTML = '✏️';
+        editBtn.title = lang() === 'he' ? 'ערוך' : (lang() === 'en' ? 'Edit' : 'Изменить');
+        editBtn.onclick = function(e) {
+          e.stopPropagation();
+          window.__p5editClient(userId);
+        };
+        
+        // Replace the arrow › with edit button
+        var arrow = card.querySelector('[style*="opacity:0.3"]');
+        if (arrow) {
+          arrow.replaceWith(editBtn);
+        } else {
+          card.appendChild(editBtn);
+        }
+      });
+    };
+    window.__p5clientsWrapped = true;
+  }
+
+  // Edit client modal — inline editing on desktop
+  window.__p5editClient = function(userId) {
+    var users = [];
+    try { users = getUsers(); } catch(e){}
+    var user = users.find(function(u) { return u.id === userId; });
+    if (!user) return;
+
+    var L = lang();
+    var l = {
+      ru: { title: '✏️ Редактировать клиента', name: 'Имя', lastName: 'Фамилия', phone: 'Телефон', age: 'Возраст', weight: 'Вес (кг)', height: 'Рост (см)', gender: 'Пол', male: 'Муж', female: 'Жен', activity: 'Активность', goal: 'Цель', notes: 'Заметки', save: '💾 Сохранить', delete: '🗑 Удалить', close: 'Закрыть' },
+      en: { title: '✏️ Edit Client', name: 'Name', lastName: 'Last Name', phone: 'Phone', age: 'Age', weight: 'Weight (kg)', height: 'Height (cm)', gender: 'Gender', male: 'Male', female: 'Female', activity: 'Activity', goal: 'Goal', notes: 'Notes', save: '💾 Save', delete: '🗑 Delete', close: 'Close' },
+      he: { title: '✏️ עריכת לקוח', name: 'שם', lastName: 'שם משפחה', phone: 'טלפון', age: 'גיל', weight: 'משקל (ק"ג)', height: 'גובה (ס"מ)', gender: 'מגדר', male: 'זכר', female: 'נקבה', activity: 'פעילות', goal: 'יעד', notes: 'הערות', save: '💾 שמור', delete: '🗑 מחק', close: 'סגור' }
+    }[L] || l.ru;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'p5editClient';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    function field(label, id, val, type) {
+      return '<div style="margin-bottom:10px;"><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:4px;">'+esc(label)+'</label>'+
+        '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:14px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;"></div>';
+    }
+
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border-color,#E0E0E0);background:var(--primary-color,#4CAF50);color:#fff;border-radius:16px 16px 0 0;">' +
+        '<h2 style="margin:0;font-size:18px;">'+esc(l.title)+'</h2>' +
+        '<button onclick="document.getElementById(\'p5editClient\').remove()" style="background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer;">×</button></div>' +
+      '<div style="padding:20px;">' +
+        field(l.name, 'p5cName', user.name) +
+        field(l.lastName, 'p5cLastName', user.lastName) +
+        field(l.phone, 'p5cPhone', user.phone) +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">' +
+          field(l.age, 'p5cAge', user.age, 'number') +
+          field(l.weight, 'p5cWeight', user.weight, 'number') +
+          field(l.height, 'p5cHeight', user.height, 'number') +
+        '</div>' +
+        '<div style="margin-bottom:10px;"><label style="display:block;font-size:12px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:4px;">'+esc(l.gender)+'</label>' +
+          '<select id="p5cGender" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:14px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);">' +
+            '<option value="male" '+(user.gender==='male'?'selected':'')+'>'+esc(l.male)+'</option>' +
+            '<option value="female" '+(user.gender==='female'?'selected':'')+'>'+esc(l.female)+'</option></select></div>' +
+        field(l.notes, 'p5cNotes', user.notes) +
+      '</div>' +
+      '<div style="display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--border-color,#E0E0E0);">' +
+        '<button onclick="window.__p5saveClient(\''+userId+'\')" style="flex:1;background:var(--primary-color,#4CAF50);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;">'+esc(l.save)+'</button>' +
+        '<button onclick="document.getElementById(\'p5editClient\').remove()" style="background:rgba(0,0,0,0.05);color:var(--text-primary,#212121);border:0;border-radius:10px;padding:12px 20px;cursor:pointer;">'+esc(l.close)+'</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+  };
+
+  window.__p5saveClient = function(userId) {
+    try {
+      var users = getUsers();
+      var u = users.find(function(x) { return x.id === userId; });
+      if (!u) return;
+      u.name = document.getElementById('p5cName').value.trim();
+      u.lastName = document.getElementById('p5cLastName').value.trim();
+      u.phone = document.getElementById('p5cPhone').value.trim();
+      u.age = parseFloat(document.getElementById('p5cAge').value) || '';
+      u.weight = parseFloat(document.getElementById('p5cWeight').value) || '';
+      u.height = parseFloat(document.getElementById('p5cHeight').value) || '';
+      u.gender = document.getElementById('p5cGender').value;
+      u.notes = document.getElementById('p5cNotes').value.trim();
+      // Save
+      if (typeof users !== 'undefined' && typeof saveUsers === 'function') {
+        // users is the global array
+        saveUsers();
+      } else {
+        localStorage.setItem('nutritionUsers', JSON.stringify(users));
+      }
+      // Close modal
+      var m = document.getElementById('p5editClient');
+      if (m) m.remove();
+      // Re-render
+      if (typeof mdRenderClients === 'function') mdRenderClients('');
+      if (typeof showToast === 'function') showToast('✅');
+    } catch(e) { alert('Error: ' + e.message); }
+  };
+
+  // ============================================================
+  // 4 & 5. EXERCISE DB EDITOR — Full CRUD
+  // ============================================================
+  window.__p5openExEditor = function() {
+    var L = lang();
+    var l = {
+      ru: { title: '🏋️ Редактор базы упражнений', groups: 'Группы мышц', subgroups: 'Подгруппы', exercises: 'Упражнения', addGroup: '+ Группа', addSub: '+ Подгруппа', addEx: '+ Упражнение', edit: '✏️', delete: '🗑', name: 'Название', equip: 'Оборудование', ru: 'Рус', en: 'Анг', he: 'Ивр', save: '💾 Сохранить', close: 'Закрыть', confirmDel: 'Удалить?', resetAll: '🔄 Сбросить всё', confirmReset: 'Удалить ВСЕ упражнения и начать заново?' },
+      en: { title: '🏋️ Exercise DB Editor', groups: 'Muscle Groups', subgroups: 'Subgroups', exercises: 'Exercises', addGroup: '+ Group', addSub: '+ Subgroup', addEx: '+ Exercise', edit: '✏️', delete: '🗑', name: 'Name', equip: 'Equipment', ru: 'Ru', en: 'En', he: 'He', save: '💾 Save', close: 'Close', confirmDel: 'Delete?', resetAll: '🔄 Reset All', confirmReset: 'Delete ALL exercises and start over?' },
+      he: { title: '🏋️ עורך מאגר תרגילים', groups: 'קבוצות שרירים', subgroups: 'תת-קבוצות', exercises: 'תרגילים', addGroup: '+ קבוצה', addSub: '+ תת-קבוצה', addEx: '+ תרגיל', edit: '✏️', delete: '🗑', name: 'שם', equip: 'ציוד', ru: 'רוס', en: 'אנג', he: 'עבר', save: '💾 שמור', close: 'סגור', confirmDel: 'למחוק?', resetAll: '🔄 אפס הכל', confirmReset: 'למחוק את כל התרגילים ולהתחיל מחדש?' }
+    }[L] || l.ru;
+
+    if (typeof EXERCISE_DB === 'undefined') { alert('EXERCISE_DB not available'); return; }
+
+    var overlay = document.createElement('div');
+    overlay.id = 'p5exEditor';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:8px;';
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);color:var(--text-primary,#212121);border-radius:16px;max-width:900px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border-color,#E0E0E0);background:var(--primary-color,#4CAF50);color:#fff;border-radius:16px 16px 0 0;">' +
+        '<h2 style="margin:0;font-size:18px;">'+esc(l.title)+'</h2>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button onclick="window.__p5resetDB()" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(l.resetAll)+'</button>' +
+          '<button onclick="document.getElementById(\'p5exEditor\').remove()" style="background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer;">×</button>' +
+        '</div></div>' +
+      '<div id="p5exBody" style="flex:1;overflow-y:auto;padding:12px;"></div>' +
+      '<div style="display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--border-color,#E0E0E0);">' +
+        '<button onclick="window.__p5saveDB()" style="flex:1;background:var(--primary-color,#4CAF50);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;">'+esc(l.save)+'</button>' +
+        '<button onclick="document.getElementById(\'p5exEditor\').remove()" style="background:rgba(0,0,0,0.05);border:0;border-radius:10px;padding:12px 20px;cursor:pointer;">'+esc(l.close)+'</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    window.__p5renderDB(l);
+  };
+
+  window.__p5renderDB = function(l) {
+    var body = document.getElementById('p5exBody');
+    if (!body) return;
+    if (typeof EXERCISE_DB === 'undefined') return;
+    
+    var html = '';
+    html += '<div style="margin-bottom:12px;"><button onclick="window.__p5addGroup()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13px;">'+esc(l.addGroup)+'</button></div>';
+    
+    EXERCISE_DB.forEach(function(group, gi) {
+      var exCount = 0;
+      (group.subgroups||[]).forEach(function(sg) { exCount += (sg.exercises||[]).length; });
+      
+      html += '<div style="background:var(--surface-color,#fff);border:1px solid var(--border-color,#EEE);border-radius:12px;margin-bottom:10px;overflow:hidden;">';
+      // Group header
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(0,0,0,0.03);">' +
+        '<span onclick="window.__p5toggleGroup('+gi+')" id="p5g'+gi+'" style="cursor:pointer;font-size:14px;">▼</span>' +
+        '<span style="flex:1;font-weight:700;font-size:15px;color:var(--text-primary,#212121);">'+esc(group.id)+'</span>' +
+        '<span style="font-size:11px;color:var(--text-secondary,#757575);">'+exCount+' ex</span>' +
+        '<button onclick="window.__p5editGroup('+gi+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;">'+esc(l.edit)+'</button>' +
+        '<button onclick="window.__p5delGroup('+gi+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;">'+esc(l.delete)+'</button>' +
+        '</div>';
+      
+      // Subgroups
+      html += '<div id="p5gb'+gi+'" style="padding:8px 14px;">';
+      (group.subgroups||[]).forEach(function(sg, si) {
+        html += '<div style="margin-bottom:8px;padding:8px;background:rgba(0,0,0,0.02);border-radius:8px;">';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+          '<span onclick="window.__p5toggleSub('+gi+','+si+')" id="p5s'+gi+'_'+si+'" style="cursor:pointer;font-size:12px;">▶</span>' +
+          '<span style="flex:1;font-weight:600;font-size:13px;">'+esc(sg.id)+'</span>' +
+          '<span style="font-size:10px;color:var(--text-light,#999);">'+(sg.exercises||[]).length+' ex</span>' +
+          '<button onclick="window.__p5editSub('+gi+','+si+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:10px;">'+esc(l.edit)+'</button>' +
+          '<button onclick="window.__p5delSub('+gi+','+si+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:10px;">'+esc(l.delete)+'</button>' +
+          '</div>';
+        
+        // Exercises
+        html += '<div id="p5sb'+gi+'_'+si+'" style="display:none;padding-left:20px;">';
+        (sg.exercises||[]).forEach(function(ex, ei) {
+          html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;">' +
+            '<span style="flex:1;color:var(--text-primary,#212121);">'+esc(ex.ru||ex.en||ex.he||ex.id)+'</span>' +
+            '<span style="font-size:10px;color:var(--text-light,#999);">['+esc(ex.equip||'')+']</span>' +
+            '<button onclick="window.__p5editEx('+gi+','+si+','+ei+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:10px;">'+esc(l.edit)+'</button>' +
+            '<button onclick="window.__p5delEx('+gi+','+si+','+ei+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:10px;">'+esc(l.delete)+'</button>' +
+            '</div>';
+        });
+        html += '<button onclick="window.__p5addEx('+gi+','+si+')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;margin-top:4px;">'+esc(l.addEx)+'</button>';
+        html += '</div>'; // exercises
+        html += '</div>'; // subgroup
+      });
+      
+      html += '<button onclick="window.__p5addSub('+gi+')" style="background:#3B82F6;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;margin-top:4px;">'+esc(l.addSub)+'</button>';
+      html += '</div>'; // subgroups container
+      html += '</div>'; // group
+    });
+    
+    body.innerHTML = html;
+  };
+
+  window.__p5toggleGroup = function(gi) {
+    var el = document.getElementById('p5gb'+gi);
+    var icon = document.getElementById('p5g'+gi);
+    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+    if (icon) { icon.textContent = icon.textContent === '▼' ? '▶' : '▼'; }
+  };
+
+  window.__p5toggleSub = function(gi, si) {
+    var el = document.getElementById('p5sb'+gi+'_'+si);
+    var icon = document.getElementById('p5s'+gi+'_'+si);
+    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+    if (icon) { icon.textContent = icon.textContent === '▶' ? '▼' : '▶'; }
+  };
+
+  window.__p5addGroup = function() {
+    var name = prompt('Group ID (e.g., "chest"):');
+    if (!name) return;
+    name = name.trim().toLowerCase().replace(/\s+/g, '_');
+    EXERCISE_DB.push({ id: name, subgroups: [] });
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5editGroup = function(gi) {
+    var g = EXERCISE_DB[gi];
+    if (!g) return;
+    var name = prompt('Group ID:', g.id);
+    if (name && name.trim()) {
+      g.id = name.trim().toLowerCase().replace(/\s+/g, '_');
+      window.__p5renderDB(window.__p5l);
+    }
+  };
+
+  window.__p5delGroup = function(gi) {
+    if (!confirm(window.__p5l.confirmDel)) return;
+    EXERCISE_DB.splice(gi, 1);
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5addSub = function(gi) {
+    var g = EXERCISE_DB[gi];
+    if (!g) return;
+    var name = prompt('Subgroup ID (e.g., "chest_upper"):');
+    if (!name) return;
+    name = name.trim().toLowerCase().replace(/\s+/g, '_');
+    if (!g.subgroups) g.subgroups = [];
+    g.subgroups.push({ id: name, exercises: [] });
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5editSub = function(gi, si) {
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg) return;
+    var name = prompt('Subgroup ID:', sg.id);
+    if (name && name.trim()) {
+      sg.id = name.trim().toLowerCase().replace(/\s+/g, '_');
+      window.__p5renderDB(window.__p5l);
+    }
+  };
+
+  window.__p5delSub = function(gi, si) {
+    if (!confirm(window.__p5l.confirmDel)) return;
+    EXERCISE_DB[gi].subgroups.splice(si, 1);
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5addEx = function(gi, si) {
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg) return;
+    if (!sg.exercises) sg.exercises = [];
+    var id = 'custom_' + Date.now();
+    var ru = prompt('Название (RU) / Name (RU):', '');
+    if (!ru) return;
+    var en = prompt('Name (EN):', ru);
+    var he = prompt('שם (HE):', ru);
+    var equip = prompt('Equipment (barbell/dumbbell/cable/machine/bw/etc):', 'bw');
+    sg.exercises.push({ id: id, equip: equip||'bw', ru: ru, en: en||ru, he: he||ru });
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5editEx = function(gi, si, ei) {
+    var ex = EXERCISE_DB[gi].subgroups[si].exercises[ei];
+    if (!ex) return;
+    var ru = prompt('RU:', ex.ru);
+    if (ru === null) return;
+    var en = prompt('EN:', ex.en);
+    var he = prompt('HE:', ex.he);
+    var equip = prompt('Equipment:', ex.equip);
+    ex.ru = ru; ex.en = en; ex.he = he; ex.equip = equip;
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5delEx = function(gi, si, ei) {
+    if (!confirm(window.__p5l.confirmDel)) return;
+    EXERCISE_DB[gi].subgroups[si].exercises.splice(ei, 1);
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5resetDB = function() {
+    if (!confirm(window.__p5l.confirmReset)) return;
+    EXERCISE_DB.length = 0;
+    EXERCISE_DB.push({ id: 'custom', subgroups: [{ id: 'exercises', exercises: [] }] });
+    window.__p5renderDB(window.__p5l);
+  };
+
+  window.__p5saveDB = function() {
+    // Save entire EXERCISE_DB to localStorage
+    try {
+      localStorage.setItem('exerciseDB_custom', JSON.stringify(EXERCISE_DB));
+      if (typeof showToast === 'function') showToast('✅ Saved');
+      var m = document.getElementById('p5exEditor');
+      if (m) m.remove();
+      document.body.style.overflow = '';
+    } catch(e) { alert('Save error: ' + e.message); }
+  };
+
+  // Load custom DB on init
+  try {
+    var customDB = localStorage.getItem('exerciseDB_custom');
+    if (customDB && typeof EXERCISE_DB !== 'undefined') {
+      var parsed = JSON.parse(customDB);
+      if (parsed && parsed.length > 0) {
+        EXERCISE_DB.length = 0;
+        parsed.forEach(function(g) { EXERCISE_DB.push(g); });
+        console.log('[P5] Loaded custom exercise DB:', EXERCISE_DB.length, 'groups');
+      }
+    }
+  } catch(e){ console.warn('[P5] Load custom DB:', e); }
+
+  // Store labels for re-render
+  var origRender = window.__p5renderDB;
+  if (typeof origRender === 'function') {
+    var origWrap = origRender;
+    window.__p5renderDB = function(l) {
+      window.__p5l = l;
+      origWrap(l);
+    };
+  }
+
+  // Add editor button to workout "More" menu
+  var origMpActions = window.mpOpenActions;
+  if (typeof origMpActions === 'function' && !window.__p5actionsWrapped) {
+    window.mpOpenActions = function() {
+      origMpActions.apply(this, arguments);
+      setTimeout(function() {
+        var sheet = document.getElementById('mpSheet');
+        if (!sheet) return;
+        var body = sheet.querySelector('.mp-sheet-body');
+        if (!body) return;
+        if (body.querySelector('.p5-editor-btn')) return;
+        var isWk = document.body.classList.contains('mode-workout');
+        if (!isWk) return;
+        
+        var btn = document.createElement('button');
+        btn.className = 'mp-action-item p5-editor-btn';
+        btn.style.cssText = 'display:flex;width:100%;align-items:center;gap:10px;padding:14px;border:0;border-bottom:1px solid var(--border-color,#E0E0E0);background:transparent;cursor:pointer;font-size:14px;text-align:left;color:inherit;';
+        var L = lang();
+        btn.innerHTML = '<span class="ico" style="font-size:18px;">🏋️</span><span>' + (L==='he'?'עורך מאגר תרגילים':(L==='en'?'Exercise DB Editor':'Редактор базы упражнений')) + '</span>';
+        btn.onclick = function() {
+          if (typeof mpCloseSheet === 'function') mpCloseSheet();
+          window.__p5openExEditor();
+        };
+        body.insertBefore(btn, body.firstChild);
+      }, 50);
+    };
+    window.__p5actionsWrapped = true;
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  injectOrientationCSS();
+  patchDesktopButtons();
+  patchClientCards();
+  addOrientationToSettings();
+
+  // Apply saved orientation
+  try {
+    var s = JSON.parse(localStorage.getItem('nutritionPlannerSettings') || '{}');
+    if (s.orientation) applyOrientation(s.orientation);
+  } catch(e){}
+
+  console.log('[P5 Unified] initialized');
+})();
+
+</script>
+<!-- /P5_UNIFIED -->
 </body>
 </html>
