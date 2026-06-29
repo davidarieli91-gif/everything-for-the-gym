@@ -28190,7 +28190,7 @@ setTimeout(function(){
 
             if (total === 0) { ctx.fillStyle='#94A3B8'; ctx.font='13px Inter'; ctx.textAlign='center'; ctx.fillText(t('tpNoData') || 'Нет данных',W/2,H/2); return; }
 
-            const cx = W*0.32, cy = H/2, radius = Math.min(cx-16, cy-16, 78);
+            const cx = W*0.32, cy = H/2, radius = Math.max(1, Math.min(cx-16, cy-16, 78));
             let angle = -Math.PI/2;
             entries.forEach(([type, count], i) => {
                 const slice = (count/total)*Math.PI*2;
@@ -44563,16 +44563,40 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     var s = document.createElement('style');
     s.id = 'p5orientCSS';
     s.textContent = `
-      /* Landscape mode adjustments */
+      /* Landscape mode adjustments — rebuild panels for horizontal */
       @media (orientation: landscape) and (max-height: 500px) {
-        .mp-topbar { min-height: 44px !important; }
-        .mp-nav { padding: 2px 0 !important; }
-        .mp-nav-item { padding: 4px 6px !important; }
+        .mp-topbar { min-height: 40px !important; padding: 0 8px !important; }
+        .mp-nav { padding: 2px 0 !important; min-height: 44px !important; }
+        .mp-nav-item { padding: 3px 6px !important; }
         .mp-nav-ico { font-size: 1.1em !important; }
-        .mp-body { padding-bottom: 4px !important; }
-        .mp-summary { padding: 8px 12px !important; }
-        .mp-card { padding: 8px 12px !important; }
-        #p1topbar button { padding: 5px 8px !important; font-size: 10px !important; }
+        .mp-nav-item span:last-child { font-size: 8px !important; }
+        .mp-body { padding-bottom: 4px !important; padding-top: 4px !important; }
+        .mp-summary { padding: 6px 10px !important; margin-bottom: 4px !important; }
+        .mp-sum-big { font-size: 1.2em !important; }
+        .mp-sum-bars { gap: 6px !important; }
+        .mp-card { padding: 6px 10px !important; margin-bottom: 4px !important; }
+        .mp-meal-head { padding: 6px 10px !important; }
+        .mp-prow { padding: 3px 10px !important; min-height: 32px !important; }
+        .mp-addline { padding: 4px 10px !important; }
+        .mp-empty { padding: 10px !important; }
+        #p1topbar button { padding: 4px 6px !important; font-size: 9px !important; }
+        .mp-sheet { max-height: 90vh !important; }
+        /* Two-column layout for meals in landscape */
+        .mp-body > .mp-card:nth-child(n+3) { display: inline-block !important; width: 48% !important; vertical-align: top !important; margin-right: 2% !important; }
+      }
+      /* Force portrait mode */
+      body.force-portrait { transform: rotate(0deg) !important; }
+      /* Force landscape — rotate content if in portrait */
+      body.force-landscape {
+        @media (orientation: portrait) {
+          transform: rotate(90deg);
+          transform-origin: top left;
+          width: 100vh;
+          height: 100vw;
+          position: fixed;
+          top: 0;
+          left: 100%;
+        }
       }
     `;
     document.head.appendChild(s);
