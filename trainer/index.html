@@ -46109,65 +46109,90 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
 
 </script>
 <!-- /P6_UNIFIED -->
-<!-- P7_EX_EDITOR -->
+<!-- P8_EX_EDITOR_FINAL -->
 <script>
 // ============================================================
-// P7 — Full RU/i18n Exercise DB Editor
-// Replaces P5/P6 editor with: full CRUD via modals (no prompts),
-// GIF URL field, technique description per language (RU/EN/HE),
-// search filter, GIF preview in list, import/export JSON.
+// P8 — Final Exercise DB Editor (replaces P5/P7)
+// - Real i18n (uses GROUP_I18N + SUBGROUP_I18N already in the page)
+// - GIF picker from existing library (EXERCISE_GIFS + EX_PHOTO_MAP_WGER + EX_PHOTO_MAP + gifs/)
+// - All collapsed by default
+// - Up/down reordering for groups, subgroups, exercises
+// - Move group into another group (nesting as subgroup)
+// - Move subgroup to top-level group (promote)
+// - Move exercise to another subgroup
+// - Duplicate exercise
+// - Larger thumbnails with live preview
+// - Search filter across all 3 languages + ID + equipment
+// - Export / Import JSON
 // ============================================================
 (function() {
   'use strict';
-  if (window.__p7exEditor) return;
-  window.__p7exEditor = true;
+  if (window.__p8exEditor) return;
+  window.__p8exEditor = true;
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function lang(){try{return(typeof currentLang!=='undefined'&&currentLang)||'ru';}catch(e){return'ru';}}
+  function lcGet(dict, key){
+    try {
+      var d = dict[key]; if (!d) return key;
+      return d[lang()] || d.ru || d.en || key;
+    } catch(e) { return key; }
+  }
+  function groupLabel(g){ return g && g.id ? lcGet(GROUP_I18N, g.id) : ''; }
+  function subLabel(sg){ return sg && sg.id ? lcGet(SUBGROUP_I18N, sg.id) : ''; }
+  function exLabel(ex){
+    if (!ex) return '';
+    try { return ex[lang()] || ex.ru || ex.en || ex.he || ex.id || ''; }
+    catch(e) { return ex.id || ''; }
+  }
 
-  function L(){
+  // =============== i18n strings for the editor itself ===============
+  function T(){
     var l = lang();
     var R = {
       ru: {
         title: '🏋️ Редактор базы упражнений',
-        searchPh: 'Поиск по названию или ID...',
-        addGroup: '+ Группа мышц',
+        searchPh: 'Поиск: название, ID, оборудование...',
+        addGroup: '+ Группа',
         addSub: '+ Подгруппа',
         addEx: '+ Упражнение',
-        edit: '✏️ Изменить',
-        delete: '🗑 Удалить',
+        edit: '✏️',
+        delete: '🗑',
+        dup: '⧉',
+        up: '▲',
+        down: '▼',
+        moveTo: '📁↦',
+        expandAll: '▽ Открыть всё',
+        collapseAll: '▷ Свернуть всё',
         confirmDelGrp: 'Удалить всю группу со всеми подгруппами и упражнениями?',
         confirmDelSub: 'Удалить подгруппу со всеми упражнениями?',
         confirmDelEx: 'Удалить упражнение?',
-        resetAll: '🔄 Сбросить базу',
+        resetAll: '🔄 Сброс',
         confirmReset: 'Удалить ВСЕ упражнения и начать заново? Это действие необратимо!',
         save: '💾 Сохранить базу',
         close: '✕ Закрыть',
-        export: '⬇ Экспорт JSON',
-        import: '⬆ Импорт JSON',
+        export: '⬇ Экспорт',
+        import: '⬆ Импорт',
         confirmImport: 'Импортировать базу из JSON? Текущая база будет заменена.',
-        // Edit group modal
-        grpTitleNew: '➕ Новая группа мышц',
-        grpTitleEdit: '✏️ Редактировать группу',
+        // Group modal
+        grpNew: '➕ Новая группа мышц',
+        grpEdit: '✏️ Редактировать группу',
         grpId: 'ID группы',
-        grpIdHint: 'латиницей, например: chest, back, legs',
-        grpNameRu: 'Название (рус)',
-        grpNameEn: 'Name (EN)',
-        grpNameHe: 'שם (עבר)',
-        grpIcon: 'Иконка (эмодзи)',
-        // Edit subgroup modal
-        subTitleNew: '➕ Новая подгруппа',
-        subTitleEdit: '✏️ Редактировать подгруппу',
+        grpIdHint: 'латиницей: chest, back, legs',
+        grpCustomName: 'Своё название (необязательно)',
+        grpCustomHint: 'если ID нет в словаре',
+        // Subgroup modal
+        subNew: '➕ Новая подгруппа',
+        subEdit: '✏️ Редактировать подгруппу',
         subId: 'ID подгруппы',
         subIdHint: 'например: chest_upper, back_lats',
-        subNameRu: 'Название (рус)',
-        subNameEn: 'Name (EN)',
-        subNameHe: 'שם (עבר)',
-        // Edit exercise modal
-        exTitleNew: '➕ Новое упражнение',
-        exTitleEdit: '✏️ Редактировать упражнение',
+        subCustomName: 'Своё название (необязательно)',
+        subCustomHint: 'если ID нет в словаре',
+        // Exercise modal
+        exNew: '➕ Новое упражнение',
+        exEdit: '✏️ Редактировать упражнение',
         exId: 'ID упражнения',
-        exIdHint: 'латиницей, например: bench_press, squat',
+        exIdHint: 'латиницей: bench_press, squat',
         exEquip: 'Оборудование',
         exEquipHint: 'barbell, dumbbell, cable, machine, bw, band, kettlebell, trx',
         exNameRu: 'Название (рус)',
@@ -46177,68 +46202,80 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         exGifHint: 'https://... ссылка на gif',
         exPhotoUrl: 'URL фото (запасное)',
         exPhotoHint: 'https://... ссылка на jpg/png',
-        exTechniqueRu: 'Техника выполнения (рус)',
+        pickFromLibrary: '📚 Выбрать из библиотеки',
+        exTechniqueRu: 'Техника (рус)',
         exTechniqueEn: 'Technique (EN)',
         exTechniqueHe: 'טכניקה (עבר)',
-        exTips: 'Советы и ошибки',
-        exTipsHint: 'Частые ошибки и рекомендации',
+        exTips: 'Советы и частые ошибки',
+        exTipsHint: 'что делать и чего избегать',
         exMuscles: 'Рабочие мышцы',
-        exMusclesHint: 'основные и вспомогательные мышцы',
+        exMusclesHint: 'основные и вспомогательные',
         exCategory: 'Категория',
         exCategoryHint: 'compound, isolation, mobility, stretch, warmup',
         preview: 'Предпросмотр',
         saveEx: '💾 Сохранить',
         cancel: '✕ Отмена',
-        // Units
         exCount: 'упр.',
         noResults: 'Ничего не найдено',
         saved: '✅ База сохранена',
-        // Stats
         statGroups: 'Групп',
         statSubs: 'Подгрупп',
         statExercises: 'Упражнений',
-        statCustom: 'Своих упражнений',
-        // Add to workout button
-        addToWorkout: '➕ В тренировку',
-        added: '✅ Добавлено в тренировку'
+        statCustom: 'Своих',
+        statGifs: 'С гифками',
+        // Move-to modal
+        moveToTitle: '📁 Переместить',
+        moveToPrompt: 'Выберите куда переместить:',
+        moveToRoot: '⬆ Наверх (сделать группой)',
+        moveToNone: '(нет других групп)',
+        // GIF picker
+        gifPickerTitle: '📚 Библиотека гифок и фото',
+        gifPickerSearch: 'Поиск по названию...',
+        gifPickerCount: 'доступно',
+        gifPickerUse: 'Выбрать',
+        gifPickerNone: 'Ничего не найдено',
+        gifPickerEmpty: 'Библиотека пуста'
       },
       en: {
         title: '🏋️ Exercise DB Editor',
-        searchPh: 'Search by name or ID...',
-        addGroup: '+ Muscle Group',
+        searchPh: 'Search: name, ID, equipment...',
+        addGroup: '+ Group',
         addSub: '+ Subgroup',
         addEx: '+ Exercise',
-        edit: '✏️ Edit',
-        delete: '🗑 Delete',
+        edit: '✏️',
+        delete: '🗑',
+        dup: '⧉',
+        up: '▲',
+        down: '▼',
+        moveTo: '📁↦',
+        expandAll: '▽ Expand all',
+        collapseAll: '▷ Collapse all',
         confirmDelGrp: 'Delete entire group with all subgroups and exercises?',
         confirmDelSub: 'Delete subgroup with all exercises?',
         confirmDelEx: 'Delete exercise?',
-        resetAll: '🔄 Reset DB',
+        resetAll: '🔄 Reset',
         confirmReset: 'Delete ALL exercises and start over? This cannot be undone!',
         save: '💾 Save DB',
         close: '✕ Close',
-        export: '⬇ Export JSON',
-        import: '⬆ Import JSON',
+        export: '⬇ Export',
+        import: '⬆ Import',
         confirmImport: 'Import DB from JSON? Current DB will be replaced.',
-        grpTitleNew: '➕ New Muscle Group',
-        grpTitleEdit: '✏️ Edit Group',
+        grpNew: '➕ New Muscle Group',
+        grpEdit: '✏️ Edit Group',
         grpId: 'Group ID',
-        grpIdHint: 'latin, e.g.: chest, back, legs',
-        grpNameRu: 'Name (RU)',
-        grpNameEn: 'Name (EN)',
-        grpNameHe: 'שם (עבר)',
-        grpIcon: 'Icon (emoji)',
-        subTitleNew: '➕ New Subgroup',
-        subTitleEdit: '✏️ Edit Subgroup',
+        grpIdHint: 'latin: chest, back, legs',
+        grpCustomName: 'Custom name (optional)',
+        grpCustomHint: 'if ID is not in dictionary',
+        subNew: '➕ New Subgroup',
+        subEdit: '✏️ Edit Subgroup',
         subId: 'Subgroup ID',
         subIdHint: 'e.g.: chest_upper, back_lats',
-        subNameRu: 'Name (RU)',
-        subNameEn: 'Name (EN)',
-        subNameHe: 'שם (עבר)',
-        exTitleNew: '➕ New Exercise',
-        exTitleEdit: '✏️ Edit Exercise',
+        subCustomName: 'Custom name (optional)',
+        subCustomHint: 'if ID is not in dictionary',
+        exNew: '➕ New Exercise',
+        exEdit: '✏️ Edit Exercise',
         exId: 'Exercise ID',
-        exIdHint: 'latin, e.g.: bench_press, squat',
+        exIdHint: 'latin: bench_press, squat',
         exEquip: 'Equipment',
         exEquipHint: 'barbell, dumbbell, cable, machine, bw, band, kettlebell, trx',
         exNameRu: 'Name (RU)',
@@ -46248,13 +46285,14 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         exGifHint: 'https://... link to gif',
         exPhotoUrl: 'Photo URL (fallback)',
         exPhotoHint: 'https://... link to jpg/png',
+        pickFromLibrary: '📚 Pick from library',
         exTechniqueRu: 'Technique (RU)',
         exTechniqueEn: 'Technique (EN)',
         exTechniqueHe: 'טכניקה (עבר)',
-        exTips: 'Tips & Mistakes',
-        exTipsHint: 'Common mistakes and recommendations',
+        exTips: 'Tips & common mistakes',
+        exTipsHint: 'what to do and avoid',
         exMuscles: 'Working muscles',
-        exMusclesHint: 'primary and secondary muscles',
+        exMusclesHint: 'primary and secondary',
         exCategory: 'Category',
         exCategoryHint: 'compound, isolation, mobility, stretch, warmup',
         preview: 'Preview',
@@ -46267,46 +46305,58 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         statSubs: 'Subgroups',
         statExercises: 'Exercises',
         statCustom: 'Custom',
-        addToWorkout: '➕ To Workout',
-        added: '✅ Added to workout'
+        statGifs: 'With GIFs',
+        moveToTitle: '📁 Move',
+        moveToPrompt: 'Choose where to move:',
+        moveToRoot: '⬆ To top (make a group)',
+        moveToNone: '(no other groups)',
+        gifPickerTitle: '📚 GIF & photo library',
+        gifPickerSearch: 'Search by name...',
+        gifPickerCount: 'available',
+        gifPickerUse: 'Use',
+        gifPickerNone: 'Nothing found',
+        gifPickerEmpty: 'Library is empty'
       },
       he: {
         title: '🏋️ עורך מאגר תרגילים',
-        searchPh: 'חיפוש לפי שם או מזהה...',
-        addGroup: '+ קבוצת שרירים',
+        searchPh: 'חיפוש: שם, מזהה, ציוד...',
+        addGroup: '+ קבוצה',
         addSub: '+ תת-קבוצה',
         addEx: '+ תרגיל',
-        edit: '✏️ ערוך',
-        delete: '🗑 מחק',
+        edit: '✏️',
+        delete: '🗑',
+        dup: '⧉',
+        up: '▲',
+        down: '▼',
+        moveTo: '📁↦',
+        expandAll: '▽ פתח הכל',
+        collapseAll: '▷ סגור הכל',
         confirmDelGrp: 'למחוק את כל הקבוצה עם כל תת-הקבוצות והתרגילים?',
         confirmDelSub: 'למחוק תת-קבוצה עם כל התרגילים?',
         confirmDelEx: 'למחוק תרגיל?',
-        resetAll: '🔄 אפס מאגר',
+        resetAll: '🔄 אפס',
         confirmReset: 'למחוק את כל התרגילים ולהתחיל מחדש? לא ניתן לבטל!',
         save: '💾 שמור מאגר',
         close: '✕ סגור',
-        export: '⬇ ייצוא JSON',
-        import: '⬆ ייבוא JSON',
+        export: '⬇ ייצוא',
+        import: '⬆ ייבוא',
         confirmImport: 'לייבא מאגר מ-JSON? המאגר הנוכחי יוחלף.',
-        grpTitleNew: '➕ קבוצת שרירים חדשה',
-        grpTitleEdit: '✏️ עריכת קבוצה',
+        grpNew: '➕ קבוצת שרירים חדשה',
+        grpEdit: '✏️ עריכת קבוצה',
         grpId: 'מזהה קבוצה',
-        grpIdHint: 'בלטינית, לדוגמה: chest, back, legs',
-        grpNameRu: 'שם (רוס)',
-        grpNameEn: 'Name (EN)',
-        grpNameHe: 'שם (עבר)',
-        grpIcon: 'אייקון (אימוג\'י)',
-        subTitleNew: '➕ תת-קבוצה חדשה',
-        subTitleEdit: '✏️ עריכת תת-קבוצה',
+        grpIdHint: 'בלטינית: chest, back, legs',
+        grpCustomName: 'שם מותאם (אופציונלי)',
+        grpCustomHint: 'אם המזהה לא במילון',
+        subNew: '➕ תת-קבוצה חדשה',
+        subEdit: '✏️ עריכת תת-קבוצה',
         subId: 'מזהה תת-קבוצה',
         subIdHint: 'לדוגמה: chest_upper, back_lats',
-        subNameRu: 'שם (רוס)',
-        subNameEn: 'Name (EN)',
-        subNameHe: 'שם (עבר)',
-        exTitleNew: '➕ תרגיל חדש',
-        exTitleEdit: '✏️ עריכת תרגיל',
+        subCustomName: 'שם מותאם (אופציונלי)',
+        subCustomHint: 'אם המזהה לא במילון',
+        exNew: '➕ תרגיל חדש',
+        exEdit: '✏️ עריכת תרגיל',
         exId: 'מזהה תרגיל',
-        exIdHint: 'בלטינית, לדוגמה: bench_press, squat',
+        exIdHint: 'בלטינית: bench_press, squat',
         exEquip: 'ציוד',
         exEquipHint: 'barbell, dumbbell, cable, machine, bw, band, kettlebell, trx',
         exNameRu: 'שם (רוס)',
@@ -46316,36 +46366,107 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         exGifHint: 'https://... קישור ל-gif',
         exPhotoUrl: 'URL תמונה (גיבוי)',
         exPhotoHint: 'https://... קישור ל-jpg/png',
+        pickFromLibrary: '📚 בחר מהספרייה',
         exTechniqueRu: 'טכניקה (רוס)',
         exTechniqueEn: 'Technique (EN)',
         exTechniqueHe: 'טכניקה (עבר)',
-        exTips: 'טיפים ושגיאות',
-        exTipsHint: 'שגיאות נפוצות והמלצות',
+        exTips: 'טיפים ושגיאות נפוצות',
+        exTipsHint: 'מה לעשות ומה לא',
         exMuscles: 'שרירים עובדים',
-        exMusclesHint: 'שרירים עיקריים ומשניים',
+        exMusclesHint: 'עיקריים ומשניים',
         exCategory: 'קטגוריה',
         exCategoryHint: 'compound, isolation, mobility, stretch, warmup',
         preview: 'תצוגה מקדימה',
         saveEx: '💾 שמור',
         cancel: '✕ ביטול',
         exCount: 'תרג',
-        noResults: 'לא נמצאו תוצאות',
+        noResults: 'אין תוצאות',
         saved: '✅ המאגר נשמר',
         statGroups: 'קבוצות',
         statSubs: 'תת-קבוצות',
         statExercises: 'תרגילים',
-        statCustom: 'מותאם אישית',
-        addToWorkout: '➕ לאימון',
-        added: '✅ נוסף לאימון'
+        statCustom: 'מותאם',
+        statGifs: 'עם גיפים',
+        moveToTitle: '📁 העבר',
+        moveToPrompt: 'בחר לאן להעביר:',
+        moveToRoot: '⬆ למעלה (לקבוצה)',
+        moveToNone: '(אין קבוצות אחרות)',
+        gifPickerTitle: '📚 ספריית גיפים ותמונות',
+        gifPickerSearch: 'חיפוש לפי שם...',
+        gifPickerCount: 'זמינים',
+        gifPickerUse: 'בחר',
+        gifPickerNone: 'לא נמצא',
+        gifPickerEmpty: 'הספרייה ריקה'
       }
     };
     return R[l] || R.ru;
   }
 
-  function getExLabel(ex){
-    if(!ex) return '';
-    var l = lang();
-    return ex[l] || ex.ru || ex.en || ex.he || ex.id || '';
+  // =============== Collapse state (per session) ===============
+  var COLLAPSE = { groups: {}, subs: {} };
+  // Default: everything collapsed. Will be set true on first render.
+
+  function isGrpOpen(gi){ return COLLAPSE.groups[gi] === true; }
+  function isSubOpen(gi, si){ return COLLAPSE.subs[gi+'_'+si] === true; }
+  function setGrpOpen(gi, v){ COLLAPSE.groups[gi] = v; }
+  function setSubOpen(gi, si, v){ COLLAPSE.subs[gi+'_'+si] = v; }
+
+  // =============== Helper: get all GIFs/photos available ===============
+  function buildLibrary(){
+    var lib = [];
+    // 1) EXERCISE_GIFS (burnfit.io) — keyed by exercise id
+    try {
+      if (typeof EXERCISE_GIFS !== 'undefined') {
+        Object.keys(EXERCISE_GIFS).forEach(function(id){
+          lib.push({ id: id, url: EXERCISE_GIFS[id], type: 'gif', source: 'burnfit' });
+        });
+      }
+    } catch(e){}
+    // 2) Local gifs/ folder — we don't have a list, but try common names via EXERCISE_DB ids
+    try {
+      if (typeof EXERCISE_DB !== 'undefined' && window.EX_GIF_BASE) {
+        EXERCISE_DB.forEach(function(g){
+          (g.subgroups||[]).forEach(function(sg){
+            (sg.exercises||[]).forEach(function(ex){
+              if (ex.id && /^[\w-]+$/.test(ex.id)) {
+                lib.push({ id: ex.id, url: window.EX_GIF_BASE + ex.id + '.gif', type: 'gif', source: 'local' });
+              }
+            });
+          });
+        });
+      }
+    } catch(e){}
+    // 3) wger-img local files
+    try {
+      if (typeof EX_PHOTO_MAP_WGER !== 'undefined') {
+        Object.keys(EX_PHOTO_MAP_WGER).forEach(function(id){
+          lib.push({ id: id, url: EX_PHOTO_MAP_WGER[id], type: 'photo', source: 'wger' });
+        });
+      }
+    } catch(e){}
+    // 4) free-exercise-db photos
+    try {
+      if (typeof EX_PHOTO_MAP !== 'undefined' && typeof EX_PHOTO_CDN !== 'undefined') {
+        Object.keys(EX_PHOTO_MAP).forEach(function(id){
+          var v = EX_PHOTO_MAP[id].split('|');
+          var folder = v[0];
+          var n = parseInt(v[1],10) || 1;
+          for (var i = 0; i < n; i++) {
+            lib.push({ id: id + (i>0 ? '_'+i : ''), url: EX_PHOTO_CDN + encodeURIComponent(folder) + '/' + i + '.jpg', type: 'photo', source: 'free-exercise-db', originalId: id, frame: i });
+          }
+        });
+      }
+    } catch(e){}
+
+    // Deduplicate by url
+    var seen = {};
+    var out = [];
+    lib.forEach(function(item){
+      if (seen[item.url]) return;
+      seen[item.url] = true;
+      out.push(item);
+    });
+    return out;
   }
 
   function getExGif(ex){
@@ -46356,15 +46477,10 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     if(!ex) return '';
     return ex.photoUrl || ex._photo || ex.photo || '';
   }
-  function getExTech(ex){
-    if(!ex) return '';
-    var l = lang();
-    return ex['technique_'+l] || ex.technique || ex._tech || ex['technique_ru'] || ex['technique_en'] || ex['technique_he'] || '';
-  }
 
   // =============== Main editor ===============
   window.__p5openExEditor = function() {
-    var t = L();
+    var t = T();
     if (typeof EXERCISE_DB === 'undefined') { alert('EXERCISE_DB not available'); return; }
 
     var existing = document.getElementById('p5exEditor');
@@ -46375,24 +46491,26 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:8px;';
     
     overlay.innerHTML = 
-      '<div style="background:var(--surface-color,#fff);color:var(--text-primary,#212121);border-radius:16px;max-width:1000px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+      '<div style="background:var(--surface-color,#fff);color:var(--text-primary,#212121);border-radius:16px;max-width:1100px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border-radius:16px 16px 0 0;">' +
           '<h2 style="margin:0;font-size:18px;font-weight:700;">'+esc(t.title)+'</h2>' +
           '<div style="display:flex;gap:6px;align-items:center;">' +
-            '<button id="p7exportBtn" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.export)+'</button>' +
-            '<button id="p7importBtn" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.import)+'</button>' +
-            '<button id="p7resetBtn" style="background:rgba(239,68,68,0.3);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.resetAll)+'</button>' +
+            '<button id="p8expandAll" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.expandAll)+'</button>' +
+            '<button id="p8collapseAll" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.collapseAll)+'</button>' +
+            '<button id="p8exportBtn" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.export)+'</button>' +
+            '<button id="p8importBtn" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.import)+'</button>' +
+            '<button id="p8resetBtn" style="background:rgba(239,68,68,0.3);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.resetAll)+'</button>' +
             '<button onclick="document.getElementById(\'p5exEditor\').remove();document.body.style.overflow=\'\'" style="background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer;line-height:1;padding:0 4px;">×</button>' +
           '</div>' +
         '</div>' +
         '<div style="padding:10px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);display:flex;gap:8px;align-items:center;background:var(--surface-color,#fff);">' +
           '<input id="p7search" type="text" placeholder="'+esc(t.searchPh)+'" style="flex:1;padding:8px 12px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);">' +
-          '<button onclick="window.__p7addGroup()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">'+esc(t.addGroup)+'</button>' +
+          '<button onclick="window.__p8addGroup()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">'+esc(t.addGroup)+'</button>' +
         '</div>' +
         '<div id="p7stats" style="padding:8px 16px;background:rgba(0,0,0,0.02);font-size:11px;color:var(--text-secondary,#757575);border-bottom:1px solid var(--border-color,#E0E0E0);"></div>' +
         '<div id="p5exBody" style="flex:1;overflow-y:auto;padding:12px 16px;"></div>' +
         '<div style="display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--border-color,#E0E0E0);background:var(--surface-color,#fff);">' +
-          '<button onclick="window.__p7saveDB()" style="flex:1;background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.save)+'</button>' +
+          '<button onclick="window.__p8saveDB()" style="flex:1;background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.save)+'</button>' +
           '<button onclick="document.getElementById(\'p5exEditor\').remove();document.body.style.overflow=\'\'" style="background:rgba(0,0,0,0.05);color:var(--text-primary,#212121);border:0;border-radius:10px;padding:12px 20px;cursor:pointer;font-size:13px;">'+esc(t.close)+'</button>' +
         '</div>' +
       '</div>';
@@ -46401,40 +46519,46 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     
     // Hook up buttons
     var sb = document.getElementById('p7search');
-    if (sb) sb.addEventListener('input', function(){ window.__p7renderDB(); });
-    var eb = document.getElementById('p7exportBtn');
-    if (eb) eb.onclick = window.__p7exportDB;
-    var ib = document.getElementById('p7importBtn');
-    if (ib) ib.onclick = window.__p7importDB;
-    var rb = document.getElementById('p7resetBtn');
-    if (rb) rb.onclick = window.__p7resetDB;
+    if (sb) sb.addEventListener('input', function(){ window.__p8renderDB(); });
+    document.getElementById('p8expandAll').onclick = function(){
+      EXERCISE_DB.forEach(function(g, gi){ setGrpOpen(gi, true); (g.subgroups||[]).forEach(function(sg, si){ setSubOpen(gi, si, true); }); });
+      window.__p8renderDB();
+    };
+    document.getElementById('p8collapseAll').onclick = function(){
+      EXERCISE_DB.forEach(function(g, gi){ setGrpOpen(gi, false); (g.subgroups||[]).forEach(function(sg, si){ setSubOpen(gi, si, false); }); });
+      window.__p8renderDB();
+    };
+    document.getElementById('p8exportBtn').onclick = window.__p8exportDB;
+    document.getElementById('p8importBtn').onclick = window.__p8importDB;
+    document.getElementById('p8resetBtn').onclick = window.__p8resetDB;
     
-    window.__p7renderDB();
+    window.__p8renderDB();
   };
 
   // =============== Render DB ===============
-  window.__p7renderDB = function() {
+  window.__p8renderDB = function() {
     var body = document.getElementById('p5exBody');
     if (!body) return;
     if (typeof EXERCISE_DB === 'undefined') return;
-    var t = L();
+    var t = T();
     var search = (document.getElementById('p7search')||{}).value || '';
     search = search.trim().toLowerCase();
     
     // Compute stats
-    var gCount = EXERCISE_DB.length, sCount = 0, eCount = 0, cCount = 0;
+    var gCount = EXERCISE_DB.length, sCount = 0, eCount = 0, cCount = 0, gCount2 = 0;
     EXERCISE_DB.forEach(function(g){
       (g.subgroups||[]).forEach(function(sg){
         sCount++;
         (sg.exercises||[]).forEach(function(ex){
           eCount++;
           if (ex.id && ex.id.indexOf('custom_') === 0) cCount++;
+          if (getExGif(ex) || getExPhoto(ex)) gCount2++;
         });
       });
     });
     var statsEl = document.getElementById('p7stats');
     if (statsEl) {
-      statsEl.innerHTML = '<b>'+t.statGroups+':</b> '+gCount+' &nbsp; <b>'+t.statSubs+':</b> '+sCount+' &nbsp; <b>'+t.statExercises+':</b> '+eCount+' &nbsp; <b>'+t.statCustom+':</b> '+cCount;
+      statsEl.innerHTML = '<b>'+t.statGroups+':</b> '+gCount+' &nbsp;·&nbsp; <b>'+t.statSubs+':</b> '+sCount+' &nbsp;·&nbsp; <b>'+t.statExercises+':</b> '+eCount+' &nbsp;·&nbsp; <b>'+t.statGifs+':</b> '+gCount2+' &nbsp;·&nbsp; <b>'+t.statCustom+':</b> '+cCount;
     }
     
     var html = '';
@@ -46445,18 +46569,16 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
       (group.subgroups||[]).forEach(function(sg) { exCount += (sg.exercises||[]).length; });
       
       // Filter check
+      var gLbl = groupLabel(group);
       var groupMatches = !search || (group.id && group.id.toLowerCase().indexOf(search) >= 0)
-        || (group.ru && group.ru.toLowerCase().indexOf(search) >= 0)
-        || (group.en && group.en.toLowerCase().indexOf(search) >= 0)
-        || (group.he && group.he.toLowerCase().indexOf(search) >= 0);
+        || (gLbl && gLbl.toLowerCase().indexOf(search) >= 0);
       
       var subHtml = '';
       var subMatched = 0;
       (group.subgroups||[]).forEach(function(sg, si) {
+        var sgLbl = subLabel(sg);
         var sgMatches = !search || (sg.id && sg.id.toLowerCase().indexOf(search) >= 0)
-          || (sg.ru && sg.ru.toLowerCase().indexOf(search) >= 0)
-          || (sg.en && sg.en.toLowerCase().indexOf(search) >= 0)
-          || (sg.he && sg.he.toLowerCase().indexOf(search) >= 0);
+          || (sgLbl && sgLbl.toLowerCase().indexOf(search) >= 0);
         
         var exHtml = '';
         var exMatched = 0;
@@ -46465,45 +46587,61 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
             || (ex.id && ex.id.toLowerCase().indexOf(search) >= 0)
             || (ex.ru && ex.ru.toLowerCase().indexOf(search) >= 0)
             || (ex.en && ex.en.toLowerCase().indexOf(search) >= 0)
-            || (ex.he && ex.he.toLowerCase().indexOf(search) >= 0);
+            || (ex.he && ex.he.toLowerCase().indexOf(search) >= 0)
+            || (ex.equip && ex.equip.toLowerCase().indexOf(search) >= 0);
           if (!exMatches) return;
           exMatched++;
           
           var gif = getExGif(ex);
           var photo = getExPhoto(ex);
           var thumb = '';
+          var fallbackBg = 'linear-gradient(135deg,#10B981,#047857)';
+          var fallbackChar = (ex.id||'?').charAt(0).toUpperCase();
           if (gif) {
-            thumb = '<img src="'+esc(gif)+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#f0f0f0;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;">'+esc((ex.id||'?').charAt(0).toUpperCase())+'</div>';
+            thumb = '<img src="'+esc(gif)+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;background:#f0f0f0;flex-shrink:0;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div style="width:60px;height:60px;border-radius:8px;background:'+fallbackBg+';color:#fff;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:700;flex-shrink:0;">'+esc(fallbackChar)+'</div>';
           } else if (photo) {
-            thumb = '<img src="'+esc(photo)+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#f0f0f0;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;">'+esc((ex.id||'?').charAt(0).toUpperCase())+'</div>';
+            thumb = '<img src="'+esc(photo)+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;background:#f0f0f0;flex-shrink:0;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div style="width:60px;height:60px;border-radius:8px;background:'+fallbackBg+';color:#fff;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:700;flex-shrink:0;">'+esc(fallbackChar)+'</div>';
           } else {
-            thumb = '<div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;">'+esc((ex.id||'?').charAt(0).toUpperCase())+'</div>';
+            thumb = '<div style="width:60px;height:60px;border-radius:8px;background:'+fallbackBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;flex-shrink:0;">'+esc(fallbackChar)+'</div>';
           }
           
-          exHtml += '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:var(--surface-color,#fff);margin-bottom:4px;border:1px solid var(--border-color,#EEE);">' +
+          exHtml += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:var(--surface-color,#fff);margin-bottom:4px;border:1px solid var(--border-color,#EEE);">' +
             thumb +
             '<div style="flex:1;min-width:0;">' +
-              '<div style="font-weight:600;font-size:13px;color:var(--text-primary,#212121);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(getExLabel(ex))+'</div>' +
+              '<div style="font-weight:600;font-size:13px;color:var(--text-primary,#212121);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(exLabel(ex))+'</div>' +
               '<div style="font-size:10px;color:var(--text-light,#999);margin-top:2px;">'+esc(ex.id||'')+' • '+esc(ex.equip||'bw')+(ex.category?' • '+esc(ex.category):'')+'</div>' +
             '</div>' +
-            '<button onclick="window.__p7editEx('+gi+','+si+','+ei+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.edit)+'</button>' +
-            '<button onclick="window.__p7delEx('+gi+','+si+','+ei+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.delete)+'</button>' +
+            '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+              '<button onclick="window.__p8moveEx('+gi+','+si+','+ei+')" title="'+esc(t.moveTo)+'" style="background:rgba(107,114,128,0.12);color:#6B7280;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;">'+esc(t.moveTo)+'</button>' +
+              '<button onclick="window.__p8dupEx('+gi+','+si+','+ei+')" title="Duplicate" style="background:rgba(16,185,129,0.12);color:#10B981;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;">'+esc(t.dup)+'</button>' +
+              '<button onclick="window.__p8moveExUp('+gi+','+si+','+ei+')" title="Up" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;">'+esc(t.up)+'</button>' +
+              '<button onclick="window.__p8moveExDown('+gi+','+si+','+ei+')" title="Down" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;">'+esc(t.down)+'</button>' +
+              '<button onclick="window.__p7editEx('+gi+','+si+','+ei+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.edit)+'</button>' +
+              '<button onclick="window.__p7delEx('+gi+','+si+','+ei+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.delete)+'</button>' +
+            '</div>' +
           '</div>';
         });
         
         if (!sgMatches && exMatched === 0 && search) return;
         subMatched++;
         
-        var sgLabel = sg.ru || sg.en || sg.he || sg.id;
-        subHtml += '<div style="margin-bottom:10px;padding:8px 10px;background:rgba(0,0,0,0.02);border-radius:10px;border:1px solid var(--border-color,#EEE);">' +
-          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
-            '<span onclick="window.__p7toggleSub('+gi+','+si+')" id="p7s'+gi+'_'+si+'" style="cursor:pointer;font-size:12px;width:18px;text-align:center;">▼</span>' +
-            '<span style="flex:1;font-weight:600;font-size:13px;color:var(--text-primary,#212121);">'+esc(sgLabel)+'</span>' +
-            '<span style="font-size:10px;color:var(--text-light,#999);background:rgba(0,0,0,0.05);padding:2px 8px;border-radius:10px;">'+(sg.exercises||[]).length+' '+t.exCount+'</span>' +
-            '<button onclick="window.__p7editSub('+gi+','+si+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;">'+esc(t.edit)+'</button>' +
-            '<button onclick="window.__p7delSub('+gi+','+si+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;">'+esc(t.delete)+'</button>' +
+        var isOpen = isSubOpen(gi, si);
+        var icon = isOpen ? '▼' : '▶';
+        
+        subHtml += '<div style="margin-bottom:8px;padding:8px 10px;background:rgba(0,0,0,0.02);border-radius:10px;border:1px solid var(--border-color,#EEE);">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
+            '<span onclick="window.__p8toggleSub('+gi+','+si+')" id="p8s'+gi+'_'+si+'" style="cursor:pointer;font-size:12px;width:18px;text-align:center;flex-shrink:0;">'+icon+'</span>' +
+            '<span style="flex:1;font-weight:600;font-size:13px;color:var(--text-primary,#212121);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(sgLbl)+'</span>' +
+            '<span style="font-size:10px;color:var(--text-light,#999);background:rgba(0,0,0,0.05);padding:2px 8px;border-radius:10px;flex-shrink:0;">'+(sg.exercises||[]).length+' '+t.exCount+'</span>' +
+            '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+              '<button onclick="window.__p8moveSub('+gi+','+si+')" title="'+esc(t.moveTo)+'" style="background:rgba(107,114,128,0.12);color:#6B7280;border:0;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;">'+esc(t.moveTo)+'</button>' +
+              '<button onclick="window.__p8moveSubUp('+gi+','+si+')" title="Up" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;">'+esc(t.up)+'</button>' +
+              '<button onclick="window.__p8moveSubDown('+gi+','+si+')" title="Down" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;">'+esc(t.down)+'</button>' +
+              '<button onclick="window.__p7editSub('+gi+','+si+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;font-weight:600;">'+esc(t.edit)+'</button>' +
+              '<button onclick="window.__p7delSub('+gi+','+si+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:3px 6px;cursor:pointer;font-size:10px;font-weight:600;">'+esc(t.delete)+'</button>' +
+            '</div>' +
           '</div>' +
-          '<div id="p7sb'+gi+'_'+si+'" style="padding-left:8px;">' +
+          '<div id="p8sb'+gi+'_'+si+'" style="padding-left:8px;'+(isOpen?'':'display:none;')+'">' +
             exHtml +
             '<button onclick="window.__p7addEx('+gi+','+si+')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:11px;margin-top:6px;font-weight:600;">'+esc(t.addEx)+'</button>' +
           '</div>' +
@@ -46513,21 +46651,26 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
       if (!groupMatches && subMatched === 0 && search) return;
       anyMatched = true;
       
-      var gLabel = group.ru || group.en || group.he || group.id;
-      var gIcon = group.icon || (group.id === 'chest' ? '💪' : group.id === 'back' ? '🔙' : group.id === 'legs' ? '🦵' : group.id === 'shoulders' ? '🤸' : group.id === 'arms' ? '💪' : group.id === 'core' ? '🎯' : group.id === 'cardio' ? '❤️' : '🏋️');
+      var gLbl2 = groupLabel(group);
+      var isOpen = isGrpOpen(gi);
+      var icon = isOpen ? '▼' : '▶';
       
       html += '<div style="background:var(--surface-color,#fff);border:1px solid var(--border-color,#EEE);border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
-        '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(90deg,rgba(76,175,80,0.08),rgba(16,185,129,0.04));border-bottom:1px solid var(--border-color,#EEE);">' +
-          '<span onclick="window.__p7toggleGroup('+gi+')" id="p7g'+gi+'" style="cursor:pointer;font-size:16px;width:20px;text-align:center;">▼</span>' +
-          '<span style="font-size:22px;">'+esc(gIcon)+'</span>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-weight:700;font-size:15px;color:var(--text-primary,#212121);">'+esc(gLabel)+'</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:linear-gradient(90deg,rgba(76,175,80,0.08),rgba(16,185,129,0.04));border-bottom:1px solid var(--border-color,#EEE);">' +
+          '<span onclick="window.__p8toggleGroup('+gi+')" id="p8g'+gi+'" style="cursor:pointer;font-size:14px;width:20px;text-align:center;flex-shrink:0;">'+icon+'</span>' +
+          '<span style="flex:1;min-width:0;">' +
+            '<div style="font-weight:700;font-size:15px;color:var(--text-primary,#212121);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(gLbl2)+'</div>' +
             '<div style="font-size:11px;color:var(--text-light,#999);margin-top:2px;">'+esc(group.id||'')+' • '+(group.subgroups||[]).length+' '+t.statSubs+' • '+exCount+' '+t.exCount+'</div>' +
           '</div>' +
-          '<button onclick="window.__p7editGroup('+gi+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.edit)+'</button>' +
-          '<button onclick="window.__p7delGroup('+gi+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.delete)+'</button>' +
+          '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+            '<button onclick="window.__p8moveGroup('+gi+')" title="'+esc(t.moveTo)+'" style="background:rgba(107,114,128,0.12);color:#6B7280;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;">'+esc(t.moveTo)+'</button>' +
+            '<button onclick="window.__p8moveGroupUp('+gi+')" title="Up" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;">'+esc(t.up)+'</button>' +
+            '<button onclick="window.__p8moveGroupDown('+gi+')" title="Down" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;">'+esc(t.down)+'</button>' +
+            '<button onclick="window.__p7editGroup('+gi+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.edit)+'</button>' +
+            '<button onclick="window.__p7delGroup('+gi+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.delete)+'</button>' +
+          '</div>' +
         '</div>' +
-        '<div id="p7gb'+gi+'" style="padding:10px 14px;">' +
+        '<div id="p8gb'+gi+'" style="padding:10px 14px;'+(isOpen?'':'display:none;')+'">' +
           subHtml +
           '<button onclick="window.__p7addSub('+gi+')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px;margin-top:4px;font-weight:600;">'+esc(t.addSub)+'</button>' +
         '</div>' +
@@ -46541,25 +46684,294 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     body.innerHTML = html;
   };
 
-  // =============== Toggle ===============
-  window.__p7toggleGroup = function(gi) {
-    var el = document.getElementById('p7gb'+gi);
-    var icon = document.getElementById('p7g'+gi);
-    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
-    if (icon) { icon.textContent = icon.textContent === '▼' ? '▶' : '▼'; }
+  // =============== Toggle (collapse state) ===============
+  window.__p8toggleGroup = function(gi) {
+    setGrpOpen(gi, !isGrpOpen(gi));
+    window.__p8renderDB();
   };
-  window.__p7toggleSub = function(gi, si) {
-    var el = document.getElementById('p7sb'+gi+'_'+si);
-    var icon = document.getElementById('p7s'+gi+'_'+si);
-    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
-    if (icon) { icon.textContent = icon.textContent === '▼' ? '▶' : '▼'; }
+  window.__p8toggleSub = function(gi, si) {
+    setSubOpen(gi, si, !isSubOpen(gi, si));
+    window.__p8renderDB();
   };
 
-  // =============== Group modal ===============
+  // =============== Reordering ===============
+  window.__p8moveGroupUp = function(gi) {
+    if (gi <= 0) return;
+    var tmp = EXERCISE_DB[gi-1];
+    EXERCISE_DB[gi-1] = EXERCISE_DB[gi];
+    EXERCISE_DB[gi] = tmp;
+    // Preserve open state by re-keying
+    var newGroups = {};
+    Object.keys(COLLAPSE.groups).forEach(function(k){
+      var i = parseInt(k,10);
+      if (i === gi-1) newGroups[gi] = COLLAPSE.groups[k];
+      else if (i === gi) newGroups[gi-1] = COLLAPSE.groups[k];
+      else newGroups[k] = COLLAPSE.groups[k];
+    });
+    COLLAPSE.groups = newGroups;
+    window.__p8renderDB();
+  };
+  window.__p8moveGroupDown = function(gi) {
+    if (gi >= EXERCISE_DB.length - 1) return;
+    var tmp = EXERCISE_DB[gi+1];
+    EXERCISE_DB[gi+1] = EXERCISE_DB[gi];
+    EXERCISE_DB[gi] = tmp;
+    var newGroups = {};
+    Object.keys(COLLAPSE.groups).forEach(function(k){
+      var i = parseInt(k,10);
+      if (i === gi+1) newGroups[gi] = COLLAPSE.groups[k];
+      else if (i === gi) newGroups[gi+1] = COLLAPSE.groups[k];
+      else newGroups[k] = COLLAPSE.groups[k];
+    });
+    COLLAPSE.groups = newGroups;
+    window.__p8renderDB();
+  };
+  window.__p8moveSubUp = function(gi, si) {
+    var g = EXERCISE_DB[gi];
+    if (!g || !g.subgroups || si <= 0) return;
+    var tmp = g.subgroups[si-1];
+    g.subgroups[si-1] = g.subgroups[si];
+    g.subgroups[si] = tmp;
+    // Re-key subs
+    var newSubs = {};
+    var keyOld = gi+'_'+(si-1);
+    var keyOld2 = gi+'_'+si;
+    Object.keys(COLLAPSE.subs).forEach(function(k){
+      if (k === keyOld) newSubs[keyOld2] = COLLAPSE.subs[k];
+      else if (k === keyOld2) newSubs[keyOld] = COLLAPSE.subs[k];
+      else newSubs[k] = COLLAPSE.subs[k];
+    });
+    COLLAPSE.subs = newSubs;
+    window.__p8renderDB();
+  };
+  window.__p8moveSubDown = function(gi, si) {
+    var g = EXERCISE_DB[gi];
+    if (!g || !g.subgroups || si >= g.subgroups.length - 1) return;
+    var tmp = g.subgroups[si+1];
+    g.subgroups[si+1] = g.subgroups[si];
+    g.subgroups[si] = tmp;
+    var newSubs = {};
+    var keyOld = gi+'_'+(si+1);
+    var keyOld2 = gi+'_'+si;
+    Object.keys(COLLAPSE.subs).forEach(function(k){
+      if (k === keyOld) newSubs[keyOld2] = COLLAPSE.subs[k];
+      else if (k === keyOld2) newSubs[keyOld] = COLLAPSE.subs[k];
+      else newSubs[k] = COLLAPSE.subs[k];
+    });
+    COLLAPSE.subs = newSubs;
+    window.__p8renderDB();
+  };
+  window.__p8moveExUp = function(gi, si, ei) {
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg || !sg.exercises || ei <= 0) return;
+    var tmp = sg.exercises[ei-1];
+    sg.exercises[ei-1] = sg.exercises[ei];
+    sg.exercises[ei] = tmp;
+    window.__p8renderDB();
+  };
+  window.__p8moveExDown = function(gi, si, ei) {
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg || !sg.exercises || ei >= sg.exercises.length - 1) return;
+    var tmp = sg.exercises[ei+1];
+    sg.exercises[ei+1] = sg.exercises[ei];
+    sg.exercises[ei] = tmp;
+    window.__p8renderDB();
+  };
+
+  // =============== Duplicate exercise ===============
+  window.__p8dupEx = function(gi, si, ei) {
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg || !sg.exercises) return;
+    var ex = sg.exercises[ei];
+    if (!ex) return;
+    var copy = JSON.parse(JSON.stringify(ex));
+    copy.id = (ex.id||'ex') + '_copy_' + Date.now();
+    sg.exercises.splice(ei+1, 0, copy);
+    window.__p8renderDB();
+    if (typeof showToast === 'function') showToast('⧉');
+  };
+
+  // =============== Move-to modal (group, subgroup, exercise) ===============
+  // kind: 'group' | 'sub' | 'ex'
+  window.__p8moveGroup = function(gi) {
+    var t = T();
+    var g = EXERCISE_DB[gi];
+    if (!g) return;
+    // Targets: any other top-level group (becomes subgroup of target)
+    var targets = [];
+    EXERCISE_DB.forEach(function(gg, idx){ if (idx !== gi) targets.push({type:'group', idx: idx, label: groupLabel(gg)}); });
+    if (targets.length === 0) { alert(t.moveToNone); return; }
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p8moveModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10002;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    var optsHtml = targets.map(function(tg){ return '<button onclick="window.__p8doMoveGroup('+gi+','+tg.idx+')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);cursor:pointer;font-size:13px;margin-bottom:4px;">📁 '+esc(tg.label)+'</button>'; }).join('');
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:400px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
+      '<div style="padding:12px 16px;background:linear-gradient(135deg,#6B7280,#374151);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<h3 style="margin:0;font-size:15px;">'+esc(t.moveToTitle)+': '+esc(groupLabel(g))+'</h3>' +
+          '<button onclick="document.getElementById(\'p8moveModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer;">×</button>' +
+        '</div>' +
+        '<div style="font-size:11px;opacity:0.8;margin-top:4px;">'+esc(t.moveToPrompt)+'</div>' +
+      '</div>' +
+      '<div style="padding:14px;overflow-y:auto;flex:1;">' +
+        '<button onclick="window.__p8doPromoteGroup('+gi+')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:1px solid rgba(59,130,246,0.3);border-radius:8px;background:rgba(59,130,246,0.05);color:#3B82F6;cursor:pointer;font-size:13px;margin-bottom:8px;font-weight:600;">'+esc(t.moveToRoot)+'</button>' +
+        optsHtml +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+  };
+
+  window.__p8doMoveGroup = function(srcGi, dstGi) {
+    var src = EXERCISE_DB[srcGi];
+    var dst = EXERCISE_DB[dstGi];
+    if (!src || !dst) return;
+    // Move src group as a new subgroup inside dst
+    // The new subgroup takes src.id and gets all subgroups flattened into dst.subgroups alongside it
+    // To preserve the src structure, we merge: dst.subgroups += src.subgroups (renamed with prefix to avoid collisions)
+    if (!dst.subgroups) dst.subgroups = [];
+    // Add a "header" subgroup with src.id as id (empty exercises — just an organisational node)
+    var headerSub = { id: src.id, exercises: [] };
+    // Use src.id as a custom name to preserve original label
+    if (src.id) {
+      headerSub._customLabel = groupLabel(src);
+    }
+    dst.subgroups.push(headerSub);
+    // Move all original subgroups of src into dst as well
+    (src.subgroups||[]).forEach(function(sg){ dst.subgroups.push(sg); });
+    // Remove src from top-level
+    EXERCISE_DB.splice(srcGi, 1);
+    // Reset collapse state (indices changed)
+    COLLAPSE.groups = {};
+    COLLAPSE.subs = {};
+    var m = document.getElementById('p8moveModal');
+    if (m) m.remove();
+    window.__p8renderDB();
+    if (typeof showToast === 'function') showToast('📁→');
+  };
+
+  window.__p8doPromoteGroup = function(srcGi) {
+    // No-op — already a top-level group
+    var m=document.getElementById('p8moveModal'); if(m) m.remove();
+    if (typeof showToast === 'function') showToast('⬆');
+  };
+
+  window.__p8moveSub = function(gi, si) {
+    var t = T();
+    var g = EXERCISE_DB[gi];
+    var sg = g && g.subgroups[si];
+    if (!sg) return;
+    var targets = [];
+    // Target: any other subgroup-having group, including self but different subgroup slot
+    EXERCISE_DB.forEach(function(gg, idx){
+      if (idx !== gi) targets.push({type:'group', gi: idx, label: groupLabel(gg)});
+    });
+    // Also: promote to top-level group
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p8moveModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10002;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    var optsHtml = targets.map(function(tg){ return '<button onclick="window.__p8doMoveSub('+gi+','+si+','+tg.gi+')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);cursor:pointer;font-size:13px;margin-bottom:4px;">📁 '+esc(tg.label)+'</button>'; }).join('');
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:400px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
+      '<div style="padding:12px 16px;background:linear-gradient(135deg,#6B7280,#374151);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<h3 style="margin:0;font-size:15px;">'+esc(t.moveToTitle)+': '+esc(subLabel(sg))+'</h3>' +
+          '<button onclick="document.getElementById(\'p8moveModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer;">×</button>' +
+        '</div>' +
+        '<div style="font-size:11px;opacity:0.8;margin-top:4px;">'+esc(t.moveToPrompt)+'</div>' +
+      '</div>' +
+      '<div style="padding:14px;overflow-y:auto;flex:1;">' +
+        '<button onclick="window.__p8doPromoteSub('+gi+','+si+')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:1px solid rgba(59,130,246,0.3);border-radius:8px;background:rgba(59,130,246,0.05);color:#3B82F6;cursor:pointer;font-size:13px;margin-bottom:8px;font-weight:600;">'+esc(t.moveToRoot)+'</button>' +
+        (optsHtml || '<div style="color:var(--text-light,#999);font-size:12px;text-align:center;padding:20px;">'+esc(t.moveToNone)+'</div>') +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+  };
+
+  window.__p8doMoveSub = function(srcGi, srcSi, dstGi) {
+    var srcG = EXERCISE_DB[srcGi];
+    var dstG = EXERCISE_DB[dstGi];
+    if (!srcG || !dstG || !srcG.subgroups) return;
+    var sub = srcG.subgroups[srcSi];
+    if (!sub) return;
+    if (!dstG.subgroups) dstG.subgroups = [];
+    dstG.subgroups.push(sub);
+    srcG.subgroups.splice(srcSi, 1);
+    COLLAPSE.subs = {};
+    var m=document.getElementById('p8moveModal'); if(m) m.remove();
+    window.__p8renderDB();
+    if (typeof showToast === 'function') showToast('📁→');
+  };
+
+  window.__p8doPromoteSub = function(srcGi, srcSi) {
+    var srcG = EXERCISE_DB[srcGi];
+    if (!srcG || !srcG.subgroups) return;
+    var sub = srcG.subgroups[srcSi];
+    if (!sub) return;
+    // Promote to top-level group: use sub.id as the new group's id
+    var newGroup = { id: sub.id, subgroups: [{ id: sub.id + '_main', exercises: sub.exercises || [] }] };
+    EXERCISE_DB.push(newGroup);
+    srcG.subgroups.splice(srcSi, 1);
+    COLLAPSE.groups = {};
+    COLLAPSE.subs = {};
+    var m=document.getElementById('p8moveModal'); if(m) m.remove();
+    window.__p8renderDB();
+    if (typeof showToast === 'function') showToast('⬆');
+  };
+
+  window.__p8moveEx = function(gi, si, ei) {
+    var t = T();
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    var ex = sg && sg.exercises[ei];
+    if (!ex) return;
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p8moveModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10002;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    var optsHtml = '';
+    EXERCISE_DB.forEach(function(gg, gidx){
+      (gg.subgroups||[]).forEach(function(s, sidx){
+        if (gidx === gi && sidx === si) return; // skip same subgroup
+        optsHtml += '<button onclick="window.__p8doMoveEx('+gi+','+si+','+ei+','+gidx+','+sidx+')" style="display:block;width:100%;text-align:left;padding:8px 12px;border:1px solid var(--border-color,#E0E0E0);border-radius:6px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);cursor:pointer;font-size:12px;margin-bottom:3px;">'+esc(groupLabel(gg))+' ▸ '+esc(subLabel(s))+'</button>';
+      });
+    });
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:400px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
+      '<div style="padding:12px 16px;background:linear-gradient(135deg,#6B7280,#374151);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<h3 style="margin:0;font-size:14px;">'+esc(t.moveToTitle)+': '+esc(exLabel(ex))+'</h3>' +
+          '<button onclick="document.getElementById(\'p8moveModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer;">×</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:12px;overflow-y:auto;flex:1;">' + optsHtml + '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+  };
+
+  window.__p8doMoveEx = function(srcGi, srcSi, ei, dstGi, dstSi) {
+    var srcSg = EXERCISE_DB[srcGi] && EXERCISE_DB[srcGi].subgroups[srcSi];
+    var dstSg = EXERCISE_DB[dstGi] && EXERCISE_DB[dstGi].subgroups[dstSi];
+    if (!srcSg || !dstSg) return;
+    var ex = srcSg.exercises[ei];
+    if (!ex) return;
+    if (!dstSg.exercises) dstSg.exercises = [];
+    dstSg.exercises.push(ex);
+    srcSg.exercises.splice(ei, 1);
+    var m=document.getElementById('p8moveModal'); if(m) m.remove();
+    window.__p8renderDB();
+    if (typeof showToast === 'function') showToast('📁→');
+  };
+
+  // =============== Group modal (uses GROUP_I18N for preview) ===============
   function openGroupModal(gi) {
-    var t = L();
-    var g = (gi !== undefined) ? EXERCISE_DB[gi] : null;
-    var title = g ? t.grpTitleEdit : t.grpTitleNew;
+    var t = T();
+    var g = (gi !== undefined && gi !== null) ? EXERCISE_DB[gi] : null;
+    var title = g ? t.grpEdit : t.grpNew;
     
     var overlay = document.createElement('div');
     overlay.id = 'p7grpModal';
@@ -46570,64 +46982,98 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;"></div>';
     }
     
+    // Show preview of localized label if id matches a dictionary entry
+    var preview = g ? groupLabel(g) : '';
+    var previewHtml = preview ? '<div style="margin-bottom:10px;padding:8px 10px;background:rgba(76,175,80,0.08);border-radius:8px;font-size:12px;color:#4CAF50;"><b>'+esc(lang()==='he'?'תצוגה מקדימה':(lang()==='en'?'Preview':'Предпросмотр'))+':</b> '+esc(preview)+'</div>' : '';
+    
     overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border-radius:14px 14px 0 0;">' +
         '<h2 style="margin:0;font-size:16px;font-weight:700;">'+esc(title)+'</h2>' +
         '<button onclick="document.getElementById(\'p7grpModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button>' +
       '</div>' +
       '<div style="padding:16px;">' +
+        previewHtml +
         f(t.grpId, 'p7gId', g ? g.id : '', 'text', t.grpIdHint) +
-        f(t.grpNameRu, 'p7gRu', g ? (g.ru||'') : '', 'text', 'Грудь') +
-        f(t.grpNameEn, 'p7gEn', g ? (g.en||'') : '', 'text', 'Chest') +
-        f(t.grpNameHe, 'p7gHe', g ? (g.he||'') : '', 'text', 'חזה') +
-        f(t.grpIcon, 'p7gIcon', g ? (g.icon||'') : '', 'text', '💪') +
+        '<div id="p7gPreviewLive" style="margin-bottom:10px;"></div>' +
+        f(t.grpCustomName, 'p7gCustom', g ? (g._customLabel||'') : '', 'text', t.grpCustomHint) +
       '</div>' +
       '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-color,#E0E0E0);">' +
-        '<button onclick="window.__p7saveGroup('+gi+')" style="flex:1;background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
+        '<button onclick="window.__p8saveGroup('+gi+')" style="flex:1;background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
         '<button onclick="document.getElementById(\'p7grpModal\').remove()" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(t.cancel)+'</button>' +
       '</div>' +
     '</div>';
     document.body.appendChild(overlay);
+    
+    // Live preview as user types ID
+    var idInput = document.getElementById('p7gId');
+    var previewEl = document.getElementById('p7gPreviewLive');
+    if (idInput && previewEl) {
+      var update = function(){
+        var id = (idInput.value||'').trim().toLowerCase().replace(/\s+/g,'_');
+        if (id && GROUP_I18N[id]) {
+          var lbl = lcGet(GROUP_I18N, id);
+          previewEl.innerHTML = '<div style="padding:6px 10px;background:rgba(76,175,80,0.08);border-radius:6px;font-size:12px;color:#4CAF50;">✓ '+esc(lbl)+'</div>';
+        } else if (id) {
+          previewEl.innerHTML = '<div style="padding:6px 10px;background:rgba(234,179,8,0.08);border-radius:6px;font-size:12px;color:#EAB308;">⚠ '+esc(id)+' ('+esc(lang()==='he'?'לא במילון — יידרש שם מותאם':(lang()==='en'?'not in dictionary — custom name needed':'не в словаре — нужно своё название'))+')</div>';
+        } else {
+          previewEl.innerHTML = '';
+        }
+      };
+      idInput.addEventListener('input', update);
+      update();
+    }
   }
 
-  window.__p7addGroup = function() { openGroupModal(undefined); };
+  window.__p8addGroup = function() { openGroupModal(null); };
+  window.__p7addGroup = window.__p8addGroup;
   window.__p7editGroup = function(gi) { openGroupModal(gi); };
 
-  window.__p7saveGroup = function(gi) {
+  window.__p8saveGroup = function(gi) {
+    var t = T();
     var id = (document.getElementById('p7gId').value||'').trim().toLowerCase().replace(/\s+/g,'_');
-    if (!id) { alert('ID required'); return; }
-    var data = {
-      id: id,
-      ru: document.getElementById('p7gRu').value,
-      en: document.getElementById('p7gEn').value,
-      he: document.getElementById('p7gHe').value,
-      icon: document.getElementById('p7gIcon').value || '🏋️'
-    };
+    if (!id) { alert(t.grpId + ' required'); return; }
+    var customLabel = (document.getElementById('p7gCustom').value||'').trim();
+    var data = { id: id };
+    if (customLabel) data._customLabel = customLabel;
     if (gi === undefined || gi === null || EXERCISE_DB[gi] === undefined) {
       data.subgroups = [];
       EXERCISE_DB.push(data);
     } else {
       data.subgroups = EXERCISE_DB[gi].subgroups || [];
+      // Preserve _customLabel on existing if not changed
+      if (!customLabel && EXERCISE_DB[gi]._customLabel) data._customLabel = EXERCISE_DB[gi]._customLabel;
       EXERCISE_DB[gi] = data;
     }
     document.getElementById('p7grpModal').remove();
-    window.__p7renderDB();
+    window.__p8renderDB();
   };
 
   window.__p7delGroup = function(gi) {
-    var t = L();
+    var t = T();
     if (!confirm(t.confirmDelGrp)) return;
     EXERCISE_DB.splice(gi, 1);
-    window.__p7renderDB();
+    COLLAPSE.groups = {};
+    COLLAPSE.subs = {};
+    window.__p8renderDB();
   };
+
+  // Override groupLabel to honor _customLabel
+  var origGroupLabel = groupLabel;
+  groupLabel = function(g){
+    if (!g) return '';
+    if (g._customLabel) return g._customLabel;
+    return origGroupLabel(g);
+  };
+  // Re-export for use in onclick handlers
+  window.__p8groupLabel = groupLabel;
 
   // =============== Subgroup modal ===============
   function openSubModal(gi, si) {
-    var t = L();
+    var t = T();
     var g = EXERCISE_DB[gi];
     if (!g) return;
-    var sg = (si !== undefined) ? g.subgroups[si] : null;
-    var title = sg ? t.subTitleEdit : t.subTitleNew;
+    var sg = (si !== undefined && si !== null) ? g.subgroups[si] : null;
+    var title = sg ? t.subEdit : t.subNew;
     
     var overlay = document.createElement('div');
     overlay.id = 'p7subModal';
@@ -46645,58 +47091,83 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
       '</div>' +
       '<div style="padding:16px;">' +
         f(t.subId, 'p7sId', sg ? sg.id : '', 'text', t.subIdHint) +
-        f(t.subNameRu, 'p7sRu', sg ? (sg.ru||'') : '', 'text', 'Верх груди') +
-        f(t.subNameEn, 'p7sEn', sg ? (sg.en||'') : '', 'text', 'Upper chest') +
-        f(t.subNameHe, 'p7sHe', sg ? (sg.he||'') : '', 'text', 'חלק עליון של החזה') +
+        '<div id="p7sPreviewLive" style="margin-bottom:10px;"></div>' +
+        f(t.subCustomName, 'p7sCustom', sg ? (sg._customLabel||'') : '', 'text', t.subCustomHint) +
       '</div>' +
       '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-color,#E0E0E0);">' +
-        '<button onclick="window.__p7saveSub('+gi+','+si+')" style="flex:1;background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
+        '<button onclick="window.__p8saveSub('+gi+','+si+')" style="flex:1;background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
         '<button onclick="document.getElementById(\'p7subModal\').remove()" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(t.cancel)+'</button>' +
       '</div>' +
     '</div>';
     document.body.appendChild(overlay);
+    
+    var idInput = document.getElementById('p7sId');
+    var previewEl = document.getElementById('p7sPreviewLive');
+    if (idInput && previewEl) {
+      var update = function(){
+        var id = (idInput.value||'').trim().toLowerCase().replace(/\s+/g,'_');
+        if (id && SUBGROUP_I18N[id]) {
+          var lbl = lcGet(SUBGROUP_I18N, id);
+          previewEl.innerHTML = '<div style="padding:6px 10px;background:rgba(59,130,246,0.08);border-radius:6px;font-size:12px;color:#3B82F6;">✓ '+esc(lbl)+'</div>';
+        } else if (id) {
+          previewEl.innerHTML = '<div style="padding:6px 10px;background:rgba(234,179,8,0.08);border-radius:6px;font-size:12px;color:#EAB308;">⚠ '+esc(id)+' ('+esc(lang()==='he'?'לא במילון':(lang()==='en'?'not in dictionary':'не в словаре'))+')</div>';
+        } else {
+          previewEl.innerHTML = '';
+        }
+      };
+      idInput.addEventListener('input', update);
+      update();
+    }
   }
 
-  window.__p7addSub = function(gi) { openSubModal(gi, undefined); };
+  window.__p7addSub = function(gi) { openSubModal(gi, null); };
   window.__p7editSub = function(gi, si) { openSubModal(gi, si); };
 
-  window.__p7saveSub = function(gi, si) {
+  // Override subLabel to honor _customLabel
+  var origSubLabel = subLabel;
+  subLabel = function(sg){
+    if (!sg) return '';
+    if (sg._customLabel) return sg._customLabel;
+    return origSubLabel(sg);
+  };
+
+  window.__p8saveSub = function(gi, si) {
+    var t = T();
     var g = EXERCISE_DB[gi];
     if (!g) return;
     if (!g.subgroups) g.subgroups = [];
     var id = (document.getElementById('p7sId').value||'').trim().toLowerCase().replace(/\s+/g,'_');
-    if (!id) { alert('ID required'); return; }
-    var data = {
-      id: id,
-      ru: document.getElementById('p7sRu').value,
-      en: document.getElementById('p7sEn').value,
-      he: document.getElementById('p7sHe').value
-    };
+    if (!id) { alert(t.subId + ' required'); return; }
+    var customLabel = (document.getElementById('p7sCustom').value||'').trim();
+    var data = { id: id };
+    if (customLabel) data._customLabel = customLabel;
     if (si === undefined || si === null || g.subgroups[si] === undefined) {
       data.exercises = [];
       g.subgroups.push(data);
     } else {
       data.exercises = g.subgroups[si].exercises || [];
+      if (!customLabel && g.subgroups[si]._customLabel) data._customLabel = g.subgroups[si]._customLabel;
       g.subgroups[si] = data;
     }
     document.getElementById('p7subModal').remove();
-    window.__p7renderDB();
+    window.__p8renderDB();
   };
 
   window.__p7delSub = function(gi, si) {
-    var t = L();
+    var t = T();
     if (!confirm(t.confirmDelSub)) return;
     EXERCISE_DB[gi].subgroups.splice(si, 1);
-    window.__p7renderDB();
+    COLLAPSE.subs = {};
+    window.__p8renderDB();
   };
 
   // =============== Exercise modal ===============
   function openExModal(gi, si, ei) {
-    var t = L();
+    var t = T();
     var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
     if (!sg) return;
-    var ex = (ei !== undefined) ? sg.exercises[ei] : null;
-    var title = ex ? t.exTitleEdit : t.exTitleNew;
+    var ex = (ei !== undefined && ei !== null) ? sg.exercises[ei] : null;
+    var title = ex ? t.exEdit : t.exNew;
     
     var overlay = document.createElement('div');
     overlay.id = 'p7exModal';
@@ -46722,12 +47193,12 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     
     var previewHtml = '';
     if (gif) {
-      previewHtml = '<img src="'+esc(gif)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" onerror="this.style.display=\'none\'">';
+      previewHtml = '<img src="'+esc(gif)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">';
     } else if (photo) {
-      previewHtml = '<img src="'+esc(photo)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" onerror="this.style.display=\'none\'">';
+      previewHtml = '<img src="'+esc(photo)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">';
     }
     
-    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:550px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">' +
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:580px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#10B981,#047857);color:#fff;border-radius:14px 14px 0 0;">' +
         '<h2 style="margin:0;font-size:16px;font-weight:700;">'+esc(title)+'</h2>' +
         '<button onclick="document.getElementById(\'p7exModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button>' +
@@ -46747,7 +47218,10 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
           f(t.exNameHe, 'p7eHe', ex ? (ex.he||'') : '', 'text', 'פרס מזרן') +
         '</div>' +
         '<div style="margin:12px 0 8px;padding:12px;background:rgba(16,185,129,0.05);border-radius:10px;border:1px solid rgba(16,185,129,0.15);">' +
-          '<div style="font-size:12px;font-weight:700;color:#10B981;margin-bottom:8px;">🎬 '+esc(t.preview)+'</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+            '<div style="font-size:12px;font-weight:700;color:#10B981;">🎬 '+esc(t.preview)+'</div>' +
+            '<button onclick="window.__p8openGifPicker()" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.pickFromLibrary)+'</button>' +
+          '</div>' +
           f(t.exGifUrl, 'p7eGif', gif, 'text', t.exGifHint) +
           '<div id="p7eGifPreview" style="margin-top:6px;">'+previewHtml+'</div>' +
           f(t.exPhotoUrl, 'p7ePhoto', photo, 'text', t.exPhotoHint) +
@@ -46774,7 +47248,7 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         var preview = document.getElementById('p7eGifPreview');
         var url = this.value.trim();
         if (url) {
-          preview.innerHTML = '<img src="'+esc(url)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" onerror="this.style.display=\'none\'">';
+          preview.innerHTML = '<img src="'+esc(url)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">';
         } else {
           preview.innerHTML = '';
         }
@@ -46782,7 +47256,7 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     }
   }
 
-  window.__p7addEx = function(gi, si) { openExModal(gi, si, undefined); };
+  window.__p7addEx = function(gi, si) { openExModal(gi, si, null); };
   window.__p7editEx = function(gi, si, ei) { openExModal(gi, si, ei); };
 
   window.__p7saveEx = function(gi, si, ei) {
@@ -46822,7 +47296,6 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     if (ei === undefined || ei === null || sg.exercises[ei] === undefined) {
       sg.exercises.push(data);
     } else {
-      // Preserve any extra fields not in our form
       var old = sg.exercises[ei];
       Object.keys(old).forEach(function(k){
         if (!(k in data)) data[k] = old[k];
@@ -46831,37 +47304,114 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     }
     
     document.getElementById('p7exModal').remove();
-    window.__p7renderDB();
+    window.__p8renderDB();
     if (typeof showToast === 'function') showToast('✅');
   };
 
   window.__p7delEx = function(gi, si, ei) {
-    var t = L();
+    var t = T();
     if (!confirm(t.confirmDelEx)) return;
     EXERCISE_DB[gi].subgroups[si].exercises.splice(ei, 1);
-    window.__p7renderDB();
+    window.__p8renderDB();
+  };
+
+  // =============== GIF picker from library ===============
+  window.__p8openGifPicker = function() {
+    var t = T();
+    var lib = buildLibrary();
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p8gifPicker';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10003;display:flex;align-items:center;justify-content:center;padding:8px;';
+    
+    var countText = lib.length + ' ' + t.gifPickerCount;
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);color:var(--text-primary,#212121);border-radius:14px;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#10B981,#047857);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<div>' +
+          '<h2 style="margin:0;font-size:15px;font-weight:700;">'+esc(t.gifPickerTitle)+'</h2>' +
+          '<div style="font-size:11px;opacity:0.85;margin-top:2px;">'+esc(countText)+'</div>' +
+        '</div>' +
+        '<button onclick="document.getElementById(\'p8gifPicker\').remove()" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button>' +
+      '</div>' +
+      '<div style="padding:10px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);">' +
+        '<input id="p8gifSearch" type="text" placeholder="'+esc(t.gifPickerSearch)+'" style="width:100%;padding:8px 12px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;">' +
+      '</div>' +
+      '<div id="p8gifGrid" style="flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+    
+    var grid = document.getElementById('p8gifGrid');
+    var searchInput = document.getElementById('p8gifSearch');
+    
+    function render(filter){
+      filter = (filter||'').toLowerCase().trim();
+      var html = '';
+      var shown = 0;
+      lib.forEach(function(item){
+        if (filter && item.id.toLowerCase().indexOf(filter) < 0) return;
+        shown++;
+        var bg = item.type === 'gif' ? '#000' : '#fff';
+        var badge = item.source === 'burnfit' ? '🎬 GIF' : (item.source === 'local' ? '🎬 Local' : (item.source === 'wger' ? '📷 wger' : '📷 photo'));
+        var badgeColor = item.type === 'gif' ? '#10B981' : '#3B82F6';
+        html += '<div onclick="window.__p8pickGif(\''+esc(item.url).replace(/'/g,"\\'")+'\')" style="cursor:pointer;border:2px solid var(--border-color,#E0E0E0);border-radius:10px;overflow:hidden;background:'+bg+';transition:all 0.15s;position:relative;" onmouseover="this.style.borderColor=\'#10B981\';this.style.transform=\'scale(1.03)\'" onmouseout="this.style.borderColor=\'var(--border-color,#E0E0E0)\';this.style.transform=\'scale(1)\'">' +
+          '<div style="position:relative;height:100px;background:'+bg+';display:flex;align-items:center;justify-content:center;">' +
+            '<img src="'+esc(item.url)+'" style="max-width:100%;max-height:100%;object-fit:contain;display:block;" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.innerHTML+=\'<div style=color:#999;font-size:11px;padding:10px;text-align:center;>⚠</div>\'">' +
+            '<div style="position:absolute;top:4px;right:4px;background:'+badgeColor+';color:#fff;font-size:9px;padding:2px 6px;border-radius:6px;font-weight:600;">'+badge+'</div>' +
+          '</div>' +
+          '<div style="padding:6px 8px;background:var(--surface-color,#fff);font-size:10px;color:var(--text-secondary,#757575);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(item.id)+'</div>' +
+        '</div>';
+      });
+      if (shown === 0) {
+        html = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-light,#999);font-size:14px;">'+esc(t.gifPickerNone)+'</div>';
+      }
+      grid.innerHTML = html;
+    }
+    
+    render('');
+    if (searchInput) {
+      searchInput.addEventListener('input', function(){ render(this.value); });
+      setTimeout(function(){ searchInput.focus(); }, 100);
+    }
+  };
+
+  window.__p8pickGif = function(url) {
+    var gifInput = document.getElementById('p7eGif');
+    if (gifInput) {
+      gifInput.value = url;
+      // Trigger live preview update
+      var evt = new Event('input', { bubbles: true });
+      gifInput.dispatchEvent(evt);
+    }
+    var picker = document.getElementById('p8gifPicker');
+    if (picker) picker.remove();
+    if (typeof showToast === 'function') showToast('✅');
   };
 
   // =============== Reset / Save / Export / Import ===============
   window.__p7resetDB = function() {
-    var t = L();
+    var t = T();
     if (!confirm(t.confirmReset)) return;
     EXERCISE_DB.length = 0;
-    EXERCISE_DB.push({ id: 'custom', ru: 'Свои упражнения', en: 'Custom exercises', he: 'תרגילים שלי', icon: '⭐', subgroups: [{ id: 'general', ru: 'Общие', en: 'General', he: 'כללי', exercises: [] }] });
-    window.__p7renderDB();
+    EXERCISE_DB.push({ id: 'custom', _customLabel: (lang()==='he'?'מותאם אישית':(lang()==='en'?'Custom':'Свои упражнения')), subgroups: [{ id: 'general', _customLabel: (lang()==='he'?'כללי':(lang()==='en'?'General':'Общие')), exercises: [] }] });
+    COLLAPSE.groups = {};
+    COLLAPSE.subs = {};
+    window.__p8renderDB();
   };
 
-  window.__p7saveDB = function() {
+  window.__p8saveDB = function() {
     try {
       localStorage.setItem('exerciseDB_custom', JSON.stringify(EXERCISE_DB));
-      if (typeof showToast === 'function') showToast(L().saved);
+      if (typeof showToast === 'function') showToast(T().saved);
       var m = document.getElementById('p5exEditor');
       if (m) m.remove();
       document.body.style.overflow = '';
     } catch(e) { alert('Save error: ' + e.message); }
   };
+  // Keep old name for compatibility
+  window.__p7saveDB = window.__p8saveDB;
 
-  window.__p7exportDB = function() {
+  window.__p8exportDB = function() {
     try {
       var data = JSON.stringify(EXERCISE_DB, null, 2);
       var blob = new Blob([data], {type: 'application/json'});
@@ -46873,9 +47423,10 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
       URL.revokeObjectURL(url);
     } catch(e) { alert('Export error: ' + e.message); }
   };
+  window.__p7exportDB = window.__p8exportDB;
 
-  window.__p7importDB = function() {
-    var t = L();
+  window.__p8importDB = function() {
+    var t = T();
     var inp = document.createElement('input');
     inp.type = 'file';
     inp.accept = '.json,application/json';
@@ -46890,7 +47441,9 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
           if (!confirm(t.confirmImport)) return;
           EXERCISE_DB.length = 0;
           parsed.forEach(function(g){ EXERCISE_DB.push(g); });
-          window.__p7renderDB();
+          COLLAPSE.groups = {};
+          COLLAPSE.subs = {};
+          window.__p8renderDB();
           if (typeof showToast === 'function') showToast('✅');
         } catch(err) { alert('Import error: ' + err.message); }
       };
@@ -46898,18 +47451,25 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     };
     inp.click();
   };
+  window.__p7importDB = window.__p8importDB;
 
-  // =============== Override the picker pencil to use new editor ===============
-  // The P6 picker patch already calls window.__p5openExEditor, which we now override above.
-  
-  // =============== Override the "More" menu button too ===============
-  // The P5 patch adds a "🏋️ Редактор базы упражнений" button that calls __p5openExEditor,
-  // which we now override. So it just works.
-  
-  console.log('[P7 ExEditor] initialized — overrides __p5openExEditor with full i18n CRUD');
+  // Load custom DB on init (override P5's loader)
+  try {
+    var customDB = localStorage.getItem('exerciseDB_custom');
+    if (customDB && typeof EXERCISE_DB !== 'undefined') {
+      var parsed = JSON.parse(customDB);
+      if (parsed && parsed.length > 0) {
+        EXERCISE_DB.length = 0;
+        parsed.forEach(function(g){ EXERCISE_DB.push(g); });
+        console.log('[P8] Loaded custom exercise DB:', EXERCISE_DB.length, 'groups');
+      }
+    }
+  } catch(e){ console.warn('[P8] Load custom DB:', e); }
+
+  console.log('[P8 ExEditor] initialized — full i18n + GIF picker + reorder + nest');
 })();
 </script>
-<!-- /P7_EX_EDITOR -->
+<!-- /P8_EX_EDITOR_FINAL -->
 
 </body>
 </html>
