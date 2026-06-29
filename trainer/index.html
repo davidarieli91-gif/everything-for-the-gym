@@ -10076,7 +10076,7 @@ setTimeout(function(){
                 {icon:'🔔',name:'Уведомл.',color:'#EF4444',action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); }},
                 {icon:'📁',name:'Файлы',color:'#8B5CF6',action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); }},
                 {icon:'👨‍🏫',name:'Профиль',color:'#6366F1',action:function(){ if(typeof openTrainerProfile==='function') openTrainerProfile(); }},
-                {icon:'📋',name:'История',color:'#10B981',action:function(){ if(typeof cwShowHistory==='function') cwShowHistory(); }}
+                {icon:'📚',name:'Энциклопед.',color:'#7C3AED',action:function(){ if(typeof openEncyclopedia==='function') openEncyclopedia(); }}
             ];
             var grid = document.getElementById('mdAppGrid');
             if (!grid) return;
@@ -46864,9 +46864,12 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     var sg = g && g.subgroups[si];
     if (!sg) return;
     var targets = [];
-    // Target: any other subgroup-having group, including self but different subgroup slot
-    EXERCISE_DB.forEach(function(gg, idx){
-      if (idx !== gi) targets.push({type:'group', gi: idx, label: groupLabel(gg)});
+    // Target: any subgroup in any group (including the same group but different slot)
+    EXERCISE_DB.forEach(function(gg, gidx){
+      (gg.subgroups||[]).forEach(function(s, sidx){
+        if (gidx === gi && sidx === si) return; // skip self
+        targets.push({type:'sub', gi: gidx, si: sidx, label: groupLabel(gg) + ' ▸ ' + subLabel(s)});
+      });
     });
     // Also: promote to top-level group
     
@@ -46874,7 +46877,7 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     overlay.id = 'p8moveModal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10002;display:flex;align-items:center;justify-content:center;padding:12px;';
     
-    var optsHtml = targets.map(function(tg){ return '<button onclick="window.__p8doMoveSub('+gi+','+si+','+tg.gi+')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);cursor:pointer;font-size:13px;margin-bottom:4px;">📁 '+esc(tg.label)+'</button>'; }).join('');
+    var optsHtml = targets.map(function(tg){ return '<button onclick="window.__p8doMoveSub('+gi+','+si+','+tg.gi+','+(tg.si !== undefined ? tg.si : -1)+')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);cursor:pointer;font-size:13px;margin-bottom:4px;">📁 '+esc(tg.label)+'</button>'; }).join('');
     
     overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:400px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
       '<div style="padding:12px 16px;background:linear-gradient(135deg,#6B7280,#374151);color:#fff;border-radius:14px 14px 0 0;">' +
@@ -46892,15 +46895,29 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     document.body.appendChild(overlay);
   };
 
-  window.__p8doMoveSub = function(srcGi, srcSi, dstGi) {
+  window.__p8doMoveSub = function(srcGi, srcSi, dstGi, dstSi) {
+    // dstSi === -1 (or undefined) → move to top-level group as a subgroup of dstGi
+    // dstSi >= 0 → nest srcSi inside subgroup dstSi of group dstGi (merge exercises)
     var srcG = EXERCISE_DB[srcGi];
     var dstG = EXERCISE_DB[dstGi];
     if (!srcG || !dstG || !srcG.subgroups) return;
     var sub = srcG.subgroups[srcSi];
     if (!sub) return;
-    if (!dstG.subgroups) dstG.subgroups = [];
-    dstG.subgroups.push(sub);
-    srcG.subgroups.splice(srcSi, 1);
+    
+    if (dstSi !== undefined && dstSi >= 0) {
+      // Nest inside dstG.subgroups[dstSi]
+      var dstSub = dstG.subgroups[dstSi];
+      if (!dstSub) return;
+      if (!dstSub.exercises) dstSub.exercises = [];
+      // Flatten: append src's exercises to dstSub (since EXERCISE_DB schema only supports 2 levels)
+      (sub.exercises || []).forEach(function(ex){ dstSub.exercises.push(ex); });
+      srcG.subgroups.splice(srcSi, 1);
+    } else {
+      // Move as a new subgroup at end of dstG (current behavior)
+      if (!dstG.subgroups) dstG.subgroups = [];
+      dstG.subgroups.push(sub);
+      srcG.subgroups.splice(srcSi, 1);
+    }
     COLLAPSE.subs = {};
     var m=document.getElementById('p8moveModal'); if(m) m.remove();
     window.__p8renderDB();
@@ -47337,7 +47354,7 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
       '<div style="padding:10px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);">' +
         '<input id="p8gifSearch" type="text" placeholder="'+esc(t.gifPickerSearch)+'" style="width:100%;padding:8px 12px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;">' +
       '</div>' +
-      '<div id="p8gifGrid" style="flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>' +
+      '<div id="p8gifGrid" style="flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;align-content:start;"></div>' +
     '</div>';
     document.body.appendChild(overlay);
     
@@ -47354,12 +47371,14 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
         var bg = item.type === 'gif' ? '#000' : '#fff';
         var badge = item.source === 'burnfit' ? '🎬 GIF' : (item.source === 'local' ? '🎬 Local' : (item.source === 'wger' ? '📷 wger' : '📷 photo'));
         var badgeColor = item.type === 'gif' ? '#10B981' : '#3B82F6';
-        html += '<div onclick="window.__p8pickGif(\''+esc(item.url).replace(/'/g,"\\'")+'\')" style="cursor:pointer;border:2px solid var(--border-color,#E0E0E0);border-radius:10px;overflow:hidden;background:'+bg+';transition:all 0.15s;position:relative;" onmouseover="this.style.borderColor=\'#10B981\';this.style.transform=\'scale(1.03)\'" onmouseout="this.style.borderColor=\'var(--border-color,#E0E0E0)\';this.style.transform=\'scale(1)\'">' +
-          '<div style="position:relative;height:100px;background:'+bg+';display:flex;align-items:center;justify-content:center;">' +
-            '<img src="'+esc(item.url)+'" style="max-width:100%;max-height:100%;object-fit:contain;display:block;" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.innerHTML+=\'<div style=color:#999;font-size:11px;padding:10px;text-align:center;>⚠</div>\'">' +
-            '<div style="position:absolute;top:4px;right:4px;background:'+badgeColor+';color:#fff;font-size:9px;padding:2px 6px;border-radius:6px;font-weight:600;">'+badge+'</div>' +
+        // BIG preview — 200x200 tile with image filling the whole tile
+        html += '<div onclick="window.__p8pickGif(\''+esc(item.url).replace(/'/g,"\\'")+'\')" style="cursor:pointer;border:2px solid var(--border-color,#E0E0E0);border-radius:12px;overflow:hidden;background:'+bg+';transition:all 0.15s;position:relative;display:flex;flex-direction:column;" onmouseover="this.style.borderColor=\'#10B981\';this.style.transform=\'scale(1.03)\';this.style.boxShadow=\'0 8px 24px rgba(16,185,129,0.3)\'" onmouseout="this.style.borderColor=\'var(--border-color,#E0E0E0)\';this.style.transform=\'scale(1)\';this.style.boxShadow=\'none\'">' +
+          '<div style="position:relative;aspect-ratio:1/1;background:'+bg+';display:flex;align-items:center;justify-content:center;min-height:180px;">' +
+            '<img src="'+esc(item.url)+'" style="width:100%;height:100%;object-fit:contain;display:block;" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.display=\'none\';var f=this.parentNode.querySelector(\'.p8-fallback\');if(f)f.style.display=\'flex\'">' +
+            '<div class="p8-fallback" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#999;font-size:32px;background:'+bg+';">⚠</div>' +
+            '<div style="position:absolute;top:6px;right:6px;background:'+badgeColor+';color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.2);">'+badge+'</div>' +
           '</div>' +
-          '<div style="padding:6px 8px;background:var(--surface-color,#fff);font-size:10px;color:var(--text-secondary,#757575);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(item.id)+'</div>' +
+          '<div style="padding:8px 10px;background:var(--surface-color,#fff);font-size:11px;color:var(--text-secondary,#757575);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;">'+esc(item.id)+'</div>' +
         '</div>';
       });
       if (shown === 0) {
@@ -47470,6 +47489,743 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
 })();
 </script>
 <!-- /P8_EX_EDITOR_FINAL -->
+
+<!-- P9_DESKTOP_FIX -->
+<script>
+// ============================================================
+// P9 Desktop / Dock / App Drawer / Orientation fix
+// - Add Settings button to bottom dock
+// - Remove Питание/Тренировки from dock (already inside client card)
+// - Clean up app drawer (remove pulse, pedometer, piano, measurements, scanner, water, history)
+// - Upgrade remaining apps in app drawer
+// - Real orientation switching
+// ============================================================
+(function() {
+  'use strict';
+  if (window.__p9desktopFix) return;
+  window.__p9desktopFix = true;
+
+  function lang(){try{return(typeof currentLang!=='undefined'&&currentLang)||'ru';}catch(e){return'ru';}}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  // ============== 1. REAL ORIENTATION SWITCHING ==============
+  function injectOrientationCSS() {
+    if (document.getElementById('p9orientCSS')) return;
+    var css = document.createElement('style');
+    css.id = 'p9orientCSS';
+    css.textContent = `
+      /* ============ LANDSCAPE: 2-column layouts, wider panels ============ */
+      body.p9-landscape #mobileDesktop > div:first-child {
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+      }
+      body.p9-landscape #mdClientList {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      body.p9-landscape #mdAppGrid {
+        grid-template-columns: repeat(8, 1fr) !important;
+      }
+      body.p9-landscape #mdStats {
+        grid-template-columns: repeat(4, 1fr) !important;
+        max-width: 800px;
+      }
+      body.p9-landscape .mp-active #mpBody {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+      }
+      body.p9-landscape .mp-active #mpBody > .mp-card,
+      body.p9-landscape .mp-active #mpBody > div {
+        grid-column: span 1 !important;
+      }
+      body.p9-landscape .mp-active #mpBody > .mp-summary {
+        grid-column: 1 / -1 !important;
+      }
+      body.p9-landscape .mp-active .mp-nav {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      body.p9-landscape .mp-active .mp-topbar {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      body.p9-landscape .cs-sheet { max-width: 800px !important; margin: 0 auto !important; }
+      body.p9-landscape .mp-sheet { max-width: 800px !important; margin: 0 auto !important; }
+      body.p9-landscape #csBody { 
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+      }
+      
+      /* ============ PORTRAIT: single column, larger fonts ============ */
+      body.p9-portrait #mdAppGrid {
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+      body.p9-portrait #mdClientList {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      body.p9-portrait .mp-active #mpBody {
+        display: block !important;
+      }
+      body.p9-portrait .mp-active .mp-nav {
+        font-size: 1em;
+      }
+      
+      /* ============ Modal max-widths for landscape ============ */
+      body.p9-landscape .modal,
+      body.p9-landscape [id$="Modal"],
+      body.p9-landscape [id$="modal"] {
+        max-width: 1000px !important;
+        margin: 0 auto !important;
+      }
+      
+      /* ============ Two-column editor body in landscape ============ */
+      body.p9-landscape #p5exBody > div {
+        display: inline-block !important;
+        width: 48% !important;
+        vertical-align: top !important;
+        margin-right: 2% !important;
+      }
+      body.p9-landscape #p5exEditor > div {
+        max-width: 1400px !important;
+      }
+      
+      /* ============ Client card grid in landscape ============ */
+      body.p9-landscape #mdClientList > div[onclick] {
+        width: 100% !important;
+      }
+    `;
+    document.head.appendChild(css);
+  }
+
+  window.__p9applyOrientation = function(mode) {
+    document.body.classList.remove('p9-landscape', 'p9-portrait');
+    if (mode === 'landscape') {
+      document.body.classList.add('p9-landscape');
+    } else if (mode === 'portrait') {
+      document.body.classList.add('p9-portrait');
+    }
+    // Save
+    try {
+      var s = JSON.parse(localStorage.getItem('nutritionPlannerSettings') || '{}');
+      s.p9orientation = mode;
+      localStorage.setItem('nutritionPlannerSettings', JSON.stringify(s));
+    } catch(e){}
+    // Try screen.orientation.lock if available (mobile)
+    try {
+      if (mode !== 'auto' && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock(mode).catch(function(){});
+      } else if (mode === 'auto' && screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch(e){}
+  };
+
+  // Apply saved orientation on init
+  try {
+    var saved = JSON.parse(localStorage.getItem('nutritionPlannerSettings') || '{}');
+    if (saved.p9orientation) window.__p9applyOrientation(saved.p9orientation);
+  } catch(e){}
+
+  // Hook into P5 orientation buttons
+  var origP5orient = window.__p5orient;
+  if (typeof origP5orient === 'function') {
+    window.__p5orient = function(mode) {
+      origP5orient.apply(this, arguments);
+      window.__p9applyOrientation(mode);
+    };
+  }
+
+  // ============== 2. FIX DOCK (Settings button) ==============
+  window.__p9fixDock = function() {
+    var md = document.getElementById('mobileDesktop');
+    if (!md) return;
+    var dock = md.querySelector('div[style*="space-around"]');
+    if (!dock) return;
+    if (dock.querySelector('.p9-settings-btn')) return; // already patched
+    
+    // Remove Питание (🍽️) and Тренировки (🏋️) buttons
+    dock.querySelectorAll('button').forEach(function(btn) {
+      var oc = btn.getAttribute('onclick') || '';
+      if (oc.indexOf("win11OpenApp('planner')") >= 0 || oc.indexOf("win11OpenApp('workout')") >= 0) {
+        btn.remove();
+      }
+    });
+    
+    // Find ⊞ (App drawer) button — insert ⚙️ before it
+    var appDrawerBtn = dock.querySelector('button[onclick*="mdOpenAppDrawer"]');
+    if (appDrawerBtn) {
+      var L = lang();
+      var settingsBtn = document.createElement('button');
+      settingsBtn.className = 'p9-settings-btn';
+      settingsBtn.style.cssText = 'width:48px;height:48px;border:none;border-radius:14px;background:rgba(107,114,128,0.12);color:#6B7280;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;';
+      settingsBtn.textContent = '⚙️';
+      settingsBtn.title = L==='he'?'הגדרות':(L==='en'?'Settings':'Настройки');
+      settingsBtn.onclick = function() {
+        if (typeof openSettingsModal === 'function') openSettingsModal();
+      };
+      dock.insertBefore(settingsBtn, appDrawerBtn);
+    }
+  };
+
+  // Run dock fix repeatedly until dock exists
+  var p9dockRetries = 0;
+  var p9dockInterval = setInterval(function() {
+    window.__p9fixDock();
+    p9dockRetries++;
+    if (p9dockRetries > 30) clearInterval(p9dockInterval);
+  }, 1000);
+
+  // ============== 3. CLEAN UP + UPGRADE APP DRAWER ==============
+  // Override mdRenderAppDrawer to remove unwanted apps and add working ones
+  var origMdRenderAppDrawer = window.mdRenderAppDrawer;
+  window.mdRenderAppDrawer = function(q) {
+    q = (q || '').toLowerCase();
+    var L = lang();
+    
+    // Translated app names
+    var TN = {
+      ru: {nutrition:'Питание', workout:'Тренировки', calendar:'Календарь', tasks:'Задачи', shop:'Магазин', leads:'Лиды', chat:'Чат', notifications:'Уведомления', files:'Файлы', profile:'Профиль', encyclopedia:'Энциклопедия', settings:'Настройки', calculator:'Калькулятор', stopwatch:'Секундомер', timer:'Таймер', bmr:'BMR', notes:'Заметки', weather:'Погода', clients:'Клиенты', history:'История тренировок'},
+      en: {nutrition:'Nutrition', workout:'Workouts', calendar:'Calendar', tasks:'Tasks', shop:'Shop', leads:'Leads', chat:'Chat', notifications:'Notifications', files:'Files', profile:'Profile', encyclopedia:'Encyclopedia', settings:'Settings', calculator:'Calculator', stopwatch:'Stopwatch', timer:'Timer', bmr:'BMR', notes:'Notes', weather:'Weather', clients:'Clients', history:'Workout history'},
+      he: {nutrition:'תזונה', workout:'אימונים', calendar:'יומן', tasks:'משימות', shop:'חנות', leads:'לידים', chat:'צ\'אט', notifications:'הודעות', files:'קבצים', profile:'פרופיל', encyclopedia:'אנציקלופדיה', settings:'הגדרות', calculator:'מחשבון', stopwatch:'שעון עצר', timer:'טיימר', bmr:'BMR', notes:'פתקים', weather:'מזג אוויר', clients:'לקוחות', history:'היסטוריית אימונים'}
+    }[L] || TN.ru;
+    
+    var allApps = [
+      // Main apps (kept)
+      {icon:'📅',name:TN.calendar,color:'linear-gradient(135deg,#F59E0B,#d97706)',action:function(){ if(typeof openCalendarModal==='function') openCalendarModal(); mdCloseAppDrawer(); }},
+      {icon:'✅',name:TN.tasks,color:'linear-gradient(135deg,#3B82F6,#1d4ed8)',action:function(){ if(typeof openTasksModal==='function') openTasksModal(); mdCloseAppDrawer(); }},
+      {icon:'🛒',name:TN.shop,color:'linear-gradient(135deg,#8B5CF6,#6d28d9)',action:function(){ if(typeof openShopModal==='function') openShopModal(); mdCloseAppDrawer(); }},
+      {icon:'🌟',name:TN.leads,color:'linear-gradient(135deg,#F59E0B,#ea580c)',action:function(){ if(typeof openLeadsModal==='function') openLeadsModal(); mdCloseAppDrawer(); }},
+      {icon:'💬',name:TN.chat,color:'linear-gradient(135deg,#06B6D4,#0891b2)',action:function(){ if(typeof openChat==='function') openChat((typeof currentUserId!=='undefined'?currentUserId:null),'trainer'); mdCloseAppDrawer(); }},
+      {icon:'🔔',name:TN.notifications,color:'linear-gradient(135deg,#EF4444,#dc2626)',action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); mdCloseAppDrawer(); }},
+      {icon:'📁',name:TN.files,color:'linear-gradient(135deg,#F472B6,#db2777)',action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); mdCloseAppDrawer(); }},
+      {icon:'👨‍🏫',name:TN.profile,color:'linear-gradient(135deg,#6366F1,#4338ca)',action:function(){ if(typeof openTrainerProfile==='function') openTrainerProfile(); mdCloseAppDrawer(); }},
+      {icon:'📚',name:TN.encyclopedia,color:'linear-gradient(135deg,#7C3AED,#5b21b6)',action:function(){ if(typeof openEncyclopedia==='function') openEncyclopedia(); mdCloseAppDrawer(); }},
+      {icon:'⚙️',name:TN.settings,color:'linear-gradient(135deg,#6B7280,#4b5563)',action:function(){ if(typeof openSettingsModal==='function') openSettingsModal(); mdCloseAppDrawer(); }},
+      // Widgets (kept + upgraded)
+      {icon:'🧮',name:TN.calculator,color:'linear-gradient(135deg,#374151,#1f2937)',action:function(){ mdOpenWidget('calculator'); }},
+      {icon:'⏱',name:TN.stopwatch,color:'linear-gradient(135deg,#0891b2,#155e75)',action:function(){ mdOpenWidget('stopwatch'); }},
+      {icon:'⏲',name:TN.timer,color:'linear-gradient(135deg,#ea580c,#c2410c)',action:function(){ mdOpenWidget('timer'); }},
+      {icon:'⚖️',name:TN.bmr,color:'linear-gradient(135deg,#7C3AED,#5b21b6)',action:function(){ mdOpenWidget('bmr'); }},
+      {icon:'📝',name:TN.notes,color:'linear-gradient(135deg,#FCD34D,#f59e0b)',action:function(){ mdOpenWidget('notes'); }},
+      {icon:'🌤️',name:TN.weather,color:'linear-gradient(135deg,#0EA5E9,#0284c7)',action:function(){ mdOpenWidget('weather'); }}
+    ];
+    // REMOVED: 📋 История (history), 📷 Сканер (scanner), 💧 Вода (hydration), 📏 Замеры (measurements), ❤️ Пульс (heartrate), 👣 Шагомер (pedometer), 🎹 Пианино (keyboard)
+    
+    var filtered = q ? allApps.filter(function(a){ return a.name.toLowerCase().indexOf(q) >= 0; }) : allApps;
+    var grid = document.getElementById('mdAppDrawerGrid');
+    if (!grid) return;
+    grid.innerHTML = filtered.map(function(app) {
+      var idx = allApps.indexOf(app);
+      return '<div onclick="mdAppDrawerClick('+idx+')" style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:6px 4px;border-radius:14px;transition:background 0.15s;" onmouseover="this.style.background=\'rgba(0,0,0,0.04)\'" onmouseout="this.style.background=\'transparent\'">'+
+        '<div style="width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;color:white;box-shadow:0 4px 12px rgba(0,0,0,0.18);background:'+app.color+';">'+app.icon+'</div>'+
+        '<div style="font-size:11px;color:var(--text-secondary);text-align:center;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;">'+esc(app.name)+'</div>'+
+      '</div>';
+    }).join('');
+    window._mdAllApps = allApps;
+  };
+
+  // ============== 4. DEFINE WIDGETS THAT WERE MISSING ==============
+  // The original code calls window.__win11RenderCalculator etc, but they don't exist.
+  // We define them now so the widgets actually work.
+  
+  window.__win11RenderCalculator = function(body) {
+    body.innerHTML = `
+      <style>
+        .p9-calc { max-width: 360px; margin: 0 auto; padding: 16px; }
+        .p9-calc-disp { background: #1f2937; color: #fff; padding: 20px; border-radius: 12px; text-align: right; font-size: 36px; min-height: 60px; word-break: break-all; }
+        .p9-calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+        .p9-calc-btn { padding: 18px; border: 0; border-radius: 10px; font-size: 18px; cursor: pointer; background: var(--surface-color,#fff); color: var(--text-primary,#212121); box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.05s; }
+        .p9-calc-btn:active { transform: scale(0.95); }
+        .p9-calc-op { background: #F59E0B; color: #fff; }
+        .p9-calc-eq { background: #10B981; color: #fff; grid-column: span 2; }
+        .p9-calc-clr { background: #EF4444; color: #fff; }
+        .p9-calc-fn { background: #6B7280; color: #fff; }
+      </style>
+      <div class="p9-calc">
+        <div class="p9-calc-disp" id="p9CalcDisp">0</div>
+        <div class="p9-calc-grid">
+          <button class="p9-calc-btn p9-calc-clr" onclick="window.__p9CalcClear()">C</button>
+          <button class="p9-calc-btn p9-calc-fn" onclick="window.__p9CalcBack()">⌫</button>
+          <button class="p9-calc-btn p9-calc-fn" onclick="window.__p9CalcPct()">%</button>
+          <button class="p9-calc-btn p9-calc-op" onclick="window.__p9CalcOp('/')">÷</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('7')">7</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('8')">8</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('9')">9</button>
+          <button class="p9-calc-btn p9-calc-op" onclick="window.__p9CalcOp('*')">×</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('4')">4</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('5')">5</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('6')">6</button>
+          <button class="p9-calc-btn p9-calc-op" onclick="window.__p9CalcOp('-')">−</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('1')">1</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('2')">2</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('3')">3</button>
+          <button class="p9-calc-btn p9-calc-op" onclick="window.__p9CalcOp('+')">+</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('0')">0</button>
+          <button class="p9-calc-btn" onclick="window.__p9CalcNum('.')">.</button>
+          <button class="p9-calc-btn p9-calc-eq" onclick="window.__p9CalcEq()">=</button>
+        </div>
+      </div>
+    `;
+    window.__p9CalcState = { cur: '0', prev: null, op: null, reset: false };
+    window.__p9CalcNum = function(n) {
+      var s = window.__p9CalcState;
+      if (s.reset) { s.cur = '0'; s.reset = false; }
+      if (n === '.' && s.cur.indexOf('.') >= 0) return;
+      s.cur = s.cur === '0' && n !== '.' ? n : s.cur + n;
+      window.__p9CalcUpdate();
+    };
+    window.__p9CalcOp = function(op) {
+      var s = window.__p9CalcState;
+      if (s.prev !== null && !s.reset) window.__p9CalcEq();
+      s.prev = parseFloat(s.cur);
+      s.op = op;
+      s.reset = true;
+    };
+    window.__p9CalcEq = function() {
+      var s = window.__p9CalcState;
+      if (s.prev === null || s.op === null) return;
+      var cur = parseFloat(s.cur);
+      var r = 0;
+      if (s.op === '+') r = s.prev + cur;
+      else if (s.op === '-') r = s.prev - cur;
+      else if (s.op === '*') r = s.prev * cur;
+      else if (s.op === '/') r = cur === 0 ? 0 : s.prev / cur;
+      s.cur = String(parseFloat(r.toFixed(10)));
+      s.prev = null;
+      s.op = null;
+      s.reset = true;
+      window.__p9CalcUpdate();
+    };
+    window.__p9CalcClear = function() {
+      var s = window.__p9CalcState;
+      s.cur = '0'; s.prev = null; s.op = null; s.reset = false;
+      window.__p9CalcUpdate();
+    };
+    window.__p9CalcBack = function() {
+      var s = window.__p9CalcState;
+      s.cur = s.cur.length > 1 ? s.cur.slice(0, -1) : '0';
+      window.__p9CalcUpdate();
+    };
+    window.__p9CalcPct = function() {
+      var s = window.__p9CalcState;
+      s.cur = String(parseFloat(s.cur) / 100);
+      window.__p9CalcUpdate();
+    };
+    window.__p9CalcUpdate = function() {
+      var el = document.getElementById('p9CalcDisp');
+      if (el) el.textContent = window.__p9CalcState.cur;
+    };
+  };
+
+  window.__win11RenderStopwatch = function(body) {
+    body.innerHTML = `
+      <style>
+        .p9-sw { max-width: 400px; margin: 0 auto; padding: 24px; text-align: center; }
+        .p9-sw-disp { font-size: 72px; font-weight: 300; color: var(--text-primary,#212121); font-variant-numeric: tabular-nums; padding: 24px 0; }
+        .p9-sw-ctrls { display: flex; gap: 12px; justify-content: center; }
+        .p9-sw-btn { padding: 14px 28px; border: 0; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: 600; }
+        .p9-sw-start { background: #10B981; color: #fff; }
+        .p9-sw-stop { background: #EF4444; color: #fff; }
+        .p9-sw-lap { background: #3B82F6; color: #fff; }
+        .p9-sw-reset { background: #6B7280; color: #fff; }
+        .p9-sw-laps { margin-top: 16px; max-height: 200px; overflow-y: auto; }
+        .p9-sw-lap-row { padding: 8px 12px; border-bottom: 1px solid var(--border-color,#EEE); font-variant-numeric: tabular-nums; font-size: 14px; }
+      </style>
+      <div class="p9-sw">
+        <div class="p9-sw-disp" id="p9SwDisp">00:00.00</div>
+        <div class="p9-sw-ctrls">
+          <button class="p9-sw-btn p9-sw-start" id="p9SwStart" onclick="window.__p9SwStart()">▶ Старт</button>
+          <button class="p9-sw-btn p9-sw-lap" onclick="window.__p9SwLap()">🔄 Круг</button>
+          <button class="p9-sw-btn p9-sw-reset" onclick="window.__p9SwReset()">⏹ Сброс</button>
+        </div>
+        <div class="p9-sw-laps" id="p9SwLaps"></div>
+      </div>
+    `;
+    window.__p9SwState = { startTime: 0, elapsed: 0, running: false, laps: [], interval: null };
+    window.__p9SwStart = function() {
+      var s = window.__p9SwState;
+      if (s.running) {
+        s.elapsed += Date.now() - s.startTime;
+        clearInterval(s.interval);
+        s.running = false;
+        var btn = document.getElementById('p9SwStart');
+        if (btn) { btn.textContent = '▶ Старт'; btn.className = 'p9-sw-btn p9-sw-start'; }
+      } else {
+        s.startTime = Date.now();
+        s.running = true;
+        s.interval = setInterval(window.__p9SwTick, 31);
+        var btn = document.getElementById('p9SwStart');
+        if (btn) { btn.textContent = '⏸ Пауза'; btn.className = 'p9-sw-btn p9-sw-stop'; }
+      }
+    };
+    window.__p9SwTick = function() {
+      var s = window.__p9SwState;
+      var t = s.elapsed + (s.running ? Date.now() - s.startTime : 0);
+      var ms = Math.floor((t % 1000) / 10);
+      var sec = Math.floor(t / 1000) % 60;
+      var min = Math.floor(t / 60000);
+      var el = document.getElementById('p9SwDisp');
+      if (el) el.textContent = String(min).padStart(2,'0') + ':' + String(sec).padStart(2,'0') + '.' + String(ms).padStart(2,'0');
+    };
+    window.__p9SwLap = function() {
+      var s = window.__p9SwState;
+      var t = s.elapsed + (s.running ? Date.now() - s.startTime : 0);
+      var ms = Math.floor((t % 1000) / 10);
+      var sec = Math.floor(t / 1000) % 60;
+      var min = Math.floor(t / 60000);
+      s.laps.unshift('#' + (s.laps.length+1) + ' — ' + String(min).padStart(2,'0') + ':' + String(sec).padStart(2,'0') + '.' + String(ms).padStart(2,'0'));
+      var laps = document.getElementById('p9SwLaps');
+      if (laps) laps.innerHTML = s.laps.map(function(l){ return '<div class="p9-sw-lap-row">'+l+'</div>'; }).join('');
+    };
+    window.__p9SwReset = function() {
+      var s = window.__p9SwState;
+      clearInterval(s.interval);
+      s.elapsed = 0; s.running = false; s.laps = [];
+      var btn = document.getElementById('p9SwStart');
+      if (btn) { btn.textContent = '▶ Старт'; btn.className = 'p9-sw-btn p9-sw-start'; }
+      var disp = document.getElementById('p9SwDisp');
+      if (disp) disp.textContent = '00:00.00';
+      var laps = document.getElementById('p9SwLaps');
+      if (laps) laps.innerHTML = '';
+    };
+  };
+
+  window.__win11RenderTimer = function(body) {
+    body.innerHTML = `
+      <style>
+        .p9-tm { max-width: 400px; margin: 0 auto; padding: 24px; text-align: center; }
+        .p9-tm-disp { font-size: 72px; font-weight: 300; color: var(--text-primary,#212121); font-variant-numeric: tabular-nums; padding: 24px 0; }
+        .p9-tm-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .p9-tm-input { padding: 10px; border: 1px solid var(--border-color,#E0E0E0); border-radius: 8px; font-size: 18px; text-align: center; background: var(--surface-color,#fff); color: var(--text-primary,#212121); }
+        .p9-tm-ctrls { display: flex; gap: 12px; justify-content: center; }
+        .p9-tm-btn { padding: 14px 28px; border: 0; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: 600; }
+        .p9-tm-start { background: #10B981; color: #fff; }
+        .p9-tm-pause { background: #F59E0B; color: #fff; }
+        .p9-tm-reset { background: #6B7280; color: #fff; }
+        .p9-tm-presets { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+        .p9-tm-preset { padding: 6px 12px; background: rgba(59,130,246,0.1); color: #3B82F6; border: 0; border-radius: 6px; font-size: 12px; cursor: pointer; }
+      </style>
+      <div class="p9-tm">
+        <div class="p9-tm-disp" id="p9TmDisp">00:00:00</div>
+        <div class="p9-tm-inputs">
+          <input class="p9-tm-input" type="number" id="p9TmH" min="0" max="23" value="0" placeholder="ч">
+          <input class="p9-tm-input" type="number" id="p9TmM" min="0" max="59" value="5" placeholder="мин">
+          <input class="p9-tm-input" type="number" id="p9TmS" min="0" max="59" value="0" placeholder="сек">
+        </div>
+        <div class="p9-tm-presets">
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(0,1,0)">1 мин</button>
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(0,3,0)">3 мин</button>
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(0,5,0)">5 мин</button>
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(0,10,0)">10 мин</button>
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(0,15,0)">15 мин</button>
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(0,30,0)">30 мин</button>
+          <button class="p9-tm-preset" onclick="window.__p9TmPreset(1,0,0)">1 ч</button>
+        </div>
+        <div class="p9-tm-ctrls">
+          <button class="p9-tm-btn p9-tm-start" id="p9TmStart" onclick="window.__p9TmStart()">▶ Старт</button>
+          <button class="p9-tm-btn p9-tm-reset" onclick="window.__p9TmReset()">⏹ Сброс</button>
+        </div>
+      </div>
+    `;
+    window.__p9TmState = { remaining: 0, running: false, interval: null, endTime: 0 };
+    window.__p9TmPreset = function(h,m,s) {
+      var elH = document.getElementById('p9TmH'); if (elH) elH.value = h;
+      var elM = document.getElementById('p9TmM'); if (elM) elM.value = m;
+      var elS = document.getElementById('p9TmS'); if (elS) elS.value = s;
+    };
+    window.__p9TmStart = function() {
+      var s = window.__p9TmState;
+      if (s.running) {
+        clearInterval(s.interval);
+        s.remaining = s.endTime - Date.now();
+        s.running = false;
+        var btn = document.getElementById('p9TmStart');
+        if (btn) { btn.textContent = '▶ Продолжить'; btn.className = 'p9-tm-btn p9-tm-start'; }
+        return;
+      }
+      if (s.remaining <= 0) {
+        var h = parseInt(document.getElementById('p9TmH').value)||0;
+        var m = parseInt(document.getElementById('p9TmM').value)||0;
+        var sec = parseInt(document.getElementById('p9TmS').value)||0;
+        s.remaining = (h*3600 + m*60 + sec) * 1000;
+      }
+      if (s.remaining <= 0) return;
+      s.endTime = Date.now() + s.remaining;
+      s.running = true;
+      s.interval = setInterval(window.__p9TmTick, 100);
+      var btn = document.getElementById('p9TmStart');
+      if (btn) { btn.textContent = '⏸ Пауза'; btn.className = 'p9-tm-btn p9-tm-pause'; }
+    };
+    window.__p9TmTick = function() {
+      var s = window.__p9TmState;
+      var left = s.endTime - Date.now();
+      if (left <= 0) {
+        clearInterval(s.interval);
+        s.running = false;
+        s.remaining = 0;
+        var disp = document.getElementById('p9TmDisp');
+        if (disp) disp.textContent = '⏰ ВРЕМЯ!';
+        try { if (typeof showToast === 'function') showToast('⏰ Время вышло!'); } catch(e){}
+        try { navigator.vibrate && navigator.vibrate([200,100,200,100,200]); } catch(e){}
+        var btn = document.getElementById('p9TmStart');
+        if (btn) { btn.textContent = '▶ Старт'; btn.className = 'p9-tm-btn p9-tm-start'; }
+        return;
+      }
+      s.remaining = left;
+      var sec = Math.floor(left/1000);
+      var h = Math.floor(sec/3600);
+      var m = Math.floor((sec%3600)/60);
+      var ss = sec%60;
+      var disp = document.getElementById('p9TmDisp');
+      if (disp) disp.textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+    };
+    window.__p9TmReset = function() {
+      var s = window.__p9TmState;
+      clearInterval(s.interval);
+      s.running = false; s.remaining = 0;
+      var disp = document.getElementById('p9TmDisp');
+      if (disp) disp.textContent = '00:00:00';
+      var btn = document.getElementById('p9TmStart');
+      if (btn) { btn.textContent = '▶ Старт'; btn.className = 'p9-tm-btn p9-tm-start'; }
+    };
+  };
+
+  window.__win11RenderBMR = function(body) {
+    body.innerHTML = `
+      <style>
+        .p9-bmr { max-width: 500px; margin: 0 auto; padding: 16px; }
+        .p9-bmr h3 { margin: 0 0 12px; font-size: 16px; color: var(--text-primary,#212121); }
+        .p9-bmr-fld { margin-bottom: 10px; }
+        .p9-bmr-fld label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary,#757575); margin-bottom: 4px; }
+        .p9-bmr-fld input, .p9-bmr-fld select { width: 100%; padding: 10px; border: 1px solid var(--border-color,#E0E0E0); border-radius: 8px; font-size: 14px; background: var(--surface-color,#fff); color: var(--text-primary,#212121); box-sizing: border-box; }
+        .p9-bmr-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .p9-bmr-btn { width: 100%; padding: 14px; background: linear-gradient(135deg,#7C3AED,#5b21b6); color: #fff; border: 0; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        .p9-bmr-result { margin-top: 16px; padding: 16px; background: rgba(124,58,237,0.08); border-radius: 12px; border: 1px solid rgba(124,58,237,0.2); }
+        .p9-bmr-result-val { font-size: 32px; font-weight: 700; color: #7C3AED; }
+        .p9-bmr-result-lbl { font-size: 11px; color: var(--text-secondary,#757575); margin-top: 4px; }
+        .p9-bmr-tdee { margin-top: 8px; font-size: 13px; color: var(--text-primary,#212121); }
+        .p9-bmr-tdee b { color: #10B981; }
+      </style>
+      <div class="p9-bmr">
+        <h3>⚖️ BMR — Базовый обмен веществ</h3>
+        <div class="p9-bmr-row">
+          <div class="p9-bmr-fld"><label>Возраст</label><input type="number" id="p9BmrAge" value="30" min="10" max="100"></div>
+          <div class="p9-bmr-fld"><label>Вес (кг)</label><input type="number" id="p9BmrW" value="70" min="30" max="300"></div>
+          <div class="p9-bmr-fld"><label>Рост (см)</label><input type="number" id="p9BmrH" value="170" min="100" max="250"></div>
+        </div>
+        <div class="p9-bmr-fld"><label>Пол</label><select id="p9BmrSex"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+        <div class="p9-bmr-fld"><label>Активность</label><select id="p9BmrAct">
+          <option value="1.2">Минимальная (сидячий)</option>
+          <option value="1.375">Лёгкая (1-3 трен/нед)</option>
+          <option value="1.55" selected>Умеренная (3-5 трен/нед)</option>
+          <option value="1.725">Высокая (6-7 трен/нед)</option>
+          <option value="1.9">Очень высокая</option>
+        </select></div>
+        <button class="p9-bmr-btn" onclick="window.__p9BmrCalc()">🔢 Рассчитать</button>
+        <div id="p9BmrResult"></div>
+      </div>
+    `;
+    window.__p9BmrCalc = function() {
+      var age = parseInt(document.getElementById('p9BmrAge').value)||0;
+      var w = parseFloat(document.getElementById('p9BmrW').value)||0;
+      var h = parseFloat(document.getElementById('p9BmrH').value)||0;
+      var sex = document.getElementById('p9BmrSex').value;
+      var act = parseFloat(document.getElementById('p9BmrAct').value)||1.55;
+      // Mifflin-St Jeor
+      var bmr = sex === 'male' ? (10*w + 6.25*h - 5*age + 5) : (10*w + 6.25*h - 5*age - 161);
+      var tdee = bmr * act;
+      var loss = tdee - 500;
+      var gain = tdee + 500;
+      var html = '<div class="p9-bmr-result">' +
+        '<div class="p9-bmr-result-val">' + Math.round(bmr) + ' ккал</div>' +
+        '<div class="p9-bmr-result-lbl">BMR (базовый обмен, в покое)</div>' +
+        '<div class="p9-bmr-tdee">TDEE (с активностью): <b>' + Math.round(tdee) + ' ккал/день</b></div>' +
+        '<div class="p9-bmr-tdee">📉 Для похудения: <b>' + Math.round(loss) + ' ккал</b></div>' +
+        '<div class="p9-bmr-tdee">📈 Для набора: <b>' + Math.round(gain) + ' ккал</b></div>' +
+      '</div>';
+      var el = document.getElementById('p9BmrResult');
+      if (el) el.innerHTML = html;
+    };
+  };
+
+  window.__win11RenderNotes = function(body) {
+    var notes = [];
+    try { notes = JSON.parse(localStorage.getItem('p9_notes') || '[]'); } catch(e){}
+    body.innerHTML = `
+      <style>
+        .p9-notes { max-width: 600px; margin: 0 auto; padding: 16px; }
+        .p9-notes-add { display: flex; gap: 8px; margin-bottom: 12px; }
+        .p9-notes-input { flex: 1; padding: 10px 12px; border: 1px solid var(--border-color,#E0E0E0); border-radius: 8px; font-size: 14px; background: var(--surface-color,#fff); color: var(--text-primary,#212121); }
+        .p9-notes-btn { padding: 10px 16px; background: #f59e0b; color: #fff; border: 0; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .p9-note { background: var(--surface-color,#fff); border: 1px solid var(--border-color,#E0E0E0); border-radius: 10px; padding: 12px; margin-bottom: 8px; position: relative; }
+        .p9-note-date { font-size: 10px; color: var(--text-light,#999); margin-bottom: 4px; }
+        .p9-note-text { font-size: 14px; color: var(--text-primary,#212121); white-space: pre-wrap; word-break: break-word; }
+        .p9-note-del { position: absolute; top: 8px; right: 8px; background: rgba(239,68,68,0.1); color: #EF4444; border: 0; border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 11px; }
+        .p9-note-empty { text-align: center; padding: 30px; color: var(--text-light,#999); }
+      </style>
+      <div class="p9-notes">
+        <div class="p9-notes-add">
+          <input class="p9-notes-input" id="p9NoteInput" placeholder="📝 Новая заметка..." onkeydown="if(event.key==='Enter')window.__p9NoteAdd()">
+          <button class="p9-notes-btn" onclick="window.__p9NoteAdd()">+ Добавить</button>
+        </div>
+        <div id="p9NotesList"></div>
+      </div>
+    `;
+    window.__p9NoteRender = function() {
+      var list = document.getElementById('p9NotesList');
+      if (!list) return;
+      if (!notes.length) {
+        list.innerHTML = '<div class="p9-note-empty">📝 Заметок пока нет. Добавьте первую!</div>';
+        return;
+      }
+      list.innerHTML = notes.map(function(n, i) {
+        return '<div class="p9-note"><div class="p9-note-date">'+new Date(n.ts).toLocaleString()+'</div><div class="p9-note-text">'+String(n.text).replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'</div><button class="p9-note-del" onclick="window.__p9NoteDel('+i+')">🗑</button></div>';
+      }).join('');
+    };
+    window.__p9NoteAdd = function() {
+      var inp = document.getElementById('p9NoteInput');
+      if (!inp) return;
+      var txt = inp.value.trim();
+      if (!txt) return;
+      notes.unshift({ text: txt, ts: Date.now() });
+      try { localStorage.setItem('p9_notes', JSON.stringify(notes)); } catch(e){}
+      inp.value = '';
+      window.__p9NoteRender();
+    };
+    window.__p9NoteDel = function(i) {
+      notes.splice(i, 1);
+      try { localStorage.setItem('p9_notes', JSON.stringify(notes)); } catch(e){}
+      window.__p9NoteRender();
+    };
+    window.__p9NoteRender();
+  };
+
+  window.__win11RenderWeather = function(body) {
+    body.innerHTML = `
+      <style>
+        .p9-w { max-width: 500px; margin: 0 auto; padding: 16px; }
+        .p9-w-card { background: linear-gradient(135deg,#0EA5E9,#0284c7); color: #fff; border-radius: 18px; padding: 24px; text-align: center; margin-bottom: 16px; }
+        .p9-w-loc { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }
+        .p9-w-temp { font-size: 64px; font-weight: 300; line-height: 1; }
+        .p9-w-desc { font-size: 16px; opacity: 0.9; margin-top: 8px; }
+        .p9-w-icon { font-size: 48px; margin: 12px 0; }
+        .p9-w-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .p9-w-item { background: var(--surface-color,#fff); border: 1px solid var(--border-color,#E0E0E0); border-radius: 10px; padding: 12px; text-align: center; }
+        .p9-w-item-v { font-size: 16px; font-weight: 700; color: var(--text-primary,#212121); }
+        .p9-w-item-l { font-size: 10px; color: var(--text-light,#999); margin-top: 4px; }
+        .p9-w-search { display: flex; gap: 6px; margin-bottom: 12px; }
+        .p9-w-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color,#E0E0E0); border-radius: 8px; font-size: 13px; background: var(--surface-color,#fff); color: var(--text-primary,#212121); }
+        .p9-w-btn { padding: 8px 14px; background: #0EA5E9; color: #fff; border: 0; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .p9-w-loading { text-align: center; padding: 40px; color: var(--text-light,#999); }
+      </style>
+      <div class="p9-w">
+        <div class="p9-w-search">
+          <input class="p9-w-input" id="p9WCity" placeholder="🔍 Город (например, Tel Aviv)" value="Tel Aviv">
+          <button class="p9-w-btn" onclick="window.__p9WLoad()">Показать</button>
+        </div>
+        <div id="p9WBody"><div class="p9-w-loading">🌤️ Введите город и нажмите «Показать»</div></div>
+      </div>
+    `;
+    window.__p9WLoad = function() {
+      var city = (document.getElementById('p9WCity').value || '').trim();
+      if (!city) return;
+      var body = document.getElementById('p9WBody');
+      if (body) body.innerHTML = '<div class="p9-w-loading">⏳ Загрузка...</div>';
+      // wttr.in — free weather API, returns JSON
+      fetch('https://wttr.in/' + encodeURIComponent(city) + '?format=j1')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          var cur = data.current_condition && data.current_condition[0];
+          if (!cur) throw new Error('no data');
+          var temp = cur.temp_C;
+          var desc = (cur.lang_ru && cur.lang_ru[0] && cur.lang_ru[0].value) || cur.weatherDesc[0].value;
+          var icon = '☁️';
+          var code = cur.weatherCode;
+          if (code === '113') icon = '☀️';
+          else if (code === '116') icon = '⛅';
+          else if (code === '119' || code === '122') icon = '☁️';
+          else if (code === '143' || code === '248' || code === '260') icon = '🌫️';
+          else if (code === '176' || code === '263' || code === '266' || code === '281' || code === '284' || code === '293' || code === '296' || code === '299' || code === '302' || code === '305' || code === '308') icon = '🌧️';
+          else if (code === '179' || code === '182' || code === '185' || code === '227' || code === '230' || code === '320' || code === '323' || code === '326' || code === '329' || code === '332' || code === '335' || code === '338' || code === '350' || code === '353' || code === '356' || code === '359' || code === '362' || code === '365') icon = '❄️';
+          else if (code === '200' || code === '386' || code === '389' || code === '392' || code === '395') icon = '⛈️';
+          var html = '<div class="p9-w-card">' +
+            '<div class="p9-w-loc">📍 ' + city + '</div>' +
+            '<div class="p9-w-icon">' + icon + '</div>' +
+            '<div class="p9-w-temp">' + temp + '°C</div>' +
+            '<div class="p9-w-desc">' + desc + '</div>' +
+          '</div>' +
+          '<div class="p9-w-grid">' +
+            '<div class="p9-w-item"><div class="p9-w-item-v">' + cur.humidity + '%</div><div class="p9-w-item-l">Влажность</div></div>' +
+            '<div class="p9-w-item"><div class="p9-w-item-v">' + cur.windspeedKmph + ' км/ч</div><div class="p9-w-item-l">Ветер</div></div>' +
+            '<div class="p9-w-item"><div class="p9-w-item-v">' + cur.FeelsLikeC + '°C</div><div class="p9-w-item-l">Ощущается</div></div>' +
+            '<div class="p9-w-item"><div class="p9-w-item-v">' + cur.pressure + ' hPa</div><div class="p9-w-item-l">Давление</div></div>' +
+            '<div class="p9-w-item"><div class="p9-w-item-v">' + cur.uvIndex + '</div><div class="p9-w-item-l">УФ-индекс</div></div>' +
+            '<div class="p9-w-item"><div class="p9-w-item-v">' + cur.visibility + ' км</div><div class="p9-w-item-l">Видимость</div></div>' +
+          '</div>';
+          if (body) body.innerHTML = html;
+        })
+        .catch(function(err){
+          if (body) body.innerHTML = '<div class="p9-w-loading">⚠️ Не удалось загрузить погоду. Проверьте интернет.</div>';
+        });
+    };
+    // Auto-load Tel Aviv
+    setTimeout(window.__p9WLoad, 300);
+  };
+
+  // Stub renderers for removed widgets (so they show a friendly message if somehow accessed)
+  ['Keyboard','Hydration','Measurements','HeartRate','Pedometer'].forEach(function(name){
+    var lc = name.charAt(0).toLowerCase() + name.slice(1);
+    window['__win11Render' + name] = function(body) {
+      var L = (typeof currentLang!=='undefined') ? currentLang : 'ru';
+      var msg = L === 'he' ? 'יישום זה הוסר' : (L === 'en' ? 'This app has been removed' : 'Это приложение удалено из системы');
+      body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-light,#999);font-size:14px;">🚫 ' + msg + '</div>';
+    };
+  });
+
+  // ============== 5. Also upgrade mdOpenWidget to use translated names ==============
+  var origMdOpenWidget = window.mdOpenWidget;
+  window.mdOpenWidget = function(id) {
+    mdCloseAppDrawer();
+    var fs = document.getElementById('mdWidgetOverlay');
+    if (!fs) {
+      fs = document.createElement('div');
+      fs.id = 'mdWidgetOverlay';
+      fs.style.cssText = 'position:fixed;inset:0;z-index:200;background:var(--background-color);display:none;flex-direction:column;';
+      document.body.appendChild(fs);
+    }
+    var L = lang();
+    var names = {
+      calculator: L==='he'?'🧮 מחשבון':(L==='en'?'🧮 Calculator':'🧮 Калькулятор'),
+      bmr: L==='he'?'⚖️ BMR':(L==='en'?'⚖️ BMR':'⚖️ BMR'),
+      stopwatch: L==='he'?'⏱ שעון עצר':(L==='en'?'⏱ Stopwatch':'⏱ Секундомер'),
+      timer: L==='he'?'⏲ טיימר':(L==='en'?'⏲ Timer':'⏲ Таймер'),
+      notes: L==='he'?'📝 פתקים':(L==='en'?'📝 Notes':'📝 Заметки'),
+      weather: L==='he'?'🌤️ מזג אוויר':(L==='en'?'🌤️ Weather':'🌤️ Погода'),
+      keyboard: L==='he'?'🎹 פסנתר':(L==='en'?'🎹 Piano':'🎹 Пианино'),
+      hydration: L==='he'?'💧 מים':(L==='en'?'💧 Water':'💧 Вода'),
+      measurements: L==='he'?'📏 מדידות':(L==='en'?'📏 Measurements':'📏 Замеры'),
+      heartrate: L==='he'?'❤️ דופק':(L==='en'?'❤️ Heart rate':'❤️ Пульс'),
+      pedometer: L==='he'?'👣 מד צעדים':(L==='en'?'👣 Pedometer':'👣 Шагомер')
+    };
+    fs.innerHTML = '<div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface-color);border-bottom:1px solid var(--border-color);"><button onclick="mdCloseWidget()" style="width:40px;height:40px;border:none;border-radius:12px;background:var(--background-color);color:var(--text-primary);font-size:20px;cursor:pointer;">‹</button><div style="font-size:17px;font-weight:600;">'+(names[id]||id)+'</div></div><div id="mdWidgetBody" style="flex:1;overflow-y:auto;padding:16px;"></div>';
+    fs.style.display = 'flex';
+    var body = document.getElementById('mdWidgetBody');
+    if (!body) return;
+    var fns = {calculator:'window.__win11RenderCalculator',bmr:'window.__win11RenderBMR',stopwatch:'window.__win11RenderStopwatch',timer:'window.__win11RenderTimer',keyboard:'window.__win11RenderKeyboard',notes:'window.__win11RenderNotes',hydration:'window.__win11RenderHydration',measurements:'window.__win11RenderMeasurements',heartrate:'window.__win11RenderHeartRate',pedometer:'window.__win11RenderPedometer',weather:'window.__win11RenderWeather'};
+    var fn = fns[id];
+    if (fn) { try { eval(fn + '(body)'); } catch(e){ body.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Ошибка: ' + e.message + '</div>'; } }
+  };
+
+  console.log('[P9 DesktopFix] initialized — dock patched, app drawer cleaned, widgets upgraded');
+})();
+</script>
+<!-- /P9_DESKTOP_FIX -->
 
 </body>
 </html>
