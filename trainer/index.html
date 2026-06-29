@@ -45687,5 +45687,413 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
 
 </script>
 <!-- /P5_UNIFIED -->
+
+<!-- P6_UNIFIED -->
+<script>
+// ============================================================
+// P6 UNIFIED — Full client edit + Desktop cleanup + Picker editor + DB enhancement
+// 1. Full client edit modal (ALL fields from create + password change)
+// 2. Remove Питание/Тренировки buttons from desktop (top + bottom dock)
+// 3. Add Настройки to bottom dock
+// 4. Add ✏️ to exercise picker panel → opens DB editor
+// 5. Enhanced DB editor with GIF URLs + technique descriptions
+// ============================================================
+
+(function() {
+  'use strict';
+  if (window.__p6unified) return;
+  window.__p6unified = true;
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function lang(){try{return(typeof currentLang!=='undefined'&&currentLang)||'ru';}catch(e){return'ru';}}
+
+  // ============================================================
+  // 1. FULL CLIENT EDIT — all fields from create modal + password
+  // ============================================================
+  // Override the P5 edit function with a complete version
+  window.__p5editClient = function(userId) {
+    var users = [];
+    try { users = getUsers(); } catch(e){}
+    var user = users.find(function(u) { return u.id === userId; });
+    if (!user) return;
+
+    var L = lang();
+    var l = {
+      ru: { title:'✏️ Редактировать клиента', name:'Имя', lastName:'Фамилия', phone:'Телефон', email:'Email', address:'Адрес', passport:'Паспорт/ID', birthday:'День рождения', age:'Возраст', weight:'Вес (кг)', height:'Рост (см)', gender:'Пол', male:'Муж', female:'Жен', activity:'Активность', goal:'Цель', notes:'Заметки', password:'Пароль клиента', passwordHint:'Оставьте пустым чтобы не менять', save:'💾 Сохранить', delete:'🗑 Удалить клиента', close:'Закрыть', confirmDel:'Удалить клиента и все его данные?' },
+      en: { title:'✏️ Edit Client', name:'Name', lastName:'Last Name', phone:'Phone', email:'Email', address:'Address', passport:'Passport/ID', birthday:'Birthday', age:'Age', weight:'Weight (kg)', height:'Height (cm)', gender:'Gender', male:'Male', female:'Female', activity:'Activity', goal:'Goal', notes:'Notes', password:'Client Password', passwordHint:'Leave empty to keep current', save:'💾 Save', delete:'🗑 Delete Client', close:'Close', confirmDel:'Delete client and all data?' },
+      he: { title:'✏️ עריכת לקוח', name:'שם', lastName:'שם משפחה', phone:'טלפון', email:'אימייל', address:'כתובת', passport:'תעודת זהות', birthday:'יום הולדת', age:'גיל', weight:'משקל (ק"ג)', height:'גובה (ס"מ)', gender:'מגדר', male:'זכר', female:'נקבה', activity:'פעילות', goal:'יעד', notes:'הערות', password:'סיסמת לקוח', passwordHint:'השאר ריק כדי לשמור את הנוכחי', save:'💾 שמור', delete:'🗑 מחק לקוח', close:'סגור', confirmDel:'למחוק לקוח ואת כל הנתונים?' }
+    }[L] || l.ru;
+
+    function field(label, id, val, type, placeholder) {
+      return '<div style="margin-bottom:8px;"><label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:3px;">'+esc(label)+'</label>'+
+        '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(placeholder||'')+'" style="width:100%;padding:7px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:7px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;"></div>';
+    }
+    function selectField(label, id, options, selected) {
+      var opts = options.map(function(o) { return '<option value="'+o.v+'" '+(o.v==selected?'selected':'')+'>'+esc(o.l)+'</option>'; }).join('');
+      return '<div style="margin-bottom:8px;"><label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:3px;">'+esc(label)+'</label>'+
+        '<select id="'+id+'" style="width:100%;padding:7px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:7px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);">'+opts+'</select></div>';
+    }
+
+    var activities = [
+      {v:'1.2',l:L==='he'?'מינימלית':(L==='en'?'Minimal':'Минимальная (сидячий)')},
+      {v:'1.375',l:L==='he'?'קלה':(L==='en'?'Light':'Легкая (1-3 трен/нед)')},
+      {v:'1.55',l:L==='he'?'בינונית':(L==='en'?'Moderate':'Умеренная (3-5 трен/нед)')},
+      {v:'1.725',l:L==='he'?'גבוהה':(L==='en'?'High':'Высокая (6-7 трен/нед)')},
+      {v:'1.9',l:L==='he'?'גבוהה מאוד':(L==='en'?'Very High':'Очень высокая')}
+    ];
+    var goals = [
+      {v:'physio',l:L==='he'?'פיזיותרפיה':(L==='en'?'Physio':'Физиотерапия')},
+      {v:'health',l:L==='he'?'בריאות':(L==='en'?'Health':'Оздоровление')},
+      {v:'lose',l:L==='he'?'ירידה במשקל':(L==='en'?'Lose':'Похудение')},
+      {v:'maintain',l:L==='he'?'שמירה':(L==='en'?'Maintain':'Поддержание')},
+      {v:'recomp',l:L==='he'?'רקומפ':(L==='en'?'Recomp':'Рекомпозиция')},
+      {v:'tone',l:L==='he'?'טונוס':(L==='en'?'Tone':'Тонус')},
+      {v:'gain',l:L==='he'?'עליה':(L==='en'?'Gain':'Набор массы')}
+    ];
+
+    var overlay = document.createElement('div');
+    overlay.id = 'p5editClient';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:8px;';
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:500px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:var(--primary-color,#4CAF50);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<h2 style="margin:0;font-size:16px;">'+esc(l.title)+'</h2>' +
+        '<button onclick="document.getElementById(\'p5editClient\').remove();document.body.style.overflow=\'\'" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button></div>' +
+      '<div style="flex:1;overflow-y:auto;padding:16px;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+          field(l.name, 'p5cName', user.name) +
+          field(l.lastName, 'p5cLastName', user.lastName) +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+          field(l.phone, 'p5cPhone', user.phone, 'tel', '+972 50 123 4567') +
+          field(l.email, 'p5cEmail', user.email, 'email') +
+        '</div>' +
+        field(l.address, 'p5cAddress', user.address) +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+          field(l.passport, 'p5cPassport', user.passport) +
+          field(l.birthday, 'p5cBirthday', user.birthday, 'date') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+          field(l.age, 'p5cAge', user.age, 'number') +
+          field(l.weight, 'p5cWeight', user.weight, 'number') +
+          field(l.height, 'p5cHeight', user.height, 'number') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+          selectField(l.gender, 'p5cGender', [{v:'male',l:l.male},{v:'female',l:l.female}], user.gender) +
+          selectField(l.activity, 'p5cActivity', activities, user.activity||'1.55') +
+        '</div>' +
+        selectField(l.goal, 'p5cGoal', goals, user.goal||'maintain') +
+        field(l.notes, 'p5cNotes', user.notes) +
+        '<div style="margin:12px 0 8px;padding:10px;background:rgba(59,130,246,0.05);border-radius:8px;border:1px solid rgba(59,130,246,0.15);">' +
+          '<label style="display:block;font-size:11px;font-weight:600;color:#3B82F6;margin-bottom:3px;">🔐 '+esc(l.password)+'</label>' +
+          '<input id="p5cPassword" type="password" placeholder="'+esc(l.passwordHint)+'" style="width:100%;padding:7px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:7px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;">' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-color,#E0E0E0);">' +
+        '<button onclick="window.__p6deleteClient(\''+userId+'\')" style="background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:13px;">'+esc(l.delete)+'</button>' +
+        '<button onclick="window.__p5saveClient(\''+userId+'\')" style="flex:1;background:var(--primary-color,#4CAF50);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(l.save)+'</button>' +
+        '<button onclick="document.getElementById(\'p5editClient\').remove();document.body.style.overflow=\'\'" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(l.close)+'</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Enhanced save with all fields + password
+  window.__p5saveClient = function(userId) {
+    try {
+      var users = getUsers();
+      var u = users.find(function(x) { return x.id === userId; });
+      if (!u) return;
+      u.name = (document.getElementById('p5cName').value||'').trim();
+      u.lastName = (document.getElementById('p5cLastName').value||'').trim();
+      u.phone = (document.getElementById('p5cPhone').value||'').trim();
+      u.email = (document.getElementById('p5cEmail').value||'').trim();
+      u.address = (document.getElementById('p5cAddress').value||'').trim();
+      u.passport = (document.getElementById('p5cPassport').value||'').trim();
+      u.birthday = (document.getElementById('p5cBirthday').value||'').trim();
+      u.age = parseFloat(document.getElementById('p5cAge').value) || '';
+      u.weight = parseFloat(document.getElementById('p5cWeight').value) || '';
+      u.height = parseFloat(document.getElementById('p5cHeight').value) || '';
+      u.gender = document.getElementById('p5cGender').value;
+      u.activity = document.getElementById('p5cActivity').value;
+      u.goal = document.getElementById('p5cGoal').value;
+      u.notes = (document.getElementById('p5cNotes').value||'').trim();
+      // Password change
+      var pwd = (document.getElementById('p5cPassword').value||'').trim();
+      if (pwd.length >= 4) {
+        // Hash and save
+        if (typeof hashPassword === 'function') {
+          hashPassword(pwd).then(function(h) {
+            u.clientPassword = h;
+            finishSave(users);
+          });
+          return;
+        }
+      }
+      finishSave(users);
+    } catch(e) { alert('Error: ' + e.message); }
+
+    function finishSave(users) {
+      try {
+        if (typeof saveUsers === 'function') saveUsers();
+        else localStorage.setItem('nutritionUsers', JSON.stringify(users));
+      } catch(e){}
+      var m = document.getElementById('p5editClient');
+      if (m) m.remove();
+      document.body.style.overflow = '';
+      if (typeof mdRenderClients === 'function') mdRenderClients('');
+      if (typeof showToast === 'function') showToast('✅');
+    }
+  };
+
+  // Delete client
+  window.__p6deleteClient = function(userId) {
+    var L = lang();
+    var msg = L==='he'?'למחוק לקוח ואת כל הנתונים?':(L==='en'?'Delete client and all data?':'Удалить клиента и все его данные?');
+    if (!confirm(msg)) return;
+    if (typeof deleteUser === 'function') {
+      deleteUser(userId);
+    } else {
+      var users = getUsers().filter(function(u) { return u.id !== userId; });
+      localStorage.setItem('nutritionUsers', JSON.stringify(users));
+    }
+    var m = document.getElementById('p5editClient');
+    if (m) m.remove();
+    document.body.style.overflow = '';
+    if (typeof mdRenderClients === 'function') mdRenderClients('');
+  };
+
+  // ============================================================
+  // 2. DESKTOP CLEANUP — remove Питание/Тренировки from top + dock
+  // 3. Add Настройки to dock
+  // ============================================================
+  window.__p6patchDesktop = function patchDesktop() {
+    // Remove the top "Quick actions: Nutrition + Workout" section
+    var quickActions = document.querySelector('[style*="grid-template-columns:1fr 1fr"] > button[onclick*="win11OpenApp(\'planner\')"]');
+    if (quickActions) {
+      var container = quickActions.parentElement;
+      if (container) container.remove();
+    }
+    
+    // Patch the bottom dock — remove Питание and Тренировки, add Настройки
+    var dockButtons = document.querySelectorAll('[style*="space-around"] button, .mobile-desktop > div:last-child button');
+    var dock = document.querySelector('.mobile-desktop > div:last-child');
+    if (dock && !dock.querySelector('.p6-settings-btn')) {
+      // Remove 🍽️ and 🏋️ buttons
+      dock.querySelectorAll('button').forEach(function(btn) {
+        var onclick = btn.getAttribute('onclick') || '';
+        if (onclick.indexOf("win11OpenApp('planner')") >= 0 || onclick.indexOf("win11OpenApp('workout')") >= 0) {
+          btn.remove();
+        }
+      });
+      
+      // Add ⚙️ Настройки button before ⊞
+      var appDrawerBtn = dock.querySelector('button[onclick*="mdOpenAppDrawer"]');
+      if (appDrawerBtn) {
+        var L = lang();
+        var settingsBtn = document.createElement('button');
+        settingsBtn.className = 'p6-settings-btn';
+        settingsBtn.style.cssText = 'width:48px;height:48px;border:none;border-radius:14px;background:rgba(107,114,128,0.1);color:#6B7280;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+        settingsBtn.textContent = '⚙️';
+        settingsBtn.title = L==='he'?'הגדרות':(L==='en'?'Settings':'Настройки');
+        settingsBtn.onclick = function() { if(typeof openSettingsModal==='function')openSettingsModal(); };
+        dock.insertBefore(settingsBtn, appDrawerBtn);
+      }
+    }
+  }
+
+  // Run patchDesktop aggressively — every 2s for first 30s, then every 10s
+  var p6retries = 0;
+  var p6interval = setInterval(function() {
+    if (window.__p6patchDesktop) window.__p6patchDesktop();
+    if (++p6retries > 15) {
+      clearInterval(p6interval);
+      // Switch to slower interval
+      setInterval(patchDesktop, 10000);
+    }
+  }, 2000);
+  
+  // Also patch after mdInit
+  var origMdInit = window.mdInit;
+  if (typeof origMdInit === 'function' && !window.__p6mdInitWrapped) {
+    window.mdInit = function() {
+      origMdInit.apply(this, arguments);
+      setTimeout(patchDesktop, 100);
+    };
+    window.__p6mdInitWrapped = true;
+  }
+
+  // ============================================================
+  // 4. ADD ✏️ TO EXERCISE PICKER PANEL
+  // ============================================================
+  function patchPicker() {
+    var orig = window.mpOpenPicker;
+    if (typeof orig !== 'function' || window.__p6pickerWrapped) return;
+    
+    window.mpOpenPicker = function() {
+      orig.apply(this, arguments);
+      setTimeout(function() {
+        // Find the picker sheet
+        var sheet = document.getElementById('mpSheet') || document.getElementById('csSheet');
+        if (!sheet) return;
+        var head = sheet.querySelector('.mp-sheet-head, .cs-sheet-head');
+        if (!head) return;
+        if (head.querySelector('.p6-picker-edit')) return;
+        
+        var L = lang();
+        var btn = document.createElement('button');
+        btn.className = 'p6-picker-edit';
+        btn.style.cssText = 'background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;font-weight:600;margin-left:auto;margin-right:8px;';
+        btn.innerHTML = '✏️ ' + (L==='he'?'ערוך':(L==='en'?'Edit':'Изменить'));
+        btn.onclick = function() {
+          if (typeof mpCloseSheet === 'function') mpCloseSheet();
+          if (typeof csCloseSheet === 'function') csCloseSheet();
+          window.__p5openExEditor();
+        };
+        // Insert before the × button
+        var closeBtn = head.querySelector('button:last-child, .mp-sheet-x, .cs-sheet-x');
+        if (closeBtn) {
+          head.insertBefore(btn, closeBtn);
+        } else {
+          head.appendChild(btn);
+        }
+      }, 100);
+    };
+    window.__p6pickerWrapped = true;
+  }
+
+  // ============================================================
+  // 5. ENHANCED DB EDITOR — add GIF URL + technique fields
+  // ============================================================
+  // Override the edit exercise function to include more fields
+  var origP5EditEx = window.__p5editEx;
+  if (typeof origP5EditEx === 'function' && !window.__p6editExWrapped) {
+    window.__p5editEx = function(gi, si, ei) {
+      var ex = EXERCISE_DB[gi].subgroups[si].exercises[ei];
+      if (!ex) return;
+      
+      var L = lang();
+      var l = {
+        ru: {title:'✏️ Редактировать упражнение', id:'ID', equip:'Оборудование', ru:'Название (RU)', en:'Name (EN)', he:'שם (HE)', gif:'GIF URL', gifHint:'Ссылка на анимацию', tech:'Техника выполнения', techHint:'Описание техники', save:'💾 Сохранить', cancel:'Отмена'},
+        en: {title:'✏️ Edit Exercise', id:'ID', equip:'Equipment', ru:'Name (RU)', en:'Name (EN)', he:'Name (HE)', gif:'GIF URL', gifHint:'Link to animation', tech:'Technique', techHint:'Technique description', save:'💾 Save', cancel:'Cancel'},
+        he: {title:'✏️ עריכת תרגיל', id:'מזהה', equip:'ציוד', ru:'שם (RU)', en:'שם (EN)', he:'שם (HE)', gif:'GIF', gifHint:'קישור לאנימציה', tech:'טכניקה', techHint:'תיאור טכניקה', save:'💾 שמור', cancel:'ביטול'}
+      }[L]||l.ru;
+      
+      var overlay = document.createElement('div');
+      overlay.id = 'p6editEx';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;padding:12px;';
+      
+      function f(label, id, val, type, ph) {
+        return '<div style="margin-bottom:8px;"><label style="display:block;font-size:11px;font-weight:600;color:#757575;margin-bottom:3px;">'+esc(label)+'</label>'+
+          '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%;padding:7px 10px;border:1px solid #E0E0E0;border-radius:7px;font-size:13px;background:#fff;color:#212121;box-sizing:border-box;"></div>';
+      }
+      
+      overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #E0E0E0;background:#4CAF50;color:#fff;border-radius:14px 14px 0 0;">' +
+          '<h2 style="margin:0;font-size:16px;">'+esc(l.title)+'</h2>' +
+          '<button onclick="document.getElementById(\'p6editEx\').remove();document.body.style.overflow=\'\'" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button></div>' +
+        '<div style="padding:16px;">' +
+          f(l.id, 'p6exId', ex.id, 'text') +
+          f(l.equip, 'p6exEquip', ex.equip, 'text', 'barbell/dumbbell/cable/machine/bw') +
+          f(l.ru, 'p6exRu', ex.ru) +
+          f(l.en, 'p6exEn', ex.en) +
+          f(l.he, 'p6exHe', ex.he) +
+          '<div style="margin:12px 0 8px;padding:10px;background:rgba(16,185,129,0.05);border-radius:8px;border:1px solid rgba(16,185,129,0.15);">' +
+            f(l.gif, 'p6exGif', ex.gifUrl||ex._gif||'', 'text', l.gifHint) +
+            '<div id="p6exGifPreview" style="margin-top:6px;">' + (ex.gifUrl||ex._gif ? '<img src="'+esc(ex.gifUrl||ex._gif)+'" style="max-width:200px;max-height:100px;border-radius:6px;" onerror="this.style.display=\'none\'">' : '') + '</div>' +
+          '</div>' +
+          '<div style="margin:12px 0 8px;padding:10px;background:rgba(59,130,246,0.05);border-radius:8px;border:1px solid rgba(59,130,246,0.15);">' +
+            '<label style="display:block;font-size:11px;font-weight:600;color:#3B82F6;margin-bottom:3px;">'+esc(l.tech)+'</label>' +
+            '<textarea id="p6exTech" rows="4" placeholder="'+esc(l.techHint)+'" style="width:100%;padding:7px 10px;border:1px solid #E0E0E0;border-radius:7px;font-size:13px;background:#fff;color:#212121;box-sizing:border-box;resize:vertical;">'+esc(ex.technique||ex._tech||'')+'</textarea>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid #E0E0E0;">' +
+          '<button onclick="window.__p6saveEx('+gi+','+si+','+ei+')" style="flex:1;background:#4CAF50;color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(l.save)+'</button>' +
+          '<button onclick="document.getElementById(\'p6editEx\').remove();document.body.style.overflow=\'\'" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(l.cancel)+'</button>' +
+        '</div></div>';
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      
+      // Live GIF preview
+      var gifInput = document.getElementById('p6exGif');
+      if (gifInput) {
+        gifInput.addEventListener('input', function() {
+          var preview = document.getElementById('p6exGifPreview');
+          var url = this.value.trim();
+          if (url) {
+            preview.innerHTML = '<img src="'+esc(url)+'" style="max-width:200px;max-height:100px;border-radius:6px;" onerror="this.style.display=\'none\'">';
+          } else {
+            preview.innerHTML = '';
+          }
+        });
+      }
+    };
+    window.__p6editExWrapped = true;
+  }
+
+  window.__p6saveEx = function(gi, si, ei) {
+    var ex = EXERCISE_DB[gi].subgroups[si].exercises[ei];
+    if (!ex) return;
+    ex.id = document.getElementById('p6exId').value.trim();
+    ex.equip = document.getElementById('p6exEquip').value.trim();
+    ex.ru = document.getElementById('p6exRu').value;
+    ex.en = document.getElementById('p6exEn').value;
+    ex.he = document.getElementById('p6exHe').value;
+    var gif = document.getElementById('p6exGif').value.trim();
+    if (gif) { ex.gifUrl = gif; ex._gif = gif; }
+    else { delete ex.gifUrl; delete ex._gif; }
+    var tech = document.getElementById('p6exTech').value.trim();
+    if (tech) { ex.technique = tech; ex._tech = tech; }
+    else { delete ex.technique; delete ex._tech; }
+    
+    var m = document.getElementById('p6editEx');
+    if (m) m.remove();
+    document.body.style.overflow = '';
+    // Re-render DB editor
+    if (typeof window.__p5renderDB === 'function') {
+      var L = lang();
+      var l = {ru:{title:'',groups:'',subgroups:'',exercises:'',addGroup:'',addSub:'',addEx:'',edit:'✏️',delete:'🗑',name:'',equip:'',ru:'',en:'',he:'',save:'',close:'',confirmDel:'',resetAll:'',confirmReset:''}};
+      window.__p5renderDB(l[L]||l.ru);
+    }
+    if (typeof showToast === 'function') showToast('✅');
+  };
+
+  // Also enhance add exercise to include GIF and technique
+  var origP5AddEx = window.__p5addEx;
+  if (typeof origP5AddEx === 'function' && !window.__p6addExWrapped) {
+    window.__p5addEx = function(gi, si) {
+      var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+      if (!sg) return;
+      if (!sg.exercises) sg.exercises = [];
+      var id = 'custom_' + Date.now();
+      var ru = prompt('Название (RU) / Name:', '');
+      if (!ru) return;
+      var en = prompt('Name (EN):', ru);
+      var he = prompt('שם (HE):', ru);
+      var equip = prompt('Equipment (barbell/dumbbell/cable/machine/bw):', 'bw');
+      var gif = prompt('GIF URL (optional):', '');
+      var tech = prompt('Technique description (optional):', '');
+      var newEx = { id: id, equip: equip||'bw', ru: ru, en: en||ru, he: he||ru };
+      if (gif) { newEx.gifUrl = gif; newEx._gif = gif; }
+      if (tech) { newEx.technique = tech; newEx._tech = tech; }
+      sg.exercises.push(newEx);
+      window.__p5renderDB(window.__p5l);
+    };
+    window.__p6addExWrapped = true;
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  patchPicker();
+  setTimeout(patchDesktop, 500);
+  setTimeout(patchDesktop, 2000);
+  setTimeout(patchDesktop, 5000);
+
+  console.log('[P6 Unified] initialized');
+})();
+
+</script>
+<!-- /P6_UNIFIED -->
 </body>
 </html>
