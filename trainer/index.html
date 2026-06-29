@@ -16658,6 +16658,13 @@ setTimeout(function(){
                 if (!userSettings.productSecondaryLang) userSettings.productSecondaryLang = 'en';
                 if (!userSettings.layout) userSettings.layout = 'tablet';
                 if (!userSettings.interfaceScale) userSettings.interfaceScale = 1.0;
+                if (!userSettings.theme) userSettings.theme = 'light';
+                if (!userSettings.color) userSettings.color = 'green';
+                if (!userSettings.font) userSettings.font = 'inter';
+                if (!userSettings.primaryColor) userSettings.primaryColor = '#4CAF50';
+                if (!userSettings.secondaryColor) userSettings.secondaryColor = '#2196F3';
+                if (!userSettings.accentColor) userSettings.accentColor = '#FF9800';
+                if (!userSettings.bgColor) userSettings.bgColor = '#f0f2f5';
                 currentLang = userSettings.language;
                 productPrimaryLang = userSettings.productPrimaryLang;
                 productSecondaryLang = userSettings.productSecondaryLang;
@@ -20001,6 +20008,17 @@ setTimeout(function(){
         }
 
         // ---------- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ----------
+        /* BUG-007 fixed: setInterval modal-flex hack removed.
+           openXxxModal functions now set display='flex' directly (BUG-014).
+           Modal stack tracking — declared at top level (NOT inside switchAppMode)
+           so all callers can access __modalOpened/__modalClosed globally. */
+        window.__modalStack = 0;
+        window.__modalOpened = function() { window.__modalStack++; document.body.style.overflow = 'hidden'; };
+        window.__modalClosed = function() { window.__modalStack = Math.max(0, (window.__modalStack||0) - 1); if (!window.__modalStack) document.body.style.overflow = ''; };
+        // Top-level aliases so existing `__modalOpened()` bare calls work from any scope
+        var __modalOpened = window.__modalOpened;
+        var __modalClosed = window.__modalClosed;
+
         window.switchAppMode = function(mode) {
             const body = document.body;
             if (mode === 'workout') {
@@ -20016,12 +20034,7 @@ setTimeout(function(){
             }
             try { safeSetItem('appMode', mode); } catch(e){console.warn("[ctx]",e);}
             try { localStorage.setItem('appMode', mode); } catch(e){console.warn("[ctx]",e);}
-
-        /* BUG-007 fixed: setInterval modal-flex hack removed.
-           openXxxModal functions now set display='flex' directly (BUG-014). */
-        __modalStack = 0;
-        function __modalOpened() { __modalStack++; document.body.style.overflow = 'hidden'; }
-        function __modalClosed() { __modalStack = Math.max(0, __modalStack - 1); if (!__modalStack) document.body.style.overflow = ''; }
+        };
 
         /* BUG-039: cleanup all background intervals (called on logout) */
         window.__intervalManager = window.__intervalManager || [];
@@ -20033,7 +20046,7 @@ setTimeout(function(){
             }
         };
 
-        };
+
 
         // ---------- ПЕЧАТЬ ----------
         // ============================================================
@@ -23076,6 +23089,7 @@ setTimeout(function(){
 
         // Затемнить/осветлить hex-цвет на percent (-100..100)
         function shadeColor(hex, percent) {
+            if (!hex || typeof hex !== 'string') hex = '#4CAF50';
             const h = hex.replace('#','');
             const num = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
             let r = (num >> 16) & 0xff, g = (num >> 8) & 0xff, b = num & 0xff;
@@ -45909,7 +45923,7 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
     if (++p6retries > 15) {
       clearInterval(p6interval);
       // Switch to slower interval
-      setInterval(patchDesktop, 10000);
+      setInterval(window.__p6patchDesktop, 10000);
     }
   }, 2000);
   
@@ -45918,7 +45932,7 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
   if (typeof origMdInit === 'function' && !window.__p6mdInitWrapped) {
     window.mdInit = function() {
       origMdInit.apply(this, arguments);
-      setTimeout(patchDesktop, 100);
+      setTimeout(window.__p6patchDesktop, 100);
     };
     window.__p6mdInitWrapped = true;
   }
@@ -46086,14 +46100,816 @@ window.win11OpenApp = window.win11OpenApp || function(app) {
   // INIT
   // ============================================================
   patchPicker();
-  setTimeout(patchDesktop, 500);
-  setTimeout(patchDesktop, 2000);
-  setTimeout(patchDesktop, 5000);
+  setTimeout(window.__p6patchDesktop, 500);
+  setTimeout(window.__p6patchDesktop, 2000);
+  setTimeout(window.__p6patchDesktop, 5000);
 
   console.log('[P6 Unified] initialized');
 })();
 
 </script>
 <!-- /P6_UNIFIED -->
+<!-- P7_EX_EDITOR -->
+<script>
+// ============================================================
+// P7 — Full RU/i18n Exercise DB Editor
+// Replaces P5/P6 editor with: full CRUD via modals (no prompts),
+// GIF URL field, technique description per language (RU/EN/HE),
+// search filter, GIF preview in list, import/export JSON.
+// ============================================================
+(function() {
+  'use strict';
+  if (window.__p7exEditor) return;
+  window.__p7exEditor = true;
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function lang(){try{return(typeof currentLang!=='undefined'&&currentLang)||'ru';}catch(e){return'ru';}}
+
+  function L(){
+    var l = lang();
+    var R = {
+      ru: {
+        title: '🏋️ Редактор базы упражнений',
+        searchPh: 'Поиск по названию или ID...',
+        addGroup: '+ Группа мышц',
+        addSub: '+ Подгруппа',
+        addEx: '+ Упражнение',
+        edit: '✏️ Изменить',
+        delete: '🗑 Удалить',
+        confirmDelGrp: 'Удалить всю группу со всеми подгруппами и упражнениями?',
+        confirmDelSub: 'Удалить подгруппу со всеми упражнениями?',
+        confirmDelEx: 'Удалить упражнение?',
+        resetAll: '🔄 Сбросить базу',
+        confirmReset: 'Удалить ВСЕ упражнения и начать заново? Это действие необратимо!',
+        save: '💾 Сохранить базу',
+        close: '✕ Закрыть',
+        export: '⬇ Экспорт JSON',
+        import: '⬆ Импорт JSON',
+        confirmImport: 'Импортировать базу из JSON? Текущая база будет заменена.',
+        // Edit group modal
+        grpTitleNew: '➕ Новая группа мышц',
+        grpTitleEdit: '✏️ Редактировать группу',
+        grpId: 'ID группы',
+        grpIdHint: 'латиницей, например: chest, back, legs',
+        grpNameRu: 'Название (рус)',
+        grpNameEn: 'Name (EN)',
+        grpNameHe: 'שם (עבר)',
+        grpIcon: 'Иконка (эмодзи)',
+        // Edit subgroup modal
+        subTitleNew: '➕ Новая подгруппа',
+        subTitleEdit: '✏️ Редактировать подгруппу',
+        subId: 'ID подгруппы',
+        subIdHint: 'например: chest_upper, back_lats',
+        subNameRu: 'Название (рус)',
+        subNameEn: 'Name (EN)',
+        subNameHe: 'שם (עבר)',
+        // Edit exercise modal
+        exTitleNew: '➕ Новое упражнение',
+        exTitleEdit: '✏️ Редактировать упражнение',
+        exId: 'ID упражнения',
+        exIdHint: 'латиницей, например: bench_press, squat',
+        exEquip: 'Оборудование',
+        exEquipHint: 'barbell, dumbbell, cable, machine, bw, band, kettlebell, trx',
+        exNameRu: 'Название (рус)',
+        exNameEn: 'Name (EN)',
+        exNameHe: 'שם (עבר)',
+        exGifUrl: 'URL GIF-анимации',
+        exGifHint: 'https://... ссылка на gif',
+        exPhotoUrl: 'URL фото (запасное)',
+        exPhotoHint: 'https://... ссылка на jpg/png',
+        exTechniqueRu: 'Техника выполнения (рус)',
+        exTechniqueEn: 'Technique (EN)',
+        exTechniqueHe: 'טכניקה (עבר)',
+        exTips: 'Советы и ошибки',
+        exTipsHint: 'Частые ошибки и рекомендации',
+        exMuscles: 'Рабочие мышцы',
+        exMusclesHint: 'основные и вспомогательные мышцы',
+        exCategory: 'Категория',
+        exCategoryHint: 'compound, isolation, mobility, stretch, warmup',
+        preview: 'Предпросмотр',
+        saveEx: '💾 Сохранить',
+        cancel: '✕ Отмена',
+        // Units
+        exCount: 'упр.',
+        noResults: 'Ничего не найдено',
+        saved: '✅ База сохранена',
+        // Stats
+        statGroups: 'Групп',
+        statSubs: 'Подгрупп',
+        statExercises: 'Упражнений',
+        statCustom: 'Своих упражнений',
+        // Add to workout button
+        addToWorkout: '➕ В тренировку',
+        added: '✅ Добавлено в тренировку'
+      },
+      en: {
+        title: '🏋️ Exercise DB Editor',
+        searchPh: 'Search by name or ID...',
+        addGroup: '+ Muscle Group',
+        addSub: '+ Subgroup',
+        addEx: '+ Exercise',
+        edit: '✏️ Edit',
+        delete: '🗑 Delete',
+        confirmDelGrp: 'Delete entire group with all subgroups and exercises?',
+        confirmDelSub: 'Delete subgroup with all exercises?',
+        confirmDelEx: 'Delete exercise?',
+        resetAll: '🔄 Reset DB',
+        confirmReset: 'Delete ALL exercises and start over? This cannot be undone!',
+        save: '💾 Save DB',
+        close: '✕ Close',
+        export: '⬇ Export JSON',
+        import: '⬆ Import JSON',
+        confirmImport: 'Import DB from JSON? Current DB will be replaced.',
+        grpTitleNew: '➕ New Muscle Group',
+        grpTitleEdit: '✏️ Edit Group',
+        grpId: 'Group ID',
+        grpIdHint: 'latin, e.g.: chest, back, legs',
+        grpNameRu: 'Name (RU)',
+        grpNameEn: 'Name (EN)',
+        grpNameHe: 'שם (עבר)',
+        grpIcon: 'Icon (emoji)',
+        subTitleNew: '➕ New Subgroup',
+        subTitleEdit: '✏️ Edit Subgroup',
+        subId: 'Subgroup ID',
+        subIdHint: 'e.g.: chest_upper, back_lats',
+        subNameRu: 'Name (RU)',
+        subNameEn: 'Name (EN)',
+        subNameHe: 'שם (עבר)',
+        exTitleNew: '➕ New Exercise',
+        exTitleEdit: '✏️ Edit Exercise',
+        exId: 'Exercise ID',
+        exIdHint: 'latin, e.g.: bench_press, squat',
+        exEquip: 'Equipment',
+        exEquipHint: 'barbell, dumbbell, cable, machine, bw, band, kettlebell, trx',
+        exNameRu: 'Name (RU)',
+        exNameEn: 'Name (EN)',
+        exNameHe: 'שם (עבר)',
+        exGifUrl: 'GIF URL',
+        exGifHint: 'https://... link to gif',
+        exPhotoUrl: 'Photo URL (fallback)',
+        exPhotoHint: 'https://... link to jpg/png',
+        exTechniqueRu: 'Technique (RU)',
+        exTechniqueEn: 'Technique (EN)',
+        exTechniqueHe: 'טכניקה (עבר)',
+        exTips: 'Tips & Mistakes',
+        exTipsHint: 'Common mistakes and recommendations',
+        exMuscles: 'Working muscles',
+        exMusclesHint: 'primary and secondary muscles',
+        exCategory: 'Category',
+        exCategoryHint: 'compound, isolation, mobility, stretch, warmup',
+        preview: 'Preview',
+        saveEx: '💾 Save',
+        cancel: '✕ Cancel',
+        exCount: 'ex',
+        noResults: 'No results',
+        saved: '✅ DB saved',
+        statGroups: 'Groups',
+        statSubs: 'Subgroups',
+        statExercises: 'Exercises',
+        statCustom: 'Custom',
+        addToWorkout: '➕ To Workout',
+        added: '✅ Added to workout'
+      },
+      he: {
+        title: '🏋️ עורך מאגר תרגילים',
+        searchPh: 'חיפוש לפי שם או מזהה...',
+        addGroup: '+ קבוצת שרירים',
+        addSub: '+ תת-קבוצה',
+        addEx: '+ תרגיל',
+        edit: '✏️ ערוך',
+        delete: '🗑 מחק',
+        confirmDelGrp: 'למחוק את כל הקבוצה עם כל תת-הקבוצות והתרגילים?',
+        confirmDelSub: 'למחוק תת-קבוצה עם כל התרגילים?',
+        confirmDelEx: 'למחוק תרגיל?',
+        resetAll: '🔄 אפס מאגר',
+        confirmReset: 'למחוק את כל התרגילים ולהתחיל מחדש? לא ניתן לבטל!',
+        save: '💾 שמור מאגר',
+        close: '✕ סגור',
+        export: '⬇ ייצוא JSON',
+        import: '⬆ ייבוא JSON',
+        confirmImport: 'לייבא מאגר מ-JSON? המאגר הנוכחי יוחלף.',
+        grpTitleNew: '➕ קבוצת שרירים חדשה',
+        grpTitleEdit: '✏️ עריכת קבוצה',
+        grpId: 'מזהה קבוצה',
+        grpIdHint: 'בלטינית, לדוגמה: chest, back, legs',
+        grpNameRu: 'שם (רוס)',
+        grpNameEn: 'Name (EN)',
+        grpNameHe: 'שם (עבר)',
+        grpIcon: 'אייקון (אימוג\'י)',
+        subTitleNew: '➕ תת-קבוצה חדשה',
+        subTitleEdit: '✏️ עריכת תת-קבוצה',
+        subId: 'מזהה תת-קבוצה',
+        subIdHint: 'לדוגמה: chest_upper, back_lats',
+        subNameRu: 'שם (רוס)',
+        subNameEn: 'Name (EN)',
+        subNameHe: 'שם (עבר)',
+        exTitleNew: '➕ תרגיל חדש',
+        exTitleEdit: '✏️ עריכת תרגיל',
+        exId: 'מזהה תרגיל',
+        exIdHint: 'בלטינית, לדוגמה: bench_press, squat',
+        exEquip: 'ציוד',
+        exEquipHint: 'barbell, dumbbell, cable, machine, bw, band, kettlebell, trx',
+        exNameRu: 'שם (רוס)',
+        exNameEn: 'Name (EN)',
+        exNameHe: 'שם (עבר)',
+        exGifUrl: 'URL של GIF',
+        exGifHint: 'https://... קישור ל-gif',
+        exPhotoUrl: 'URL תמונה (גיבוי)',
+        exPhotoHint: 'https://... קישור ל-jpg/png',
+        exTechniqueRu: 'טכניקה (רוס)',
+        exTechniqueEn: 'Technique (EN)',
+        exTechniqueHe: 'טכניקה (עבר)',
+        exTips: 'טיפים ושגיאות',
+        exTipsHint: 'שגיאות נפוצות והמלצות',
+        exMuscles: 'שרירים עובדים',
+        exMusclesHint: 'שרירים עיקריים ומשניים',
+        exCategory: 'קטגוריה',
+        exCategoryHint: 'compound, isolation, mobility, stretch, warmup',
+        preview: 'תצוגה מקדימה',
+        saveEx: '💾 שמור',
+        cancel: '✕ ביטול',
+        exCount: 'תרג',
+        noResults: 'לא נמצאו תוצאות',
+        saved: '✅ המאגר נשמר',
+        statGroups: 'קבוצות',
+        statSubs: 'תת-קבוצות',
+        statExercises: 'תרגילים',
+        statCustom: 'מותאם אישית',
+        addToWorkout: '➕ לאימון',
+        added: '✅ נוסף לאימון'
+      }
+    };
+    return R[l] || R.ru;
+  }
+
+  function getExLabel(ex){
+    if(!ex) return '';
+    var l = lang();
+    return ex[l] || ex.ru || ex.en || ex.he || ex.id || '';
+  }
+
+  function getExGif(ex){
+    if(!ex) return '';
+    return ex.gifUrl || ex._gif || ex.gif || '';
+  }
+  function getExPhoto(ex){
+    if(!ex) return '';
+    return ex.photoUrl || ex._photo || ex.photo || '';
+  }
+  function getExTech(ex){
+    if(!ex) return '';
+    var l = lang();
+    return ex['technique_'+l] || ex.technique || ex._tech || ex['technique_ru'] || ex['technique_en'] || ex['technique_he'] || '';
+  }
+
+  // =============== Main editor ===============
+  window.__p5openExEditor = function() {
+    var t = L();
+    if (typeof EXERCISE_DB === 'undefined') { alert('EXERCISE_DB not available'); return; }
+
+    var existing = document.getElementById('p5exEditor');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'p5exEditor';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:8px;';
+    
+    overlay.innerHTML = 
+      '<div style="background:var(--surface-color,#fff);color:var(--text-primary,#212121);border-radius:16px;max-width:1000px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border-radius:16px 16px 0 0;">' +
+          '<h2 style="margin:0;font-size:18px;font-weight:700;">'+esc(t.title)+'</h2>' +
+          '<div style="display:flex;gap:6px;align-items:center;">' +
+            '<button id="p7exportBtn" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.export)+'</button>' +
+            '<button id="p7importBtn" style="background:rgba(255,255,255,0.2);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.import)+'</button>' +
+            '<button id="p7resetBtn" style="background:rgba(239,68,68,0.3);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.resetAll)+'</button>' +
+            '<button onclick="document.getElementById(\'p5exEditor\').remove();document.body.style.overflow=\'\'" style="background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer;line-height:1;padding:0 4px;">×</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:10px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);display:flex;gap:8px;align-items:center;background:var(--surface-color,#fff);">' +
+          '<input id="p7search" type="text" placeholder="'+esc(t.searchPh)+'" style="flex:1;padding:8px 12px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);">' +
+          '<button onclick="window.__p7addGroup()" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">'+esc(t.addGroup)+'</button>' +
+        '</div>' +
+        '<div id="p7stats" style="padding:8px 16px;background:rgba(0,0,0,0.02);font-size:11px;color:var(--text-secondary,#757575);border-bottom:1px solid var(--border-color,#E0E0E0);"></div>' +
+        '<div id="p5exBody" style="flex:1;overflow-y:auto;padding:12px 16px;"></div>' +
+        '<div style="display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--border-color,#E0E0E0);background:var(--surface-color,#fff);">' +
+          '<button onclick="window.__p7saveDB()" style="flex:1;background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border:0;border-radius:10px;padding:12px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.save)+'</button>' +
+          '<button onclick="document.getElementById(\'p5exEditor\').remove();document.body.style.overflow=\'\'" style="background:rgba(0,0,0,0.05);color:var(--text-primary,#212121);border:0;border-radius:10px;padding:12px 20px;cursor:pointer;font-size:13px;">'+esc(t.close)+'</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    
+    // Hook up buttons
+    var sb = document.getElementById('p7search');
+    if (sb) sb.addEventListener('input', function(){ window.__p7renderDB(); });
+    var eb = document.getElementById('p7exportBtn');
+    if (eb) eb.onclick = window.__p7exportDB;
+    var ib = document.getElementById('p7importBtn');
+    if (ib) ib.onclick = window.__p7importDB;
+    var rb = document.getElementById('p7resetBtn');
+    if (rb) rb.onclick = window.__p7resetDB;
+    
+    window.__p7renderDB();
+  };
+
+  // =============== Render DB ===============
+  window.__p7renderDB = function() {
+    var body = document.getElementById('p5exBody');
+    if (!body) return;
+    if (typeof EXERCISE_DB === 'undefined') return;
+    var t = L();
+    var search = (document.getElementById('p7search')||{}).value || '';
+    search = search.trim().toLowerCase();
+    
+    // Compute stats
+    var gCount = EXERCISE_DB.length, sCount = 0, eCount = 0, cCount = 0;
+    EXERCISE_DB.forEach(function(g){
+      (g.subgroups||[]).forEach(function(sg){
+        sCount++;
+        (sg.exercises||[]).forEach(function(ex){
+          eCount++;
+          if (ex.id && ex.id.indexOf('custom_') === 0) cCount++;
+        });
+      });
+    });
+    var statsEl = document.getElementById('p7stats');
+    if (statsEl) {
+      statsEl.innerHTML = '<b>'+t.statGroups+':</b> '+gCount+' &nbsp; <b>'+t.statSubs+':</b> '+sCount+' &nbsp; <b>'+t.statExercises+':</b> '+eCount+' &nbsp; <b>'+t.statCustom+':</b> '+cCount;
+    }
+    
+    var html = '';
+    var anyMatched = false;
+    
+    EXERCISE_DB.forEach(function(group, gi) {
+      var exCount = 0;
+      (group.subgroups||[]).forEach(function(sg) { exCount += (sg.exercises||[]).length; });
+      
+      // Filter check
+      var groupMatches = !search || (group.id && group.id.toLowerCase().indexOf(search) >= 0)
+        || (group.ru && group.ru.toLowerCase().indexOf(search) >= 0)
+        || (group.en && group.en.toLowerCase().indexOf(search) >= 0)
+        || (group.he && group.he.toLowerCase().indexOf(search) >= 0);
+      
+      var subHtml = '';
+      var subMatched = 0;
+      (group.subgroups||[]).forEach(function(sg, si) {
+        var sgMatches = !search || (sg.id && sg.id.toLowerCase().indexOf(search) >= 0)
+          || (sg.ru && sg.ru.toLowerCase().indexOf(search) >= 0)
+          || (sg.en && sg.en.toLowerCase().indexOf(search) >= 0)
+          || (sg.he && sg.he.toLowerCase().indexOf(search) >= 0);
+        
+        var exHtml = '';
+        var exMatched = 0;
+        (sg.exercises||[]).forEach(function(ex, ei) {
+          var exMatches = !search || sgMatches || groupMatches
+            || (ex.id && ex.id.toLowerCase().indexOf(search) >= 0)
+            || (ex.ru && ex.ru.toLowerCase().indexOf(search) >= 0)
+            || (ex.en && ex.en.toLowerCase().indexOf(search) >= 0)
+            || (ex.he && ex.he.toLowerCase().indexOf(search) >= 0);
+          if (!exMatches) return;
+          exMatched++;
+          
+          var gif = getExGif(ex);
+          var photo = getExPhoto(ex);
+          var thumb = '';
+          if (gif) {
+            thumb = '<img src="'+esc(gif)+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#f0f0f0;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;">'+esc((ex.id||'?').charAt(0).toUpperCase())+'</div>';
+          } else if (photo) {
+            thumb = '<img src="'+esc(photo)+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#f0f0f0;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;display:none;align-items:center;justify-content:center;font-size:20px;font-weight:700;">'+esc((ex.id||'?').charAt(0).toUpperCase())+'</div>';
+          } else {
+            thumb = '<div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#10B981,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;">'+esc((ex.id||'?').charAt(0).toUpperCase())+'</div>';
+          }
+          
+          exHtml += '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:var(--surface-color,#fff);margin-bottom:4px;border:1px solid var(--border-color,#EEE);">' +
+            thumb +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-weight:600;font-size:13px;color:var(--text-primary,#212121);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(getExLabel(ex))+'</div>' +
+              '<div style="font-size:10px;color:var(--text-light,#999);margin-top:2px;">'+esc(ex.id||'')+' • '+esc(ex.equip||'bw')+(ex.category?' • '+esc(ex.category):'')+'</div>' +
+            '</div>' +
+            '<button onclick="window.__p7editEx('+gi+','+si+','+ei+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.edit)+'</button>' +
+            '<button onclick="window.__p7delEx('+gi+','+si+','+ei+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;">'+esc(t.delete)+'</button>' +
+          '</div>';
+        });
+        
+        if (!sgMatches && exMatched === 0 && search) return;
+        subMatched++;
+        
+        var sgLabel = sg.ru || sg.en || sg.he || sg.id;
+        subHtml += '<div style="margin-bottom:10px;padding:8px 10px;background:rgba(0,0,0,0.02);border-radius:10px;border:1px solid var(--border-color,#EEE);">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+            '<span onclick="window.__p7toggleSub('+gi+','+si+')" id="p7s'+gi+'_'+si+'" style="cursor:pointer;font-size:12px;width:18px;text-align:center;">▼</span>' +
+            '<span style="flex:1;font-weight:600;font-size:13px;color:var(--text-primary,#212121);">'+esc(sgLabel)+'</span>' +
+            '<span style="font-size:10px;color:var(--text-light,#999);background:rgba(0,0,0,0.05);padding:2px 8px;border-radius:10px;">'+(sg.exercises||[]).length+' '+t.exCount+'</span>' +
+            '<button onclick="window.__p7editSub('+gi+','+si+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;">'+esc(t.edit)+'</button>' +
+            '<button onclick="window.__p7delSub('+gi+','+si+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;">'+esc(t.delete)+'</button>' +
+          '</div>' +
+          '<div id="p7sb'+gi+'_'+si+'" style="padding-left:8px;">' +
+            exHtml +
+            '<button onclick="window.__p7addEx('+gi+','+si+')" style="background:#10B981;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:11px;margin-top:6px;font-weight:600;">'+esc(t.addEx)+'</button>' +
+          '</div>' +
+        '</div>';
+      });
+      
+      if (!groupMatches && subMatched === 0 && search) return;
+      anyMatched = true;
+      
+      var gLabel = group.ru || group.en || group.he || group.id;
+      var gIcon = group.icon || (group.id === 'chest' ? '💪' : group.id === 'back' ? '🔙' : group.id === 'legs' ? '🦵' : group.id === 'shoulders' ? '🤸' : group.id === 'arms' ? '💪' : group.id === 'core' ? '🎯' : group.id === 'cardio' ? '❤️' : '🏋️');
+      
+      html += '<div style="background:var(--surface-color,#fff);border:1px solid var(--border-color,#EEE);border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(90deg,rgba(76,175,80,0.08),rgba(16,185,129,0.04));border-bottom:1px solid var(--border-color,#EEE);">' +
+          '<span onclick="window.__p7toggleGroup('+gi+')" id="p7g'+gi+'" style="cursor:pointer;font-size:16px;width:20px;text-align:center;">▼</span>' +
+          '<span style="font-size:22px;">'+esc(gIcon)+'</span>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:700;font-size:15px;color:var(--text-primary,#212121);">'+esc(gLabel)+'</div>' +
+            '<div style="font-size:11px;color:var(--text-light,#999);margin-top:2px;">'+esc(group.id||'')+' • '+(group.subgroups||[]).length+' '+t.statSubs+' • '+exCount+' '+t.exCount+'</div>' +
+          '</div>' +
+          '<button onclick="window.__p7editGroup('+gi+')" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.edit)+'</button>' +
+          '<button onclick="window.__p7delGroup('+gi+')" style="background:rgba(239,68,68,0.12);color:#EF4444;border:0;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;">'+esc(t.delete)+'</button>' +
+        '</div>' +
+        '<div id="p7gb'+gi+'" style="padding:10px 14px;">' +
+          subHtml +
+          '<button onclick="window.__p7addSub('+gi+')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px;margin-top:4px;font-weight:600;">'+esc(t.addSub)+'</button>' +
+        '</div>' +
+      '</div>';
+    });
+    
+    if (!html || (!anyMatched && search)) {
+      html = '<div style="text-align:center;padding:40px 20px;color:var(--text-light,#999);font-size:14px;">🔍 '+esc(t.noResults)+'</div>';
+    }
+    
+    body.innerHTML = html;
+  };
+
+  // =============== Toggle ===============
+  window.__p7toggleGroup = function(gi) {
+    var el = document.getElementById('p7gb'+gi);
+    var icon = document.getElementById('p7g'+gi);
+    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+    if (icon) { icon.textContent = icon.textContent === '▼' ? '▶' : '▼'; }
+  };
+  window.__p7toggleSub = function(gi, si) {
+    var el = document.getElementById('p7sb'+gi+'_'+si);
+    var icon = document.getElementById('p7s'+gi+'_'+si);
+    if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+    if (icon) { icon.textContent = icon.textContent === '▼' ? '▶' : '▼'; }
+  };
+
+  // =============== Group modal ===============
+  function openGroupModal(gi) {
+    var t = L();
+    var g = (gi !== undefined) ? EXERCISE_DB[gi] : null;
+    var title = g ? t.grpTitleEdit : t.grpTitleNew;
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p7grpModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    function f(label, id, val, type, ph) {
+      return '<div style="margin-bottom:10px;"><label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:3px;">'+esc(label)+'</label>'+
+        '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;"></div>';
+    }
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<h2 style="margin:0;font-size:16px;font-weight:700;">'+esc(title)+'</h2>' +
+        '<button onclick="document.getElementById(\'p7grpModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button>' +
+      '</div>' +
+      '<div style="padding:16px;">' +
+        f(t.grpId, 'p7gId', g ? g.id : '', 'text', t.grpIdHint) +
+        f(t.grpNameRu, 'p7gRu', g ? (g.ru||'') : '', 'text', 'Грудь') +
+        f(t.grpNameEn, 'p7gEn', g ? (g.en||'') : '', 'text', 'Chest') +
+        f(t.grpNameHe, 'p7gHe', g ? (g.he||'') : '', 'text', 'חזה') +
+        f(t.grpIcon, 'p7gIcon', g ? (g.icon||'') : '', 'text', '💪') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-color,#E0E0E0);">' +
+        '<button onclick="window.__p7saveGroup('+gi+')" style="flex:1;background:linear-gradient(135deg,#4CAF50,#10B981);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
+        '<button onclick="document.getElementById(\'p7grpModal\').remove()" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(t.cancel)+'</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+  }
+
+  window.__p7addGroup = function() { openGroupModal(undefined); };
+  window.__p7editGroup = function(gi) { openGroupModal(gi); };
+
+  window.__p7saveGroup = function(gi) {
+    var id = (document.getElementById('p7gId').value||'').trim().toLowerCase().replace(/\s+/g,'_');
+    if (!id) { alert('ID required'); return; }
+    var data = {
+      id: id,
+      ru: document.getElementById('p7gRu').value,
+      en: document.getElementById('p7gEn').value,
+      he: document.getElementById('p7gHe').value,
+      icon: document.getElementById('p7gIcon').value || '🏋️'
+    };
+    if (gi === undefined || gi === null || EXERCISE_DB[gi] === undefined) {
+      data.subgroups = [];
+      EXERCISE_DB.push(data);
+    } else {
+      data.subgroups = EXERCISE_DB[gi].subgroups || [];
+      EXERCISE_DB[gi] = data;
+    }
+    document.getElementById('p7grpModal').remove();
+    window.__p7renderDB();
+  };
+
+  window.__p7delGroup = function(gi) {
+    var t = L();
+    if (!confirm(t.confirmDelGrp)) return;
+    EXERCISE_DB.splice(gi, 1);
+    window.__p7renderDB();
+  };
+
+  // =============== Subgroup modal ===============
+  function openSubModal(gi, si) {
+    var t = L();
+    var g = EXERCISE_DB[gi];
+    if (!g) return;
+    var sg = (si !== undefined) ? g.subgroups[si] : null;
+    var title = sg ? t.subTitleEdit : t.subTitleNew;
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p7subModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    function f(label, id, val, type, ph) {
+      return '<div style="margin-bottom:10px;"><label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:3px;">'+esc(label)+'</label>'+
+        '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;"></div>';
+    }
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:450px;width:100%;max-height:90vh;overflow-y:auto;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<h2 style="margin:0;font-size:16px;font-weight:700;">'+esc(title)+'</h2>' +
+        '<button onclick="document.getElementById(\'p7subModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button>' +
+      '</div>' +
+      '<div style="padding:16px;">' +
+        f(t.subId, 'p7sId', sg ? sg.id : '', 'text', t.subIdHint) +
+        f(t.subNameRu, 'p7sRu', sg ? (sg.ru||'') : '', 'text', 'Верх груди') +
+        f(t.subNameEn, 'p7sEn', sg ? (sg.en||'') : '', 'text', 'Upper chest') +
+        f(t.subNameHe, 'p7sHe', sg ? (sg.he||'') : '', 'text', 'חלק עליון של החזה') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-color,#E0E0E0);">' +
+        '<button onclick="window.__p7saveSub('+gi+','+si+')" style="flex:1;background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
+        '<button onclick="document.getElementById(\'p7subModal\').remove()" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(t.cancel)+'</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+  }
+
+  window.__p7addSub = function(gi) { openSubModal(gi, undefined); };
+  window.__p7editSub = function(gi, si) { openSubModal(gi, si); };
+
+  window.__p7saveSub = function(gi, si) {
+    var g = EXERCISE_DB[gi];
+    if (!g) return;
+    if (!g.subgroups) g.subgroups = [];
+    var id = (document.getElementById('p7sId').value||'').trim().toLowerCase().replace(/\s+/g,'_');
+    if (!id) { alert('ID required'); return; }
+    var data = {
+      id: id,
+      ru: document.getElementById('p7sRu').value,
+      en: document.getElementById('p7sEn').value,
+      he: document.getElementById('p7sHe').value
+    };
+    if (si === undefined || si === null || g.subgroups[si] === undefined) {
+      data.exercises = [];
+      g.subgroups.push(data);
+    } else {
+      data.exercises = g.subgroups[si].exercises || [];
+      g.subgroups[si] = data;
+    }
+    document.getElementById('p7subModal').remove();
+    window.__p7renderDB();
+  };
+
+  window.__p7delSub = function(gi, si) {
+    var t = L();
+    if (!confirm(t.confirmDelSub)) return;
+    EXERCISE_DB[gi].subgroups.splice(si, 1);
+    window.__p7renderDB();
+  };
+
+  // =============== Exercise modal ===============
+  function openExModal(gi, si, ei) {
+    var t = L();
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg) return;
+    var ex = (ei !== undefined) ? sg.exercises[ei] : null;
+    var title = ex ? t.exTitleEdit : t.exTitleNew;
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'p7exModal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;padding:12px;';
+    
+    function f(label, id, val, type, ph) {
+      return '<div style="margin-bottom:10px;"><label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:3px;">'+esc(label)+'</label>'+
+        '<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;"></div>';
+    }
+    function ta(label, id, val, ph) {
+      return '<div style="margin-bottom:10px;"><label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary,#757575);margin-bottom:3px;">'+esc(label)+'</label>'+
+        '<textarea id="'+id+'" rows="3" placeholder="'+esc(ph||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border-color,#E0E0E0);border-radius:8px;font-size:13px;background:var(--surface-color,#fff);color:var(--text-primary,#212121);box-sizing:border-box;resize:vertical;font-family:inherit;">'+esc(val||'')+'</textarea></div>';
+    }
+    
+    var gif = ex ? getExGif(ex) : '';
+    var photo = ex ? getExPhoto(ex) : '';
+    var techRu = ex ? (ex.technique_ru || '') : '';
+    var techEn = ex ? (ex.technique_en || '') : '';
+    var techHe = ex ? (ex.technique_he || '') : '';
+    var tips = ex ? (ex.tips || '') : '';
+    var muscles = ex ? (ex.muscles || '') : '';
+    var category = ex ? (ex.category || '') : '';
+    
+    var previewHtml = '';
+    if (gif) {
+      previewHtml = '<img src="'+esc(gif)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" onerror="this.style.display=\'none\'">';
+    } else if (photo) {
+      previewHtml = '<img src="'+esc(photo)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" onerror="this.style.display=\'none\'">';
+    }
+    
+    overlay.innerHTML = '<div style="background:var(--surface-color,#fff);border-radius:14px;max-width:550px;width:100%;max-height:95vh;display:flex;flex-direction:column;overflow:hidden;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color,#E0E0E0);background:linear-gradient(135deg,#10B981,#047857);color:#fff;border-radius:14px 14px 0 0;">' +
+        '<h2 style="margin:0;font-size:16px;font-weight:700;">'+esc(title)+'</h2>' +
+        '<button onclick="document.getElementById(\'p7exModal\').remove()" style="background:transparent;border:0;color:#fff;font-size:24px;cursor:pointer;">×</button>' +
+      '</div>' +
+      '<div style="flex:1;overflow-y:auto;padding:16px;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+          f(t.exId, 'p7eId', ex ? ex.id : '', 'text', t.exIdHint) +
+          f(t.exEquip, 'p7eEquip', ex ? (ex.equip||'') : '', 'text', t.exEquipHint) +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+          f(t.exCategory, 'p7eCategory', category, 'text', t.exCategoryHint) +
+          f(t.exMuscles, 'p7eMuscles', muscles, 'text', t.exMusclesHint) +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+          f(t.exNameRu, 'p7eRu', ex ? (ex.ru||'') : '', 'text', 'Жим лежа') +
+          f(t.exNameEn, 'p7eEn', ex ? (ex.en||'') : '', 'text', 'Bench press') +
+          f(t.exNameHe, 'p7eHe', ex ? (ex.he||'') : '', 'text', 'פרס מזרן') +
+        '</div>' +
+        '<div style="margin:12px 0 8px;padding:12px;background:rgba(16,185,129,0.05);border-radius:10px;border:1px solid rgba(16,185,129,0.15);">' +
+          '<div style="font-size:12px;font-weight:700;color:#10B981;margin-bottom:8px;">🎬 '+esc(t.preview)+'</div>' +
+          f(t.exGifUrl, 'p7eGif', gif, 'text', t.exGifHint) +
+          '<div id="p7eGifPreview" style="margin-top:6px;">'+previewHtml+'</div>' +
+          f(t.exPhotoUrl, 'p7ePhoto', photo, 'text', t.exPhotoHint) +
+        '</div>' +
+        '<div style="margin:12px 0 8px;padding:12px;background:rgba(59,130,246,0.05);border-radius:10px;border:1px solid rgba(59,130,246,0.15);">' +
+          '<div style="font-size:12px;font-weight:700;color:#3B82F6;margin-bottom:8px;">📖 '+esc(t.exTechniqueRu)+'</div>' +
+          ta(t.exTechniqueRu, 'p7eTechRu', techRu, 'Лягте на скамью, хват чуть шире плеч...') +
+          ta(t.exTechniqueEn, 'p7eTechEn', techEn, 'Lie on bench, grip slightly wider than shoulders...') +
+          ta(t.exTechniqueHe, 'p7eTechHe', techHe, 'שכב על הספסל...') +
+        '</div>' +
+        ta(t.exTips, 'p7eTips', tips, t.exTipsHint) +
+      '</div>' +
+      '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-color,#E0E0E0);">' +
+        '<button onclick="window.__p7saveEx('+gi+','+si+','+ei+')" style="flex:1;background:linear-gradient(135deg,#10B981,#047857);color:#fff;border:0;border-radius:8px;padding:10px;cursor:pointer;font-weight:700;font-size:14px;">'+esc(t.saveEx)+'</button>' +
+        '<button onclick="document.getElementById(\'p7exModal\').remove()" style="background:rgba(0,0,0,0.05);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:13px;">'+esc(t.cancel)+'</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(overlay);
+    
+    // Live GIF preview
+    var gifInput = document.getElementById('p7eGif');
+    if (gifInput) {
+      gifInput.addEventListener('input', function() {
+        var preview = document.getElementById('p7eGifPreview');
+        var url = this.value.trim();
+        if (url) {
+          preview.innerHTML = '<img src="'+esc(url)+'" style="max-width:200px;max-height:120px;border-radius:8px;display:block;" onerror="this.style.display=\'none\'">';
+        } else {
+          preview.innerHTML = '';
+        }
+      });
+    }
+  }
+
+  window.__p7addEx = function(gi, si) { openExModal(gi, si, undefined); };
+  window.__p7editEx = function(gi, si, ei) { openExModal(gi, si, ei); };
+
+  window.__p7saveEx = function(gi, si, ei) {
+    var sg = EXERCISE_DB[gi] && EXERCISE_DB[gi].subgroups[si];
+    if (!sg) return;
+    if (!sg.exercises) sg.exercises = [];
+    var id = (document.getElementById('p7eId').value||'').trim().toLowerCase().replace(/\s+/g,'_');
+    if (!id) { alert('ID required'); return; }
+    
+    var data = {
+      id: id,
+      equip: (document.getElementById('p7eEquip').value||'').trim() || 'bw',
+      ru: document.getElementById('p7eRu').value,
+      en: document.getElementById('p7eEn').value,
+      he: document.getElementById('p7eHe').value
+    };
+    
+    var gif = (document.getElementById('p7eGif').value||'').trim();
+    if (gif) { data.gifUrl = gif; data._gif = gif; }
+    var photo = (document.getElementById('p7ePhoto').value||'').trim();
+    if (photo) { data.photoUrl = photo; data._photo = photo; }
+    
+    var techRu = (document.getElementById('p7eTechRu').value||'').trim();
+    if (techRu) data.technique_ru = techRu;
+    var techEn = (document.getElementById('p7eTechEn').value||'').trim();
+    if (techEn) data.technique_en = techEn;
+    var techHe = (document.getElementById('p7eTechHe').value||'').trim();
+    if (techHe) data.technique_he = techHe;
+    
+    var tips = (document.getElementById('p7eTips').value||'').trim();
+    if (tips) data.tips = tips;
+    var muscles = (document.getElementById('p7eMuscles').value||'').trim();
+    if (muscles) data.muscles = muscles;
+    var category = (document.getElementById('p7eCategory').value||'').trim();
+    if (category) data.category = category;
+    
+    if (ei === undefined || ei === null || sg.exercises[ei] === undefined) {
+      sg.exercises.push(data);
+    } else {
+      // Preserve any extra fields not in our form
+      var old = sg.exercises[ei];
+      Object.keys(old).forEach(function(k){
+        if (!(k in data)) data[k] = old[k];
+      });
+      sg.exercises[ei] = data;
+    }
+    
+    document.getElementById('p7exModal').remove();
+    window.__p7renderDB();
+    if (typeof showToast === 'function') showToast('✅');
+  };
+
+  window.__p7delEx = function(gi, si, ei) {
+    var t = L();
+    if (!confirm(t.confirmDelEx)) return;
+    EXERCISE_DB[gi].subgroups[si].exercises.splice(ei, 1);
+    window.__p7renderDB();
+  };
+
+  // =============== Reset / Save / Export / Import ===============
+  window.__p7resetDB = function() {
+    var t = L();
+    if (!confirm(t.confirmReset)) return;
+    EXERCISE_DB.length = 0;
+    EXERCISE_DB.push({ id: 'custom', ru: 'Свои упражнения', en: 'Custom exercises', he: 'תרגילים שלי', icon: '⭐', subgroups: [{ id: 'general', ru: 'Общие', en: 'General', he: 'כללי', exercises: [] }] });
+    window.__p7renderDB();
+  };
+
+  window.__p7saveDB = function() {
+    try {
+      localStorage.setItem('exerciseDB_custom', JSON.stringify(EXERCISE_DB));
+      if (typeof showToast === 'function') showToast(L().saved);
+      var m = document.getElementById('p5exEditor');
+      if (m) m.remove();
+      document.body.style.overflow = '';
+    } catch(e) { alert('Save error: ' + e.message); }
+  };
+
+  window.__p7exportDB = function() {
+    try {
+      var data = JSON.stringify(EXERCISE_DB, null, 2);
+      var blob = new Blob([data], {type: 'application/json'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'exercise_db_' + new Date().toISOString().slice(0,10) + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) { alert('Export error: ' + e.message); }
+  };
+
+  window.__p7importDB = function() {
+    var t = L();
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = function(ev) {
+      var file = ev.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var parsed = JSON.parse(e.target.result);
+          if (!Array.isArray(parsed)) throw new Error('Invalid format');
+          if (!confirm(t.confirmImport)) return;
+          EXERCISE_DB.length = 0;
+          parsed.forEach(function(g){ EXERCISE_DB.push(g); });
+          window.__p7renderDB();
+          if (typeof showToast === 'function') showToast('✅');
+        } catch(err) { alert('Import error: ' + err.message); }
+      };
+      reader.readAsText(file);
+    };
+    inp.click();
+  };
+
+  // =============== Override the picker pencil to use new editor ===============
+  // The P6 picker patch already calls window.__p5openExEditor, which we now override above.
+  
+  // =============== Override the "More" menu button too ===============
+  // The P5 patch adds a "🏋️ Редактор базы упражнений" button that calls __p5openExEditor,
+  // which we now override. So it just works.
+  
+  console.log('[P7 ExEditor] initialized — overrides __p5openExEditor with full i18n CRUD');
+})();
+</script>
+<!-- /P7_EX_EDITOR -->
+
 </body>
 </html>
