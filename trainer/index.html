@@ -9848,9 +9848,7 @@ setTimeout(function(){
             </div>
             <!-- Bottom dock -->
             <div style="flex:0 0 auto;display:flex;justify-content:space-around;align-items:center;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));background:var(--surface-color);border-top:1px solid var(--border-color);box-shadow:0 -4px 16px rgba(0,0,0,0.06);">
-                <button onclick="mdGoHome()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(59,130,246,0.1);color:var(--primary-color);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🏠</button>
-                <button onclick="win11OpenApp('planner')" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(16,185,129,0.1);color:#10B981;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🍽️</button>
-                <button onclick="win11OpenApp('workout')" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(239,68,68,0.1);color:#EF4444;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🏋️</button>
+                <button data-p6settings="1" onclick="openSettingsModal()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(107,114,128,0.1);color:#6B7280;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚙️</button>
                 <button onclick="mdOpenAppDrawer()" style="width:48px;height:48px;border:none;border-radius:14px;background:rgba(139,92,246,0.1);color:#8B5CF6;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">⊞</button>
             </div>
         </div>
@@ -24059,7 +24057,7 @@ setTimeout(function(){
             localStorage.setItem('__exWgerMiss_cache', JSON.stringify(cachedWger));
           } catch(e){}
         function getExerciseWgerUrl(exId) {
-            if (!EX_PHOTO_MAP_WGER[exId] || window.__exWgerMiss[exId]) return null;
+            return null; // P10: wger-img folder doesn't exist on production, skip entirely
             return EX_PHOTO_MAP_WGER[exId];
         }
 
@@ -32554,6 +32552,7 @@ function mpRenderTopbar(){
     if (!el) return;
     var name = mpClientName();
     el.innerHTML =
+        '<button class="mp-topbar-btn" onclick="goHome()" aria-label="back">←</button>' +
         '<div class="mp-topbar-title">' +
             '<div class="mp-tt1">' + (name ? esc(name) : (mpIsWorkout() ? '🏋️ ' + mt('workouts') : '🍽️ ' + mt('nutrition'))) + '</div>' +
             '<div class="mp-tt2">' + (mpIsWorkout() ? '🏋️ ' + mt('workouts') : '🍽️ ' + mt('nutrition')) + '</div>' +
@@ -32566,6 +32565,8 @@ function mpRenderNav(){
     if (!el) return;
     var wk = mpIsWorkout();
     el.innerHTML =
+        '<button class="mp-nav-item" onclick="goHome()">' +
+            '<span class="mp-nav-ico">🏠</span><span>Дом</span></button>' +
         '<button class="mp-nav-item' + (!wk ? ' active' : '') + '" onclick="mpSwitchTab(\'nutrition\')">' +
             '<span class="mp-nav-ico">🍽️</span><span>' + mt('nutrition') + '</span></button>' +
         '<button class="mp-nav-item' + (wk ? ' active' : '') + '" onclick="mpSwitchTab(\'workout\')">' +
@@ -47087,33 +47088,9 @@ window.__win11RefreshClients = function(){
   };
 
   // ---- Inject button into topbar (workout mode only) ----
+  // DISABLED by user request — the "Ищи" (search) button was cluttering the topbar
   function injectButtons() {
-    // Only inject in trainer app workout mode
-    if (!document.body.classList.contains('mp-active')) return;
-    if (!document.body.classList.contains('mode-workout')) return;
-
-    const topbar = document.querySelector('.mp-topbar');
-    if (!topbar) return;
-
-    // Find or create button container
-    let btnsContainer = document.getElementById('nuTopBarButtons');
-    if (!btnsContainer) {
-      btnsContainer = document.createElement('div');
-      btnsContainer.id = 'nuTopBarButtons';
-      btnsContainer.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
-      topbar.appendChild(btnsContainer);
-    }
-
-    if (!document.getElementById('exSearchBtn')) {
-      const btn = document.createElement('button');
-      btn.id = 'exSearchBtn';
-      btn.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-      btn.innerHTML = '🔎 ' + (uiLang() === 'he' ? 'wger' : (uiLang() === 'en' ? 'wger' : 'wger'));
-      btn.title = t('title');
-      btn.onclick = openExerciseSearchModal;
-      // Insert as FIRST button (before OFF)
-      btnsContainer.insertBefore(btn, btnsContainer.firstChild);
-    }
+    return; // P10: disabled — search moved to "More" menu
   }
 
   // ---- Observer ----
