@@ -48398,5 +48398,2161 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
 
 </script>
 <!-- /P2_UNIFIED -->
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- P5_UNIFIED -->
+<script>
+(function() {
+  'use strict';
+  if (window.__p5loaded) return;
+  window.__p5loaded = true;
+
+  function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function lang() { try { return (typeof currentLang!=='undefined'&&currentLang)||'ru'; } catch(e){ return 'ru'; } }
+  function t(key, ru, en, he) {
+    var L = lang(); return L==='en' ? (en||ru) : L==='he' ? (he||ru) : ru;
+  }
+
+  // ============================================================
+  // 1. SCREEN ORIENTATION LOCK
+  // ============================================================
+  // Inject minimal CSS for orientation hints (P9 expands this)
+  if (!document.getElementById('p5OrientCSS')) {
+    var s = document.createElement('style');
+    s.id = 'p5OrientCSS';
+    s.textContent = [
+      'body.p5-landscape .mp-layout-2col { grid-template-columns: 1fr 1fr !important; }',
+      'body.p5-portrait .mp-layout-2col { grid-template-columns: 1fr !important; }',
+      'body.p5-portrait .p5-orient-hint::after { content:" portrait"; opacity:.5; }',
+      'body.p5-landscape .p5-orient-hint::after { content:" landscape"; opacity:.5; }'
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+
+  // __p5orient(mode) — locks screen orientation if supported
+  // mode: 'portrait' | 'landscape' | 'auto'
+  window.__p5orient = function(mode) {
+    try {
+      if (mode === 'auto') {
+        if (screen.orientation && screen.orientation.unlock) {
+          try { screen.orientation.unlock(); } catch(e) {}
+        }
+      } else if (screen.orientation && screen.orientation.lock) {
+        try { screen.orientation.lock(mode); } catch(e) { console.warn('[P5] orientation lock not allowed:', e && e.message); }
+      }
+    } catch(e) {}
+    // Apply CSS class
+    try {
+      document.body.classList.remove('p5-landscape','p5-portrait');
+      if (mode === 'landscape') document.body.classList.add('p5-landscape');
+      else if (mode === 'portrait') document.body.classList.add('p5-portrait');
+    } catch(e) {}
+    // Hook into P9 if loaded (P9 will also be loaded after P5)
+    if (typeof window.__p9applyOrientation === 'function') {
+      try { window.__p9applyOrientation(mode); } catch(e) {}
+    }
+    // Persist preference
+    try { localStorage.setItem('p5_orientation', mode); } catch(e) {}
+  };
+
+  // Restore saved orientation on load
+  try {
+    var savedOri = localStorage.getItem('p5_orientation');
+    if (savedOri) setTimeout(function(){ try { window.__p5orient(savedOri); } catch(e){} }, 800);
+  } catch(e) {}
+
+  // Add orientation section to settings modal (P1 compact settings)
+  // We hook openSettingsModal to inject orientation controls
+  var origOpenSettings = (typeof openSettingsModal === 'function') ? openSettingsModal : window.openSettingsModal;
+  if (typeof origOpenSettings === 'function' && !window.__p5settingsHooked) {
+    window.__p5settingsHooked = true;
+    window.openSettingsModal = function() {
+      var r = origOpenSettings.apply(this, arguments);
+      try { setTimeout(window.__p5injectOrientation, 50); } catch(e) {}
+      return r;
+    };
+    // Also redefine openSettingsModal in the global scope if possible
+    try { openSettingsModal = window.openSettingsModal; } catch(e) {}
+  }
+
+  window.__p5injectOrientation = function() {
+    var modal = document.getElementById('settingsModal');
+    if (!modal) return;
+    if (modal.querySelector('#p5OrientSection')) return; // already injected
+    // Find a good insertion point — look for the last settings group
+    var container = modal.querySelector('.settings-body, .modal-body, .settings-content');
+    if (!container) container = modal;
+    var L = lang();
+    var labels = {
+      ru: { title: 'Поворот экрана', p: '👁‍🗨 Портрет', l: '🗺 Ландшафт', a: '🔄 Авто' },
+      en: { title: 'Screen orientation', p: '👁 Portrait', l: '🗺 Landscape', a: '🔄 Auto' },
+      he: { title: 'כיוון מסך', p: '👁 לאורך', l: '🗺 לרוחב', a: '🔄 אוטו' }
+    }[L] || labels.ru;
+    var current = 'auto';
+    try { current = localStorage.getItem('p5_orientation') || 'auto'; } catch(e) {}
+    var div = document.createElement('div');
+    div.id = 'p5OrientSection';
+    div.style.cssText = 'padding:12px 0;border-top:1px solid var(--border-color,#EEE);margin-top:12px;';
+    div.innerHTML =
+      '<div style="font-weight:600;margin-bottom:8px;font-size:14px;">🧭 ' + esc(labels.title) + '</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button type="button" onclick="window.__p5orient(\'portrait\')" style="flex:1;padding:10px;border:1px solid var(--border-color,#DDD);border-radius:10px;background:'+(current==='portrait'?'var(--primary-color,#3B82F6)':'var(--surface-color,#FFF)')+';color:'+(current==='portrait'?'#fff':'var(--text-primary)')+';font-size:13px;cursor:pointer;">' + esc(labels.p) + '</button>' +
+        '<button type="button" onclick="window.__p5orient(\'landscape\')" style="flex:1;padding:10px;border:1px solid var(--border-color,#DDD);border-radius:10px;background:'+(current==='landscape'?'var(--primary-color,#3B82F6)':'var(--surface-color,#FFF)')+';color:'+(current==='landscape'?'#fff':'var(--text-primary)')+';font-size:13px;cursor:pointer;">' + esc(labels.l) + '</button>' +
+        '<button type="button" onclick="window.__p5orient(\'auto\')" style="flex:1;padding:10px;border:1px solid var(--border-color,#DDD);border-radius:10px;background:'+(current==='auto'?'var(--primary-color,#3B82F6)':'var(--surface-color,#FFF)')+';color:'+(current==='auto'?'#fff':'var(--text-primary)')+';font-size:13px;cursor:pointer;">' + esc(labels.a) + '</button>' +
+      '</div>';
+    container.appendChild(div);
+  };
+
+  // ============================================================
+  // 2. PATCH win11OpenApp — Питание/Тренировки only work through client card
+  // ============================================================
+  var origWin11OpenApp = window.win11OpenApp;
+  if (typeof origWin11OpenApp === 'function' && !window.__p5win11Hooked) {
+    window.__p5win11Hooked = true;
+    window.win11OpenApp = function(app) {
+      if (app === 'planner' || app === 'workout') {
+        var uid = null;
+        try { uid = (typeof currentUserId !== 'undefined') ? currentUserId : null; } catch(e) {}
+        if (!uid) {
+          // Use toast if available, else alert
+          var msg = t('p5NeedClient', 'Сначала выберите клиента в карточке', 'Please select a client in the card first', 'אנא בחר לקוח בכרטיס תחילה');
+          if (typeof showToast === 'function') { try { showToast(msg, 'error'); return; } catch(e){} }
+          alert(msg);
+          return;
+        }
+      }
+      return origWin11OpenApp.apply(this, arguments);
+    };
+  }
+
+  // ============================================================
+  // 3. PATCH mdRenderClients — add ✏️ edit button on each client card
+  // ============================================================
+  var origMdRenderClients = (typeof mdRenderClients === 'function') ? mdRenderClients : window.mdRenderClients;
+  if (typeof origMdRenderClients === 'function' && !window.__p5clientsHooked) {
+    window.__p5clientsHooked = true;
+    var newFn = function(q) {
+      var r = origMdRenderClients.apply(this, arguments);
+      try {
+        var list = document.getElementById('mdClientList');
+        if (!list) return r;
+        var cards = list.querySelectorAll('div[onclick^="openUser"]');
+        for (var i = 0; i < cards.length; i++) {
+          (function(card) {
+            var oc = card.getAttribute('onclick') || '';
+            var m = oc.match(/openUser\(\s*[\'"]([^\'"]+)[\'"]\s*\)/);
+            if (!m) return;
+            var uid = m[1];
+            if (card.querySelector('.p5-edit-btn')) return;
+            var btn = document.createElement('button');
+            btn.className = 'p5-edit-btn';
+            btn.type = 'button';
+            btn.style.cssText = 'background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:15px;color:#6366F1;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+            btn.innerHTML = '✏️';
+            btn.title = t('p5EditClient', 'Редактировать клиента', 'Edit client', 'ערוך לקוח');
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              if (window.__p5editClient) window.__p5editClient(uid);
+            });
+            card.appendChild(btn);
+          })(cards[i]);
+        }
+      } catch(e) { console.warn('[P5] mdRenderClients patch error:', e); }
+      return r;
+    };
+    window.mdRenderClients = newFn;
+    try { mdRenderClients = newFn; } catch(e) {}
+  }
+
+  // ============================================================
+  // 4. __p5editClient — basic version (P6 will override with FULL modal)
+  // ============================================================
+  window.__p5editClient = function(userId) {
+    // P6 overrides this with a full edit modal. This is the fallback.
+    try {
+      var users = (typeof getUsers === 'function') ? getUsers() : [];
+      var u = null;
+      for (var i = 0; i < users.length; i++) { if (users[i].id === userId) { u = users[i]; break; } }
+      if (!u) { alert(t('p5NotFound', 'Клиент не найден', 'Client not found', 'לקוח לא נמצא') + ': ' + userId); return; }
+      var name = prompt(t('p5EditName', 'Имя', 'Name', 'שם') + ':', u.name || '');
+      if (name === null) return;
+      u.name = name.trim();
+      var phone = prompt(t('p5EditPhone', 'Телефон', 'Phone', 'טלפון') + ':', u.phone || '');
+      if (phone !== null) u.phone = phone.trim();
+      if (typeof saveUsers === 'function') saveUsers();
+      if (typeof mdRenderClients === 'function') mdRenderClients('');
+    } catch(e) { alert('[P5] editClient error: ' + (e.message || e)); }
+  };
+
+  // 5. __p5saveClient — basic version (P6 overrides)
+  window.__p5saveClient = function(userId) {
+    try {
+      if (typeof saveUsers === 'function') saveUsers();
+      if (typeof mdRenderClients === 'function') mdRenderClients('');
+    } catch(e) {}
+  };
+
+  // ============================================================
+  // 6-9. __p5openExEditor + Exercise DB CRUD (basic stubs; P8 overrides)
+  // ============================================================
+  // P8 will override all of these. We define basic stubs so the buttons
+  // always work even if P8 is somehow missing.
+  window.__p5openExEditor = function() {
+    alert(t('p5EditorLoading', 'Открываю редактор базы упражнений...', 'Opening exercise DB editor...', 'פותח עורך בסיס תרגילים...'));
+  };
+
+  // Basic CRUD — P8 will fully implement these
+  window.__p5addGroup = function() { if (window.__p8addGroup) return window.__p8addGroup(); };
+  window.__p5editGroup = function(gi) { if (window.__p7editGroup) return window.__p7editGroup(gi); };
+  window.__p5delGroup = function(gi) { if (window.__p7delGroup) return window.__p7delGroup(gi); };
+  window.__p5addSub = function(gi) { if (window.__p7addSub) return window.__p7addSub(gi); };
+  window.__p5editSub = function(gi, si) { if (window.__p7editSub) return window.__p7editSub(gi, si); };
+  window.__p5delSub = function(gi, si) { if (window.__p7delSub) return window.__p7delSub(gi, si); };
+  window.__p5addEx = function(gi, si) { if (window.__p7addEx) return window.__p7addEx(gi, si); };
+  window.__p5editEx = function(gi, si, ei) { if (window.__p7editEx) return window.__p7editEx(gi, si, ei); };
+  window.__p5delEx = function(gi, si, ei) { if (window.__p7delEx) return window.__p7delEx(gi, si, ei); };
+  window.__p5saveEx = function(gi, si, ei) { if (window.__p7saveEx) return window.__p7saveEx(gi, si, ei); };
+  window.__p5resetDB = function() { if (window.__p7resetDB) return window.__p7resetDB(); };
+  window.__p5saveDB = function() { if (window.__p7saveDB) return window.__p7saveDB(); };
+
+  // ============================================================
+  // 10. Add "🏋️ Редактор базы упражнений" button to workout "More" menu
+  // ============================================================
+  var origMpOpenActions = window.mpOpenActions;
+  if (typeof origMpOpenActions === 'function' && !window.__p5actionsHooked) {
+    window.__p5actionsHooked = true;
+    window.mpOpenActions = function() {
+      var r = origMpOpenActions.apply(this, arguments);
+      // After the sheet opens, inject our button (only in workout mode)
+      setTimeout(function() {
+        try {
+          var sheet = document.getElementById('mpSheet');
+          if (!sheet) return;
+          // Only add in workout mode
+          if (typeof mpIsWorkout === 'function' && !mpIsWorkout()) return;
+          // Find the settings button — we insert before it
+          var settingsBtn = sheet.querySelector('button[onclick*="openSettingsModal"]');
+          if (!settingsBtn) return;
+          // Skip if already injected
+          if (sheet.querySelector('button[onclick*="__p5openExEditor"]')) return;
+          var btn = document.createElement('button');
+          btn.className = 'mp-action-item';
+          btn.setAttribute('onclick', "mpCloseSheet(); if(window.__p5openExEditor) window.__p5openExEditor();");
+          btn.innerHTML = '<span class="ico">🏋️</span>' + esc(t('p5ExEditor', 'Редактор базы упражнений', 'Exercise DB editor', 'עורך בסיס תרגילים'));
+          settingsBtn.parentNode.insertBefore(btn, settingsBtn);
+        } catch(e) {}
+      }, 50);
+      return r;
+    };
+  }
+
+  console.log('[P5 Unified] initialized');
+})();
+</script>
+<!-- /P5_UNIFIED -->
+
+<!-- P6_UNIFIED -->
+<script>
+(function() {
+  'use strict';
+  if (window.__p6loaded) return;
+  window.__p6loaded = true;
+
+  function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function lang() { try { return (typeof currentLang!=='undefined'&&currentLang)||'ru'; } catch(e){ return 'ru'; } }
+  function t(key, ru, en, he) {
+    var L = lang(); return L==='en' ? (en||ru) : L==='he' ? (he||ru) : ru;
+  }
+
+  // ============================================================
+  // 1. __p6patchDesktop — remove Питание/Тренировки from desktop + add ⚙️
+  // ============================================================
+  window.__p6patchDesktop = function() {
+    var md = document.getElementById('mobileDesktop');
+    if (!md) return;
+
+    // Find dock (a div with style containing "space-around")
+    var dock = md.querySelector('div[style*="space-around"]');
+    if (dock) {
+      // Remove 🍽️ Питание and 🏋️ Тренировки buttons (match by text or onclick)
+      var dockBtns = dock.querySelectorAll('div[onclick], button[onclick]');
+      for (var i = dockBtns.length - 1; i >= 0; i--) {
+        var b = dockBtns[i];
+        var oc = b.getAttribute('onclick') || '';
+        var txt = (b.textContent || '').trim();
+        var isPlanner = oc.indexOf('planner') >= 0 || txt.indexOf('Питание') >= 0 || txt.indexOf('🍽') >= 0;
+        var isWorkout = oc.indexOf('workout') >= 0 || txt.indexOf('Тренировки') >= 0 || txt.indexOf('🏋') >= 0;
+        if (isPlanner || isWorkout) b.remove();
+      }
+      // Add ⚙️ Settings button BEFORE ⊞ (apps drawer button)
+      if (!dock.querySelector('[data-p6settings]')) {
+        var settingsBtn = document.createElement('button');
+        settingsBtn.setAttribute('data-p6settings', '1');
+        settingsBtn.style.cssText = 'width:48px;height:48px;border:none;border-radius:14px;background:rgba(107,114,128,0.12);color:#6B7280;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+        settingsBtn.setAttribute('onclick', "if(typeof openSettingsModal==='function') openSettingsModal();");
+        settingsBtn.innerHTML = '⚙️';
+        settingsBtn.title = 'Настройки';
+        // Find apps button (⊞ icon or mdOpenAppDrawer onclick)
+        var appsBtn = null;
+        var allBtns = dock.querySelectorAll('div[onclick], button[onclick]');
+        for (var j = 0; j < allBtns.length; j++) {
+          var oc2 = allBtns[j].getAttribute('onclick') || '';
+          var txt2 = allBtns[j].textContent || '';
+          if (oc2.indexOf('mdOpenAppDrawer') >= 0 || txt2.indexOf('⊞') >= 0 || txt2.indexOf('Apps') >= 0 || txt2.indexOf('Все') >= 0) {
+            appsBtn = allBtns[j];
+            break;
+          }
+        }
+        if (appsBtn && appsBtn.parentNode) {
+          appsBtn.parentNode.insertBefore(settingsBtn, appsBtn);
+        } else {
+          dock.appendChild(settingsBtn);
+        }
+      }
+    }
+
+    // Also remove 🍽️/🏋️ from the desktop top header (if any)
+    var topBtns = md.querySelectorAll('button[onclick*="planner"], button[onclick*="workout"], div[onclick*="planner"], div[onclick*="workout"]');
+    for (var k = topBtns.length - 1; k >= 0; k--) {
+      var tb = topBtns[k];
+      var ttxt = (tb.textContent || '').trim();
+      if (ttxt.indexOf('Питание') >= 0 || ttxt.indexOf('Тренировки') >= 0 || ttxt.indexOf('🍽') >= 0 || ttxt.indexOf('🏋') >= 0) {
+        tb.remove();
+      }
+    }
+  };
+
+  // Run patchDesktop on body class change + periodically for first 30s
+  var p6Observer = new MutationObserver(function() {
+    setTimeout(window.__p6patchDesktop, 80);
+  });
+  p6Observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  setTimeout(window.__p6patchDesktop, 600);
+  setTimeout(window.__p6patchDesktop, 2000);
+  setTimeout(window.__p6patchDesktop, 5000);
+
+  // ============================================================
+  // 2. FULL client edit modal (overrides P5's __p5editClient)
+  // ============================================================
+  // Includes ALL fields from create modal + password change
+  window.__p5editClient = function(userId) {
+    try {
+      var users = (typeof getUsers === 'function') ? getUsers() : [];
+      var u = null;
+      for (var i = 0; i < users.length; i++) { if (users[i].id === userId) { u = users[i]; break; } }
+      if (!u) { alert(t('p5NotFound', 'Клиент не найден', 'Client not found', 'לקוח לא נמצא') + ': ' + userId); return; }
+      var L = lang();
+      var L10N = {
+        ru: { title:'✏️ Редактировать клиента', name:'Имя', lastName:'Фамилия', phone:'Телефон', email:'Email', age:'Возраст', weight:'Вес (кг)', height:'Рост (см)', gender:'Пол', male:'Мужской', female:'Женский', notes:'Заметки', photo:'Фото', changePwd:'Сменить пароль (мин. 4 символа, пусто = без изменений)', save:'💾 Сохранить', cancel:'Отмена', address:'Адрес', birthday:'День рождения', passport:'Паспорт/ID', activity:'Активность', goal:'Цель', lose:'Похудение', maintain:'Поддержание', gain:'Набор' },
+        en: { title:'✏️ Edit client', name:'Name', lastName:'Last name', phone:'Phone', email:'Email', age:'Age', weight:'Weight (kg)', height:'Height (cm)', gender:'Gender', male:'Male', female:'Female', notes:'Notes', photo:'Photo', changePwd:'Change password (min. 4 chars, empty = no change)', save:'💾 Save', cancel:'Cancel', address:'Address', birthday:'Birthday', passport:'Passport/ID', activity:'Activity', goal:'Goal', lose:'Lose', maintain:'Maintain', gain:'Gain' },
+        he: { title:'✏️ ערוך לקוח', name:'שם', lastName:'שם משפחה', phone:'טלפון', email:'אימייל', age:'גיל', weight:'משקל (ק"ג)', height:'גובה (ס"מ)', gender:'מגדר', male:'זכר', female:'נקבה', notes:'הערות', photo:'תמונה', changePwd:'שנה סיסמה (מינ\' 4 תווים, ריק = ללא שינוי)', save:'💾 שמור', cancel:'ביטול', address:'כתובת', birthday:'יום הולדת', passport:'תעודת זהות', activity:'פעילות', goal:'יעד', lose:'ירידה', maintain:'שמירה', gain:'עליה' }
+      }[L] || L10N.ru;
+
+      // Remove any existing modal
+      var ex = document.getElementById('p6EditClientModal');
+      if (ex) ex.remove();
+
+      var overlay = document.createElement('div');
+      overlay.id = 'p6EditClientModal';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:300000;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;padding:0;';
+      var sheet = document.createElement('div');
+      sheet.style.cssText = 'background:var(--surface-color,#FFF);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));';
+      var pwdPlaceholder = t('p6PwdPh', 'Без изменений', 'No change', 'ללא שינוי');
+      sheet.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
+          '<h3 style="margin:0;font-size:17px;font-weight:700;color:var(--text-primary);">' + esc(L10N.title) + '</h3>' +
+          '<button type="button" onclick="document.getElementById(\'p6EditClientModal\').remove();document.body.style.overflow=\'\';" style="background:transparent;border:0;font-size:26px;color:var(--text-light);cursor:pointer;width:36px;height:36px;">×</button>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.name) + '</span><input id="p6ec_name" type="text" value="' + esc(u.name||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.lastName) + '</span><input id="p6ec_lastName" type="text" value="' + esc(u.lastName||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.phone) + '</span><input id="p6ec_phone" type="tel" value="' + esc(u.phone||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.email) + '</span><input id="p6ec_email" type="email" value="' + esc(u.email||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.age) + '</span><input id="p6ec_age" type="number" value="' + esc(u.age||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.weight) + '</span><input id="p6ec_weight" type="number" value="' + esc(u.weight||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.height) + '</span><input id="p6ec_height" type="number" value="' + esc(u.height||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.gender) + '</span><select id="p6ec_gender" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);">' +
+            '<option value="male"' + (u.gender==='male'?' selected':'') + '>' + esc(L10N.male) + '</option>' +
+            '<option value="female"' + (u.gender==='female'?' selected':'') + '>' + esc(L10N.female) + '</option>' +
+          '</select></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.birthday) + '</span><input id="p6ec_birthday" type="date" value="' + esc(u.birthday||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.address) + '</span><input id="p6ec_address" type="text" value="' + esc(u.address||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.passport) + '</span><input id="p6ec_passport" type="text" value="' + esc(u.passport||'') + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.activity) + '</span><select id="p6ec_activity" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);">' +
+            ['1.2','1.375','1.55','1.725','1.9'].map(function(a){ return '<option value="'+a+'"'+(String(u.activity)===a?' selected':'')+'>'+a+'</option>'; }).join('') +
+          '</select></label>' +
+          '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.goal) + '</span><select id="p6ec_goal" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);">' +
+            '<option value="lose"' + (u.goal==='lose'?' selected':'') + '>' + esc(L10N.lose) + '</option>' +
+            '<option value="maintain"' + (u.goal==='maintain'?' selected':'') + '>' + esc(L10N.maintain) + '</option>' +
+            '<option value="gain"' + (u.goal==='gain'?' selected':'') + '>' + esc(L10N.gain) + '</option>' +
+          '</select></label>' +
+        '</div>' +
+        '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.notes) + '</span><textarea id="p6ec_notes" rows="3" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);resize:vertical;">' + esc(u.notes||'') + '</textarea></label>' +
+        '<label style="display:block;margin-bottom:14px;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.changePwd) + '</span><input id="p6ec_pwd" type="password" placeholder="' + esc(pwdPlaceholder) + '" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button type="button" onclick="document.getElementById(\'p6EditClientModal\').remove();document.body.style.overflow=\'\';" style="flex:1;padding:12px;border:1px solid var(--border-color);border-radius:10px;background:var(--background-color);color:var(--text-primary);font-size:14px;cursor:pointer;">' + esc(L10N.cancel) + '</button>' +
+          '<button type="button" onclick="window.__p5saveClient(\'' + esc(userId) + '\')" style="flex:1;padding:12px;border:0;border-radius:10px;background:var(--primary-color,#3B82F6);color:#fff;font-size:14px;cursor:pointer;font-weight:600;">' + esc(L10N.save) + '</button>' +
+        '</div>';
+      overlay.appendChild(sheet);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) { overlay.remove(); document.body.style.overflow=''; } });
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+    } catch(e) { alert('[P6] editClient error: ' + (e.message || e)); }
+  };
+
+  // __p5saveClient — full save (overrides P5 basic)
+  window.__p5saveClient = function(userId) {
+    try {
+      var users = (typeof getUsers === 'function') ? getUsers() : [];
+      var u = null;
+      for (var i = 0; i < users.length; i++) { if (users[i].id === userId) { u = users[i]; break; } }
+      if (!u) { alert('Client not found'); return; }
+
+      function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+      u.name = (val('p6ec_name') || '').trim();
+      u.lastName = (val('p6ec_lastName') || '').trim();
+      u.phone = (val('p6ec_phone') || '').trim();
+      u.email = (val('p6ec_email') || '').trim();
+      u.age = parseFloat(val('p6ec_age')) || 0;
+      u.weight = parseFloat(val('p6ec_weight')) || 0;
+      u.height = parseFloat(val('p6ec_height')) || 0;
+      u.gender = val('p6ec_gender') || 'male';
+      u.birthday = val('p6ec_birthday');
+      u.address = (val('p6ec_address') || '').trim();
+      u.passport = (val('p6ec_passport') || '').trim();
+      u.activity = parseFloat(val('p6ec_activity')) || 1.55;
+      u.goal = val('p6ec_goal') || 'maintain';
+      u.notes = (val('p6ec_notes') || '').trim();
+
+      // Password change (only if user entered something)
+      var rawPwd = (val('p6ec_pwd') || '').trim();
+      if (rawPwd.length > 0) {
+        if (rawPwd.length < 4) {
+          alert(t('p6PwdShort', 'Пароль слишком короткий (мин. 4 символа)', 'Password too short (min. 4 chars)', 'סיסמה קצרה מדי (מינ\' 4 תווים)'));
+          return;
+        }
+        // Hash using existing hashPassword if available
+        if (typeof hashPassword === 'function') {
+          hashPassword(rawPwd).then(function(hashed) {
+            u.clientPassword = hashed;
+            finishSave();
+          }).catch(function() {
+            u.clientPassword = rawPwd; // fallback (not recommended)
+            finishSave();
+          });
+          return;
+        } else {
+          u.clientPassword = rawPwd;
+        }
+      }
+
+      function finishSave() {
+        if (typeof saveUsers === 'function') saveUsers();
+        if (typeof mdRenderClients === 'function') mdRenderClients('');
+        var modal = document.getElementById('p6EditClientModal');
+        if (modal) modal.remove();
+        document.body.style.overflow = '';
+        if (typeof showToast === 'function') {
+          try { showToast(t('p6Saved', 'Клиент сохранён', 'Client saved', 'הלקוח נשמר'), 'success'); } catch(e){}
+        }
+      }
+      finishSave();
+    } catch(e) { alert('[P6] saveClient error: ' + (e.message || e)); }
+  };
+
+  // ============================================================
+  // 3. Exercise picker pencil — adds ✏️ to exercise picker sheet header
+  // ============================================================
+  var origMpOpenSheetP6 = window.mpOpenSheet;
+  if (typeof origMpOpenSheetP6 === 'function' && !window.__p6sheetHooked) {
+    window.__p6sheetHooked = true;
+    window.mpOpenSheet = function(html, tall) {
+      try {
+        // Detect exercise picker sheet by characteristic content
+        if (html && typeof html === 'string' &&
+            (html.indexOf('mp-pick-item') >= 0 || html.indexOf('ex-picker') >= 0 || html.indexOf('pick-exercise') >= 0) &&
+            html.indexOf('mp-sheet-head') >= 0) {
+          // Inject ✏️ pencil button before the ✕ close button
+          var pencil =
+            '<button type="button" onclick="event.stopPropagation(); if(window.__p5openExEditor) window.__p5openExEditor();" ' +
+            'style="background:transparent;border:0;color:var(--text-primary);font-size:18px;cursor:pointer;padding:0 10px;flex-shrink:0;" ' +
+            'title="' + esc(t('p6EditDB', 'Редактор базы', 'Edit DB', 'ערוך בסיס')) + '">✏️</button>';
+          // Insert before <button class="mp-sheet-x"
+          html = html.replace(/<button class="mp-sheet-x"/, pencil + '<button class="mp-sheet-x"');
+        }
+      } catch(e) {}
+      return origMpOpenSheetP6.call(this, html, tall);
+    };
+  }
+
+  // ============================================================
+  // 4. Enhanced exercise edit modal with GIF URL + technique
+  //    (P8 will override __p7editEx / __p5editEx with FULL version.
+  //    We define this here as fallback if P8 is missing.)
+  // ============================================================
+  window.__p5editEx = function(gi, si, ei) {
+    // P8 fully overrides this. Fallback alert.
+    if (window.__p7editEx) return window.__p7editEx(gi, si, ei);
+    alert(t('p6EditExFallback', 'Редактор упражнений загружается...', 'Exercise editor loading...', 'עורך תרגילים בטעינה...'));
+  };
+
+  console.log('[P6 Unified] initialized');
+})();
+</script>
+<!-- /P6_UNIFIED -->
+
+<!-- P8_EX_EDITOR_FINAL -->
+<script>
+(function() {
+  'use strict';
+  if (window.__p8loaded) return;
+  window.__p8loaded = true;
+
+  function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function lang() { try { return (typeof currentLang!=='undefined'&&currentLang)||'ru'; } catch(e){ return 'ru'; } }
+
+  // ============================================================
+  // i18n strings
+  // ============================================================
+  var I18N = {
+    title:        { ru:'Редактор базы упражнений',       en:'Exercise DB Editor',         he:'עורך בסיס תרגילים' },
+    close:        { ru:'Закрыть',                         en:'Close',                       he:'סגור' },
+    save:         { ru:'💾 Сохранить',                    en:'💾 Save',                      he:'💾 שמור' },
+    cancel:       { ru:'Отмена',                          en:'Cancel',                       he:'ביטול' },
+    addGroup:     { ru:'➕ Группа',                       en:'➕ Group',                    he:'➕ קבוצה' },
+    addSub:       { ru:'➕ Подгруппа',                    en:'➕ Subgroup',                 he:'➕ תת-קבוצה' },
+    addEx:        { ru:'➕ Упражнение',                   en:'➕ Exercise',                 he:'➕ תרגיל' },
+    expandAll:    { ru:'▽ Развернуть всё',                en:'▽ Expand all',                he:'▽ הרחב הכל' },
+    collapseAll:  { ru:'△ Свернуть всё',                  en:'△ Collapse all',              he:'△ כווץ הכל' },
+    export:       { ru:'📤 Экспорт',                      en:'📤 Export',                   he:'📤 ייצוא' },
+    import:       { ru:'📥 Импорт',                       en:'📥 Import',                   he:'📥 ייבוא' },
+    reset:        { ru:'🗑 Сброс',                        en:'🗑 Reset',                    he:'🗑 איפוס' },
+    edit:         { ru:'✏️',                              en:'✏️',                          he:'✏️' },
+    del:          { ru:'🗑',                              en:'🗑',                          he:'🗑' },
+    moveUp:       { ru:'▲',                               en:'▲',                           he:'▲' },
+    moveDown:     { ru:'▼',                               en:'▼',                           he:'▼' },
+    duplicate:    { ru:'⧉',                               en:'⧉',                           he:'⧉' },
+    move:         { ru:'↗',                               en:'↗',                           he:'↗' },
+    promote:      { ru:'⤴',                               en:'⤴',                           he:'⤴' },
+    pickGif:      { ru:'GIF',                             en:'GIF',                         he:'GIF' },
+    search:       { ru:'🔍 Поиск',                        en:'🔍 Search',                   he:'🔍 חיפוש' },
+    searchPh:     { ru:'Поиск по имени/ID...',             en:'Search by name/ID...',        he:'חיפוש לפי שם/מזהה...' },
+    statsGroups:  { ru:'Группы',                          en:'Groups',                      he:'קבוצות' },
+    statsSubs:    { ru:'Подгруппы',                       en:'Subgroups',                   he:'תת-קבוצות' },
+    statsExs:     { ru:'Упражнения',                      en:'Exercises',                   he:'תרגילים' },
+    statsGifs:    { ru:'С GIF',                           en:'With GIFs',                   he:'עם GIF' },
+    statsCustom:  { ru:'Своих',                           en:'Custom',                      he:'מותאם' },
+    addGroupT:    { ru:'Новая группа',                    en:'New group',                   he:'קבוצה חדשה' },
+    editGroupT:   { ru:'Редактировать группу',            en:'Edit group',                  he:'ערוך קבוצה' },
+    addSubT:      { ru:'Новая подгруппа',                 en:'New subgroup',                he:'תת-קבוצה חדשה' },
+    editSubT:     { ru:'Редактировать подгруппу',         en:'Edit subgroup',               he:'ערוך תת-קבוצה' },
+    addExT:       { ru:'Новое упражнение',                en:'New exercise',                he:'תרגיל חדש' },
+    editExT:      { ru:'Редактировать упражнение',        en:'Edit exercise',               he:'ערוך תרגיל' },
+    groupId:      { ru:'ID группы',                       en:'Group ID',                    he:'מזהה קבוצה' },
+    subId:        { ru:'ID подгруппы',                    en:'Subgroup ID',                 he:'מזהה תת-קבוצה' },
+    exId:         { ru:'ID упражнения',                   en:'Exercise ID',                 he:'מזהה תרגיל' },
+    nameRu:       { ru:'Название (RU)',                   en:'Name (RU)',                   he:'שם (RU)' },
+    nameEn:       { ru:'Название (EN)',                   en:'Name (EN)',                   he:'שם (EN)' },
+    nameHe:       { ru:'Название (HE)',                   en:'Name (HE)',                   he:'שם (HE)' },
+    equip:        { ru:'Снаряд',                          en:'Equipment',                   he:'ציוד' },
+    emoji:        { ru:'Эмодзи',                          en:'Emoji',                       he:'אמוג\'י' },
+    customLabel:  { ru:'Своё название (переопределение)', en:'Custom label (override)',     he:'שם מותאם (דריסה)' },
+    gifUrl:       { ru:'URL GIF/изображения',             en:'GIF/image URL',               he:'כתובת GIF/תמונה' },
+    technique:    { ru:'Техника выполнения',              en:'Technique',                   he:'טכניקה' },
+    preview:      { ru:'Предпросмотр',                    en:'Preview',                     he:'תצוגה מקדימה' },
+    moveInto:     { ru:'Переместить в...',                en:'Move into...',                he:'העבר אל...' },
+    moveTopLevel: { ru:'— Топ-уровень —',                 en:'— Top level —',               he:'— רמה עליונה —' },
+    moveTarget:   { ru:'Целевая группа',                  en:'Target group',                he:'קבוצת יעד' },
+    moveSubTarget:{ ru:'Целевая подгруппа',               en:'Target subgroup',             he:'תת-קבוצת יעד' },
+    confirmDelG:  { ru:'Удалить группу со всеми подгруппами и упражнениями?', en:'Delete group with all subgroups and exercises?', he:'למחוק קבוצה עם כל תת-הקבוצות והתרגילים?' },
+    confirmDelS:  { ru:'Удалить подгруппу со всеми упражнениями?', en:'Delete subgroup with all exercises?', he:'למחוק תת-קבוצה עם כל התרגילים?' },
+    confirmDelE:  { ru:'Удалить упражнение?',             en:'Delete exercise?',            he:'למחוק תרגיל?' },
+    confirmReset: { ru:'Сбросить базу к стандартным значениям? Все пользовательские изменения будут потеряны.', en:'Reset DB to defaults? All custom changes will be lost.', he:'אפס בסיס לברירת מחדל? כל השינויים יאבדו.' },
+    noResults:    { ru:'Ничего не найдено',               en:'No results',                  he:'לא נמצאו תוצאות' },
+    savedToast:   { ru:'✓ Сохранено',                     en:'✓ Saved',                      he:'✓ נשמר' },
+    importedToast:{ ru:'✓ Импортировано',                 en:'✓ Imported',                   he:'✓ יובא' },
+    resetToast:   { ru:'✓ Сброшено',                      en:'✓ Reset',                      he:'✓ אופס' },
+    pickGifT:     { ru:'Выберите GIF/изображение',        en:'Pick GIF/image',              he:'בחר GIF/תמונה' },
+    noGif:        { ru:'— без GIF —',                     en:'— no GIF —',                  he:'— ללא GIF —' },
+    library:      { ru:'Библиотека',                      en:'Library',                      he:'ספרייה' },
+    customUrl:    { ru:'Свой URL',                        en:'Custom URL',                  he:'כתובת מותאמת' },
+    apply:        { ru:'Применить',                       en:'Apply',                        he:'החל' },
+    remove:       { ru:'Убрать',                          en:'Remove',                       he:'הסר' },
+    labelOverrideHint: { ru:'Если заполнено, заменяет стандартное i18n-название', en:'If filled, overrides the standard i18n label', he:'אם מלא, מחליף את התווית הסטנדרטית' },
+    idHint:       { ru:'Только латинские буквы, цифры и _', en:'Latin letters, digits and _ only', he:'אותיות לטיניות, ספרות ו-_ בלבד' }
+  };
+  function tr(key) {
+    var d = I18N[key]; if (!d) return key;
+    return d[lang()] || d.ru || d.en || key;
+  }
+
+  // ============================================================
+  // DB access (load from localStorage, fallback to EXERCISE_DB)
+  // ============================================================
+  function loadDB() {
+    try {
+      var saved = localStorage.getItem('exerciseDB_custom');
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch(e) {}
+    if (typeof EXERCISE_DB !== 'undefined') {
+      // Deep clone
+      try { return JSON.parse(JSON.stringify(EXERCISE_DB)); } catch(e) {}
+    }
+    return [];
+  }
+  function persistDB() {
+    try {
+      localStorage.setItem('exerciseDB_custom', JSON.stringify(window.__p8db));
+      return true;
+    } catch(e) { return false; }
+  }
+  // Initialize DB cache
+  window.__p8db = loadDB();
+
+  // Sync the page's EXERCISE_DB with our edited version so the rest of
+  // the app sees the latest changes (add/edit/delete) without a reload.
+  function syncEXERCISE_DB() {
+    try {
+      if (typeof EXERCISE_DB !== 'undefined' && Array.isArray(EXERCISE_DB)) {
+        EXERCISE_DB.length = 0;
+        for (var i = 0; i < window.__p8db.length; i++) EXERCISE_DB.push(window.__p8db[i]);
+      }
+    } catch(e) {}
+  }
+
+  // ============================================================
+  // i18n label helpers (use page's GROUP_I18N/SUBGROUP_I18N)
+  // ============================================================
+  function grpLabel(g) {
+    if (!g) return '';
+    if (g._customLabel) return g._customLabel;
+    try {
+      if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[g.id]) {
+        return GROUP_I18N[g.id][lang()] || GROUP_I18N[g.id].ru || g.id;
+      }
+    } catch(e) {}
+    return g.id || '';
+  }
+  function subLabel(s) {
+    if (!s) return '';
+    if (s._customLabel) return s._customLabel;
+    try {
+      if (typeof SUBGROUP_I18N !== 'undefined' && SUBGROUP_I18N[s.id]) {
+        return SUBGROUP_I18N[s.id][lang()] || SUBGROUP_I18N[s.id].ru || s.id;
+      }
+    } catch(e) {}
+    return s.id || '';
+  }
+  function exLabel(ex) {
+    if (!ex) return '';
+    if (ex._customLabel) return ex._customLabel;
+    try { return ex[lang()] || ex.ru || ex.en || ex.he || ex.id || ''; } catch(e) { return ex.id || ''; }
+  }
+
+  // ============================================================
+  // Thumbnail (60x60) — uses burnfit GIF, wger, free-exercise-db, or local gifs/
+  // ============================================================
+  function exThumb(ex) {
+    if (!ex) return '';
+    var url = null;
+    try {
+      if (ex.__image) url = ex.__image;
+      else if (typeof EXERCISE_GIFS !== 'undefined' && EXERCISE_GIFS[ex.id]) url = EXERCISE_GIFS[ex.id];
+      else if (typeof EX_PHOTO_MAP_WGER !== 'undefined' && EX_PHOTO_MAP_WGER[ex.id]) url = EX_PHOTO_MAP_WGER[ex.id];
+      else if (typeof EX_PHOTO_MAP !== 'undefined' && EX_PHOTO_MAP[ex.id]) {
+        var parts = EX_PHOTO_MAP[ex.id].split('|');
+        url = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/' + parts[0] + '/0.jpg';
+      } else if (ex.id && /^[\w-]+$/.test(ex.id)) url = 'gifs/' + ex.id + '.gif';
+    } catch(e) {}
+    if (!url) return '<div style="width:60px;height:60px;border-radius:8px;background:linear-gradient(135deg,#374151,#1f2937);display:flex;align-items:center;justify-content:center;font-size:24px;">' + esc((ex.__emoji)||'🏋️') + '</div>';
+    return '<img src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:60px;height:60px;object-fit:cover;border-radius:8px;background:#fff;" onerror="this.style.display=\'none\';var p=this.parentNode;if(p)p.innerHTML=\'<div style=&quot;width:60px;height:60px;border-radius:8px;background:linear-gradient(135deg,#374151,#1f2937);display:flex;align-items:center;justify-content:center;font-size:24px;&quot;>' + esc(ex.__emoji||'🏋️') + '</div>\';">';
+  }
+
+  // ============================================================
+  // Stats
+  // ============================================================
+  function computeStats() {
+    var gN = 0, sN = 0, eN = 0, gifN = 0, custN = 0;
+    try {
+      window.__p8db.forEach(function(g) {
+        gN++;
+        (g.subgroups||[]).forEach(function(s) {
+          sN++;
+          (s.exercises||[]).forEach(function(e) {
+            eN++;
+            if (e.__image || (typeof EXERCISE_GIFS!=='undefined' && EXERCISE_GIFS[e.id]) || (typeof EX_PHOTO_MAP_WGER!=='undefined' && EX_PHOTO_MAP_WGER[e.id])) gifN++;
+            if (e._customLabel || e.__custom || e.__image || e.__tech || e.__emoji) custN++;
+          });
+        });
+      });
+    } catch(e) {}
+    return { g:gN, s:sN, e:eN, gif:gifN, custom:custN };
+  }
+
+  // ============================================================
+  // Collapsed-state map (default: all collapsed)
+  // ============================================================
+  window.__p8collapsed = window.__p8collapsed || {}; // keys: 'g<gi>', 'g<gi>s<si>'
+
+  // ============================================================
+  // MAIN: open editor modal
+  // ============================================================
+  window.__p5openExEditor = function() {
+    // Re-load DB
+    window.__p8db = loadDB();
+    // Remove existing modal if any
+    var ex = document.getElementById('p8ExEditorModal');
+    if (ex) ex.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'p8ExEditorModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:500000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:12px;';
+    overlay.innerHTML =
+      '<div id="p8ExEditorSheet" style="background:var(--surface-color,#FFF);width:100%;max-width:960px;height:94vh;display:flex;flex-direction:column;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.4);">' +
+        '<div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--surface-color);border-bottom:1px solid var(--border-color);">' +
+          '<div style="font-size:17px;font-weight:700;color:var(--text-primary);">🏋️ ' + esc(tr('title')) + '</div>' +
+          '<div style="flex:1;"></div>' +
+          '<button type="button" onclick="document.getElementById(\'p8ExEditorModal\').remove();document.body.style.overflow=\'\';" style="background:transparent;border:0;font-size:26px;color:var(--text-light);cursor:pointer;width:36px;height:36px;">×</button>' +
+        '</div>' +
+        '<div id="p8ExEditorStats" style="flex:0 0 auto;padding:10px 16px;background:var(--background-color);border-bottom:1px solid var(--border-color);font-size:12px;color:var(--text-light);display:flex;gap:14px;flex-wrap:wrap;"></div>' +
+        '<div style="flex:0 0 auto;padding:10px 16px;background:var(--surface-color);border-bottom:1px solid var(--border-color);display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+          '<button type="button" onclick="window.__p8addGroup()" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);font-size:12px;cursor:pointer;">' + esc(tr('addGroup')) + '</button>' +
+          '<button type="button" onclick="window.__p8expandAll()" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);font-size:12px;cursor:pointer;">' + esc(tr('expandAll')) + '</button>' +
+          '<button type="button" onclick="window.__p8collapseAll()" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);font-size:12px;cursor:pointer;">' + esc(tr('collapseAll')) + '</button>' +
+          '<button type="button" onclick="window.__p8exportDB()" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);font-size:12px;cursor:pointer;">' + esc(tr('export')) + '</button>' +
+          '<button type="button" onclick="window.__p8importDB()" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);font-size:12px;cursor:pointer;">' + esc(tr('import')) + '</button>' +
+          '<button type="button" onclick="window.__p7resetDB()" style="padding:8px 12px;border:1px solid #EF4444;border-radius:8px;background:rgba(239,68,68,0.1);color:#EF4444;font-size:12px;cursor:pointer;">' + esc(tr('reset')) + '</button>' +
+          '<button type="button" onclick="window.__p8saveDB()" style="padding:8px 12px;border:0;border-radius:8px;background:var(--primary-color,#3B82F6);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">' + esc(tr('save')) + '</button>' +
+          '<input id="p8ExSearch" type="text" placeholder="' + esc(tr('searchPh')) + '" oninput="window.__p8renderDB(this.value)" style="flex:1;min-width:160px;padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-size:13px;">' +
+        '</div>' +
+        '<div id="p8ExEditorBody" style="flex:1;overflow-y:auto;padding:8px 12px;"></div>' +
+      '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) { overlay.remove(); document.body.style.overflow=''; } });
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    // Initial render
+    window.__p8renderDB('');
+  };
+
+  // ============================================================
+  // Render DB tree (with optional search filter)
+  // ============================================================
+  window.__p8renderDB = function(searchQuery) {
+    var body = document.getElementById('p8ExEditorBody');
+    if (!body) return;
+    var statsEl = document.getElementById('p8ExEditorStats');
+    if (statsEl) {
+      var st = computeStats();
+      statsEl.innerHTML =
+        '<span>📦 ' + esc(tr('statsGroups')) + ': <b style="color:var(--text-primary);">' + st.g + '</b></span>' +
+        '<span>📂 ' + esc(tr('statsSubs')) + ': <b style="color:var(--text-primary);">' + st.s + '</b></span>' +
+        '<span>🏋️ ' + esc(tr('statsExs')) + ': <b style="color:var(--text-primary);">' + st.e + '</b></span>' +
+        '<span>🎬 ' + esc(tr('statsGifs')) + ': <b style="color:#10B981;">' + st.gif + '</b></span>' +
+        '<span>✨ ' + esc(tr('statsCustom')) + ': <b style="color:#F59E0B;">' + st.custom + '</b></span>';
+    }
+    var q = (searchQuery || '').toLowerCase().trim();
+    var html = '';
+    var matchedAny = false;
+    window.__p8db.forEach(function(g, gi) {
+      // Filter: if search, only show groups/subs/exs that match
+      var gMatch = !q || (g.id && g.id.toLowerCase().indexOf(q) >= 0) || (grpLabel(g).toLowerCase().indexOf(q) >= 0);
+      var subHtml = '';
+      var anySubMatched = false;
+      (g.subgroups||[]).forEach(function(s, si) {
+        var sMatch = !q || (s.id && s.id.toLowerCase().indexOf(q) >= 0) || (subLabel(s).toLowerCase().indexOf(q) >= 0);
+        var exHtml = '';
+        var anyExMatched = false;
+        (s.exercises||[]).forEach(function(e, ei) {
+          var eMatch = !q || (e.id && e.id.toLowerCase().indexOf(q) >= 0) || (exLabel(e).toLowerCase().indexOf(q) >= 0);
+          if (q && !eMatch) return;
+          anyExMatched = true;
+          matchedAny = true;
+          var hasGif = !!(e.__image || (typeof EXERCISE_GIFS!=='undefined' && EXERCISE_GIFS[e.id]) || (typeof EX_PHOTO_MAP_WGER!=='undefined' && EX_PHOTO_MAP_WGER[e.id]));
+          exHtml +=
+            '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:var(--background-color);margin:3px 0;">' +
+              '<div style="flex-shrink:0;">' + exThumb(e) + '</div>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(exLabel(e)) + (e.__custom?' <span style="font-size:10px;color:#F59E0B;">★</span>':'') + '</div>' +
+                '<div style="font-size:10px;color:var(--text-light);font-family:monospace;">' + esc(e.id) + (e.equip?(' • '+esc(e.equip)):'') + (hasGif?' • 🎬':'') + '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+                '<button type="button" onclick="window.__p7editEx(' + gi + ',' + si + ',' + ei + ')" title="' + esc(tr('edit')) + '" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:13px;">' + tr('edit') + '</button>' +
+                '<button type="button" onclick="window.__p8dupEx(' + gi + ',' + si + ',' + ei + ')" title="Duplicate" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:13px;">' + tr('duplicate') + '</button>' +
+                '<button type="button" onclick="window.__p8openGifPicker(' + gi + ',' + si + ',' + ei + ')" title="GIF" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:11px;">' + tr('pickGif') + '</button>' +
+                '<button type="button" onclick="window.__p8moveEx(' + gi + ',' + si + ',' + ei + ')" title="Move" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:13px;">' + tr('move') + '</button>' +
+                '<button type="button" onclick="window.__p8moveExUp(' + gi + ',' + si + ',' + ei + ')" title="Up" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:12px;">' + tr('moveUp') + '</button>' +
+                '<button type="button" onclick="window.__p8moveExDown(' + gi + ',' + si + ',' + ei + ')" title="Down" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:12px;">' + tr('moveDown') + '</button>' +
+                '<button type="button" onclick="window.__p7delEx(' + gi + ',' + si + ',' + ei + ')" title="Delete" style="width:28px;height:28px;border:1px solid #EF4444;border-radius:6px;background:rgba(239,68,68,0.1);color:#EF4444;cursor:pointer;font-size:13px;">' + tr('del') + '</button>' +
+              '</div>' +
+            '</div>';
+        });
+        if (q && !sMatch && !anyExMatched) return;
+        if (q) sMatch = true; // force-expand when searching
+        anySubMatched = true;
+        var sCollapsed = !sMatch && window.__p8collapsed['g'+gi+'s'+si];
+        subHtml +=
+          '<div style="margin:4px 0 4px 18px;">' +
+            '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:rgba(124,58,237,0.06);">' +
+              '<button type="button" onclick="window.__p8toggleSub(' + gi + ',' + si + ')" style="background:transparent;border:0;cursor:pointer;font-size:13px;color:var(--text-secondary);width:18px;">' + (sCollapsed?'▶':'▼') + '</button>' +
+              '<span style="font-size:14px;">📂</span>' +
+              '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text-primary);">' + esc(subLabel(s)) + '</span>' +
+              '<span style="font-size:10px;color:var(--text-light);font-family:monospace;">' + esc(s.id) + ' (' + (s.exercises||[]).length + ')</span>' +
+              '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+                '<button type="button" onclick="window.__p7editSub(' + gi + ',' + si + ')" title="Edit" style="width:26px;height:26px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:12px;">' + tr('edit') + '</button>' +
+                '<button type="button" onclick="window.__p7addEx(' + gi + ',' + si + ')" title="Add ex" style="width:26px;height:26px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:14px;">+</button>' +
+                '<button type="button" onclick="window.__p8moveSub(' + gi + ',' + si + ')" title="Move" style="width:26px;height:26px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:12px;">' + tr('move') + '</button>' +
+                '<button type="button" onclick="window.__p8doPromoteSub(' + gi + ',' + si + ')" title="Promote" style="width:26px;height:26px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:12px;">' + tr('promote') + '</button>' +
+                '<button type="button" onclick="window.__p8moveSubUp(' + gi + ',' + si + ')" title="Up" style="width:26px;height:26px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:11px;">' + tr('moveUp') + '</button>' +
+                '<button type="button" onclick="window.__p8moveSubDown(' + gi + ',' + si + ')" title="Down" style="width:26px;height:26px;border:1px solid var(--border-color);border-radius:6px;background:var(--surface-color);cursor:pointer;font-size:11px;">' + tr('moveDown') + '</button>' +
+                '<button type="button" onclick="window.__p7delSub(' + gi + ',' + si + ')" title="Delete" style="width:26px;height:26px;border:1px solid #EF4444;border-radius:6px;background:rgba(239,68,68,0.1);color:#EF4444;cursor:pointer;font-size:12px;">' + tr('del') + '</button>' +
+              '</div>' +
+            '</div>' +
+            (sCollapsed ? '' : '<div style="padding:4px 0 4px 14px;">' + exHtml + '</div>') +
+          '</div>';
+      });
+      if (q && !gMatch && !anySubMatched) return;
+      matchedAny = true;
+      var gCollapsed = !anySubMatched && window.__p8collapsed['g'+gi];
+      var groupColor = '#3B82F6';
+      try { if (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[g.id]) groupColor = GROUP_COLORS[g.id]; } catch(e) {}
+      html +=
+        '<div style="margin:6px 0;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;">' +
+          '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--surface-color);">' +
+            '<button type="button" onclick="window.__p8toggleGroup(' + gi + ')" style="background:transparent;border:0;cursor:pointer;font-size:14px;color:var(--text-secondary);width:20px;">' + (gCollapsed?'▶':'▼') + '</button>' +
+            '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + groupColor + ';"></span>' +
+            '<span style="flex:1;font-size:15px;font-weight:700;color:var(--text-primary);">' + esc(grpLabel(g)) + '</span>' +
+            '<span style="font-size:10px;color:var(--text-light);font-family:monospace;">' + esc(g.id) + '</span>' +
+            '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+              '<button type="button" onclick="window.__p7editGroup(' + gi + ')" title="Edit" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--background-color);cursor:pointer;font-size:13px;">' + tr('edit') + '</button>' +
+              '<button type="button" onclick="window.__p7addSub(' + gi + ')" title="Add sub" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--background-color);cursor:pointer;font-size:16px;">+</button>' +
+              '<button type="button" onclick="window.__p8moveGroup(' + gi + ')" title="Move" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--background-color);cursor:pointer;font-size:13px;">' + tr('move') + '</button>' +
+              '<button type="button" onclick="window.__p8moveGroupUp(' + gi + ')" title="Up" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--background-color);cursor:pointer;font-size:12px;">' + tr('moveUp') + '</button>' +
+              '<button type="button" onclick="window.__p8moveGroupDown(' + gi + ')" title="Down" style="width:28px;height:28px;border:1px solid var(--border-color);border-radius:6px;background:var(--background-color);cursor:pointer;font-size:12px;">' + tr('moveDown') + '</button>' +
+              '<button type="button" onclick="window.__p7delGroup(' + gi + ')" title="Delete" style="width:28px;height:28px;border:1px solid #EF4444;border-radius:6px;background:rgba(239,68,68,0.1);color:#EF4444;cursor:pointer;font-size:13px;">' + tr('del') + '</button>' +
+            '</div>' +
+          '</div>' +
+          (gCollapsed ? '' : '<div style="padding:4px 8px 8px;background:var(--background-color);">' + subHtml + '</div>') +
+        '</div>';
+    });
+    if (q && !matchedAny) {
+      html = '<div style="text-align:center;padding:40px;color:var(--text-light);">' + esc(tr('noResults')) + '</div>';
+    }
+    if (!window.__p8db.length) {
+      html = '<div style="text-align:center;padding:40px;color:var(--text-light);">DB is empty. Click "' + esc(tr('addGroup')) + '" to create the first group.</div>';
+    }
+    body.innerHTML = html;
+  };
+
+  // ============================================================
+  // Toggle expand/collapse
+  // ============================================================
+  window.__p8toggleGroup = function(gi) {
+    var k = 'g'+gi;
+    window.__p8collapsed[k] = !window.__p8collapsed[k];
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+  window.__p8toggleSub = function(gi, si) {
+    var k = 'g'+gi+'s'+si;
+    window.__p8collapsed[k] = !window.__p8collapsed[k];
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+  window.__p8expandAll = function() {
+    window.__p8collapsed = {};
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+  window.__p8collapseAll = function() {
+    window.__p8db.forEach(function(g, gi) {
+      window.__p8collapsed['g'+gi] = true;
+      (g.subgroups||[]).forEach(function(s, si) {
+        window.__p8collapsed['g'+gi+'s'+si] = true;
+      });
+    });
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // Generic modal helper for add/edit forms
+  // ============================================================
+  function openModal(title, innerHtml, onSave) {
+    var ex = document.getElementById('p8FormModal');
+    if (ex) ex.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'p8FormModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:550000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:16px;';
+    overlay.innerHTML =
+      '<div style="background:var(--surface-color,#FFF);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;border-radius:14px;padding:18px 16px;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
+          '<h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text-primary);">' + esc(title) + '</h3>' +
+          '<button type="button" onclick="document.getElementById(\'p8FormModal\').remove();" style="background:transparent;border:0;font-size:24px;color:var(--text-light);cursor:pointer;">×</button>' +
+        '</div>' +
+        '<div id="p8FormBody">' + innerHtml + '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:14px;">' +
+          '<button type="button" onclick="document.getElementById(\'p8FormModal\').remove();" style="flex:1;padding:11px;border:1px solid var(--border-color);border-radius:10px;background:var(--background-color);color:var(--text-primary);font-size:14px;cursor:pointer;">' + esc(tr('cancel')) + '</button>' +
+          '<button type="button" id="p8FormSave" style="flex:1;padding:11px;border:0;border-radius:10px;background:var(--primary-color,#3B82F6);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">' + esc(tr('save')) + '</button>' +
+        '</div>' +
+      '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    var saveBtn = overlay.querySelector('#p8FormSave');
+    if (saveBtn && typeof onSave === 'function') {
+      saveBtn.addEventListener('click', function() {
+        try { onSave(overlay); } catch(e) { alert('[P8] Save error: ' + (e.message||e)); }
+      });
+    }
+    return overlay;
+  }
+
+  function fieldVal(overlay, id) {
+    var el = overlay.querySelector('#' + id);
+    return el ? el.value : '';
+  }
+
+  // Live preview helper for group/subgroup ID
+  function livePreviewId(inputId, previewId, type) {
+    setTimeout(function() {
+      var overlay = document.getElementById('p8FormModal');
+      if (!overlay) return;
+      var inp = overlay.querySelector('#' + inputId);
+      var prv = overlay.querySelector('#' + previewId);
+      if (!inp || !prv) return;
+      inp.addEventListener('input', function() {
+        var id = inp.value.trim();
+        var label = id;
+        try {
+          if (type === 'group' && typeof GROUP_I18N !== 'undefined' && GROUP_I18N[id]) {
+            label = GROUP_I18N[id][lang()] || GROUP_I18N[id].ru || id;
+          } else if (type === 'sub' && typeof SUBGROUP_I18N !== 'undefined' && SUBGROUP_I18N[id]) {
+            label = SUBGROUP_I18N[id][lang()] || SUBGROUP_I18N[id].ru || id;
+          }
+        } catch(e) {}
+        prv.textContent = '↳ ' + label;
+      });
+    }, 50);
+  }
+
+  // ============================================================
+  // GROUP: add / edit / save / delete
+  // ============================================================
+  window.__p8addGroup = function() {
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('groupId')) + '</span>' +
+        '<input id="p8_grp_id" type="text" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
+        '<div style="font-size:11px;color:var(--text-light);margin-top:3px;">' + esc(tr('idHint')) + '</div>' +
+        '<div id="p8_grp_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ —</div>' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_grp_custom" type="text" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+        '<div style="font-size:11px;color:var(--text-light);margin-top:3px;">' + esc(tr('labelOverrideHint')) + '</div>' +
+      '</label>';
+    openModal(tr('addGroupT'), innerHtml, function(overlay) {
+      var id = fieldVal(overlay, 'p8_grp_id').trim();
+      if (!id || !/^[\w-]+$/.test(id)) { alert('Invalid ID'); return; }
+      // Check duplicate
+      for (var i = 0; i < window.__p8db.length; i++) { if (window.__p8db[i].id === id) { alert('ID already exists'); return; } }
+      window.__p8db.push({ id: id, subgroups: [], _customLabel: fieldVal(overlay, 'p8_grp_custom').trim() || undefined });
+      syncEXERCISE_DB();
+      persistDB();
+      overlay.remove();
+      window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    });
+    livePreviewId('p8_grp_id', 'p8_grp_preview', 'group');
+  };
+
+  // __p7editGroup — alias used by render (opens edit group modal)
+  window.__p7editGroup = function(gi) {
+    var g = window.__p8db[gi];
+    if (!g) return;
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('groupId')) + '</span>' +
+        '<input id="p8_grp_id" type="text" value="' + esc(g.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
+        '<div id="p8_grp_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(grpLabel(g)) + '</div>' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_grp_custom" type="text" value="' + esc(g._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>';
+    openModal(tr('editGroupT'), innerHtml, function(overlay) {
+      var newId = fieldVal(overlay, 'p8_grp_id').trim();
+      if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
+      g.id = newId;
+      var cl = fieldVal(overlay, 'p8_grp_custom').trim();
+      g._customLabel = cl || undefined;
+      syncEXERCISE_DB();
+      persistDB();
+      overlay.remove();
+      window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    });
+    livePreviewId('p8_grp_id', 'p8_grp_preview', 'group');
+  };
+
+  window.__p8saveGroup = function(gi) {
+    // Placeholder for legacy calls — actual save happens in modal handler.
+    syncEXERCISE_DB(); persistDB();
+  };
+
+  window.__p7delGroup = function(gi) {
+    var g = window.__p8db[gi];
+    if (!g) return;
+    if (!confirm(tr('confirmDelG') + '\n\n(' + grpLabel(g) + ')')) return;
+    window.__p8db.splice(gi, 1);
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // SUBGROUP: add / edit / save / delete
+  // ============================================================
+  window.__p7addSub = function(gi) {
+    var g = window.__p8db[gi];
+    if (!g) return;
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('subId')) + '</span>' +
+        '<input id="p8_sub_id" type="text" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
+        '<div id="p8_sub_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ —</div>' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_sub_custom" type="text" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>';
+    openModal(tr('addSubT'), innerHtml, function(overlay) {
+      var id = fieldVal(overlay, 'p8_sub_id').trim();
+      if (!id || !/^[\w-]+$/.test(id)) { alert('Invalid ID'); return; }
+      for (var i = 0; i < (g.subgroups||[]).length; i++) { if (g.subgroups[i].id === id) { alert('ID already exists'); return; } }
+      if (!g.subgroups) g.subgroups = [];
+      g.subgroups.push({ id: id, exercises: [], _customLabel: fieldVal(overlay, 'p8_sub_custom').trim() || undefined });
+      syncEXERCISE_DB();
+      persistDB();
+      overlay.remove();
+      window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    });
+    livePreviewId('p8_sub_id', 'p8_sub_preview', 'sub');
+  };
+
+  window.__p7editSub = function(gi, si) {
+    var s = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si];
+    if (!s) return;
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('subId')) + '</span>' +
+        '<input id="p8_sub_id" type="text" value="' + esc(s.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
+        '<div id="p8_sub_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(subLabel(s)) + '</div>' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_sub_custom" type="text" value="' + esc(s._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>';
+    openModal(tr('editSubT'), innerHtml, function(overlay) {
+      var newId = fieldVal(overlay, 'p8_sub_id').trim();
+      if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
+      s.id = newId;
+      var cl = fieldVal(overlay, 'p8_sub_custom').trim();
+      s._customLabel = cl || undefined;
+      syncEXERCISE_DB();
+      persistDB();
+      overlay.remove();
+      window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    });
+    livePreviewId('p8_sub_id', 'p8_sub_preview', 'sub');
+  };
+
+  window.__p8saveSub = function(gi, si) {
+    syncEXERCISE_DB(); persistDB();
+  };
+
+  window.__p7delSub = function(gi, si) {
+    var g = window.__p8db[gi];
+    if (!g || !g.subgroups) return;
+    var s = g.subgroups[si];
+    if (!s) return;
+    if (!confirm(tr('confirmDelS') + '\n\n(' + subLabel(s) + ')')) return;
+    g.subgroups.splice(si, 1);
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // EXERCISE: add / edit / save / delete
+  // ============================================================
+  var EQUIPMENT = ['barbell','dumbbell','smith','machine','hammer','cable','kettlebell','bodyweight','bw','plate','plates','band','trx','fitball','bosu','box','medball'];
+
+  window.__p7addEx = function(gi, si) {
+    var s = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si];
+    if (!s) return;
+    var innerHtml =
+      '<label style="display:block;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('exId')) + '</span>' +
+        '<input id="p8_ex_id" type="text" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;"></label>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('nameRu')) + '</span><input id="p8_ex_ru" type="text" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('nameEn')) + '</span><input id="p8_ex_en" type="text" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('nameHe')) + '</span><input id="p8_ex_he" type="text" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('equip')) + '</span><select id="p8_ex_equip" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' + EQUIPMENT.map(function(e){return '<option value="'+esc(e)+'">'+esc(e)+'</option>';}).join('') + '</select></label>' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('emoji')) + '</span><input id="p8_ex_emoji" type="text" maxlength="2" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+      '</div>' +
+      '<label style="display:block;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_ex_custom" type="text" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+      '<label style="display:block;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('gifUrl')) + '</span>' +
+        '<div style="display:flex;gap:6px;"><input id="p8_ex_gif" type="text" autocomplete="off" placeholder="https://..." style="flex:1;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+        '<button type="button" onclick="window.__p8openGifPicker(-1,-1,-1,\'p8_ex_gif\')" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);cursor:pointer;">' + esc(tr('pickGif')) + '</button></div></label>' +
+      '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('technique')) + '</span>' +
+        '<textarea id="p8_ex_tech" rows="3" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);resize:vertical;"></textarea></label>';
+    openModal(tr('addExT'), innerHtml, function(overlay) {
+      var id = fieldVal(overlay, 'p8_ex_id').trim();
+      if (!id || !/^[\w-]+$/.test(id)) { alert('Invalid ID'); return; }
+      for (var i = 0; i < (s.exercises||[]).length; i++) { if (s.exercises[i].id === id) { alert('ID already exists'); return; } }
+      if (!s.exercises) s.exercises = [];
+      var ex = {
+        id: id,
+        equip: fieldVal(overlay, 'p8_ex_equip') || 'bw',
+        ru: fieldVal(overlay, 'p8_ex_ru').trim(),
+        en: fieldVal(overlay, 'p8_ex_en').trim(),
+        he: fieldVal(overlay, 'p8_ex_he').trim()
+      };
+      var cl = fieldVal(overlay, 'p8_ex_custom').trim();
+      if (cl) ex._customLabel = cl;
+      var gif = fieldVal(overlay, 'p8_ex_gif').trim();
+      if (gif) ex.__image = gif;
+      var emoji = fieldVal(overlay, 'p8_ex_emoji').trim();
+      if (emoji) ex.__emoji = emoji;
+      var tech = fieldVal(overlay, 'p8_ex_tech').trim();
+      if (tech) ex.__tech = tech.split('\n').filter(Boolean);
+      ex.__custom = true;
+      s.exercises.push(ex);
+      syncEXERCISE_DB();
+      persistDB();
+      overlay.remove();
+      window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    });
+  };
+
+  window.__p7editEx = function(gi, si, ei) {
+    var ex = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si] && window.__p8db[gi].subgroups[si].exercises && window.__p8db[gi].subgroups[si].exercises[ei];
+    if (!ex) return;
+    var techText = (ex.__tech && ex.__tech.join) ? ex.__tech.join('\n') : (ex.__tech || '');
+    var innerHtml =
+      '<label style="display:block;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('exId')) + '</span>' +
+        '<input id="p8_ex_id" type="text" value="' + esc(ex.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;"></label>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;">' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('nameRu')) + '</span><input id="p8_ex_ru" type="text" value="' + esc(ex.ru||'') + '" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('nameEn')) + '</span><input id="p8_ex_en" type="text" value="' + esc(ex.en||'') + '" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('nameHe')) + '</span><input id="p8_ex_he" type="text" value="' + esc(ex.he||'') + '" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('equip')) + '</span><select id="p8_ex_equip" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' + EQUIPMENT.map(function(e){return '<option value="'+esc(e)+'"'+(ex.equip===e?' selected':'')+'>'+esc(e)+'</option>';}).join('') + '</select></label>' +
+        '<label><span style="font-size:12px;color:var(--text-light);">' + esc(tr('emoji')) + '</span><input id="p8_ex_emoji" type="text" maxlength="2" value="' + esc(ex.__emoji||'') + '" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+      '</div>' +
+      '<label style="display:block;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_ex_custom" type="text" value="' + esc(ex._customLabel||'') + '" autocomplete="off" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+      '<label style="display:block;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('gifUrl')) + '</span>' +
+        '<div style="display:flex;gap:6px;"><input id="p8_ex_gif" type="text" value="' + esc(ex.__image||'') + '" autocomplete="off" placeholder="https://..." style="flex:1;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+        '<button type="button" onclick="window.__p8openGifPicker(-1,-1,-1,\'p8_ex_gif\')" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);cursor:pointer;">' + esc(tr('pickGif')) + '</button></div></label>' +
+      '<label style="display:block;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('technique')) + '</span>' +
+        '<textarea id="p8_ex_tech" rows="3" style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);resize:vertical;">' + esc(techText) + '</textarea></label>' +
+      '<div style="margin-top:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('preview')) + ':</span><div style="display:inline-block;vertical-align:middle;margin-left:8px;">' + exThumb(ex) + '</div></div>';
+    openModal(tr('editExT'), innerHtml, function(overlay) {
+      var newId = fieldVal(overlay, 'p8_ex_id').trim();
+      if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
+      ex.id = newId;
+      ex.ru = fieldVal(overlay, 'p8_ex_ru').trim();
+      ex.en = fieldVal(overlay, 'p8_ex_en').trim();
+      ex.he = fieldVal(overlay, 'p8_ex_he').trim();
+      ex.equip = fieldVal(overlay, 'p8_ex_equip') || 'bw';
+      var cl = fieldVal(overlay, 'p8_ex_custom').trim();
+      if (cl) ex._customLabel = cl; else delete ex._customLabel;
+      var gif = fieldVal(overlay, 'p8_ex_gif').trim();
+      if (gif) ex.__image = gif; else delete ex.__image;
+      var emoji = fieldVal(overlay, 'p8_ex_emoji').trim();
+      if (emoji) ex.__emoji = emoji; else delete ex.__emoji;
+      var tech = fieldVal(overlay, 'p8_ex_tech').trim();
+      if (tech) ex.__tech = tech.split('\n').filter(Boolean); else delete ex.__tech;
+      ex.__custom = true;
+      syncEXERCISE_DB();
+      persistDB();
+      overlay.remove();
+      window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    });
+  };
+
+  window.__p7saveEx = function(gi, si, ei) {
+    syncEXERCISE_DB(); persistDB();
+  };
+
+  window.__p7delEx = function(gi, si, ei) {
+    var s = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si];
+    if (!s || !s.exercises) return;
+    var ex = s.exercises[ei];
+    if (!ex) return;
+    if (!confirm(tr('confirmDelE') + '\n\n(' + exLabel(ex) + ')')) return;
+    s.exercises.splice(ei, 1);
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // MOVE: up / down
+  // ============================================================
+  function swap(arr, i, j) { if (i<0||j<0||i>=arr.length||j>=arr.length) return; var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+
+  window.__p8moveGroupUp = function(gi) { swap(window.__p8db, gi, gi-1); syncEXERCISE_DB(); persistDB(); window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : ''); };
+  window.__p8moveGroupDown = function(gi) { swap(window.__p8db, gi, gi+1); syncEXERCISE_DB(); persistDB(); window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : ''); };
+  window.__p8moveSubUp = function(gi, si) { var g = window.__p8db[gi]; if (!g||!g.subgroups) return; swap(g.subgroups, si, si-1); syncEXERCISE_DB(); persistDB(); window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : ''); };
+  window.__p8moveSubDown = function(gi, si) { var g = window.__p8db[gi]; if (!g||!g.subgroups) return; swap(g.subgroups, si, si+1); syncEXERCISE_DB(); persistDB(); window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : ''); };
+  window.__p8moveExUp = function(gi, si, ei) { var s = window.__p8db[gi]&&window.__p8db[gi].subgroups&&window.__p8db[gi].subgroups[si]; if (!s||!s.exercises) return; swap(s.exercises, ei, ei-1); syncEXERCISE_DB(); persistDB(); window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : ''); };
+  window.__p8moveExDown = function(gi, si, ei) { var s = window.__p8db[gi]&&window.__p8db[gi].subgroups&&window.__p8db[gi].subgroups[si]; if (!s||!s.exercises) return; swap(s.exercises, ei, ei+1); syncEXERCISE_DB(); persistDB(); window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : ''); };
+
+  // ============================================================
+  // MOVE: group into another group (nesting)
+  // ============================================================
+  window.__p8moveGroup = function(gi) {
+    var g = window.__p8db[gi];
+    if (!g) return;
+    var opts = '<option value="-1">' + esc(tr('moveTopLevel')) + '</option>';
+    window.__p8db.forEach(function(gg, idx) {
+      if (idx === gi) return;
+      opts += '<option value="' + idx + '">' + esc(grpLabel(gg)) + '</option>';
+    });
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('moveTarget')) + '</span>' +
+        '<select id="p8_move_dst" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' + opts + '</select></label>' +
+      '<div style="font-size:12px;color:var(--text-light);padding:8px;background:rgba(245,158,11,0.08);border-radius:6px;">ℹ️ ' + esc(tr('moveInto')) + '</div>';
+    openModal(tr('moveInto') + ' — ' + grpLabel(g), innerHtml, function(overlay) {
+      var dst = parseInt(fieldVal(overlay, 'p8_move_dst'), 10);
+      window.__p8doMoveGroup(gi, dst);
+      overlay.remove();
+    });
+  };
+  window.__p8doMoveGroup = function(srcGi, dstGi) {
+    var src = window.__p8db[srcGi];
+    if (!src) return;
+    // Remove from top level
+    window.__p8db.splice(srcGi, 1);
+    if (dstGi < 0) {
+      // Move to top level (already there after splice)
+      window.__p8db.push(src);
+    } else {
+      // Adjust dstGi if it was after srcGi
+      if (dstGi > srcGi) dstGi--;
+      var dst = window.__p8db[dstGi];
+      if (!dst) { window.__p8db.push(src); return; }
+      // Nest src as a subgroup of dst (merge: src becomes a subgroup)
+      if (!dst.subgroups) dst.subgroups = [];
+      // Convert group to subgroup (keep id, move subgroups' exercises into one combined subgroup OR add as a single subgroup)
+      var newSub = { id: src.id, exercises: [] };
+      // Flatten: collect all exercises from all subgroups of src into newSub
+      (src.subgroups||[]).forEach(function(sub) {
+        (sub.exercises||[]).forEach(function(e) { newSub.exercises.push(e); });
+      });
+      if (src._customLabel) newSub._customLabel = src._customLabel;
+      dst.subgroups.push(newSub);
+    }
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+  window.__p8doPromoteGroup = function(gi, si) {
+    // Promote subgroup si of group gi to a top-level group
+    var g = window.__p8db[gi];
+    if (!g || !g.subgroups || !g.subgroups[si]) return;
+    var sub = g.subgroups[si];
+    var newGroup = { id: sub.id, subgroups: [{ id: sub.id + '_main', exercises: sub.exercises || [] }] };
+    if (sub._customLabel) newGroup._customLabel = sub._customLabel;
+    g.subgroups.splice(si, 1);
+    window.__p8db.push(newGroup);
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // MOVE: subgroup — into another subgroup (merge exercises) or another group
+  // ============================================================
+  window.__p8moveSub = function(gi, si) {
+    var g = window.__p8db[gi];
+    var s = g && g.subgroups && g.subgroups[si];
+    if (!s) return;
+    var opts = '';
+    window.__p8db.forEach(function(gg, gidx) {
+      (gg.subgroups||[]).forEach(function(ss, sidx) {
+        if (gidx === gi && sidx === si) return;
+        opts += '<option value="' + gidx + ':' + sidx + '">' + esc(grpLabel(gg) + ' / ' + subLabel(ss)) + '</option>';
+      });
+    });
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('moveSubTarget')) + '</span>' +
+        '<select id="p8_move_dst_sub" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' + opts + '</select></label>' +
+      '<div style="font-size:12px;color:var(--text-light);padding:8px;background:rgba(245,158,11,0.08);border-radius:6px;">ℹ️ ' + esc(tr('moveInto')) + '</div>';
+    openModal(tr('moveInto') + ' — ' + subLabel(s), innerHtml, function(overlay) {
+      var dst = fieldVal(overlay, 'p8_move_dst_sub').split(':');
+      var dstGi = parseInt(dst[0], 10);
+      var dstSi = parseInt(dst[1], 10);
+      window.__p8doMoveSub(gi, si, dstGi, dstSi);
+      overlay.remove();
+    });
+  };
+  // dstSi = -1 means move subgroup to top of dst group (becomes a subgroup of dst group, not merged)
+  // dstSi >= 0 means merge exercises into dst group's subgroup dstSi
+  window.__p8doMoveSub = function(srcGi, srcSi, dstGi, dstSi) {
+    var srcG = window.__p8db[srcGi];
+    if (!srcG || !srcG.subgroups) return;
+    var srcSub = srcG.subgroups[srcSi];
+    if (!srcSub) return;
+    var dstG = window.__p8db[dstGi];
+    if (!dstG) return;
+    // Remove from source
+    srcG.subgroups.splice(srcSi, 1);
+    if (dstSi >= 0 && dstG.subgroups && dstG.subgroups[dstSi]) {
+      // Merge exercises into existing subgroup
+      var dstSub = dstG.subgroups[dstSi];
+      if (!dstSub.exercises) dstSub.exercises = [];
+      (srcSub.exercises||[]).forEach(function(e) { dstSub.exercises.push(e); });
+    } else {
+      // Move subgroup as-is to dst group
+      if (!dstG.subgroups) dstG.subgroups = [];
+      dstG.subgroups.push(srcSub);
+    }
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+  window.__p8doPromoteSub = function(gi, si) {
+    return window.__p8doPromoteGroup(gi, si);
+  };
+
+  // ============================================================
+  // MOVE: exercise — to any subgroup
+  // ============================================================
+  window.__p8moveEx = function(gi, si, ei) {
+    var ex = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si] && window.__p8db[gi].subgroups[si].exercises && window.__p8db[gi].subgroups[si].exercises[ei];
+    if (!ex) return;
+    var opts = '';
+    window.__p8db.forEach(function(gg, gidx) {
+      (gg.subgroups||[]).forEach(function(ss, sidx) {
+        opts += '<option value="' + gidx + ':' + sidx + '">' + esc(grpLabel(gg) + ' / ' + subLabel(ss)) + '</option>';
+      });
+    });
+    var innerHtml =
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('moveSubTarget')) + '</span>' +
+        '<select id="p8_move_dst_ex" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' + opts + '</select></label>';
+    openModal(tr('moveInto') + ' — ' + exLabel(ex), innerHtml, function(overlay) {
+      var dst = fieldVal(overlay, 'p8_move_dst_ex').split(':');
+      var dstGi = parseInt(dst[0], 10);
+      var dstSi = parseInt(dst[1], 10);
+      window.__p8doMoveEx(gi, si, ei, dstGi, dstSi);
+      overlay.remove();
+    });
+  };
+  window.__p8doMoveEx = function(srcGi, srcSi, srcEi, dstGi, dstSi) {
+    var srcS = window.__p8db[srcGi] && window.__p8db[srcGi].subgroups && window.__p8db[srcGi].subgroups[srcSi];
+    if (!srcS || !srcS.exercises) return;
+    var ex = srcS.exercises[srcEi];
+    if (!ex) return;
+    var dstG = window.__p8db[dstGi];
+    if (!dstG || !dstG.subgroups || !dstG.subgroups[dstSi]) return;
+    var dstS = dstG.subgroups[dstSi];
+    if (!dstS.exercises) dstS.exercises = [];
+    // Remove from source
+    srcS.exercises.splice(srcEi, 1);
+    // Add to dst
+    dstS.exercises.push(ex);
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // DUPLICATE exercise
+  // ============================================================
+  window.__p8dupEx = function(gi, si, ei) {
+    var s = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si];
+    if (!s || !s.exercises) return;
+    var ex = s.exercises[ei];
+    if (!ex) return;
+    var newId = ex.id + '_copy_' + Date.now().toString(36);
+    var copy = JSON.parse(JSON.stringify(ex));
+    copy.id = newId;
+    copy.__custom = true;
+    s.exercises.splice(ei + 1, 0, copy);
+    syncEXERCISE_DB();
+    persistDB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // GIF PICKER — from EXERCISE_GIFS + EX_PHOTO_MAP_WGER + EX_PHOTO_MAP + local gifs/
+  // ============================================================
+  function getGifLibrary() {
+    var libs = [];
+    try {
+      if (typeof EXERCISE_GIFS !== 'undefined') {
+        Object.keys(EXERCISE_GIFS).forEach(function(id) {
+          libs.push({ id: id, url: EXERCISE_GIFS[id], src: 'burnfit' });
+        });
+      }
+    } catch(e) {}
+    try {
+      if (typeof EX_PHOTO_MAP_WGER !== 'undefined') {
+        Object.keys(EX_PHOTO_MAP_WGER).forEach(function(id) {
+          libs.push({ id: id, url: EX_PHOTO_MAP_WGER[id], src: 'wger' });
+        });
+      }
+    } catch(e) {}
+    try {
+      if (typeof EX_PHOTO_MAP !== 'undefined') {
+        Object.keys(EX_PHOTO_MAP).forEach(function(id) {
+          var folder = (EX_PHOTO_MAP[id] || '').split('|')[0];
+          if (folder) {
+            libs.push({ id: id, url: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/' + folder + '/0.jpg', src: 'free-exercise-db' });
+          }
+        });
+      }
+    } catch(e) {}
+    // Local gifs/ folder — one per exercise ID
+    try {
+      var seen = {};
+      libs.forEach(function(l){ seen[l.id + '|' + l.url] = true; });
+      window.__p8db.forEach(function(g) {
+        (g.subgroups||[]).forEach(function(s) {
+          (s.exercises||[]).forEach(function(e) {
+            if (e.id && /^[\w-]+$/.test(e.id) && !seen[e.id + '|gifs/' + e.id + '.gif']) {
+              libs.push({ id: e.id, url: 'gifs/' + e.id + '.gif', src: 'local' });
+              seen[e.id + '|gifs/' + e.id + '.gif'] = true;
+            }
+          });
+        });
+      });
+    } catch(e) {}
+    return libs;
+  }
+
+  // __p8openGifPicker(gi, si, ei, targetInputId)
+  // If gi/si/ei >= 0: applies to that exercise
+  // If targetInputId is provided: writes URL to that input instead (used by add/edit modal)
+  window.__p8openGifPicker = function(gi, si, ei, targetInputId) {
+    var ex = (gi >= 0 && si >= 0 && ei >= 0) ? (window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si] && window.__p8db[gi].subgroups[si].exercises && window.__p8db[gi].subgroups[si].exercises[ei]) : null;
+    var libs = getGifLibrary();
+    var exModal = document.getElementById('p8FormModal');
+    if (exModal) exModal.style.display = 'none'; // hide add/edit modal while picking
+    var ex2 = document.getElementById('p8GifPickerModal');
+    if (ex2) ex2.remove();
+    var overlay = document.createElement('div');
+    overlay.id = 'p8GifPickerModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:560000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:12px;';
+    overlay.innerHTML =
+      '<div style="background:var(--surface-color,#FFF);width:100%;max-width:780px;height:90vh;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;">' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border-color);">' +
+          '<div style="font-size:15px;font-weight:700;color:var(--text-primary);">🎬 ' + esc(tr('pickGifT')) + '</div>' +
+          '<div style="flex:1;"></div>' +
+          '<button type="button" onclick="document.getElementById(\'p8GifPickerModal\').remove();var fm=document.getElementById(\'p8FormModal\');if(fm)fm.style.display=\'\';" style="background:transparent;border:0;font-size:24px;color:var(--text-light);cursor:pointer;">×</button>' +
+        '</div>' +
+        '<div style="padding:8px 12px;border-bottom:1px solid var(--border-color);display:flex;gap:8px;align-items:center;">' +
+          '<input id="p8GifSearch" type="text" placeholder="' + esc(tr('searchPh')) + '" oninput="window.__p8filterGif(this.value)" style="flex:1;padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-size:13px;">' +
+          '<button type="button" onclick="window.__p8pickGif(\'\', ' + gi + ',' + si + ',' + ei + ',\'' + (targetInputId||'') + '\')" style="padding:7px 12px;border:1px solid var(--border-color);border-radius:8px;background:var(--surface-color);color:var(--text-primary);font-size:12px;cursor:pointer;">' + esc(tr('noGif')) + '</button>' +
+        '</div>' +
+        '<div id="p8GifGrid" style="flex:1;overflow-y:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>' +
+      '</div>';
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) { overlay.remove(); var fm = document.getElementById('p8FormModal'); if (fm) fm.style.display = ''; } });
+    document.body.appendChild(overlay);
+    // Render library
+    window.__p8gifLib = libs;
+    window.__p8gifTarget = { gi: gi, si: si, ei: ei, targetInputId: targetInputId || '' };
+    window.__p8filterGif('');
+  };
+
+  window.__p8filterGif = function(q) {
+    var grid = document.getElementById('p8GifGrid');
+    if (!grid) return;
+    q = (q || '').toLowerCase().trim();
+    var libs = window.__p8gifLib || [];
+    var filtered = q ? libs.filter(function(l) { return (l.id && l.id.toLowerCase().indexOf(q) >= 0) || (l.src && l.src.indexOf(q) >= 0); }) : libs;
+    if (!filtered.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-light);">' + esc(tr('noResults')) + '</div>';
+      return;
+    }
+    var tgt = window.__p8gifTarget || {};
+    grid.innerHTML = filtered.map(function(l) {
+      return '<div onclick="window.__p8pickGif(\'' + esc(l.url).replace(/'/g, '\\\'') + '\',' + tgt.gi + ',' + tgt.si + ',' + tgt.ei + ',\'' + (tgt.targetInputId||'') + '\')" style="cursor:pointer;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--background-color);">' +
+        '<div style="width:100%;height:180px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
+          '<img src="' + esc(l.url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentNode.innerHTML=\'<div style=\\\"color:#999;font-size:24px;\\\">⚠️</div>\';">' +
+        '</div>' +
+        '<div style="padding:5px 6px;font-size:10px;color:var(--text-light);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(l.id) + ' <span style="opacity:0.5;">(' + esc(l.src) + ')</span></div>' +
+      '</div>';
+    }).join('');
+  };
+
+  window.__p8pickGif = function(url, gi, si, ei, targetInputId) {
+    if (targetInputId) {
+      // Write URL to target input
+      var inp = document.getElementById(targetInputId);
+      if (inp) inp.value = url;
+    } else if (gi >= 0 && si >= 0 && ei >= 0) {
+      // Apply directly to exercise
+      var ex = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si] && window.__p8db[gi].subgroups[si].exercises && window.__p8db[gi].subgroups[si].exercises[ei];
+      if (ex) {
+        if (url) ex.__image = url; else delete ex.__image;
+        ex.__custom = true;
+        syncEXERCISE_DB();
+        persistDB();
+      }
+    }
+    // Close picker
+    var pk = document.getElementById('p8GifPickerModal');
+    if (pk) pk.remove();
+    // Re-show form modal if hidden
+    var fm = document.getElementById('p8FormModal');
+    if (fm) fm.style.display = '';
+    // Re-render editor if open
+    var eb = document.getElementById('p8ExEditorBody');
+    if (eb) window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+  };
+
+  // ============================================================
+  // EXPORT / IMPORT / RESET / SAVE
+  // ============================================================
+  window.__p8exportDB = function() {
+    try {
+      var data = JSON.stringify(window.__p8db, null, 2);
+      var blob = new Blob([data], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'exerciseDB_custom_' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      if (typeof showToast === 'function') { try { showToast(tr('savedToast'), 'success'); } catch(e){} }
+    } catch(e) { alert('[P8] Export error: ' + (e.message||e)); }
+  };
+
+  window.__p8importDB = function() {
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.onchange = function(ev) {
+      var f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var parsed = JSON.parse(e.target.result);
+          if (!Array.isArray(parsed)) throw new Error('Invalid format');
+          window.__p8db = parsed;
+          syncEXERCISE_DB();
+          persistDB();
+          window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+          if (typeof showToast === 'function') { try { showToast(tr('importedToast'), 'success'); } catch(e){} }
+        } catch(err) { alert('[P8] Import error: ' + (err.message||err)); }
+      };
+      reader.readAsText(f);
+    };
+    inp.click();
+  };
+
+  window.__p7resetDB = function() {
+    if (!confirm(tr('confirmReset'))) return;
+    try { localStorage.removeItem('exerciseDB_custom'); } catch(e) {}
+    window.__p8db = loadDB();
+    syncEXERCISE_DB();
+    window.__p8renderDB(document.getElementById('p8ExSearch') ? document.getElementById('p8ExSearch').value : '');
+    if (typeof showToast === 'function') { try { showToast(tr('resetToast'), 'success'); } catch(e){} }
+  };
+
+  window.__p8saveDB = function() {
+    if (persistDB()) {
+      syncEXERCISE_DB();
+      if (typeof showToast === 'function') { try { showToast(tr('savedToast'), 'success'); } catch(e){} }
+      else { try { alert(tr('savedToast')); } catch(e){} }
+    } else {
+      alert('[P8] Save failed');
+    }
+  };
+  window.__p7saveDB = function() { return window.__p8saveDB(); };
+
+  // ============================================================
+  // INITIAL LOAD — replace EXERCISE_DB with our edited version so the
+  // rest of the app sees the customized DB immediately on page load.
+  // ============================================================
+  syncEXERCISE_DB();
+
+  console.log('[P8 Exercise DB Editor] initialized — DB has ' + window.__p8db.length + ' groups');
+})();
+</script>
+<!-- /P8_EX_EDITOR_FINAL -->
+
+<!-- P9_DESKTOP_FIX -->
+<script>
+(function() {
+  'use strict';
+  if (window.__p9loaded) return;
+  window.__p9loaded = true;
+
+  function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function lang() { try { return (typeof currentLang!=='undefined'&&currentLang)||'ru'; } catch(e){ return 'ru'; } }
+  function t(key, ru, en, he) {
+    var L = lang(); return L==='en' ? (en||ru) : L==='he' ? (he||ru) : ru;
+  }
+
+  // ============================================================
+  // 1. ORIENTATION CSS — landscape = 2-column, portrait = single
+  // ============================================================
+  if (!document.getElementById('p9OrientCSS')) {
+    var css = document.createElement('style');
+    css.id = 'p9OrientCSS';
+    css.textContent = [
+      '/* P9 orientation CSS */',
+      'body.p9-landscape .mp-layout-2col,',
+      'body.p9-landscape .mp-layout-tablet {',
+      '  grid-template-columns: 1fr 1fr !important;',
+      '  display: grid !important;',
+      '}',
+      'body.p9-landscape .mp-layout-mobile .mp-body {',
+      '  grid-template-columns: 1fr 1fr !important;',
+      '}',
+      'body.p9-portrait .mp-layout-2col,',
+      'body.p9-portrait .mp-layout-tablet,',
+      'body.p9-portrait .mp-layout-mobile {',
+      '  grid-template-columns: 1fr !important;',
+      '}',
+      'body.p9-portrait .mp-layout-mobile .mp-body {',
+      '  grid-template-columns: 1fr !important;',
+      '}',
+      '@media (orientation: landscape) { body.p9-auto .mp-layout-2col { grid-template-columns: 1fr 1fr !important; } }',
+      '@media (orientation: portrait) { body.p9-auto .mp-layout-2col { grid-template-columns: 1fr !important; } }'
+    ].join('\n');
+    document.head.appendChild(css);
+  }
+
+  // __p9applyOrientation(mode) — adds body.p9-landscape or body.p9-portrait
+  window.__p9applyOrientation = function(mode) {
+    try {
+      document.body.classList.remove('p9-landscape','p9-portrait','p9-auto');
+      if (mode === 'landscape') document.body.classList.add('p9-landscape');
+      else if (mode === 'portrait') document.body.classList.add('p9-portrait');
+      else if (mode === 'auto') document.body.classList.add('p9-auto');
+    } catch(e) {}
+    // Trigger layout re-application if available
+    try { if (typeof applyLayout === 'function' && typeof userSettings !== 'undefined') applyLayout(userSettings.layout || 'tablet'); } catch(e) {}
+  };
+
+  // Hook __p5orient to also call __p9applyOrientation
+  var origP5Orient = window.__p5orient;
+  if (typeof origP5Orient === 'function' && !window.__p9p5hooked) {
+    window.__p9p5hooked = true;
+    window.__p5orient = function(mode) {
+      var r = origP5Orient.apply(this, arguments);
+      try { window.__p9applyOrientation(mode); } catch(e) {}
+      return r;
+    };
+  }
+
+  // ============================================================
+  // 2. __p9fixDock — finds dock, removes 🍽️/🏋️, adds ⚙️ before ⊞
+  // ============================================================
+  window.__p9fixDock = function() {
+    var md = document.getElementById('mobileDesktop');
+    if (!md) return;
+    // Use P6's patchDesktop which does the same thing (and is more thorough)
+    if (typeof window.__p6patchDesktop === 'function') {
+      try { window.__p6patchDesktop(); return; } catch(e) {}
+    }
+    // Fallback dock fix
+    var dock = md.querySelector('div[style*="space-around"]');
+    if (!dock) return;
+    var btns = dock.querySelectorAll('div[onclick], button[onclick]');
+    for (var i = btns.length - 1; i >= 0; i--) {
+      var b = btns[i];
+      var oc = b.getAttribute('onclick') || '';
+      var txt = (b.textContent || '').trim();
+      if (oc.indexOf('planner') >= 0 || oc.indexOf('workout') >= 0 ||
+          txt.indexOf('Питание') >= 0 || txt.indexOf('Тренировки') >= 0 ||
+          txt.indexOf('🍽') >= 0 || txt.indexOf('🏋') >= 0) {
+        b.remove();
+      }
+    }
+  };
+  // Run on init + body class change
+  setTimeout(window.__p9fixDock, 800);
+  setTimeout(window.__p9fixDock, 2500);
+
+  // ============================================================
+  // 3. Override mdRenderAppDrawer — remove 7 apps, keep 16 with i18n
+  // ============================================================
+  if (typeof mdRenderAppDrawer === 'function' && !window.__p9drawerHooked) {
+    window.__p9drawerHooked = true;
+    var origMdRenderAppDrawer = mdRenderAppDrawer;
+    window.mdRenderAppDrawer = function(q) {
+      var L = lang();
+      // i18n app names
+      var NAMES = {
+        ru: { nutrition:'Питание', workout:'Тренировки', calendar:'Календарь', tasks:'Задачи', shop:'Магазин', leads:'Лиды', chat:'Чат', notifications:'Уведомления', files:'Файлы', profile:'Профиль', encyclopedia:'Энциклопедия', settings:'Настройки', calculator:'Калькулятор', stopwatch:'Секундомер', timer:'Таймер', bmr:'BMR', notes:'Заметки', weather:'Погода' },
+        en: { nutrition:'Nutrition', workout:'Workouts', calendar:'Calendar', tasks:'Tasks', shop:'Shop', leads:'Leads', chat:'Chat', notifications:'Notifications', files:'Files', profile:'Profile', encyclopedia:'Encyclopedia', settings:'Settings', calculator:'Calculator', stopwatch:'Stopwatch', timer:'Timer', bmr:'BMR', notes:'Notes', weather:'Weather' },
+        he: { nutrition:'תזונה', workout:'אימונים', calendar:'לוח שנה', tasks:'משימות', shop:'חנות', leads:'לידים', chat:'צ\'אט', notifications:'התראות', files:'קבצים', profile:'פרופיל', encyclopedia:'אנציקלופדיה', settings:'הגדרות', calculator:'מחשבון', stopwatch:'שעון עצר', timer:'טיימר', bmr:'BMR', notes:'פתקים', weather:'מזג אוויר' }
+      }[L] || NAMES.ru;
+
+      // 16 apps to keep (remove История/Сканер/Вода/Замеры/Пульс/Шагомер/Пианино)
+      var allApps = [
+        { icon:'🍽️', name:NAMES.nutrition, color:'linear-gradient(135deg,#10B981,#047857)', action:function(){ win11OpenApp('planner'); mdCloseAppDrawer(); } },
+        { icon:'🏋️', name:NAMES.workout, color:'linear-gradient(135deg,#EF4444,#b91c1c)', action:function(){ win11OpenApp('workout'); mdCloseAppDrawer(); } },
+        { icon:'📅', name:NAMES.calendar, color:'linear-gradient(135deg,#F59E0B,#d97706)', action:function(){ if(typeof openCalendarModal==='function') openCalendarModal(); mdCloseAppDrawer(); } },
+        { icon:'✅', name:NAMES.tasks, color:'linear-gradient(135deg,#3B82F6,#1d4ed8)', action:function(){ if(typeof openTasksModal==='function') openTasksModal(); mdCloseAppDrawer(); } },
+        { icon:'🛒', name:NAMES.shop, color:'linear-gradient(135deg,#8B5CF6,#6d28d9)', action:function(){ if(typeof openShopModal==='function') openShopModal(); mdCloseAppDrawer(); } },
+        { icon:'🌟', name:NAMES.leads, color:'linear-gradient(135deg,#F59E0B,#ea580c)', action:function(){ if(typeof openLeadsModal==='function') openLeadsModal(); mdCloseAppDrawer(); } },
+        { icon:'💬', name:NAMES.chat, color:'linear-gradient(135deg,#06B6D4,#0891b2)', action:function(){ if(typeof openChat==='function') openChat((typeof currentUserId!=='undefined'?currentUserId:null),'trainer'); mdCloseAppDrawer(); } },
+        { icon:'🔔', name:NAMES.notifications, color:'linear-gradient(135deg,#EF4444,#dc2626)', action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); mdCloseAppDrawer(); } },
+        { icon:'📁', name:NAMES.files, color:'linear-gradient(135deg,#F472B6,#db2777)', action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); mdCloseAppDrawer(); } },
+        { icon:'👨‍🏫', name:NAMES.profile, color:'linear-gradient(135deg,#6366F1,#4338ca)', action:function(){ if(typeof openTrainerProfile==='function') openTrainerProfile(); mdCloseAppDrawer(); } },
+        { icon:'📚', name:NAMES.encyclopedia, color:'linear-gradient(135deg,#7C3AED,#5b21b6)', action:function(){ if(typeof openEncyclopedia==='function') openEncyclopedia(); mdCloseAppDrawer(); } },
+        { icon:'⚙️', name:NAMES.settings, color:'linear-gradient(135deg,#6B7280,#4b5563)', action:function(){ if(typeof openSettingsModal==='function') openSettingsModal(); mdCloseAppDrawer(); } },
+        // Widgets (4 kept — removed Вода/Замеры/Пульс/Шагомер/Пианино)
+        { icon:'🧮', name:NAMES.calculator, color:'linear-gradient(135deg,#374151,#1f2937)', action:function(){ mdOpenWidget('calculator'); } },
+        { icon:'⏱', name:NAMES.stopwatch, color:'linear-gradient(135deg,#0891b2,#155e75)', action:function(){ mdOpenWidget('stopwatch'); } },
+        { icon:'⏲', name:NAMES.timer, color:'linear-gradient(135deg,#ea580c,#c2410c)', action:function(){ mdOpenWidget('timer'); } },
+        { icon:'⚖️', name:NAMES.bmr, color:'linear-gradient(135deg,#7C3AED,#5b21b6)', action:function(){ mdOpenWidget('bmr'); } },
+        { icon:'📝', name:NAMES.notes, color:'linear-gradient(135deg,#FCD34D,#f59e0b)', action:function(){ mdOpenWidget('notes'); } },
+        { icon:'🌤️', name:NAMES.weather, color:'linear-gradient(135deg,#0EA5E9,#0284c7)', action:function(){ mdOpenWidget('weather'); } }
+      ];
+      q = (q||'').toLowerCase();
+      var filtered = q ? allApps.filter(function(a){ return a.name.toLowerCase().indexOf(q) >= 0; }) : allApps;
+      var grid = document.getElementById('mdAppDrawerGrid');
+      if (!grid) return;
+      grid.innerHTML = filtered.map(function(app) {
+        return '<div onclick="mdAppDrawerClick('+allApps.indexOf(app)+')" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+          '<div style="width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;box-shadow:0 4px 12px rgba(0,0,0,0.15);background:'+app.color+';">'+app.icon+'</div>' +
+          '<div style="font-size:11px;color:var(--text-secondary);text-align:center;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(app.name)+'</div>' +
+        '</div>';
+      }).join('');
+      window._mdAllApps = allApps;
+    };
+    try { mdRenderAppDrawer = window.mdRenderAppDrawer; } catch(e) {}
+  }
+
+  // ============================================================
+  // 4. Override mdRenderApps — remove История, add Энциклопедия
+  // ============================================================
+  if (typeof mdRenderApps === 'function' && !window.__p9appsHooked) {
+    window.__p9appsHooked = true;
+    var origMdRenderApps = mdRenderApps;
+    window.mdRenderApps = function() {
+      var L = lang();
+      var NAMES = {
+        ru: { calendar:'Календарь', tasks:'Задачи', leads:'Лиды', chat:'Чат', notifications:'Уведомл.', files:'Файлы', profile:'Профиль', encyclopedia:'Энциклопедия' },
+        en: { calendar:'Calendar', tasks:'Tasks', leads:'Leads', chat:'Chat', notifications:'Notif.', files:'Files', profile:'Profile', encyclopedia:'Encyclopedia' },
+        he: { calendar:'לוח', tasks:'משימות', leads:'לידים', chat:'צ\'אט', notifications:'התראות', files:'קבצים', profile:'פרופיל', encyclopedia:'אנציקלופדיה' }
+      }[L] || NAMES.ru;
+      var apps = [
+        { icon:'📅', name:NAMES.calendar, color:'#F59E0B', action:function(){ if(typeof openCalendarModal==='function') openCalendarModal(); } },
+        { icon:'✅', name:NAMES.tasks, color:'#3B82F6', action:function(){ if(typeof openTasksModal==='function') openTasksModal(); } },
+        { icon:'🌟', name:NAMES.leads, color:'#F59E0B', action:function(){ if(typeof openLeadsModal==='function') openLeadsModal(); } },
+        { icon:'💬', name:NAMES.chat, color:'#06B6D4', action:function(){ if(typeof openChat==='function') openChat((typeof currentUserId!=='undefined'?currentUserId:null),'trainer'); } },
+        { icon:'🔔', name:NAMES.notifications, color:'#EF4444', action:function(){ if(typeof openNotificationsApp==='function') openNotificationsApp(); } },
+        { icon:'📁', name:NAMES.files, color:'#8B5CF6', action:function(){ if(typeof openFileExplorer==='function') openFileExplorer('documents'); } },
+        { icon:'👨‍🏫', name:NAMES.profile, color:'#6366F1', action:function(){ if(typeof openTrainerProfile==='function') openTrainerProfile(); } },
+        { icon:'📚', name:NAMES.encyclopedia, color:'#10B981', action:function(){ if(typeof openEncyclopedia==='function') openEncyclopedia(); } }
+      ];
+      var grid = document.getElementById('mdAppGrid');
+      if (!grid) return;
+      grid.innerHTML = apps.map(function(app, i) {
+        return '<div onclick="mdAppClick('+i+')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;">' +
+          '<div style="width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:white;box-shadow:0 3px 10px rgba(0,0,0,0.12);background:'+app.color+';">'+app.icon+'</div>' +
+          '<div style="font-size:10px;color:var(--text-secondary);text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(app.name)+'</div>' +
+        '</div>';
+      }).join('');
+      window._mdApps = apps;
+    };
+    try { mdRenderApps = window.mdRenderApps; } catch(e) {}
+  }
+
+  // ============================================================
+  // 5. Define working widgets
+  // ============================================================
+  // 🧮 Calculator
+  window.__win11RenderCalculator = function(body) {
+    if (!body) return;
+    body.innerHTML =
+      '<div style="max-width:340px;margin:0 auto;">' +
+        '<div id="p9CalcDisplay" style="background:var(--surface-color,#1f2937);color:var(--text-primary,#fff);font-size:36px;font-weight:300;text-align:right;padding:16px 18px;border-radius:12px;margin-bottom:12px;min-height:72px;overflow:hidden;font-family:ui-monospace,monospace;">0</div>' +
+        '<div id="p9CalcKeys" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>' +
+      '</div>';
+    var display = body.querySelector('#p9CalcDisplay');
+    var keys = body.querySelector('#p9CalcKeys');
+    var expr = '';
+    var KEYS = ['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','⌫','='];
+    KEYS.forEach(function(k) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = k;
+      var bg = 'var(--surface-color,#374151)';
+      if (['÷','×','−','+','='].indexOf(k) >= 0) bg = 'var(--primary-color,#3B82F6)';
+      else if (['C','±','%','⌫'].indexOf(k) >= 0) bg = 'var(--border-color,#4b5563)';
+      btn.style.cssText = 'padding:18px 0;font-size:20px;border:0;border-radius:12px;background:'+bg+';color:'+(k==='='?'#fff':'var(--text-primary,#fff)')+';cursor:pointer;font-weight:500;';
+      btn.addEventListener('click', function() {
+        if (k === 'C') { expr = ''; display.textContent = '0'; }
+        else if (k === '⌫') { expr = expr.slice(0, -1); display.textContent = expr || '0'; }
+        else if (k === '=') {
+          try {
+            var js = expr.replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-').replace(/%/g,'/100');
+            var r = Function('"use strict";return (' + js + ')')();
+            display.textContent = (typeof r === 'number' && isFinite(r)) ? String(r) : 'Error';
+            expr = String(r);
+          } catch(e) { display.textContent = 'Error'; expr = ''; }
+        } else if (k === '±') {
+          if (expr && expr[0] !== '-') expr = '-' + expr; else expr = expr.slice(1);
+          display.textContent = expr || '0';
+        } else {
+          expr += k;
+          display.textContent = expr;
+        }
+      });
+      keys.appendChild(btn);
+    });
+  };
+
+  // ⏱ Stopwatch
+  window.__win11RenderStopwatch = function(body) {
+    if (!body) return;
+    body.innerHTML =
+      '<div style="max-width:340px;margin:0 auto;text-align:center;">' +
+        '<div id="p9SwDisplay" style="font-size:54px;font-family:ui-monospace,monospace;color:var(--text-primary);margin:24px 0;letter-spacing:2px;">00:00.000</div>' +
+        '<div style="display:flex;gap:10px;justify-content:center;">' +
+          '<button type="button" id="p9SwStart" style="padding:14px 28px;border:0;border-radius:24px;background:var(--primary-color,#3B82F6);color:#fff;font-size:15px;font-weight:600;cursor:pointer;">▶ ' + esc(t('p9Start','Старт','Start','התחל')) + '</button>' +
+          '<button type="button" id="p9SwLap" style="padding:14px 22px;border:1px solid var(--border-color);border-radius:24px;background:var(--surface-color);color:var(--text-primary);font-size:15px;cursor:pointer;">🚩 ' + esc(t('p9Lap','Круг','Lap','הקפה')) + '</button>' +
+          '<button type="button" id="p9SwReset" style="padding:14px 22px;border:1px solid var(--border-color);border-radius:24px;background:var(--surface-color);color:var(--text-primary);font-size:15px;cursor:pointer;">↻ ' + esc(t('p9Reset','Сброс','Reset','אפס')) + '</button>' +
+        '</div>' +
+        '<div id="p9SwLaps" style="margin-top:20px;text-align:left;max-height:240px;overflow-y:auto;"></div>' +
+      '</div>';
+    var display = body.querySelector('#p9SwDisplay');
+    var startBtn = body.querySelector('#p9SwStart');
+    var lapBtn = body.querySelector('#p9SwLap');
+    var resetBtn = body.querySelector('#p9SwReset');
+    var lapsDiv = body.querySelector('#p9SwLaps');
+    var startTime = 0, elapsed = 0, timer = null, laps = [];
+    function fmt(ms) {
+      var m = Math.floor(ms / 60000);
+      var s = Math.floor((ms % 60000) / 1000);
+      var mss = ms % 1000;
+      return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + '.' + String(mss).padStart(3,'0');
+    }
+    function update() {
+      var now = Date.now();
+      var cur = elapsed + (now - startTime);
+      display.textContent = fmt(cur);
+    }
+    startBtn.addEventListener('click', function() {
+      if (timer) {
+        clearInterval(timer); timer = null;
+        elapsed += Date.now() - startTime;
+        startBtn.innerHTML = '▶ ' + esc(t('p9Start','Старт','Start','התחל'));
+      } else {
+        startTime = Date.now();
+        timer = setInterval(update, 33);
+        startBtn.innerHTML = '⏸ ' + esc(t('p9Pause','Пауза','Pause','השהה'));
+      }
+    });
+    lapBtn.addEventListener('click', function() {
+      var cur = elapsed + (timer ? (Date.now() - startTime) : 0);
+      laps.unshift(cur);
+      lapsDiv.innerHTML = laps.map(function(l, i) {
+        return '<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border-color);font-family:monospace;"><span>#' + (laps.length - i) + '</span><span>' + fmt(l) + '</span></div>';
+      }).join('');
+    });
+    resetBtn.addEventListener('click', function() {
+      if (timer) { clearInterval(timer); timer = null; }
+      elapsed = 0; laps = [];
+      display.textContent = '00:00.000';
+      lapsDiv.innerHTML = '';
+      startBtn.innerHTML = '▶ ' + esc(t('p9Start','Старт','Start','התחל'));
+    });
+  };
+
+  // ⏲ Timer
+  window.__win11RenderTimer = function(body) {
+    if (!body) return;
+    body.innerHTML =
+      '<div style="max-width:340px;margin:0 auto;text-align:center;">' +
+        '<div id="p9TmDisplay" style="font-size:54px;font-family:ui-monospace,monospace;color:var(--text-primary);margin:24px 0;">25:00</div>' +
+        '<div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:16px;">' +
+          '<input id="p9TmMin" type="number" min="0" max="180" value="25" style="width:70px;padding:10px;text-align:center;border:1px solid var(--border-color);border-radius:8px;font-size:16px;background:var(--background-color);color:var(--text-primary);">' +
+          '<span style="font-size:18px;color:var(--text-light);">:</span>' +
+          '<input id="p9TmSec" type="number" min="0" max="59" value="0" style="width:70px;padding:10px;text-align:center;border:1px solid var(--border-color);border-radius:8px;font-size:16px;background:var(--background-color);color:var(--text-primary);">' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;justify-content:center;">' +
+          '<button type="button" id="p9TmStart" style="padding:14px 28px;border:0;border-radius:24px;background:var(--primary-color,#3B82F6);color:#fff;font-size:15px;font-weight:600;cursor:pointer;">▶ ' + esc(t('p9Start','Старт','Start','התחל')) + '</button>' +
+          '<button type="button" id="p9TmReset" style="padding:14px 22px;border:1px solid var(--border-color);border-radius:24px;background:var(--surface-color);color:var(--text-primary);font-size:15px;cursor:pointer;">↻ ' + esc(t('p9Reset','Сброс','Reset','אפס')) + '</button>' +
+        '</div>' +
+      '</div>';
+    var display = body.querySelector('#p9TmDisplay');
+    var minInput = body.querySelector('#p9TmMin');
+    var secInput = body.querySelector('#p9TmSec');
+    var startBtn = body.querySelector('#p9TmStart');
+    var resetBtn = body.querySelector('#p9TmReset');
+    var total = 0, timer = null, endTime = 0;
+    function fmt(s) {
+      var m = Math.floor(s / 60);
+      var ss = s % 60;
+      return String(m).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+    }
+    function updateDisplay() {
+      var remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+      display.textContent = fmt(remaining);
+      if (remaining <= 0) {
+        clearInterval(timer); timer = null;
+        startBtn.innerHTML = '▶ ' + esc(t('p9Start','Старт','Start','התחל'));
+        try { if (navigator.vibrate) navigator.vibrate([200,100,200,100,200]); } catch(e) {}
+        alert(t('p9TimerDone','Время вышло!','Time\'s up!','הזמן עבר!'));
+      }
+    }
+    startBtn.addEventListener('click', function() {
+      if (timer) {
+        clearInterval(timer); timer = null;
+        startBtn.innerHTML = '▶ ' + esc(t('p9Start','Старт','Start','התחל'));
+      } else {
+        var m = parseInt(minInput.value, 10) || 0;
+        var s = parseInt(secInput.value, 10) || 0;
+        total = m * 60 + s;
+        if (total <= 0) return;
+        endTime = Date.now() + total * 1000;
+        updateDisplay();
+        timer = setInterval(updateDisplay, 250);
+        startBtn.innerHTML = '⏸ ' + esc(t('p9Pause','Пауза','Pause','השהה'));
+      }
+    });
+    resetBtn.addEventListener('click', function() {
+      if (timer) { clearInterval(timer); timer = null; }
+      var m = parseInt(minInput.value, 10) || 0;
+      var s = parseInt(secInput.value, 10) || 0;
+      display.textContent = fmt(m * 60 + s);
+      startBtn.innerHTML = '▶ ' + esc(t('p9Start','Старт','Start','התחל'));
+    });
+    minInput.addEventListener('input', function() { if (!timer) { display.textContent = fmt((parseInt(minInput.value,10)||0)*60 + (parseInt(secInput.value,10)||0)); } });
+    secInput.addEventListener('input', function() { if (!timer) { display.textContent = fmt((parseInt(minInput.value,10)||0)*60 + (parseInt(secInput.value,10)||0)); } });
+  };
+
+  // ⚖️ BMR Calculator
+  window.__win11RenderBMR = function(body) {
+    if (!body) return;
+    var L = lang();
+    var L10N = {
+      ru: { gender:'Пол', male:'Мужской', female:'Женский', age:'Возраст', weight:'Вес (кг)', height:'Рост (см)', activity:'Активность', calc:'Рассчитать', bmr:'BMR (базовый обмен)', tdee:'TDEE (суточная норма)', bmi:'ИМТ', sed:'Сидячий (1.2)', light:'Лёгкая (1.375)', mod:'Умеренная (1.55)', active:'Активная (1.725)', veryActive:'Очень активная (1.9)' },
+      en: { gender:'Gender', male:'Male', female:'Female', age:'Age', weight:'Weight (kg)', height:'Height (cm)', activity:'Activity', calc:'Calculate', bmr:'BMR (basal metabolic rate)', tdee:'TDEE (daily needs)', bmi:'BMI', sed:'Sedentary (1.2)', light:'Light (1.375)', mod:'Moderate (1.55)', active:'Active (1.725)', veryActive:'Very active (1.9)' },
+      he: { gender:'מגדר', male:'זכר', female:'נקבה', age:'גיל', weight:'משקל (ק"ג)', height:'גובה (ס"מ)', activity:'פעילות', calc:'חשב', bmr:'BMR (חילוף חומרים בסיסי)', tdee:'TDEE (צריכה יומית)', bmi:'BMI', sed:'יושבני (1.2)', light:'קלה (1.375)', mod:'בינונית (1.55)', active:'פעילה (1.725)', veryActive:'פעילה מאוד (1.9)' }
+    }[L] || L10N.ru;
+    body.innerHTML =
+      '<div style="max-width:380px;margin:0 auto;">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.gender) + '</span><select id="p9BmrGender" style="width:100%;padding:9px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"><option value="male">' + esc(L10N.male) + '</option><option value="female">' + esc(L10N.female) + '</option></select></label>' +
+          '<label><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.age) + '</span><input id="p9BmrAge" type="number" value="30" min="10" max="100" style="width:100%;padding:9px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+          '<label><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.weight) + '</span><input id="p9BmrWeight" type="number" value="70" min="30" max="250" style="width:100%;padding:9px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+          '<label><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.height) + '</span><input id="p9BmrHeight" type="number" value="170" min="120" max="220" style="width:100%;padding:9px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"></label>' +
+        '</div>' +
+        '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(L10N.activity) + '</span><select id="p9BmrActivity" style="width:100%;padding:9px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);"><option value="1.2">' + esc(L10N.sed) + '</option><option value="1.375">' + esc(L10N.light) + '</option><option value="1.55" selected>' + esc(L10N.mod) + '</option><option value="1.725">' + esc(L10N.active) + '</option><option value="1.9">' + esc(L10N.veryActive) + '</option></select></label>' +
+        '<button type="button" id="p9BmrCalc" style="width:100%;padding:12px;border:0;border-radius:10px;background:var(--primary-color,#3B82F6);color:#fff;font-size:15px;font-weight:600;cursor:pointer;">' + esc(L10N.calc) + '</button>' +
+        '<div id="p9BmrResult" style="margin-top:16px;"></div>' +
+      '</div>';
+    var calcBtn = body.querySelector('#p9BmrCalc');
+    calcBtn.addEventListener('click', function() {
+      var g = body.querySelector('#p9BmrGender').value;
+      var a = parseInt(body.querySelector('#p9BmrAge').value, 10) || 30;
+      var w = parseFloat(body.querySelector('#p9BmrWeight').value) || 70;
+      var h = parseFloat(body.querySelector('#p9BmrHeight').value) || 170;
+      var act = parseFloat(body.querySelector('#p9BmrActivity').value) || 1.55;
+      // Mifflin-St Jeor
+      var bmr = g === 'female'
+        ? (10 * w + 6.25 * h - 5 * a - 161)
+        : (10 * w + 6.25 * h - 5 * a + 5);
+      var tdee = bmr * act;
+      var bmi = w / Math.pow(h / 100, 2);
+      body.querySelector('#p9BmrResult').innerHTML =
+        '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:12px;padding:14px;text-align:center;">' +
+          '<div style="font-size:13px;color:var(--text-light);">' + esc(L10N.bmr) + '</div>' +
+          '<div style="font-size:32px;font-weight:700;color:var(--primary-color,#3B82F6);">' + Math.round(bmr) + ' ' + esc(t('p9Kcal','ккал','kcal','קק"ל')) + '</div>' +
+          '<div style="margin-top:10px;font-size:13px;color:var(--text-light);">' + esc(L10N.tdee) + '</div>' +
+          '<div style="font-size:24px;font-weight:700;color:#10B981;">' + Math.round(tdee) + ' ' + esc(t('p9Kcal','ккал','kcal','קק"ל')) + '</div>' +
+          '<div style="margin-top:10px;font-size:13px;color:var(--text-light);">' + esc(L10N.bmi) + '</div>' +
+          '<div style="font-size:20px;font-weight:700;color:#F59E0B;">' + bmi.toFixed(1) + '</div>' +
+        '</div>';
+    });
+  };
+
+  // 📝 Notes
+  window.__win11RenderNotes = function(body) {
+    if (!body) return;
+    var L = lang();
+    var saved = '';
+    try { saved = localStorage.getItem('p9_notes') || ''; } catch(e) {}
+    body.innerHTML =
+      '<div style="max-width:560px;margin:0 auto;">' +
+        '<textarea id="p9NotesArea" placeholder="' + esc(t('p9NotesPh','Пишите здесь...','Write here...','כתוב כאן...')) + '" style="width:100%;min-height:320px;padding:14px;border:1px solid var(--border-color);border-radius:12px;font-size:15px;font-family:inherit;background:var(--background-color);color:var(--text-primary);resize:vertical;line-height:1.5;">' + esc(saved) + '</textarea>' +
+        '<div style="display:flex;gap:10px;margin-top:12px;align-items:center;">' +
+          '<button type="button" id="p9NotesSave" style="padding:10px 22px;border:0;border-radius:10px;background:var(--primary-color,#3B82F6);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">💾 ' + esc(t('p9Save','Сохранить','Save','שמור')) + '</button>' +
+          '<button type="button" id="p9NotesClear" style="padding:10px 18px;border:1px solid var(--border-color);border-radius:10px;background:var(--surface-color);color:var(--text-primary);font-size:14px;cursor:pointer;">🗑 ' + esc(t('p9Clear','Очистить','Clear','נקה')) + '</button>' +
+          '<span id="p9NotesStatus" style="margin-left:auto;font-size:12px;color:var(--text-light);"></span>' +
+        '</div>' +
+      '</div>';
+    var area = body.querySelector('#p9NotesArea');
+    var saveBtn = body.querySelector('#p9NotesSave');
+    var clearBtn = body.querySelector('#p9NotesClear');
+    var status = body.querySelector('#p9NotesStatus');
+    saveBtn.addEventListener('click', function() {
+      try {
+        localStorage.setItem('p9_notes', area.value);
+        status.textContent = t('p9NotesSaved','✓ Сохранено','✓ Saved','✓ נשמר');
+        setTimeout(function(){ status.textContent = ''; }, 2000);
+      } catch(e) { status.textContent = '⚠ Error'; }
+    });
+    clearBtn.addEventListener('click', function() {
+      if (!confirm(t('p9NotesClearConfirm','Очистить заметки?','Clear notes?','לנקות פתקים?'))) return;
+      area.value = '';
+      try { localStorage.removeItem('p9_notes'); } catch(e) {}
+    });
+  };
+
+  // 🌤 Weather (uses open-meteo.com — no API key required)
+  window.__win11RenderWeather = function(body) {
+    if (!body) return;
+    var L = lang();
+    var L10N = {
+      ru: { loading:'Загрузка погоды...', detect:'Определить местоположение', temp:'Температура', wind:'Ветер', humid:'Влажность', errLoc:'Не удалось определить местоположение', errWeather:'Не удалось загрузить погоду', enterCity:'Введите город' },
+      en: { loading:'Loading weather...', detect:'Detect location', temp:'Temperature', wind:'Wind', humid:'Humidity', errLoc:'Could not detect location', errWeather:'Could not load weather', enterCity:'Enter city' },
+      he: { loading:'טוען מזג אוויר...', detect:'זהה מיקום', temp:'טמפרטורה', wind:'רוח', humid:'לחות', errLoc:'לא הצליח לזהות מיקום', errWeather:'לא הצליח לטעון מזג אוויר', enterCity:'הזן עיר' }
+    }[L] || L10N.ru;
+    body.innerHTML =
+      '<div style="max-width:420px;margin:0 auto;">' +
+        '<div style="display:flex;gap:8px;margin-bottom:14px;">' +
+          '<input id="p9WeatherCity" type="text" placeholder="' + esc(L10N.enterCity) + '" style="flex:1;padding:10px;border:1px solid var(--border-color);border-radius:10px;background:var(--background-color);color:var(--text-primary);font-size:14px;">' +
+          '<button type="button" id="p9WeatherSearch" style="padding:10px 16px;border:0;border-radius:10px;background:var(--primary-color,#3B82F6);color:#fff;font-size:14px;cursor:pointer;">🔍</button>' +
+          '<button type="button" id="p9WeatherLoc" style="padding:10px 16px;border:1px solid var(--border-color);border-radius:10px;background:var(--surface-color);color:var(--text-primary);font-size:14px;cursor:pointer;">📍</button>' +
+        '</div>' +
+        '<div id="p9WeatherResult" style="text-align:center;padding:20px;color:var(--text-light);">' + esc(L10N.loading) + '</div>' +
+      '</div>';
+    var cityInput = body.querySelector('#p9WeatherCity');
+    var searchBtn = body.querySelector('#p9WeatherSearch');
+    var locBtn = body.querySelector('#p9WeatherLoc');
+    var result = body.querySelector('#p9WeatherResult');
+
+    function renderWeather(d, placeName) {
+      var code = d.current_weather ? d.current_weather.weathercode : 0;
+      var icons = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌨️',67:'🌨️',71:'🌨️',73:'🌨️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️' };
+      var icon = icons[code] || '🌡️';
+      var temp = d.current_weather ? d.current_weather.temperature : '?';
+      var wind = d.current_weather ? d.current_weather.windspeed : '?';
+      var humid = (d.current && d.current.relative_humidity_2m != null) ? d.current.relative_humidity_2m : '?';
+      result.innerHTML =
+        '<div style="background:linear-gradient(135deg,#0EA5E9,#0284c7);border-radius:18px;padding:24px;color:#fff;">' +
+          '<div style="font-size:14px;opacity:0.85;">' + esc(placeName || '') + '</div>' +
+          '<div style="font-size:64px;line-height:1;margin:8px 0;">' + icon + '</div>' +
+          '<div style="font-size:42px;font-weight:700;">' + temp + '°C</div>' +
+          '<div style="display:flex;justify-content:space-around;margin-top:16px;font-size:13px;">' +
+            '<div><div style="opacity:0.7;">' + esc(L10N.wind) + '</div><div style="font-weight:600;font-size:16px;">' + wind + ' km/h</div></div>' +
+            '<div><div style="opacity:0.7;">' + esc(L10N.humid) + '</div><div style="font-weight:600;font-size:16px;">' + humid + '%</div></div>' +
+          '</div>' +
+        '</div>';
+    }
+    function fetchWeather(lat, lon, placeName) {
+      result.textContent = L10N.loading;
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true&current=relative_humidity_2m';
+      fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+        renderWeather(d, placeName);
+      }).catch(function() { result.textContent = L10N.errWeather; });
+    }
+    function geocode(city) {
+      var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=' + (L==='he'?'he':(L==='ru'?'ru':'en'));
+      fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.results && d.results[0]) {
+          fetchWeather(d.results[0].latitude, d.results[0].longitude, d.results[0].name + (d.results[0].country ? ', ' + d.results[0].country : ''));
+        } else {
+          result.textContent = L10N.errWeather;
+        }
+      }).catch(function() { result.textContent = L10N.errWeather; });
+    }
+    searchBtn.addEventListener('click', function() { var c = cityInput.value.trim(); if (c) geocode(c); });
+    cityInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { var c = cityInput.value.trim(); if (c) geocode(c); } });
+    locBtn.addEventListener('click', function() {
+      if (!navigator.geolocation) { result.textContent = L10N.errLoc; return; }
+      result.textContent = L10N.loading;
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        fetchWeather(pos.coords.latitude, pos.coords.longitude, t('p9MyLoc','Моё местоположение','My location','המיקום שלי'));
+      }, function() { result.textContent = L10N.errLoc; }, { timeout: 10000 });
+    });
+    // Auto-load default city
+    geocode(L==='he' ? 'Tel Aviv' : (L==='ru' ? 'Москва' : 'London'));
+  };
+
+  // ============================================================
+  // 6. Override mdOpenWidget with i18n widget names
+  // ============================================================
+  if (typeof mdOpenWidget === 'function' && !window.__p9widgetHooked) {
+    window.__p9widgetHooked = true;
+    var origMdOpenWidget = mdOpenWidget;
+    window.mdOpenWidget = function(id) {
+      // Use i18n names
+      var L = lang();
+      var names = {
+        ru: { calculator:'🧮 Калькулятор', bmr:'⚖️ BMR', stopwatch:'⏱ Секундомер', timer:'⏲ Таймер', notes:'📝 Заметки', weather:'🌤️ Погода', keyboard:'🎹 Пианино', hydration:'💧 Вода', measurements:'📏 Замеры', heartrate:'❤️ Пульс', pedometer:'👣 Шагомер' },
+        en: { calculator:'🧮 Calculator', bmr:'⚖️ BMR', stopwatch:'⏱ Stopwatch', timer:'⏲ Timer', notes:'📝 Notes', weather:'🌤️ Weather', keyboard:'🎹 Piano', hydration:'💧 Water', measurements:'📏 Measurements', heartrate:'❤️ Heart Rate', pedometer:'👣 Pedometer' },
+        he: { calculator:'🧮 מחשבון', bmr:'⚖️ BMR', stopwatch:'⏱ שעון עצר', timer:'⏲ טיימר', notes:'📝 פתקים', weather:'🌤️ מזג אוויר', keyboard:'🎹 פסנתר', hydration:'💧 מים', measurements:'📏 מדידות', heartrate:'❤️ דופק', pedometer:'👣 מד צעדים' }
+      }[L] || names.ru;
+      // Close drawer
+      if (typeof mdCloseAppDrawer === 'function') mdCloseAppDrawer();
+      // Build overlay
+      var fs = document.getElementById('mdWidgetOverlay');
+      if (!fs) {
+        fs = document.createElement('div');
+        fs.id = 'mdWidgetOverlay';
+        fs.style.cssText = 'position:fixed;inset:0;z-index:200;background:var(--background-color);display:none;flex-direction:column;';
+        document.body.appendChild(fs);
+      }
+      fs.innerHTML = '<div style="flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface-color);border-bottom:1px solid var(--border-color);"><button onclick="mdCloseWidget()" style="width:40px;height:40px;border:none;border-radius:12px;background:var(--background-color);color:var(--text-primary);font-size:20px;cursor:pointer;">‹</button><div style="font-size:17px;font-weight:600;">' + esc(names[id]||id) + '</div></div><div id="mdWidgetBody" style="flex:1;overflow-y:auto;padding:16px;"></div>';
+      fs.style.display = 'flex';
+      var body = document.getElementById('mdWidgetBody');
+      if (!body) return;
+      var fns = {
+        calculator: 'window.__win11RenderCalculator',
+        bmr: 'window.__win11RenderBMR',
+        stopwatch: 'window.__win11RenderStopwatch',
+        timer: 'window.__win11RenderTimer',
+        notes: 'window.__win11RenderNotes',
+        weather: 'window.__win11RenderWeather'
+      };
+      var fn = fns[id];
+      if (fn) {
+        try { eval(fn + '(body)'); } catch(e) { body.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">Error: ' + esc(e.message||'') + '</div>'; }
+      } else {
+        // Fall back to original widget renderer for hydration/measurements/etc
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-light);">' + esc(t('p9WidgetNA','Виджет недоступен','Widget unavailable','וידג\'ט לא זמין')) + '</div>';
+      }
+    };
+    try { mdOpenWidget = window.mdOpenWidget; } catch(e) {}
+  }
+
+  console.log('[P9 Desktop Fix] initialized');
+})();
+</script>
+<!-- /P9_DESKTOP_FIX -->
+
 </body>
 </html>
