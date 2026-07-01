@@ -45634,7 +45634,8 @@ window.__win11RefreshClients = function(){
     }
 
     // ===== TRAINER APP: inject into .mp-topbar =====
-    if (isTrainerPlanner) {
+    // DISABLED — P1 injectTopBar handles history button injection
+    if (false && isTrainerPlanner) {
       const topbar = document.querySelector('.mp-topbar');
       if (topbar) {
         let btnsContainer = document.getElementById('nuTopBarButtons');
@@ -46864,27 +46865,33 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
     // Also remove old exSearchBtn if present
     var oldBtn = document.getElementById('exSearchBtn');
     if (oldBtn) oldBtn.remove();
-    // Remove old nuTopBarButtons container
+    // Remove old nuTopBarButtons container (NutritionUpgrades) — P1 replaces it
     var oldContainer = document.getElementById('nuTopBarButtons');
     if (oldContainer) oldContainer.remove();
+    // Remove old HistoryManager buttons if they were injected separately
+    var oldHist = document.getElementById('hmHistoryBtn');
+    if (oldHist && oldHist.parentNode && oldHist.parentNode.id !== 'p1topbar') oldHist.remove();
+    var oldArch = document.getElementById('hmArchiveBtn');
+    if (oldArch) oldArch.remove();
 
     if (isWorkout) {
       container.innerHTML =
-        '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇷🇺 RU</button>' +
-        '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇮🇱 עבר</button>' +
-        '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇬🇧 EN</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
+        '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇷🇺</button>' +
+        '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇮🇱</button>' +
+        '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇬🇧</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">📄</button>';
     } else {
       container.innerHTML =
-        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
-        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
+        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐</button>' +
+        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">📄</button>';
     }
     // History button (both modes)
     var hb = document.createElement('button');
     hb.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
     var L = lang();
-    hb.textContent = L==='he'?'📜 היסטוריה':(L==='en'?'📜 History':'📜 История');
+    hb.textContent = '📜';
+    hb.title = L==='he'?'היסטוריה':(L==='en'?'History':'История');
     hb.onclick = function(){ if(window.HistoryManager) window.HistoryManager.showHistory(isWorkout?'workout':'nutrition'); };
     container.appendChild(hb);
   }
@@ -48481,6 +48488,18 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   // Collapsed-state map (default: all collapsed)
   // ============================================================
   window.__p8collapsed = window.__p8collapsed || {}; // keys: 'g<gi>', 'g<gi>s<si>'
+  // P10: Default — all groups collapsed. Initialize on first load.
+  if (!window.__p8collapsedInit) {
+    window.__p8collapsedInit = true;
+    try {
+      window.__p8db.forEach(function(g, gi) {
+        window.__p8collapsed['g'+gi] = true;
+        (g.subgroups||[]).forEach(function(s, si) {
+          window.__p8collapsed['g'+gi+'s'+si] = true;
+        });
+      });
+    } catch(e) {}
+  }
 
   // ============================================================
   // MAIN: open editor modal
@@ -48576,7 +48595,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
         if (q && !sMatch && !anyExMatched) return;
         if (q) sMatch = true; // force-expand when searching
         anySubMatched = true;
-        var sCollapsed = !sMatch && window.__p8collapsed['g'+gi+'s'+si];
+        var sCollapsed = q ? (!sMatch && window.__p8collapsed['g'+gi+'s'+si]) : window.__p8collapsed['g'+gi+'s'+si];
         subHtml +=
           '<div style="margin:4px 0 4px 18px;">' +
             '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:rgba(124,58,237,0.06);">' +
@@ -48599,7 +48618,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       });
       if (q && !gMatch && !anySubMatched) return;
       matchedAny = true;
-      var gCollapsed = !anySubMatched && window.__p8collapsed['g'+gi];
+      var gCollapsed = q ? (!anySubMatched && window.__p8collapsed['g'+gi]) : window.__p8collapsed['g'+gi];
       var groupColor = '#3B82F6';
       try { if (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[g.id]) groupColor = GROUP_COLORS[g.id]; } catch(e) {}
       html +=
