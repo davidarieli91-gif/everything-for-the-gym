@@ -44570,19 +44570,7 @@ window.__win11RefreshClients = function(){
   }
 
   function injectTopBarButtons() {
-    // Find the visible .mp-topbar
-    const topbar = document.querySelector('.mp-topbar');
-    if (!topbar) return;
-    if (topbar.querySelector('#nuTopBarButtons')) return; // already injected
-
-    const btns = document.createElement('div');
-    btns.id = 'nuTopBarButtons';
-    btns.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
-    btns.innerHTML =
-      '<button onclick="window.__nuOffOpen(0)" title="Open Food Facts" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
-      '<button onclick="window.__nuAi()" title="AI Photo" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
-      '<button onclick="window.__nuPdf(\'day\')" title="PDF Report" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
-    topbar.appendChild(btns);
+    return; // P10: disabled — P1 injectTopBar handles all topbar buttons
   }
 
   function injectBodyWidgets() {
@@ -46683,9 +46671,9 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
 .mp-nav-item span:last-child{font-size:9px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:60px!important}
 @media(max-width:380px){.mp-nav-item{padding:4px 4px!important;font-size:9px!important}.mp-nav-ico{font-size:1.2em!important}.mp-nav-item span:last-child{font-size:8px!important;max-width:45px!important}}
 /* GIF fullscreen */
-.p1gif{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.p1gif{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:600000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 .p1gif img{max-width:90vw;max-height:70vh;object-fit:contain;border-radius:12px;background:#fff}
-.p1gif .p1gifclose{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:200001}
+.p1gif .p1gifclose{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:600001}
 .p1gif .p1gifname{color:#fff;font-size:18px;font-weight:600;margin-top:16px}
 `;
     document.head.appendChild(s);
@@ -48419,13 +48407,14 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   // ============================================================
   function grpLabel(g) {
     if (!g) return '';
-    if (g._customLabel) return g._customLabel;
+    var icon = g.icon ? g.icon + ' ' : '';
+    if (g._customLabel) return icon + g._customLabel;
     try {
       if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[g.id]) {
-        return GROUP_I18N[g.id][lang()] || GROUP_I18N[g.id].ru || g.id;
+        return icon + (GROUP_I18N[g.id][lang()] || GROUP_I18N[g.id].ru || g.id);
       }
     } catch(e) {}
-    return g.id || '';
+    return icon + (g.id || '');
   }
   function subLabel(s) {
     if (!s) return '';
@@ -48768,10 +48757,15 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   window.__p7editGroup = function(gi) {
     var g = window.__p8db[gi];
     if (!g) return;
+    var currentIcon = g.icon || '🏋️';
     var innerHtml =
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('groupId')) + '</span>' +
         '<input id="p8_grp_id" type="text" value="' + esc(g.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
         '<div id="p8_grp_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(grpLabel(g)) + '</div>' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">Иконка (emoji)</span>' +
+        '<input id="p8_grp_icon" type="text" value="' + esc(currentIcon) + '" autocomplete="off" maxlength="4" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-size:20px;text-align:center;">' +
+        '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">Введите emoji-иконку для группы (например: 💪, 🦵, 🏋️)</div>' +
       '</label>' +
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
         '<input id="p8_grp_custom" type="text" value="' + esc(g._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
@@ -48780,6 +48774,8 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       var newId = fieldVal(overlay, 'p8_grp_id').trim();
       if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
       g.id = newId;
+      var icon = fieldVal(overlay, 'p8_grp_icon').trim();
+      if (icon) g.icon = icon; else delete g.icon;
       var cl = fieldVal(overlay, 'p8_grp_custom').trim();
       g._customLabel = cl || undefined;
       syncEXERCISE_DB();
@@ -49040,16 +49036,20 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       if (dstGi > srcGi) dstGi--;
       var dst = window.__p8db[dstGi];
       if (!dst) { window.__p8db.push(src); return; }
-      // Nest src as a subgroup of dst (merge: src becomes a subgroup)
+      // Nest src as a subgroup of dst — PRESERVE all subgroups and their exercises
       if (!dst.subgroups) dst.subgroups = [];
-      // Convert group to subgroup (keep id, move subgroups' exercises into one combined subgroup OR add as a single subgroup)
-      var newSub = { id: src.id, exercises: [] };
-      // Flatten: collect all exercises from all subgroups of src into newSub
+      // Add src's subgroups directly to dst (keep structure)
       (src.subgroups||[]).forEach(function(sub) {
-        (sub.exercises||[]).forEach(function(e) { newSub.exercises.push(e); });
+        dst.subgroups.push(sub);
       });
-      if (src._customLabel) newSub._customLabel = src._customLabel;
-      dst.subgroups.push(newSub);
+      // If src has no subgroups but has exercises, add as a single subgroup
+      if (!src.subgroups || src.subgroups.length === 0) {
+        dst.subgroups.push({ id: src.id, exercises: src.exercises || [] });
+      }
+      // Preserve custom label as a marker
+      if (src._customLabel) {
+        dst.subgroups[dst.subgroups.length - 1]._movedFrom = src._customLabel;
+      }
     }
     syncEXERCISE_DB();
     persistDB();
@@ -49276,9 +49276,10 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
     }
     var tgt = window.__p8gifTarget || {};
     grid.innerHTML = filtered.map(function(l) {
-      return '<div onclick="window.__p8pickGif(\'' + esc(l.url).replace(/'/g, '\\\'') + '\',' + tgt.gi + ',' + tgt.si + ',' + tgt.ei + ',\'' + (tgt.targetInputId||'') + '\')" style="cursor:pointer;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--background-color);">' +
-        '<div style="width:100%;height:180px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
-          '<img src="' + esc(l.url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentNode.innerHTML=\'<div style=\\\"color:#999;font-size:24px;\\\">⚠️</div>\';">' +
+      return '<div onclick="window.__p8pickGif(\'' + esc(l.url).replace(/'/g, '\\\'') + '\',' + tgt.gi + ',' + tgt.si + ',' + tgt.ei + ',\'' + (tgt.targetInputId||'') + '\')" style="cursor:pointer;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--background-color);transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#3B82F6\'" onmouseout="this.style.borderColor=\'transparent\'">' +
+        '<div style="width:100%;aspect-ratio:1/1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">' +
+          '<img src="' + esc(l.url) + '" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+          '<div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;color:#666;font-size:28px;">⚠️</div>' +
         '</div>' +
         '<div style="padding:5px 6px;font-size:10px;color:var(--text-light);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(l.id) + ' <span style="opacity:0.5;">(' + esc(l.src) + ')</span></div>' +
       '</div>';
