@@ -49074,11 +49074,12 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
     try {
       if (ex.__image) url = ex.__image;
       else if (typeof EXERCISE_GIFS !== 'undefined' && EXERCISE_GIFS[ex.id]) url = EXERCISE_GIFS[ex.id];
-      else if (typeof EX_PHOTO_MAP_WGER !== 'undefined' && EX_PHOTO_MAP_WGER[ex.id]) url = EX_PHOTO_MAP_WGER[ex.id];
+      // P10: Skip EX_PHOTO_MAP_WGER (wger-img folder doesn't exist on production)
+      // Skip gifs/{id}.gif fallback (folder doesn't exist on production)
       else if (typeof EX_PHOTO_MAP !== 'undefined' && EX_PHOTO_MAP[ex.id]) {
         var parts = EX_PHOTO_MAP[ex.id].split('|');
         url = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/' + parts[0] + '/0.jpg';
-      } else if (ex.id && /^[\w-]+$/.test(ex.id)) url = 'gifs/' + ex.id + '.gif';
+      }
     } catch(e) {}
     if (!url) return '<div style="width:60px;height:60px;border-radius:8px;background:linear-gradient(135deg,#374151,#1f2937);display:flex;align-items:center;justify-content:center;font-size:24px;">' + esc((ex.__emoji)||'🏋️') + '</div>';
     return '<img src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" style="width:60px;height:60px;object-fit:cover;border-radius:8px;background:#fff;" onerror="this.style.display=\'none\';var p=this.parentNode;if(p)p.innerHTML=\'<div style=&quot;width:60px;height:60px;border-radius:8px;background:linear-gradient(135deg,#374151,#1f2937);display:flex;align-items:center;justify-content:center;font-size:24px;&quot;>' + esc(ex.__emoji||'🏋️') + '</div>\';">';
