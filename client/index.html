@@ -44570,7 +44570,19 @@ window.__win11RefreshClients = function(){
   }
 
   function injectTopBarButtons() {
-    return; // P10: disabled — P1 injectTopBar handles all topbar buttons
+    // Find the visible .mp-topbar
+    const topbar = document.querySelector('.mp-topbar');
+    if (!topbar) return;
+    if (topbar.querySelector('#nuTopBarButtons')) return; // already injected
+
+    const btns = document.createElement('div');
+    btns.id = 'nuTopBarButtons';
+    btns.style.cssText = 'display:flex;gap:6px;align-items:center;margin-left:auto;padding-right:12px;';
+    btns.innerHTML =
+      '<button onclick="window.__nuOffOpen(0)" title="Open Food Facts" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
+      '<button onclick="window.__nuAi()" title="AI Photo" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
+      '<button onclick="window.__nuPdf(\'day\')" title="PDF Report" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
+    topbar.appendChild(btns);
   }
 
   function injectBodyWidgets() {
@@ -45622,8 +45634,7 @@ window.__win11RefreshClients = function(){
     }
 
     // ===== TRAINER APP: inject into .mp-topbar =====
-    // DISABLED — P1 injectTopBar handles history button injection
-    if (false && isTrainerPlanner) {
+    if (isTrainerPlanner) {
       const topbar = document.querySelector('.mp-topbar');
       if (topbar) {
         let btnsContainer = document.getElementById('nuTopBarButtons');
@@ -46671,9 +46682,9 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
 .mp-nav-item span:last-child{font-size:9px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:60px!important}
 @media(max-width:380px){.mp-nav-item{padding:4px 4px!important;font-size:9px!important}.mp-nav-ico{font-size:1.2em!important}.mp-nav-item span:last-child{font-size:8px!important;max-width:45px!important}}
 /* GIF fullscreen */
-.p1gif{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:600000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.p1gif{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 .p1gif img{max-width:90vw;max-height:70vh;object-fit:contain;border-radius:12px;background:#fff}
-.p1gif .p1gifclose{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:600001}
+.p1gif .p1gifclose{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:200001}
 .p1gif .p1gifname{color:#fff;font-size:18px;font-weight:600;margin-top:16px}
 `;
     document.head.appendChild(s);
@@ -46853,33 +46864,27 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
     // Also remove old exSearchBtn if present
     var oldBtn = document.getElementById('exSearchBtn');
     if (oldBtn) oldBtn.remove();
-    // Remove old nuTopBarButtons container (NutritionUpgrades) — P1 replaces it
+    // Remove old nuTopBarButtons container
     var oldContainer = document.getElementById('nuTopBarButtons');
     if (oldContainer) oldContainer.remove();
-    // Remove old HistoryManager buttons if they were injected separately
-    var oldHist = document.getElementById('hmHistoryBtn');
-    if (oldHist && oldHist.parentNode && oldHist.parentNode.id !== 'p1topbar') oldHist.remove();
-    var oldArch = document.getElementById('hmArchiveBtn');
-    if (oldArch) oldArch.remove();
 
     if (isWorkout) {
       container.innerHTML =
-        '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇷🇺</button>' +
-        '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇮🇱</button>' +
-        '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇬🇧</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">📄</button>';
+        '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇷🇺 RU</button>' +
+        '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇮🇱 עבר</button>' +
+        '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇬🇧 EN</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
     } else {
       container.innerHTML =
-        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐</button>' +
-        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">📄</button>';
+        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
+        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
     }
     // History button (both modes)
     var hb = document.createElement('button');
     hb.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
     var L = lang();
-    hb.textContent = '📜';
-    hb.title = L==='he'?'היסטוריה':(L==='en'?'History':'История');
+    hb.textContent = L==='he'?'📜 היסטוריה':(L==='en'?'📜 History':'📜 История');
     hb.onclick = function(){ if(window.HistoryManager) window.HistoryManager.showHistory(isWorkout?'workout':'nutrition'); };
     container.appendChild(hb);
   }
@@ -48408,7 +48413,13 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   function grpLabel(g) {
     if (!g) return '';
     var icon = g.icon ? g.icon + ' ' : '';
+    // Use custom 3-language names first
+    if (g[lang()]) return icon + g[lang()];
+    if (g.ru) return icon + g.ru;
+    if (g.en) return icon + g.en;
+    if (g.he) return icon + g.he;
     if (g._customLabel) return icon + g._customLabel;
+    // Fall back to GROUP_I18N dictionary
     try {
       if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[g.id]) {
         return icon + (GROUP_I18N[g.id][lang()] || GROUP_I18N[g.id].ru || g.id);
@@ -48418,6 +48429,11 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   }
   function subLabel(s) {
     if (!s) return '';
+    // Use custom 3-language names first
+    if (s[lang()]) return s[lang()];
+    if (s.ru) return s.ru;
+    if (s.en) return s.en;
+    if (s.he) return s.he;
     if (s._customLabel) return s._customLabel;
     try {
       if (typeof SUBGROUP_I18N !== 'undefined' && SUBGROUP_I18N[s.id]) {
@@ -48477,18 +48493,6 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   // Collapsed-state map (default: all collapsed)
   // ============================================================
   window.__p8collapsed = window.__p8collapsed || {}; // keys: 'g<gi>', 'g<gi>s<si>'
-  // P10: Default — all groups collapsed. Initialize on first load.
-  if (!window.__p8collapsedInit) {
-    window.__p8collapsedInit = true;
-    try {
-      window.__p8db.forEach(function(g, gi) {
-        window.__p8collapsed['g'+gi] = true;
-        (g.subgroups||[]).forEach(function(s, si) {
-          window.__p8collapsed['g'+gi+'s'+si] = true;
-        });
-      });
-    } catch(e) {}
-  }
 
   // ============================================================
   // MAIN: open editor modal
@@ -48584,7 +48588,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
         if (q && !sMatch && !anyExMatched) return;
         if (q) sMatch = true; // force-expand when searching
         anySubMatched = true;
-        var sCollapsed = q ? (!sMatch && window.__p8collapsed['g'+gi+'s'+si]) : window.__p8collapsed['g'+gi+'s'+si];
+        var sCollapsed = !sMatch && window.__p8collapsed['g'+gi+'s'+si];
         subHtml +=
           '<div style="margin:4px 0 4px 18px;">' +
             '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:rgba(124,58,237,0.06);">' +
@@ -48607,7 +48611,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       });
       if (q && !gMatch && !anySubMatched) return;
       matchedAny = true;
-      var gCollapsed = q ? (!anySubMatched && window.__p8collapsed['g'+gi]) : window.__p8collapsed['g'+gi];
+      var gCollapsed = !anySubMatched && window.__p8collapsed['g'+gi];
       var groupColor = '#3B82F6';
       try { if (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[g.id]) groupColor = GROUP_COLORS[g.id]; } catch(e) {}
       html +=
@@ -48758,26 +48762,52 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
     var g = window.__p8db[gi];
     if (!g) return;
     var currentIcon = g.icon || '🏋️';
+    // Get existing 3-language names
+    var nameRu = g.ru || g._customLabel || '';
+    var nameEn = g.en || '';
+    var nameHe = g.he || '';
+    // If no custom names, try to get from GROUP_I18N
+    try {
+      if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[g.id]) {
+        var trObj = GROUP_I18N[g.id];
+        if (!nameRu) nameRu = trObj.ru || '';
+        if (!nameEn) nameEn = trObj.en || '';
+        if (!nameHe) nameHe = trObj.he || '';
+      }
+    } catch(e) {}
+    
     var innerHtml =
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('groupId')) + '</span>' +
         '<input id="p8_grp_id" type="text" value="' + esc(g.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
         '<div id="p8_grp_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(grpLabel(g)) + '</div>' +
       '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇷🇺 Название (рус)</span>' +
+        '<input id="p8_grp_ru" type="text" value="' + esc(nameRu) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇬🇧 Name (EN)</span>' +
+        '<input id="p8_grp_en" type="text" value="' + esc(nameEn) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇮🇱 שם (עבר)</span>' +
+        '<input id="p8_grp_he" type="text" value="' + esc(nameHe) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>' +
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">Иконка (emoji)</span>' +
         '<input id="p8_grp_icon" type="text" value="' + esc(currentIcon) + '" autocomplete="off" maxlength="4" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-size:20px;text-align:center;">' +
-        '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">Введите emoji-иконку для группы (например: 💪, 🦵, 🏋️)</div>' +
-      '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
-        '<input id="p8_grp_custom" type="text" value="' + esc(g._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+        '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">Emoji (например: 💪, 🦵, 🏋️)</div>' +
       '</label>';
     openModal(tr('editGroupT'), innerHtml, function(overlay) {
       var newId = fieldVal(overlay, 'p8_grp_id').trim();
       if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
       g.id = newId;
+      // Save 3-language names
+      var ru = fieldVal(overlay, 'p8_grp_ru').trim();
+      var en = fieldVal(overlay, 'p8_grp_en').trim();
+      var he = fieldVal(overlay, 'p8_grp_he').trim();
+      if (ru) g.ru = ru; else delete g.ru;
+      if (en) g.en = en; else delete g.en;
+      if (he) g.he = he; else delete g.he;
       var icon = fieldVal(overlay, 'p8_grp_icon').trim();
       if (icon) g.icon = icon; else delete g.icon;
-      var cl = fieldVal(overlay, 'p8_grp_custom').trim();
-      g._customLabel = cl || undefined;
+      delete g._customLabel; // replaced by proper 3-language names
       syncEXERCISE_DB();
       persistDB();
       overlay.remove();
@@ -48832,20 +48862,44 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   window.__p7editSub = function(gi, si) {
     var s = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si];
     if (!s) return;
+    // Get existing 3-language names
+    var nameRu = s.ru || s._customLabel || '';
+    var nameEn = s.en || '';
+    var nameHe = s.he || '';
+    try {
+      if (typeof SUBGROUP_I18N !== 'undefined' && SUBGROUP_I18N[s.id]) {
+        var trObj = SUBGROUP_I18N[s.id];
+        if (!nameRu) nameRu = trObj.ru || '';
+        if (!nameEn) nameEn = trObj.en || '';
+        if (!nameHe) nameHe = trObj.he || '';
+      }
+    } catch(e) {}
+    
     var innerHtml =
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('subId')) + '</span>' +
         '<input id="p8_sub_id" type="text" value="' + esc(s.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
         '<div id="p8_sub_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(subLabel(s)) + '</div>' +
       '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
-        '<input id="p8_sub_custom" type="text" value="' + esc(s._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇷🇺 Название (рус)</span>' +
+        '<input id="p8_sub_ru" type="text" value="' + esc(nameRu) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇬🇧 Name (EN)</span>' +
+        '<input id="p8_sub_en" type="text" value="' + esc(nameEn) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '</label>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇮🇱 שם (עבר)</span>' +
+        '<input id="p8_sub_he" type="text" value="' + esc(nameHe) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
       '</label>';
     openModal(tr('editSubT'), innerHtml, function(overlay) {
       var newId = fieldVal(overlay, 'p8_sub_id').trim();
       if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
       s.id = newId;
-      var cl = fieldVal(overlay, 'p8_sub_custom').trim();
-      s._customLabel = cl || undefined;
+      var ru = fieldVal(overlay, 'p8_sub_ru').trim();
+      var en = fieldVal(overlay, 'p8_sub_en').trim();
+      var he = fieldVal(overlay, 'p8_sub_he').trim();
+      if (ru) s.ru = ru; else delete s.ru;
+      if (en) s.en = en; else delete s.en;
+      if (he) s.he = he; else delete s.he;
+      delete s._customLabel;
       syncEXERCISE_DB();
       persistDB();
       overlay.remove();
@@ -49036,20 +49090,23 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       if (dstGi > srcGi) dstGi--;
       var dst = window.__p8db[dstGi];
       if (!dst) { window.__p8db.push(src); return; }
-      // Nest src as a subgroup of dst — PRESERVE all subgroups and their exercises
+      // Nest src AS A SUBGROUP of dst — preserve src as a container with its own subgroups
+      // This creates a 3-level hierarchy: dst > src > src.subgroups
       if (!dst.subgroups) dst.subgroups = [];
-      // Add src's subgroups directly to dst (keep structure)
-      (src.subgroups||[]).forEach(function(sub) {
-        dst.subgroups.push(sub);
-      });
-      // If src has no subgroups but has exercises, add as a single subgroup
-      if (!src.subgroups || src.subgroups.length === 0) {
-        dst.subgroups.push({ id: src.id, exercises: src.exercises || [] });
+      // Create a new subgroup that REPRESENTS src, containing src's subgroups as nested children
+      var newSub = { 
+        id: src.id, 
+        exercises: [],
+        subgroups: src.subgroups || []
+      };
+      // Preserve custom label and icon
+      if (src._customLabel) newSub._customLabel = src._customLabel;
+      if (src.icon) newSub.icon = src.icon;
+      // If src has exercises directly (not in subgroups), add them
+      if (src.exercises && src.exercises.length) {
+        newSub.exercises = src.exercises;
       }
-      // Preserve custom label as a marker
-      if (src._customLabel) {
-        dst.subgroups[dst.subgroups.length - 1]._movedFrom = src._customLabel;
-      }
+      dst.subgroups.push(newSub);
     }
     syncEXERCISE_DB();
     persistDB();
@@ -49276,8 +49333,8 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
     }
     var tgt = window.__p8gifTarget || {};
     grid.innerHTML = filtered.map(function(l) {
-      return '<div onclick="window.__p8pickGif(\'' + esc(l.url).replace(/'/g, '\\\'') + '\',' + tgt.gi + ',' + tgt.si + ',' + tgt.ei + ',\'' + (tgt.targetInputId||'') + '\')" style="cursor:pointer;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--background-color);transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#3B82F6\'" onmouseout="this.style.borderColor=\'transparent\'">' +
-        '<div style="width:100%;aspect-ratio:1/1;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">' +
+      return '<div onclick="window.__p8pickGif(\'' + esc(l.url).replace(/'/g, '\\\'') + '\',' + tgt.gi + ',' + tgt.si + ',' + tgt.ei + ',\'' + (tgt.targetInputId||'') + '\')" style="cursor:pointer;border:2px solid transparent;border-radius:10px;background:var(--background-color);transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#3B82F6\'" onmouseout="this.style.borderColor=\'transparent\'">' +
+        '<div style="width:100%;height:180px;min-height:180px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;flex-shrink:0;">' +
           '<img src="' + esc(l.url) + '" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
           '<div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;color:#666;font-size:28px;">⚠️</div>' +
         '</div>' +
