@@ -23712,31 +23712,12 @@ setTimeout(function(){
             if (ex && ex.__image) {
                 return '<img src="' + ex.__image + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">';
             }
-            // 1) свой GIF из папки gifs/ (если загружен на сайт)
-            if (ex && ex.id && /^[\w-]+$/.test(ex.id) && !window.__exGifMiss[ex.id] && window.EX_GIF_BASE) {
-                var photos0 = getExercisePhotoUrls(ex.id);
-                var fb = (photos0 && !window.__exPhotoMiss[ex.id]) ? buildExercisePhotoHtml(ex.id, photos0, ex, group, color) : makeExerciseSceneSVG(ex, group, color);
-                var u = window.EX_GIF_BASE + ex.id + '.gif';
-                return '<span style="display:block; width:100%; height:100%; position:relative;">' +
-                    '<img src="' + u + '" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block; background:#fff;"' +
-                    ' onerror="window.__exGifMissMark(\'' + ex.id + '\'); var w=this.parentNode; this.style.display=\'none\'; var f=w.querySelector(\'.ex-gif-fb\'); if(f) f.style.display=\'block\';">' +
-                    '<span class="ex-gif-fb" style="display:none; width:100%; height:100%; position:absolute; inset:0;">' + fb + '</span>' +
-                '</span>';
-            }
-            // 2) фото-демонстрация из открытой базы
+            // P10: /gifs/ lookup REMOVED — folder doesn't exist on production
+            // P10: wger-img lookup REMOVED — folder doesn't exist on production
+            // 2) фото-демонстрация из открытой базы free-exercise-db
             if (ex && ex.id && !window.__exPhotoMiss[ex.id]) {
                 var photos = getExercisePhotoUrls(ex.id);
                 if (photos) return buildExercisePhotoHtml(ex.id, photos, ex, group, color);
-            }
-            // 2b) wger.de image (CC-BY-SA 4) - локальная копия в wger-img/
-            if (ex && ex.id) {
-                var wgerUrl = getExerciseWgerUrl(ex.id);
-                if (wgerUrl) {
-                    return '<span class="exph exph-wger" style="display:block; width:100%; height:100%; position:relative; background:#fff; overflow:hidden;">' +
-                        '<img src="' + wgerUrl + '" alt="" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#fff;"' +
-                        ' onerror="window.__exWgerMiss[\'' + ex.id + '\']=1; var w=this.closest(\'.exph\'); if(w){ w.innerHTML=\'\'; }">' +
-                        '</span>';
-                }
             }
 
             return makeExerciseSceneSVG(ex, group, color);
@@ -49269,21 +49250,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
         });
       }
     } catch(e) {}
-    // Local gifs/ folder — one per exercise ID
-    try {
-      var seen = {};
-      libs.forEach(function(l){ seen[l.id + '|' + l.url] = true; });
-      window.__p8db.forEach(function(g) {
-        (g.subgroups||[]).forEach(function(s) {
-          (s.exercises||[]).forEach(function(e) {
-            if (e.id && /^[\w-]+$/.test(e.id) && !seen[e.id + '|gifs/' + e.id + '.gif']) {
-              libs.push({ id: e.id, url: 'gifs/' + e.id + '.gif', src: 'local' });
-              seen[e.id + '|gifs/' + e.id + '.gif'] = true;
-            }
-          });
-        });
-      });
-    } catch(e) {}
+    // P10: Local gifs/ folder REMOVED — folder doesn't exist on production
     return libs;
   }
 
