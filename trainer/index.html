@@ -24086,12 +24086,31 @@ setTimeout(function(){
             if (ex && ex.__image) {
                 return '<img src="' + ex.__image + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">';
             }
-            // P10: /gifs/ lookup REMOVED — folder doesn't exist on production
-            // P10: wger-img lookup REMOVED — folder doesn't exist on production
-            // 2) фото-демонстрация из открытой базы free-exercise-db
+            // 1) свой GIF из папки gifs/ (если загружен на сайт)
+            if (ex && ex.id && /^[\w-]+$/.test(ex.id) && !window.__exGifMiss[ex.id] && window.EX_GIF_BASE) {
+                var photos0 = getExercisePhotoUrls(ex.id);
+                var fb = (photos0 && !window.__exPhotoMiss[ex.id]) ? buildExercisePhotoHtml(ex.id, photos0, ex, group, color) : makeExerciseSceneSVG(ex, group, color);
+                var u = window.EX_GIF_BASE + ex.id + '.gif';
+                return '<span style="display:block; width:100%; height:100%; position:relative;">' +
+                    '<img src="' + u + '" alt="" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block; background:#fff;"' +
+                    ' onerror="window.__exGifMissMark(\'' + ex.id + '\'); var w=this.parentNode; this.style.display=\'none\'; var f=w.querySelector(\'.ex-gif-fb\'); if(f) f.style.display=\'block\';">' +
+                    '<span class="ex-gif-fb" style="display:none; width:100%; height:100%; position:absolute; inset:0;">' + fb + '</span>' +
+                '</span>';
+            }
+            // 2) фото-демонстрация из открытой базы
             if (ex && ex.id && !window.__exPhotoMiss[ex.id]) {
                 var photos = getExercisePhotoUrls(ex.id);
                 if (photos) return buildExercisePhotoHtml(ex.id, photos, ex, group, color);
+            }
+            // 2b) wger.de image (CC-BY-SA 4) - локальная копия в wger-img/
+            if (ex && ex.id) {
+                var wgerUrl = getExerciseWgerUrl(ex.id);
+                if (wgerUrl) {
+                    return '<span class="exph exph-wger" style="display:block; width:100%; height:100%; position:relative; background:#fff; overflow:hidden;">' +
+                        '<img src="' + wgerUrl + '" alt="" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#fff;"' +
+                        ' onerror="window.__exWgerMiss[\'' + ex.id + '\']=1; var w=this.closest(\'.exph\'); if(w){ w.innerHTML=\'\'; }">' +
+                        '</span>';
+                }
             }
 
             return makeExerciseSceneSVG(ex, group, color);
@@ -47285,6 +47304,9 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
 #p1topbar{position:absolute!important;right:8px;top:50%;transform:translateY(-50%);display:flex!important;gap:4px;align-items:center;z-index:10}
 #p1topbar button{display:flex!important}
 @media(max-width:400px){#p1topbar button{padding:6px 8px!important;font-size:10px!important}}
+/* Search bar BELOW topbar (separate panel) */
+#p1searchbar{position:relative;display:flex;gap:6px;align-items:center;padding:6px 12px;background:var(--surface-color,#fff);border-bottom:1px solid var(--border-color,#e5e7eb);z-index:50}
+#p1searchbar button{flex-shrink:0;white-space:nowrap}
 /* Nav shrink */
 .mp-nav,.cs-nav{display:flex!important;justify-content:space-around!important;padding:4px 0!important;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px))!important}
 .mp-nav-item{flex:0 1 auto!important;min-width:0!important;padding:6px 6px!important;font-size:10px!important}
@@ -47462,40 +47484,59 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
     var topbar = document.querySelector('.mp-topbar') || document.querySelector('.cs-topbar');
     if (!topbar) return;
     var isWorkout = document.body.classList.contains('mode-workout');
+    var L = lang();
+
+    // 1. Clean up old containers
+    var oldContainer = document.getElementById('nuTopBarButtons');
+    if (oldContainer) oldContainer.remove();
+    var oldHist = document.getElementById('hmHistoryBtn');
+    if (oldHist && oldHist.parentNode && oldHist.parentNode.id !== 'p1topbar') oldHist.remove();
+    var oldArch = document.getElementById('hmArchiveBtn');
+    if (oldArch) oldArch.remove();
+    var oldBtn = document.getElementById('exSearchBtn');
+    if (oldBtn) oldBtn.remove();
+
+    // 2. Keep #p1topbar minimal — ONLY history button (no search buttons)
     var container = document.getElementById('p1topbar');
     if (!container) {
       container = document.createElement('div');
       container.id = 'p1topbar';
       topbar.appendChild(container);
     }
-    // Remove old buttons
     container.innerHTML = '';
-    // Also remove old exSearchBtn if present
-    var oldBtn = document.getElementById('exSearchBtn');
-    if (oldBtn) oldBtn.remove();
-    // Remove old nuTopBarButtons container
-    var oldContainer = document.getElementById('nuTopBarButtons');
-    if (oldContainer) oldContainer.remove();
 
-    if (isWorkout) {
-      container.innerHTML =
-        '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇷🇺 RU</button>' +
-        '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇮🇱 עבר</button>' +
-        '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🇬🇧 EN</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
-    } else {
-      container.innerHTML =
-        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🌐 OFF</button>' +
-        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">🤖 AI</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">📄 PDF</button>';
-    }
-    // History button (both modes)
+    // History button only
     var hb = document.createElement('button');
+    hb.id = 'hmHistoryBtn';
     hb.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-    var L = lang();
-    hb.textContent = L==='he'?'📜 היסטוריה':(L==='en'?'📜 History':'📜 История');
+    hb.textContent = '📜';
+    hb.title = L==='he'?'היסטוריה':(L==='en'?'History':'История');
     hb.onclick = function(){ if(window.HistoryManager) window.HistoryManager.showHistory(isWorkout?'workout':'nutrition'); };
     container.appendChild(hb);
+
+    // 3. Create SEPARATE search bar BELOW the topbar
+    var searchBar = document.getElementById('p1searchbar');
+    if (!searchBar) {
+      searchBar = document.createElement('div');
+      searchBar.id = 'p1searchbar';
+      // Insert AFTER the topbar
+      if (topbar.parentNode) {
+        topbar.parentNode.insertBefore(searchBar, topbar.nextSibling);
+      }
+    }
+
+    if (isWorkout) {
+      searchBar.innerHTML =
+        '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🇷🇺 Поиск</button>' +
+        '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🇮🇱 חיפוש</button>' +
+        '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🇬🇧 Search</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>';
+    } else {
+      searchBar.innerHTML =
+        '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🌐 OFF Поиск</button>' +
+        '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🤖 AI</button>' +
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>';
+    }
   }
 
   // ============================================================
@@ -49022,28 +49063,16 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   // ============================================================
   function grpLabel(g) {
     if (!g) return '';
-    var icon = g.icon ? g.icon + ' ' : '';
-    // Use custom 3-language names first
-    if (g[lang()]) return icon + g[lang()];
-    if (g.ru) return icon + g.ru;
-    if (g.en) return icon + g.en;
-    if (g.he) return icon + g.he;
-    if (g._customLabel) return icon + g._customLabel;
-    // Fall back to GROUP_I18N dictionary
+    if (g._customLabel) return g._customLabel;
     try {
       if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[g.id]) {
-        return icon + (GROUP_I18N[g.id][lang()] || GROUP_I18N[g.id].ru || g.id);
+        return GROUP_I18N[g.id][lang()] || GROUP_I18N[g.id].ru || g.id;
       }
     } catch(e) {}
-    return icon + (g.id || '');
+    return g.id || '';
   }
   function subLabel(s) {
     if (!s) return '';
-    // Use custom 3-language names first
-    if (s[lang()]) return s[lang()];
-    if (s.ru) return s.ru;
-    if (s.en) return s.en;
-    if (s.he) return s.he;
     if (s._customLabel) return s._customLabel;
     try {
       if (typeof SUBGROUP_I18N !== 'undefined' && SUBGROUP_I18N[s.id]) {
@@ -49103,6 +49132,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   // Collapsed-state map (default: all collapsed)
   // ============================================================
   window.__p8collapsed = window.__p8collapsed || {}; // keys: 'g<gi>', 'g<gi>s<si>'
+  window.__p8collapsedInit = window.__p8collapsedInit || false;
 
   // ============================================================
   // MAIN: open editor modal
@@ -49110,6 +49140,19 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   window.__p5openExEditor = function() {
     // Re-load DB
     window.__p8db = loadDB();
+    // Initialize collapsed state — all collapsed by default (runs once, after DB is loaded)
+    if (!window.__p8collapsedInit) {
+      window.__p8collapsedInit = true;
+      window.__p8collapsed = {};
+      try {
+        window.__p8db.forEach(function(g, gi) {
+          window.__p8collapsed['g'+gi] = true;
+          (g.subgroups||[]).forEach(function(s, si) {
+            window.__p8collapsed['g'+gi+'s'+si] = true;
+          });
+        });
+      } catch(e) {}
+    }
     // Remove existing modal if any
     var ex = document.getElementById('p8ExEditorModal');
     if (ex) ex.remove();
@@ -49198,7 +49241,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
         if (q && !sMatch && !anyExMatched) return;
         if (q) sMatch = true; // force-expand when searching
         anySubMatched = true;
-        var sCollapsed = !sMatch && window.__p8collapsed['g'+gi+'s'+si];
+        var sCollapsed = q ? (!sMatch && window.__p8collapsed['g'+gi+'s'+si]) : window.__p8collapsed['g'+gi+'s'+si];
         subHtml +=
           '<div style="margin:4px 0 4px 18px;">' +
             '<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:rgba(124,58,237,0.06);">' +
@@ -49221,7 +49264,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       });
       if (q && !gMatch && !anySubMatched) return;
       matchedAny = true;
-      var gCollapsed = !anySubMatched && window.__p8collapsed['g'+gi];
+      var gCollapsed = q ? (!anySubMatched && window.__p8collapsed['g'+gi]) : window.__p8collapsed['g'+gi];
       var groupColor = '#3B82F6';
       try { if (typeof GROUP_COLORS!=='undefined' && GROUP_COLORS[g.id]) groupColor = GROUP_COLORS[g.id]; } catch(e) {}
       html +=
@@ -49371,53 +49414,20 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   window.__p7editGroup = function(gi) {
     var g = window.__p8db[gi];
     if (!g) return;
-    var currentIcon = g.icon || '🏋️';
-    // Get existing 3-language names
-    var nameRu = g.ru || g._customLabel || '';
-    var nameEn = g.en || '';
-    var nameHe = g.he || '';
-    // If no custom names, try to get from GROUP_I18N
-    try {
-      if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[g.id]) {
-        var trObj = GROUP_I18N[g.id];
-        if (!nameRu) nameRu = trObj.ru || '';
-        if (!nameEn) nameEn = trObj.en || '';
-        if (!nameHe) nameHe = trObj.he || '';
-      }
-    } catch(e) {}
-    
     var innerHtml =
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('groupId')) + '</span>' +
         '<input id="p8_grp_id" type="text" value="' + esc(g.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
         '<div id="p8_grp_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(grpLabel(g)) + '</div>' +
       '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇷🇺 Название (рус)</span>' +
-        '<input id="p8_grp_ru" type="text" value="' + esc(nameRu) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
-      '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇬🇧 Name (EN)</span>' +
-        '<input id="p8_grp_en" type="text" value="' + esc(nameEn) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
-      '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇮🇱 שם (עבר)</span>' +
-        '<input id="p8_grp_he" type="text" value="' + esc(nameHe) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
-      '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">Иконка (emoji)</span>' +
-        '<input id="p8_grp_icon" type="text" value="' + esc(currentIcon) + '" autocomplete="off" maxlength="4" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-size:20px;text-align:center;">' +
-        '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">Emoji (например: 💪, 🦵, 🏋️)</div>' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_grp_custom" type="text" value="' + esc(g._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
       '</label>';
     openModal(tr('editGroupT'), innerHtml, function(overlay) {
       var newId = fieldVal(overlay, 'p8_grp_id').trim();
       if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
       g.id = newId;
-      // Save 3-language names
-      var ru = fieldVal(overlay, 'p8_grp_ru').trim();
-      var en = fieldVal(overlay, 'p8_grp_en').trim();
-      var he = fieldVal(overlay, 'p8_grp_he').trim();
-      if (ru) g.ru = ru; else delete g.ru;
-      if (en) g.en = en; else delete g.en;
-      if (he) g.he = he; else delete g.he;
-      var icon = fieldVal(overlay, 'p8_grp_icon').trim();
-      if (icon) g.icon = icon; else delete g.icon;
-      delete g._customLabel; // replaced by proper 3-language names
+      var cl = fieldVal(overlay, 'p8_grp_custom').trim();
+      g._customLabel = cl || undefined;
       syncEXERCISE_DB();
       persistDB();
       overlay.remove();
@@ -49472,44 +49482,20 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   window.__p7editSub = function(gi, si) {
     var s = window.__p8db[gi] && window.__p8db[gi].subgroups && window.__p8db[gi].subgroups[si];
     if (!s) return;
-    // Get existing 3-language names
-    var nameRu = s.ru || s._customLabel || '';
-    var nameEn = s.en || '';
-    var nameHe = s.he || '';
-    try {
-      if (typeof SUBGROUP_I18N !== 'undefined' && SUBGROUP_I18N[s.id]) {
-        var trObj = SUBGROUP_I18N[s.id];
-        if (!nameRu) nameRu = trObj.ru || '';
-        if (!nameEn) nameEn = trObj.en || '';
-        if (!nameHe) nameHe = trObj.he || '';
-      }
-    } catch(e) {}
-    
     var innerHtml =
       '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('subId')) + '</span>' +
         '<input id="p8_sub_id" type="text" value="' + esc(s.id) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);font-family:monospace;">' +
         '<div id="p8_sub_preview" style="font-size:13px;color:var(--primary-color,#3B82F6);margin-top:5px;font-weight:600;">↳ ' + esc(subLabel(s)) + '</div>' +
       '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇷🇺 Название (рус)</span>' +
-        '<input id="p8_sub_ru" type="text" value="' + esc(nameRu) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
-      '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇬🇧 Name (EN)</span>' +
-        '<input id="p8_sub_en" type="text" value="' + esc(nameEn) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
-      '</label>' +
-      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">🇮🇱 שם (עבר)</span>' +
-        '<input id="p8_sub_he" type="text" value="' + esc(nameHe) + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
+      '<label style="display:block;margin-bottom:10px;"><span style="font-size:12px;color:var(--text-light);">' + esc(tr('customLabel')) + '</span>' +
+        '<input id="p8_sub_custom" type="text" value="' + esc(s._customLabel||'') + '" autocomplete="off" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--background-color);color:var(--text-primary);">' +
       '</label>';
     openModal(tr('editSubT'), innerHtml, function(overlay) {
       var newId = fieldVal(overlay, 'p8_sub_id').trim();
       if (!newId || !/^[\w-]+$/.test(newId)) { alert('Invalid ID'); return; }
       s.id = newId;
-      var ru = fieldVal(overlay, 'p8_sub_ru').trim();
-      var en = fieldVal(overlay, 'p8_sub_en').trim();
-      var he = fieldVal(overlay, 'p8_sub_he').trim();
-      if (ru) s.ru = ru; else delete s.ru;
-      if (en) s.en = en; else delete s.en;
-      if (he) s.he = he; else delete s.he;
-      delete s._customLabel;
+      var cl = fieldVal(overlay, 'p8_sub_custom').trim();
+      s._customLabel = cl || undefined;
       syncEXERCISE_DB();
       persistDB();
       overlay.remove();
@@ -49700,22 +49686,15 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       if (dstGi > srcGi) dstGi--;
       var dst = window.__p8db[dstGi];
       if (!dst) { window.__p8db.push(src); return; }
-      // Nest src AS A SUBGROUP of dst — preserve src as a container with its own subgroups
-      // This creates a 3-level hierarchy: dst > src > src.subgroups
+      // Nest src as a subgroup of dst (merge: src becomes a subgroup)
       if (!dst.subgroups) dst.subgroups = [];
-      // Create a new subgroup that REPRESENTS src, containing src's subgroups as nested children
-      var newSub = { 
-        id: src.id, 
-        exercises: [],
-        subgroups: src.subgroups || []
-      };
-      // Preserve custom label and icon
+      // Convert group to subgroup (keep id, move subgroups' exercises into one combined subgroup OR add as a single subgroup)
+      var newSub = { id: src.id, exercises: [] };
+      // Flatten: collect all exercises from all subgroups of src into newSub
+      (src.subgroups||[]).forEach(function(sub) {
+        (sub.exercises||[]).forEach(function(e) { newSub.exercises.push(e); });
+      });
       if (src._customLabel) newSub._customLabel = src._customLabel;
-      if (src.icon) newSub.icon = src.icon;
-      // If src has exercises directly (not in subgroups), add them
-      if (src.exercises && src.exercises.length) {
-        newSub.exercises = src.exercises;
-      }
       dst.subgroups.push(newSub);
     }
     syncEXERCISE_DB();
@@ -49851,7 +49830,8 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   };
 
   // ============================================================
-  // GIF PICKER — from EXERCISE_GIFS + EX_PHOTO_MAP_WGER + EX_PHOTO_MAP + local gifs/
+  // GIF PICKER — from EXERCISE_GIFS + EX_PHOTO_MAP + local gifs/
+  // (wger-img entries from EX_PHOTO_MAP_WGER are intentionally excluded — folder doesn't exist on production)
   // ============================================================
   function getGifLibrary() {
     var libs = [];
@@ -49859,13 +49839,6 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       if (typeof EXERCISE_GIFS !== 'undefined') {
         Object.keys(EXERCISE_GIFS).forEach(function(id) {
           libs.push({ id: id, url: EXERCISE_GIFS[id], src: 'burnfit' });
-        });
-      }
-    } catch(e) {}
-    try {
-      if (typeof EX_PHOTO_MAP_WGER !== 'undefined') {
-        Object.keys(EX_PHOTO_MAP_WGER).forEach(function(id) {
-          libs.push({ id: id, url: EX_PHOTO_MAP_WGER[id], src: 'wger' });
         });
       }
     } catch(e) {}
@@ -49879,7 +49852,21 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
         });
       }
     } catch(e) {}
-    // P10: Local gifs/ folder REMOVED — folder doesn't exist on production
+    // Local gifs/ folder — one per exercise ID
+    try {
+      var seen = {};
+      libs.forEach(function(l){ seen[l.id + '|' + l.url] = true; });
+      window.__p8db.forEach(function(g) {
+        (g.subgroups||[]).forEach(function(s) {
+          (s.exercises||[]).forEach(function(e) {
+            if (e.id && /^[\w-]+$/.test(e.id) && !seen[e.id + '|gifs/' + e.id + '.gif']) {
+              libs.push({ id: e.id, url: 'gifs/' + e.id + '.gif', src: 'local' });
+              seen[e.id + '|gifs/' + e.id + '.gif'] = true;
+            }
+          });
+        });
+      });
+    } catch(e) {}
     return libs;
   }
 
@@ -49930,7 +49917,7 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
     var tgt = window.__p8gifTarget || {};
     grid.innerHTML = filtered.map(function(l) {
       return '<div onclick="window.__p8pickGif(\'' + esc(l.url).replace(/'/g, '\\\'') + '\',' + tgt.gi + ',' + tgt.si + ',' + tgt.ei + ',\'' + (tgt.targetInputId||'') + '\')" style="cursor:pointer;border:2px solid transparent;border-radius:10px;background:var(--background-color);transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#3B82F6\'" onmouseout="this.style.borderColor=\'transparent\'">' +
-        '<div style="width:100%;height:180px;min-height:180px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;flex-shrink:0;">' +
+        '<div style="width:100%;height:180px;min-height:180px;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border-radius:8px;flex-shrink:0;">' +
           '<img src="' + esc(l.url) + '" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
           '<div style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#000;color:#666;font-size:28px;">⚠️</div>' +
         '</div>' +
