@@ -47313,9 +47313,9 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
 .mp-nav-item span:last-child{font-size:9px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:60px!important}
 @media(max-width:380px){.mp-nav-item{padding:4px 4px!important;font-size:9px!important}.mp-nav-ico{font-size:1.2em!important}.mp-nav-item span:last-child{font-size:8px!important;max-width:45px!important}}
 /* GIF fullscreen */
-.p1gif{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.p1gif{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
 .p1gif img{max-width:90vw;max-height:70vh;object-fit:contain;border-radius:12px;background:#fff}
-.p1gif .p1gifclose{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:200001}
+.p1gif .p1gifclose{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:0;color:#fff;font-size:28px;cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:1000000}
 .p1gif .p1gifname{color:#fff;font-size:18px;font-weight:600;margin-top:16px}
 `;
     document.head.appendChild(s);
@@ -47477,6 +47477,8 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
   // ============================================================
   // PART 2: UNIFIED TOP BAR BUTTONS
   // ============================================================
+  // Track what mode we last rendered to avoid flicker
+  var __p1lastMode = '';
   function injectTopBar() {
     var isMP = document.body.classList.contains('mp-active');
     var isCS = document.body.classList.contains('client-space-open');
@@ -47485,6 +47487,13 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
     if (!topbar) return;
     var isWorkout = document.body.classList.contains('mode-workout');
     var L = lang();
+    var currentMode = isWorkout ? 'workout' : 'nutrition';
+    
+    // Skip re-render if mode hasn't changed and elements exist
+    if (__p1lastMode === currentMode && document.getElementById('p1searchbar') && document.getElementById('p1topbar')) {
+      return;
+    }
+    __p1lastMode = currentMode;
 
     // 1. Clean up old containers
     var oldContainer = document.getElementById('nuTopBarButtons');
@@ -47923,9 +47932,17 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
   setTimeout(injectTopBar, 1500);
   setTimeout(injectTopBar, 3000);
 
-  // Re-inject every 2s for first 30s
-  var retries = 0;
-  var iv = setInterval(function() { injectTopBar(); if (++retries > 15) clearInterval(iv); }, 2000);
+  // Re-inject only on body class change (not on interval — causes flicker)
+  var p1BodyObserver = new MutationObserver(function(muts) {
+    for (var m of muts) { if (m.attributeName === 'class') { setTimeout(injectTopBar, 100); break; } }
+  });
+  p1BodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  // Also re-inject when mpRenderBody is called
+  var origmpRenderBody = window.mpRenderBody;
+  if (typeof origmpRenderBody === 'function' && !window.__p1bodyWrapped) {
+    window.__p1bodyWrapped = true;
+    window.mpRenderBody = function() { origmpRenderBody.apply(this, arguments); setTimeout(injectTopBar, 50); };
+  }
 
   console.log('[P1 Unified] initialized');
 })();
@@ -49145,11 +49162,19 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       window.__p8collapsedInit = true;
       window.__p8collapsed = {};
       try {
-        window.__p8db.forEach(function(g, gi) {
-          window.__p8collapsed['g'+gi] = true;
+        function collapseGroup(g, prefix) {
+          window.__p8collapsed[prefix] = true;
           (g.subgroups||[]).forEach(function(s, si) {
-            window.__p8collapsed['g'+gi+'s'+si] = true;
+            var subPrefix = prefix + 's' + si;
+            window.__p8collapsed[subPrefix] = true;
+            // Recursively collapse nested subgroups
+            if (s.subgroups && s.subgroups.length) {
+              collapseGroup(s, subPrefix + 'g');
+            }
           });
+        }
+        window.__p8db.forEach(function(g, gi) {
+          collapseGroup(g, 'g' + gi);
         });
       } catch(e) {}
     }
@@ -49686,15 +49711,20 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
       if (dstGi > srcGi) dstGi--;
       var dst = window.__p8db[dstGi];
       if (!dst) { window.__p8db.push(src); return; }
-      // Nest src as a subgroup of dst (merge: src becomes a subgroup)
+      // Nest src AS A SUBGROUP of dst — preserve EVERYTHING (id, names, icon, subgroups, exercises)
       if (!dst.subgroups) dst.subgroups = [];
-      // Convert group to subgroup (keep id, move subgroups' exercises into one combined subgroup OR add as a single subgroup)
-      var newSub = { id: src.id, exercises: [] };
-      // Flatten: collect all exercises from all subgroups of src into newSub
-      (src.subgroups||[]).forEach(function(sub) {
-        (sub.exercises||[]).forEach(function(e) { newSub.exercises.push(e); });
-      });
+      // Create a new subgroup that IS src — with all its data preserved
+      var newSub = { 
+        id: src.id,
+        exercises: src.exercises || [],
+        subgroups: src.subgroups || []
+      };
+      // Preserve ALL language names (ru/en/he) and custom label
+      if (src.ru) newSub.ru = src.ru;
+      if (src.en) newSub.en = src.en;
+      if (src.he) newSub.he = src.he;
       if (src._customLabel) newSub._customLabel = src._customLabel;
+      if (src.icon) newSub.icon = src.icon;
       dst.subgroups.push(newSub);
     }
     syncEXERCISE_DB();
