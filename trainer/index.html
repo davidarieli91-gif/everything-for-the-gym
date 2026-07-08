@@ -1870,14 +1870,24 @@
 
         /* ===== TEMNAЯ ТЕМА ===== */
         body.dark-theme {
-            --background-color: #121212;
-            --surface-color: #1E1E1E;
-            --text-primary: #E0E0E0;
-            --text-secondary: #B0B0B0;
-            --text-light: #808080;
-            --border-color: #333333;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 5px 15px rgba(0, 0, 0, 0.4);
+            --background-color: #0F172A !important;
+            --surface-color: #1E293B !important;
+            --text-primary: #F1F5F9 !important;
+            --text-secondary: #94A3B8 !important;
+            --text-light: #64748B !important;
+            --border-color: #334155 !important;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
+            --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.5) !important;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%) !important;
+        }
+        body.dark-theme .mp-topbar { background: rgba(30, 41, 59, 0.9) !important; }
+        body.dark-theme .cs-topbar { background: rgba(30, 41, 59, 0.9) !important; }
+        body.dark-theme .mp-nav { background: rgba(30, 41, 59, 0.9) !important; }
+        body.dark-theme #p1searchbar { background: rgba(30, 41, 59, 0.9) !important; }
+        body.dark-theme input, body.dark-theme select, body.dark-theme textarea {
+            background: #0F172A !important;
+            color: #F1F5F9 !important;
+            border-color: #334155 !important;
         }
 
         body.dark-theme .product-card {
@@ -1982,45 +1992,81 @@
         }
 
         /* ===== ЦВЕТОВЫЕ ТЕМЫ ===== */
+        /* === ENHANCED THEMES — each visually distinct === */
         body.green-theme {
-            --primary-color: #4CAF50;
-            --primary-dark: #2E7D32;
-            --primary-light: #81C784;
-            --secondary-color: #2196F3;
-            --accent-color: #FF9800;
+            --primary-color: #10B981 !important;
+            --primary-dark: #047857 !important;
+            --primary-light: #34D399 !important;
+            --secondary-color: #3B82F6 !important;
+            --accent-color: #F59E0B !important;
+            --background-color: #F0FDF4 !important;
+            --surface-color: #FFFFFF !important;
+            --border-color: #D1FAE5 !important;
+            --text-primary: #064E3B !important;
+            --text-secondary: #047857 !important;
         }
+        body.green-theme .mp-topbar { background: linear-gradient(135deg, #10B981, #047857) !important; }
+        body.green-theme .cs-topbar { background: linear-gradient(135deg, #10B981, #047857) !important; }
 
         body.blue-theme {
-            --primary-color: #2196F3;
-            --primary-dark: #1976D2;
-            --primary-light: #64B5F6;
-            --secondary-color: #4CAF50;
-            --accent-color: #FF9800;
+            --primary-color: #3B82F6 !important;
+            --primary-dark: #1D4ED8 !important;
+            --primary-light: #60A5FA !important;
+            --secondary-color: #10B981 !important;
+            --accent-color: #F59E0B !important;
+            --background-color: #EFF6FF !important;
+            --surface-color: #FFFFFF !important;
+            --border-color: #BFDBFE !important;
+            --text-primary: #1E3A5F !important;
+            --text-secondary: #1E40AF !important;
         }
+        body.blue-theme .mp-topbar { background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important; }
+        body.blue-theme .cs-topbar { background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important; }
 
         body.purple-theme {
-            --primary-color: #9C27B0;
-            --primary-dark: #7B1FA2;
-            --primary-light: #BA68C8;
-            --secondary-color: #4CAF50;
-            --accent-color: #FF9800;
+            --primary-color: #8B5CF6 !important;
+            --primary-dark: #6D28D9 !important;
+            --primary-light: #A78BFA !important;
+            --secondary-color: #EC4899 !important;
+            --accent-color: #F59E0B !important;
+            --background-color: #FAF5FF !important;
+            --surface-color: #FFFFFF !important;
+            --border-color: #E9D5FF !important;
+            --text-primary: #4C1D95 !important;
+            --text-secondary: #6D28D9 !important;
         }
+        body.purple-theme .mp-topbar { background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important; }
+        body.purple-theme .cs-topbar { background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important; }
 
         body.orange-theme {
-            --primary-color: #FF9800;
-            --primary-dark: #E68A00;
-            --primary-light: #FFB74D;
-            --secondary-color: #4CAF50;
-            --accent-color: #9C27B0;
+            --primary-color: #F97316 !important;
+            --primary-dark: #C2410C !important;
+            --primary-light: #FB923C !important;
+            --secondary-color: #10B981 !important;
+            --accent-color: #8B5CF6 !important;
+            --background-color: #FFF7ED !important;
+            --surface-color: #FFFFFF !important;
+            --border-color: #FED7AA !important;
+            --text-primary: #7C2D12 !important;
+            --text-secondary: #C2410C !important;
         }
+        body.orange-theme .mp-topbar { background: linear-gradient(135deg, #F97316, #C2410C) !important; }
+        body.orange-theme .cs-topbar { background: linear-gradient(135deg, #F97316, #C2410C) !important; }
 
         body.red-theme {
-            --primary-color: #F44336;
-            --primary-dark: #D32F2F;
-            --primary-light: #E57373;
-            --secondary-color: #4CAF50;
-            --accent-color: #2196F3;
+            --primary-color: #EF4444 !important;
+            --primary-dark: #B91C1C !important;
+            --primary-light: #F87171 !important;
+            --secondary-color: #3B82F6 !important;
+            --accent-color: #10B981 !important;
+            --background-color: #FEF2F2 !important;
+            --surface-color: #FFFFFF !important;
+            --border-color: #FECACA !important;
+            --text-primary: #7F1D1D !important;
+            --text-secondary: #B91C1C !important;
         }
+        body.red-theme .mp-topbar { background: linear-gradient(135deg, #EF4444, #B91C1C) !important; }
+        body.red-theme .cs-topbar { background: linear-gradient(135deg, #EF4444, #B91C1C) !important; }
 
         /* ===== ШРИФТЫ ===== */
         body.font-inter {
@@ -6442,11 +6488,11 @@
 
             /* Dark theme optimizations */
             body.dark-theme {
-                --background-color: #0F172A !important;
-                --surface-color: #1E293B !important;
-                --border-color: #334155 !important;
-                --text-primary: #F1F5F9 !important;
-                --text-secondary: #94A3B8 !important;
+                --background-color: #0F172A !important !important;
+                --surface-color: #1E293B !important !important;
+                --border-color: #334155 !important !important;
+                --text-primary: #F1F5F9 !important !important;
+                --text-secondary: #94A3B8 !important !important;
             }
 
             body.dark-theme .collapsible-header {
@@ -16687,13 +16733,27 @@ setTimeout(function(){
             document.body.classList.add(userSettings.color + '-theme');
             document.body.classList.add('font-' + userSettings.font);
             
-            // Цвета
-            document.documentElement.style.setProperty('--primary-color', userSettings.primaryColor);
-            document.documentElement.style.setProperty('--primary-dark', shadeColor(userSettings.primaryColor, -20));
-            document.documentElement.style.setProperty('--primary-light', shadeColor(userSettings.primaryColor, 20));
-            document.documentElement.style.setProperty('--secondary-color', userSettings.secondaryColor);
-            document.documentElement.style.setProperty('--accent-color', userSettings.accentColor);
-            document.documentElement.style.setProperty('--background-color', userSettings.bgColor);
+            // Цвета — only apply inline if user has CUSTOM colors (not a named theme)
+            var namedThemes = ['green', 'blue', 'purple', 'orange', 'red', 'midnight', 'sunrise', 'forest', 'steel', 'pure'];
+            var isNamedTheme = namedThemes.indexOf(userSettings.color) >= 0;
+            
+            if (isNamedTheme) {
+              // Clear inline overrides so CSS theme classes take effect
+              document.documentElement.style.removeProperty('--primary-color');
+              document.documentElement.style.removeProperty('--primary-dark');
+              document.documentElement.style.removeProperty('--primary-light');
+              document.documentElement.style.removeProperty('--secondary-color');
+              document.documentElement.style.removeProperty('--accent-color');
+              document.documentElement.style.removeProperty('--background-color');
+            } else {
+              // Custom colors — apply inline
+              document.documentElement.style.setProperty('--primary-color', userSettings.primaryColor);
+              document.documentElement.style.setProperty('--primary-dark', shadeColor(userSettings.primaryColor, -20));
+              document.documentElement.style.setProperty('--primary-light', shadeColor(userSettings.primaryColor, 20));
+              document.documentElement.style.setProperty('--secondary-color', userSettings.secondaryColor);
+              document.documentElement.style.setProperty('--accent-color', userSettings.accentColor);
+              document.documentElement.style.setProperty('--background-color', userSettings.bgColor);
+            }
             
             // Обновляем значение в пикерах
             document.getElementById('primaryColorPicker').value = userSettings.primaryColor;
@@ -18804,9 +18864,15 @@ setTimeout(function(){
             fullbody:  { ru: '🔄 Функциональные',  en: '🔄 Full Body',     he: '🔄 גוף מלא' },
             neck:      { ru: '🟪 Шея',             en: '🟪 Neck',          he: '🟪 צוואר' },
             warmup:    { ru: '🔥 Разминка',         en: '🔥 Warm-up',       he: '🔥 חימום' },
-            stretch:   { ru: '🧘 Растяжка',         en: '🧘 Stretching',    he: '🧘 מתיחות' }
+            stretch:   { ru: '🧘 Растяжка',         en: '🧘 Stretching',    he: '🧘 מתיחות' },
+            legs:      { ru: '🦵 Ноги',             en: '🦵 Legs',           he: '🦵 רגליים' }
         };
         const SUBGROUP_I18N = {
+            // legs (nested groups)
+            quads:      { ru: 'Квадрицепс',     en: 'Quadriceps',  he: 'ארבע ראשי' },
+            hamstrings:{ ru: 'Бицепс бедра',  en: 'Hamstrings',  he: 'שרירי הירך האחוריים' },
+            calves:    { ru: 'Икры',           en: 'Calves',      he: 'שוקיים' },
+            glutes:    { ru: 'Ягодицы',        en: 'Glutes',      he: 'ישבן' },
             // chest
             chest_upper:  { ru: 'Верх груди',         en: 'Upper chest',       he: 'חזה עליון' },
             chest_middle: { ru: 'Середина груди',     en: 'Mid chest',         he: 'חזה אמצעי' },
@@ -19481,7 +19547,8 @@ setTimeout(function(){
             quads: '#F97316', hamstrings: '#A855F7', glutes: '#EC4899',
             calves: '#14B8A6', abs: '#84CC16', cardio: '#DC2626',
             fullbody: '#6366F1', neck: '#9333EA',
-            warmup: '#F97316', stretch: '#818CF8'
+            warmup: '#F97316', stretch: '#818CF8',
+            legs: '#F97316'
         };
 
         function escapeAttr(s) {
@@ -19575,14 +19642,30 @@ setTimeout(function(){
         };
 
         function findExerciseById(exId, groupId, subId) {
-            for (const g of EXERCISE_DB) {
-                if (groupId && g.id !== groupId) continue;
-                for (const sg of g.subgroups) {
-                    if (subId && sg.id !== subId) continue;
-                    for (const e of sg.exercises) {
-                        if (e.id === exId) return { ex: e, group: g, sub: sg };
+            // Helper: recursively search subgroups (including nested sub-subgroups)
+            // subId filter applies only at the TOP level; once inside a matching subgroup,
+            // search ALL nested children regardless of their ID
+            function searchSubgroups(sgs, g, insideMatch) {
+                if (!sgs) return null;
+                for (const sg of sgs) {
+                    var isMatch = insideMatch || !subId || sg.id === subId;
+                    if (isMatch) {
+                        for (const e of (sg.exercises || [])) {
+                            if (e.id === exId) return { ex: e, group: g, sub: sg };
+                        }
+                    }
+                    // Always search nested subgroups; if we're inside a match, children match too
+                    if (sg.subgroups) {
+                        var found = searchSubgroups(sg.subgroups, g, isMatch);
+                        if (found) return found;
                     }
                 }
+                return null;
+            }
+            for (const g of EXERCISE_DB) {
+                if (groupId && g.id !== groupId) continue;
+                var result = searchSubgroups(g.subgroups, g, false);
+                if (result) return result;
             }
             return null;
         }
@@ -33175,7 +33258,10 @@ window.mpOpenExPicker = function(wi){
     window.__mpExOpenSG = {};  /* раскрытые подгруппы */
     mpOpenSheet(
         mpSheetHead('🏋️ ' + mt('addExercise')) +
-        '<div class="mp-search-wrap"><input class="mp-input" id="mpExSearch" type="search" placeholder="' + escA(mt('search')) + '" oninput="mpExPick.q=this.value; mpFillExList();"></div>' +
+        '<div class="mp-search-wrap"><div style="display:flex;gap:8px;align-items:center;">' +
+            '<input class="mp-input" id="mpExSearch" type="search" placeholder="' + escA(mt('search')) + '" oninput="mpExPick.q=this.value; mpFillExList();" style="flex:1;">' +
+            '<button onclick="window.mpOpenVisualPicker()" title="Визуальный режим" style="flex-shrink:0; padding:0 12px; height:42px; border:none; border-radius:11px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-size:.88em; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; box-shadow:0 3px 10px rgba(16,185,129,.4); -webkit-tap-highlight-color:transparent;">🗺️ <span>Визуально</span></button>' +
+        '</div></div>' +
         '<div class="mp-pick-list" id="mpExList"></div>',
         true
     );
@@ -33213,14 +33299,25 @@ window.mpFillExList = function(){
     var openG = window.__mpExOpenG || {};
     var openSG = window.__mpExOpenSG || {};
 
+    // Helper: collect ALL exercises from a subgroup (including nested sub-subgroups)
+    window.collectAllExercises = function(sg) {
+        var exs = (sg.exercises || []).slice();
+        if (sg.subgroups) {
+            sg.subgroups.forEach(function(sub) {
+                exs = exs.concat(collectAllExercises(sub));
+            });
+        }
+        return exs;
+    }
     if (q){
         /* поиск: плоский список, как раньше */
         EXERCISE_DB.forEach(function(g){
             var color = (typeof GROUP_COLORS !== 'undefined' && GROUP_COLORS[g.id]) || '#ef4444';
             g.subgroups.forEach(function(sg){
                 var subLbl = (typeof lcGet === 'function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
+                var allExs = collectAllExercises(sg);
                 var items = '';
-                (sg.exercises || []).forEach(function(ex){
+                allExs.forEach(function(ex){
                     var name = (typeof getExName === 'function') ? getExName(ex) : (ex.ru || ex.id);
                     var hay = ((ex.ru || '') + ' ' + (ex.en || '') + ' ' + (ex.he || '')).toLowerCase();
                     if (hay.indexOf(q) < 0) return;
@@ -33241,7 +33338,7 @@ window.mpFillExList = function(){
             var color = (typeof GROUP_COLORS !== 'undefined' && GROUP_COLORS[g.id]) || '#ef4444';
             var gLbl = (typeof lcGet === 'function') ? lcGet(GROUP_I18N, g.id) : g.id;
             var totalEx = 0;
-            g.subgroups.forEach(function(sg){ totalEx += (sg.exercises || []).length; });
+            g.subgroups.forEach(function(sg){ totalEx += collectAllExercises(sg).length; });
             if (!totalEx) return;
             var gOpen = !!openG[g.id];
             h += '<div class="mp-exg-head" onclick="mpToggleExG(\'' + g.id + '\')">' +
@@ -33252,7 +33349,7 @@ window.mpFillExList = function(){
             '</div>';
             if (!gOpen) return;
             g.subgroups.forEach(function(sg){
-                var exs = sg.exercises || [];
+                var exs = collectAllExercises(sg);
                 if (!exs.length) return;
                 var subLbl = (typeof lcGet === 'function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
                 var key = g.id + '__' + sg.id;
@@ -35030,7 +35127,7 @@ window.cwPickerFill = function(){
             g.subgroups.forEach(function(sg){
                 var subLbl = (typeof lcGet==='function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
                 var items = '';
-                (sg.exercises||[]).forEach(function(e){
+                collectAllExercises(sg).forEach(function(e){
                     var name = (typeof getExName==='function') ? getExName(e) : (e.ru||e.id);
                     var hay = ((e.ru||'')+' '+(e.en||'')+' '+(e.he||'')).toLowerCase();
                     if (hay.indexOf(q)<0) return;
@@ -35047,7 +35144,7 @@ window.cwPickerFill = function(){
             var color = GC[g.id]||'#ef4444';
             var gName = (typeof lcGet==='function') ? lcGet(GROUP_I18N, g.id) : g.id;
             var totalEx = 0;
-            g.subgroups.forEach(function(sg){ totalEx += (sg.exercises||[]).length; });
+            g.subgroups.forEach(function(sg){ totalEx += collectAllExercises(sg).length; });
             if (!totalEx) return;
             var gOpen = !!openG[g.id];
             h += '<div class="mp-exg-head" onclick="cwToggleG(\''+g.id+'\')">'+
@@ -35058,7 +35155,7 @@ window.cwPickerFill = function(){
             '</div>';
             if (!gOpen) return;
             g.subgroups.forEach(function(sg){
-                var exs = sg.exercises||[];
+                var exs = collectAllExercises(sg);
                 if (!exs.length) return;
                 var subLbl = (typeof lcGet==='function') ? lcGet(SUBGROUP_I18N, sg.id) : sg.id;
                 var key = g.id+'__'+sg.id;
@@ -47505,7 +47602,7 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
     var oldBtn = document.getElementById('exSearchBtn');
     if (oldBtn) oldBtn.remove();
 
-    // 2. Keep #p1topbar minimal — ONLY history button (no search buttons)
+    // 2. Keep #p1topbar EMPTY (history button moved to search bar)
     var container = document.getElementById('p1topbar');
     if (!container) {
       container = document.createElement('div');
@@ -47513,15 +47610,6 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
       topbar.appendChild(container);
     }
     container.innerHTML = '';
-
-    // History button only
-    var hb = document.createElement('button');
-    hb.id = 'hmHistoryBtn';
-    hb.style.cssText = 'background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-    hb.textContent = '📜';
-    hb.title = L==='he'?'היסטוריה':(L==='en'?'History':'История');
-    hb.onclick = function(){ if(window.HistoryManager) window.HistoryManager.showHistory(isWorkout?'workout':'nutrition'); };
-    container.appendChild(hb);
 
     // 3. Create SEPARATE search bar BELOW the topbar
     var searchBar = document.getElementById('p1searchbar');
@@ -47534,17 +47622,22 @@ body.dark-theme .p1lang button,body[data-dark=true] .p1lang button,body.dark-the
       }
     }
 
+    // History button text for the search bar
+    var histLabel = L==='he'?'היסטוריה':(L==='en'?'History':'История');
+
     if (isWorkout) {
       searchBar.innerHTML =
         '<button onclick="window.__p1search(\'ru\')" style="background:#EF4444;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🇷🇺 Поиск</button>' +
         '<button onclick="window.__p1search(\'he\')" style="background:#3B82F6;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🇮🇱 חיפוש</button>' +
         '<button onclick="window.__p1search(\'en\')" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🇬🇧 Search</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>';
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>' +
+        '<button id="hmHistoryBtn" onclick="if(window.HistoryManager) window.HistoryManager.showHistory(\'workout\');" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📜 ' + esc(histLabel) + '</button>';
     } else {
       searchBar.innerHTML =
         '<button onclick="window.__nuOffOpen(0)" style="background:#1565C0;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🌐 OFF Поиск</button>' +
         '<button onclick="window.__nuAi()" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">🤖 AI</button>' +
-        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>';
+        '<button onclick="window.__nuPdf(\'day\')" style="background:#FF9800;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📄 PDF</button>' +
+        '<button id="hmHistoryBtn" onclick="if(window.HistoryManager) window.HistoryManager.showHistory(\'nutrition\');" style="background:#10B981;color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">📜 ' + esc(histLabel) + '</button>';
     }
   }
 
@@ -49064,21 +49157,21 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
   // Initialize DB cache
   window.__p8db = loadDB();
 
-  // Pre-create "legs" group with hamstrings/calves/glutes as subgroups
+  // Pre-create "legs" group with hamstrings/calves/glutes/quads as subgroups
   // (only if not already done and the source groups exist)
   if (!localStorage.getItem('p8_legs_created')) {
     try {
       var _legsExists = window.__p8db.some(function(g) { return g.id === 'legs'; });
       if (!_legsExists) {
-        var _hamIdx = window.__p8db.findIndex(function(g) { return g.id === 'hamstrings'; });
-        var _calvesIdx = window.__p8db.findIndex(function(g) { return g.id === 'calves'; });
-        var _glutesIdx = window.__p8db.findIndex(function(g) { return g.id === 'glutes'; });
+        var _hasAny = ['hamstrings', 'calves', 'glutes', 'quads'].some(function(gid) {
+          return window.__p8db.some(function(g) { return g.id === gid; });
+        });
         
-        if (_hamIdx >= 0 || _calvesIdx >= 0 || _glutesIdx >= 0) {
+        if (_hasAny) {
           var _legsGroup = { id: 'legs', ru: '🦵 Ноги', en: '🦵 Legs', he: '🦵 רגליים', icon: '🦵', subgroups: [] };
           
-          // Move hamstrings, calves, glutes into legs as subgroups (preserving their content)
-          ['hamstrings', 'calves', 'glutes'].forEach(function(gid) {
+          // Move hamstrings, quads, calves, glutes into legs as subgroups (preserving their content)
+          ['quads', 'hamstrings', 'calves', 'glutes'].forEach(function(gid) {
             var idx = window.__p8db.findIndex(function(g) { return g.id === gid; });
             if (idx >= 0) {
               var src = window.__p8db[idx];
@@ -49092,24 +49185,19 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
             }
           });
           
-          // Remove the moved groups from top level (find by ID each time to avoid index issues)
-          ['glutes', 'calves', 'hamstrings'].forEach(function(gid) {
+          // Remove the moved groups from top level (find by ID each time)
+          ['glutes', 'calves', 'hamstrings', 'quads'].forEach(function(gid) {
             var idx = window.__p8db.findIndex(function(g) { return g.id === gid; });
             if (idx >= 0) window.__p8db.splice(idx, 1);
           });
           
-          // Add legs group at the position where quads was (before quads)
-          var _quadsIdx = window.__p8db.findIndex(function(g) { return g.id === 'quads'; });
-          if (_quadsIdx >= 0) {
-            window.__p8db.splice(_quadsIdx, 0, _legsGroup);
-          } else {
-            window.__p8db.push(_legsGroup);
-          }
+          // Add legs group
+          window.__p8db.push(_legsGroup);
           
           persistDB();
           syncEXERCISE_DB();
           localStorage.setItem('p8_legs_created', '1');
-          console.log('[P8] Pre-created legs group with hamstrings/calves/glutes');
+          console.log('[P8] Pre-created legs group with quads/hamstrings/calves/glutes');
         }
       }
     } catch(e) { console.warn('[P8] legs pre-create:', e); }
@@ -50714,6 +50802,889 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
 })();
 </script>
 <!-- /P9_DESKTOP_FIX -->
+
+<!-- P11_VISUAL_PICKER -->
+<script>
+(function() {
+  'use strict';
+  if (window.__p11visualPicker) return;
+  window.__p11visualPicker = true;
+
+  /* ============================================================
+     P11 VISUAL MUSCLE MAP PICKER
+     Opens an interactive SVG body map; clicking a muscle group
+     shows all exercises for that group. Adds them to the current
+     workout using the same mechanism as mpExAdd.
+     ============================================================ */
+
+  /* ---------- helpers (self-contained, no IIFE deps) ---------- */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function curLang() {
+    try { return (typeof currentLang !== 'undefined') ? currentLang : 'ru'; }
+    catch(e) { return 'ru'; }
+  }
+  function colors() {
+    try { return (typeof GROUP_COLORS !== 'undefined') ? GROUP_COLORS : {}; }
+    catch(e) { return {}; }
+  }
+  function colorFor(id) { return colors()[id] || '#EF4444'; }
+  function groupLabel(id) {
+    try {
+      if (typeof GROUP_I18N !== 'undefined' && GROUP_I18N[id]) {
+        var d = GROUP_I18N[id];
+        var l = curLang();
+        var lbl = d[l] || d.ru || d.en || id;
+        // strip leading emoji + space (e.g. "🟥 Грудь" -> "Грудь")
+        return lbl.replace(/^[^\sа-яА-Яa-zA-Zא-ת]+\s/, '');
+      }
+    } catch(e) {}
+    return id;
+  }
+  function collectAll(sg) {
+    if (typeof window.collectAllExercises === 'function') {
+      try { return window.collectAllExercises(sg); } catch(e) {}
+    }
+    var exs = (sg.exercises || []).slice();
+    if (sg.subgroups) {
+      sg.subgroups.forEach(function(sub) { exs = exs.concat(collectAll(sub)); });
+    }
+    return exs;
+  }
+  function sheetHeadVp(title, withBack) {
+    var back = withBack
+      ? '<button class="mp-sheet-x" style="margin-top:8px;" onclick="window.mpVisualBack()" title="Назад">←</button>'
+      : '';
+    return '<div class="mp-sheet-head"><div class="mp-grab"></div>' + back +
+      '<div class="mp-sheet-title">' + title + '</div>' +
+      '<button class="mp-sheet-x" onclick="mpCloseSheet()">✕</button></div>';
+  }
+  function workoutEl(i) {
+    try {
+      var list = document.querySelectorAll('#workoutsContainer .workout');
+      return list[i] || null;
+    } catch(e) { return null; }
+  }
+  function toast(msg) {
+    try { if (typeof showToast === 'function') showToast(msg); } catch(e) {}
+  }
+  function exName(ex) {
+    try { if (typeof getExName === 'function') return getExName(ex); } catch(e) {}
+    return (ex && (ex.ru || ex.en || ex.he || ex.id)) || '';
+  }
+  function equipName(equip) {
+    try { if (typeof getEquipName === 'function') return getEquipName(equip); } catch(e) {}
+    return '';
+  }
+  function thumbHtml(ex, group, color) {
+    try {
+      if (typeof getExerciseThumbHtml === 'function') return getExerciseThumbHtml(ex, group, color);
+      if (typeof makeExerciseSceneSVG === 'function') return makeExerciseSceneSVG(ex, group, color);
+    } catch(e) {}
+    return '';
+  }
+
+  /* ---------- i18n (small local dictionary) ---------- */
+  var L = {
+    ru: { title: '🗺️ Визуальный конструктор', front: '👤 Спереди', back: '👤 Сзади',
+          hint: '👆 Нажмите на мышечную группу', select: '👆 Выберите мышцу на карте',
+          notFound: 'Группа не найдена', noEx: 'Нет упражнений в этой группе',
+          added: '✓ Добавлено', exCount: 'упр.' },
+    en: { title: '🗺️ Visual Builder', front: '👤 Front', back: '👤 Back',
+          hint: '👆 Tap a muscle group', select: '👆 Select a muscle on the map',
+          notFound: 'Group not found', noEx: 'No exercises in this group',
+          added: '✓ Added', exCount: 'ex.' },
+    he: { title: '🗺️ בונה ויזואלי', front: '👤 קדימה', back: '👤 אחורה',
+          hint: '👆 לחץ על קבוצת שריר', select: '👆 בחר שריר על המפה',
+          notFound: 'הקבוצה לא נמצאה', noEx: 'אין תרגילים בקבוצה זו',
+          added: '✓ נוסף', exCount: 'תרגילים' }
+  };
+  function Lk(k) {
+    var l = curLang();
+    return (L[l] && L[l][k]) || L.ru[k] || k;
+  }
+
+  /* ---------- state ---------- */
+  var state = { view: 'front', selected: null, arr: [] };
+
+  /* ---------- CSS ---------- */
+  var CSS =
+    '.mp-vp-tabs { display:flex; gap:8px; padding:10px 16px 6px; flex-shrink:0; }' +
+    '.mp-vp-tab { flex:1; padding:10px 14px; border:1px solid var(--border-color); background:var(--background-color); color:var(--text-secondary); border-radius:11px; font-weight:700; cursor:pointer; font-size:.9em; font-family:inherit; -webkit-tap-highlight-color:transparent; }' +
+    '.mp-vp-tab.active { background:var(--secondary-color); color:#fff; border-color:var(--secondary-color); }' +
+    '.mp-vp-body { flex:1; display:flex; flex-direction:row; gap:14px; padding:6px 16px 16px; overflow:hidden; min-height:0; }' +
+    '.mp-vp-map-col { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; overflow-y:auto; -webkit-overflow-scrolling:touch; max-width:340px; }' +
+    '.mp-vp-list-col { flex:1; min-width:0; display:flex; flex-direction:column; border:1px solid var(--border-color); border-radius:13px; background:var(--background-color); overflow:hidden; }' +
+    '.mp-vp-list-head { padding:10px 14px; border-bottom:1px solid var(--border-color); font-weight:700; font-size:.92em; color:var(--text-primary); background:var(--surface-color); flex-shrink:0; display:flex; align-items:center; gap:8px; }' +
+    '.mp-vp-list-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:120px; }' +
+    '.mp-vp-empty { padding:30px 20px; text-align:center; color:var(--text-light); font-size:.9em; line-height:1.5; }' +
+    '.mp-vp-ex { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border-color); -webkit-tap-highlight-color:transparent; }' +
+    '.mp-vp-ex:active { background:rgba(59,130,246,.08); }' +
+    '.mp-vp-ex .mp-vp-thumb { width:44px; height:44px; border-radius:11px; flex-shrink:0; overflow:hidden; background:var(--surface-color); display:flex; align-items:center; justify-content:center; }' +
+    '.mp-vp-ex .mp-vp-thumb img, .mp-vp-ex .mp-vp-thumb svg { width:100%; height:100%; object-fit:cover; display:block; }' +
+    '.mp-vp-ex .mp-vp-main { flex:1; min-width:0; }' +
+    '.mp-vp-ex .mp-vp-name { font-weight:600; font-size:.92em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-primary); }' +
+    '.mp-vp-ex .mp-vp-sub { font-size:.74em; color:var(--text-light); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }' +
+    '.mp-vp-ex .mp-vp-plus { width:30px; height:30px; border-radius:50%; flex-shrink:0; background:rgba(220,38,38,.14); color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:1.25em; font-weight:700; border:none; cursor:pointer; }' +
+    '.mp-vp-svg { display:block; width:280px; max-width:100%; height:auto; }' +
+    '.mp-vp-svg .muscle { cursor:pointer; transition:opacity .15s; }' +
+    '.mp-vp-svg .muscle:hover { opacity:.65; }' +
+    '.mp-vp-svg .muscle.selected { stroke:#111 !important; stroke-width:3.5 !important; }' +
+    'body.dark-theme .mp-vp-svg .muscle.selected { stroke:#fff !important; }' +
+    '.mp-vp-hint { font-size:.78em; color:var(--text-light); text-align:center; margin-top:8px; padding:0 8px; line-height:1.4; }' +
+    '.mp-vp-color-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }' +
+    '@media (max-width:640px) {' +
+      '.mp-vp-body { flex-direction:column; gap:10px; }' +
+      '.mp-vp-map-col { flex:0 0 auto; max-width:100%; }' +
+      '.mp-vp-svg { width:200px; }' +
+      '.mp-vp-list-col { flex:1; min-height:240px; }' +
+    '}';
+
+  function injectCss() {
+    var id = 'p11-visual-picker-css';
+    if (document.getElementById(id)) return;
+    var el = document.createElement('style');
+    el.id = id;
+    el.textContent = CSS;
+    document.head.appendChild(el);
+  }
+
+  /* ---------- SVG body map ---------- */
+  // Returns SVG string for front or back view.
+  // Each muscle is a <g class="muscle" data-mid="groupId" fill=... stroke=...>
+  // Inner shapes inherit fill/stroke from the group.
+  function buildSvg(view) {
+    var sel = state.selected;
+
+    // Silhouette (gray base, non-clickable)
+    var sil = '';
+    sil += '<circle cx="150" cy="42" r="28" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M140,66 L160,66 L162,82 L138,82 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M100,88 Q150,76 200,88 L195,260 L105,260 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M100,90 L80,95 L72,260 L96,265 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M200,90 L220,95 L228,260 L204,265 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M105,260 L195,260 L195,310 L105,310 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M105,310 L148,310 L146,492 L120,492 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>';
+    sil += '<path d="M152,310 L195,310 L180,492 L154,492 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>';
+
+    // Muscle group helper: <g> with inherited fill/stroke + clickable
+    function M(id, color, innerShapes) {
+      var cls = 'muscle' + (sel === id ? ' selected' : '');
+      return '<g class="' + cls + '" data-mid="' + id + '" ' +
+        'fill="' + color + '" stroke="#fff" stroke-width="2" stroke-linejoin="round" ' +
+        'onclick="window.mpVisualSelect(\'' + id + '\')" ' +
+        'onmouseover="this.style.opacity=0.65" onmouseout="this.style.opacity=1" ' +
+        'style="cursor:pointer;">' + innerShapes + '</g>';
+    }
+
+    var m = '';
+    if (view === 'front') {
+      m += M('shoulders', colorFor('shoulders'),
+          '<ellipse cx="100" cy="100" rx="18" ry="14"/>' +
+          '<ellipse cx="200" cy="100" rx="18" ry="14"/>');
+      m += M('chest', colorFor('chest'),
+          '<path d="M118,108 Q150,118 182,108 L185,150 Q150,160 115,150 Z"/>');
+      m += M('biceps', colorFor('biceps'),
+          '<ellipse cx="84" cy="165" rx="13" ry="28"/>' +
+          '<ellipse cx="216" cy="165" rx="13" ry="28"/>');
+      m += M('forearms', colorFor('forearms'),
+          '<ellipse cx="74" cy="225" rx="10" ry="32"/>' +
+          '<ellipse cx="226" cy="225" rx="10" ry="32"/>');
+      m += M('abs', colorFor('abs'),
+          '<path d="M125,160 L175,160 L172,255 L128,255 Z"/>' +
+          '<line x1="150" y1="160" x2="150" y2="255" stroke="#fff" stroke-width="1.5"/>');
+      m += M('legs', colorFor('legs'),
+          '<ellipse cx="128" cy="375" rx="20" ry="48"/>' +
+          '<ellipse cx="172" cy="375" rx="20" ry="48"/>' +
+          '<ellipse cx="132" cy="460" rx="11" ry="30"/>' +
+          '<ellipse cx="168" cy="460" rx="11" ry="30"/>');
+
+    } else {
+      m += M('back', colorFor('back'),
+          '<path d="M118,88 Q150,78 182,88 L186,122 Q150,130 114,122 Z"/>');
+      m += M('shoulders', colorFor('shoulders'),
+          '<ellipse cx="100" cy="100" rx="18" ry="14"/>' +
+          '<ellipse cx="200" cy="100" rx="18" ry="14"/>');
+      m += M('back', colorFor('back'),
+          '<path d="M114,124 L186,124 L182,200 Q150,215 118,200 Z"/>');
+      m += M('back', colorFor('back'),
+          '<path d="M128,210 L172,210 L170,252 L130,252 Z"/>');
+      m += M('triceps', colorFor('triceps'),
+          '<ellipse cx="84" cy="165" rx="13" ry="28"/>' +
+          '<ellipse cx="216" cy="165" rx="13" ry="28"/>');
+      m += M('forearms', colorFor('forearms'),
+          '<ellipse cx="74" cy="225" rx="10" ry="32"/>' +
+          '<ellipse cx="226" cy="225" rx="10" ry="32"/>');
+      m += M('legs', colorFor('legs'),
+          '<ellipse cx="130" cy="295" rx="20" ry="18"/>' +
+          '<ellipse cx="170" cy="295" rx="20" ry="18"/>' +
+          '<ellipse cx="128" cy="375" rx="20" ry="48"/>' +
+          '<ellipse cx="172" cy="375" rx="20" ry="48"/>' +
+          '<ellipse cx="130" cy="445" rx="14" ry="40"/>' +
+          '<ellipse cx="170" cy="445" rx="14" ry="40"/>');
+    }
+
+    return '<svg class="mp-vp-svg" viewBox="0 0 300 510" xmlns="http://www.w3.org/2000/svg">' + sil + m + '</svg>';
+  }
+
+  /* ---------- render ---------- */
+  function renderMap() {
+    var el = document.getElementById('mpVpSvg');
+    if (el) el.innerHTML = buildSvg(state.view);
+  }
+
+  function renderList() {
+    var bodyEl = document.getElementById('mpVpListBody');
+    var headEl = document.getElementById('mpVpListHead');
+    if (!bodyEl || !headEl) return;
+
+    if (!state.selected) {
+      headEl.innerHTML = '';
+      bodyEl.innerHTML = '<div class="mp-vp-empty">' + esc(Lk('select')) + '</div>';
+      return;
+    }
+
+    var groupId = state.selected;
+    var group = null;
+    try {
+      if (typeof EXERCISE_DB !== 'undefined') {
+        // Search top-level groups
+        EXERCISE_DB.forEach(function(g) { if (g.id === groupId) group = g; });
+        // If not found, search nested subgroups (e.g. 'quads' is inside 'legs')
+        if (!group) {
+          EXERCISE_DB.forEach(function(g) {
+            (g.subgroups || []).forEach(function(sg) {
+              if (sg.id === groupId) {
+                group = { id: sg.id, subgroups: [sg], ru: sg.ru, en: sg.en, he: sg.he, _customLabel: sg._customLabel };
+              }
+              // Search deeper (sub-subgroups)
+              if (sg.subgroups) {
+                sg.subgroups.forEach(function(ssg) {
+                  if (ssg.id === groupId) {
+                    group = { id: ssg.id, subgroups: [ssg], ru: ssg.ru, en: ssg.en, he: ssg.he };
+                  }
+                });
+              }
+            });
+          });
+        }
+      }
+    } catch(e) {}
+
+    if (!group) {
+      headEl.innerHTML = '';
+      bodyEl.innerHTML = '<div class="mp-vp-empty">' + esc(Lk('notFound')) + '</div>';
+      return;
+    }
+
+    var arr = [];
+    (group.subgroups || []).forEach(function(sg) {
+      var exs = collectAll(sg);
+      exs.forEach(function(ex) {
+        arr.push({ ex: ex, group: group, subId: sg.id, color: colorFor(groupId) });
+      });
+    });
+    state.arr = arr;
+
+    var gLbl = groupLabel(groupId);
+    headEl.innerHTML =
+      '<span class="mp-vp-color-dot" style="background:' + colorFor(groupId) + ';"></span>' +
+      '<span>' + esc(gLbl) + '</span>' +
+      '<span style="margin-inline-start:auto; color:var(--text-light); font-weight:700; font-size:.85em;">' +
+        arr.length + ' ' + esc(Lk('exCount')) + '</span>';
+
+    if (!arr.length) {
+      bodyEl.innerHTML = '<div class="mp-vp-empty">' + esc(Lk('noEx')) + '</div>';
+      return;
+    }
+
+    var h = '';
+    arr.forEach(function(item, i) {
+      var ex = item.ex;
+      var nm = exName(ex);
+      var eq = ex.equip ? equipName(ex.equip) : '';
+      var th = thumbHtml(ex, item.group, item.color);
+      h += '<div class="mp-vp-ex" onclick="window.mpVisualInfoEx(' + i + ')">' +
+        '<div class="mp-vp-thumb">' + (th || '') + '</div>' +
+        '<div class="mp-vp-main">' +
+          '<div class="mp-vp-name">' + esc(nm) + '</div>' +
+          (eq ? '<div class="mp-vp-sub">' + esc(eq) + '</div>' : '') +
+        '</div>' +
+        '<button class="mp-vp-plus" onclick="event.stopPropagation(); window.mpVisualAddEx(' + i + ')" title="Добавить">+</button>' +
+      '</div>';
+    });
+    bodyEl.innerHTML = h;
+  }
+
+  /* ---------- public API ---------- */
+  window.mpOpenVisualPicker = function() {
+    injectCss();
+    state.view = 'front';
+    state.selected = null;
+    state.arr = [];
+
+    var html = sheetHeadVp(esc(Lk('title')), true) +
+      '<div class="mp-vp-tabs">' +
+        '<button class="mp-vp-tab active" id="mpVpTabFront" onclick="window.mpVisualToggleView(\'front\')">' + esc(Lk('front')) + '</button>' +
+        '<button class="mp-vp-tab" id="mpVpTabBack" onclick="window.mpVisualToggleView(\'back\')">' + esc(Lk('back')) + '</button>' +
+      '</div>' +
+      '<div class="mp-vp-body">' +
+        '<div class="mp-vp-map-col">' +
+          '<div id="mpVpSvg"></div>' +
+          '<div class="mp-vp-hint">' + esc(Lk('hint')) + '</div>' +
+        '</div>' +
+        '<div class="mp-vp-list-col">' +
+          '<div class="mp-vp-list-head" id="mpVpListHead"></div>' +
+          '<div class="mp-vp-list-body" id="mpVpListBody">' +
+            '<div class="mp-vp-empty">' + esc(Lk('select')) + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    if (typeof window.mpOpenSheet === 'function') {
+      window.mpOpenSheet(html, true);
+    }
+    renderMap();
+    renderList();
+  };
+
+  window.mpVisualToggleView = function(view) {
+    state.view = (view === 'back') ? 'back' : 'front';
+    var f = document.getElementById('mpVpTabFront');
+    var b = document.getElementById('mpVpTabBack');
+    if (f) f.classList.toggle('active', state.view === 'front');
+    if (b) b.classList.toggle('active', state.view === 'back');
+    renderMap();
+  };
+
+  window.mpVisualSelect = function(groupId) {
+    state.selected = groupId;
+    renderMap();
+    renderList();
+  };
+
+  window.mpVisualAddEx = function(i) {
+    var d = state.arr[i]; if (!d) return;
+    // double-click protection
+    if (window.__mpVisualAddLast === i && (Date.now() - (window.__mpVisualAddTs || 0)) < 800) return;
+    window.__mpVisualAddLast = i;
+    window.__mpVisualAddTs = Date.now();
+
+    var wi = (window.mpExPick && window.mpExPick.wi != null) ? window.mpExPick.wi : 0;
+    var w = workoutEl(wi);
+    if (!w) {
+      try { if (typeof addWorkout === 'function') addWorkout(); } catch(e) {}
+      w = workoutEl(0);
+      if (window.mpExPick) window.mpExPick.wi = 0;
+    }
+    if (!w) return;
+    try {
+      if (typeof addExerciseRow === 'function') {
+        addExerciseRow(w, { exId: d.ex.id, groupId: d.group.id, subId: d.subId, equip: d.ex.equip || '' });
+      }
+    } catch(e) { console.error('[P11] addExerciseRow error', e); }
+    try { if (typeof window.mpRenderAll === 'function') window.mpRenderAll(); } catch(e) {}
+    toast(Lk('added'));
+  };
+
+  window.mpVisualInfoEx = function(i) {
+    var d = state.arr[i]; if (!d) return;
+    if (typeof openExerciseInfo !== 'function') { window.mpVisualAddEx(i); return; }
+    window.__infoAddOverride = function() { window.mpVisualAddEx(i); };
+    try {
+      openExerciseInfo({ exId: d.ex.id, groupId: d.group.id, subId: d.subId, equip: d.ex.equip || '' });
+    } catch(e) { console.error('[P11] openExerciseInfo error', e); }
+  };
+
+  window.mpVisualBack = function() {
+    var wi = (window.mpExPick && window.mpExPick.wi != null) ? window.mpExPick.wi : 0;
+    if (typeof window.mpOpenExPicker === 'function') {
+      window.mpOpenExPicker(wi);
+    } else {
+      window.mpCloseSheet();
+    }
+  };
+
+  console.log('[P11 Visual Picker] initialized');
+})();
+</script>
+<!-- /P11_VISUAL_PICKER -->
+
+<!-- P12_UI_OVERHAUL -->
+<script>
+// ============================================================
+// P12 — UI OVERHAUL: Professional themes, shadows, animations
+// ============================================================
+(function() {
+  'use strict';
+  if (window.__p12uiOverhaul) return;
+  window.__p12uiOverhaul = true;
+
+  // ============================================================
+  // 1. INJECT GOOGLE FONTS + CSS
+  // ============================================================
+  function injectCSS() {
+    if (document.getElementById('p12css')) return;
+    
+    // Load Google Fonts
+    // Google Fonts removed — use system fonts for file:// compatibility
+    
+    var s = document.createElement('style');
+    s.id = 'p12css';
+    s.textContent = `
+      /* ===== P12 UI OVERHAUL ===== */
+
+      /* --- Typography --- */
+      body, body * {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', system-ui, sans-serif !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      h1, h2, h3, .mp-topbar-title, .mp-tt1, .md-name, .info-modal-title {
+        font-weight: 700 !important;
+        letter-spacing: -0.02em;
+      }
+
+      /* --- Enhanced CSS Variables --- */
+      :root {
+        --p12-radius-sm: 8px;
+        --p12-radius-md: 14px;
+        --p12-radius-lg: 20px;
+        --p12-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+        --p12-shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+        --p12-shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+        --p12-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --p12-blur: blur(20px) saturate(180%);
+      }
+
+      /* --- Base body enhancements --- */
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+
+      /* --- Cards: rounded, shadowed, hover lift --- */
+      .product-card, .mp-card, .mp-pick-item, .ex-card, .info-modal-content,
+      .calendar-content, .tools-modal-content, .modal-content {
+        border-radius: var(--p12-radius-md) !important;
+        box-shadow: var(--p12-shadow-md) !important;
+        transition: var(--p12-transition) !important;
+      }
+      .product-card:hover, .mp-card:hover, .ex-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--p12-shadow-lg) !important;
+      }
+
+      /* --- Buttons: modern, with active feedback --- */
+      button, .icon-btn, .control-btn, .category-tab, .cooking-filter {
+        border-radius: var(--p12-radius-sm) !important;
+        transition: var(--p12-transition) !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button:active, .icon-btn:active, .control-btn:active {
+        transform: scale(0.96);
+      }
+
+      /* --- Topbar: glassmorphism --- */
+      .mp-topbar, .cs-topbar {
+        backdrop-filter: var(--p12-blur);
+        -webkit-backdrop-filter: var(--p12-blur);
+        box-shadow: 0 1px 8px rgba(0,0,0,0.06) !important;
+      }
+
+      /* --- Search bar (p1searchbar) --- */
+      #p1searchbar {
+        backdrop-filter: var(--p12-blur);
+        -webkit-backdrop-filter: var(--p12-blur);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      }
+      #p1searchbar button {
+        border-radius: var(--p12-radius-sm) !important;
+        font-weight: 600 !important;
+        transition: var(--p12-transition) !important;
+      }
+      #p1searchbar button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+
+      /* --- Mobile desktop dock: glassmorphism --- */
+      #mobileDesktop > div[style*="space-around"] {
+        backdrop-filter: var(--p12-blur);
+        -webkit-backdrop-filter: var(--p12-blur);
+        border-top: 1px solid rgba(0,0,0,0.04);
+      }
+
+      /* --- Bottom nav (mp-nav) --- */
+      .mp-nav {
+        backdrop-filter: var(--p12-blur);
+        -webkit-backdrop-filter: var(--p12-blur);
+        box-shadow: 0 -2px 12px rgba(0,0,0,0.06) !important;
+      }
+      .mp-nav-item {
+        border-radius: var(--p12-radius-sm) !important;
+        transition: var(--p12-transition) !important;
+      }
+      .mp-nav-item.active {
+        background: rgba(var(--primary-color-rgb, 16,185,129), 0.1);
+      }
+      .mp-nav-item:active {
+        transform: scale(0.92);
+      }
+
+      /* --- Client cards on desktop --- */
+      #mdClientList > div[onclick] {
+        border-radius: var(--p12-radius-md) !important;
+        box-shadow: var(--p12-shadow-sm) !important;
+        transition: var(--p12-transition) !important;
+        border: 1px solid var(--border-color) !important;
+      }
+      #mdClientList > div[onclick]:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--p12-shadow-md) !important;
+      }
+
+      /* --- Desktop stats cards --- */
+      #mdStats > div {
+        border-radius: var(--p12-radius-md) !important;
+        box-shadow: var(--p12-shadow-sm) !important;
+        transition: var(--p12-transition) !important;
+      }
+      #mdStats > div:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--p12-shadow-md) !important;
+      }
+
+      /* --- App grid icons --- */
+      #mdAppGrid > div, #mdAppDrawerGrid > div {
+        transition: var(--p12-transition) !important;
+      }
+      #mdAppGrid > div:active, #mdAppDrawerGrid > div:active {
+        transform: scale(0.9);
+      }
+
+      /* --- Exercise picker: accordion --- */
+      .mp-exg-head {
+        border-radius: var(--p12-radius-sm) !important;
+        transition: var(--p12-transition) !important;
+      }
+      .mp-exg-head:hover {
+        background: rgba(0,0,0,0.03);
+      }
+      .mp-pick-item {
+        border-radius: var(--p12-radius-sm) !important;
+        transition: var(--p12-transition) !important;
+      }
+      .mp-pick-item:hover {
+        transform: translateX(4px);
+      }
+
+      /* --- Modals: smoother appearance --- */
+      .info-modal, .modal, #addExerciseModal, #addUserModal {
+        animation: p12modalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes p12modalIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .info-modal-content, .modal-content {
+        animation: p12contentIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes p12contentIn {
+        from { transform: scale(0.92) translateY(10px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+      }
+
+      /* --- Sheet (mp-sheet): smoother slide --- */
+      .mp-sheet {
+        border-radius: 20px 20px 0 0 !important;
+        box-shadow: 0 -8px 40px rgba(0,0,0,0.15) !important;
+        animation: p12sheetIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes p12sheetIn {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+
+      /* --- Inputs: modern --- */
+      input[type="text"], input[type="number"], input[type="search"], input[type="email"],
+      input[type="password"], input[type="date"], select, textarea {
+        border-radius: var(--p12-radius-sm) !important;
+        transition: var(--p12-transition) !important;
+      }
+      input:focus, select:focus, textarea:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+        outline: none !important;
+      }
+
+      /* --- Scrollbar styling --- */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.15);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.25);
+      }
+
+      /* --- Theme: Midnight Pro --- */
+      body.midnight-theme {
+        --background-color: #0B1120 !important !important;
+        --surface-color: #1E293B !important !important;
+        --text-primary: #F1F5F9 !important !important;
+        --text-secondary: #94A3B8 !important !important;
+        --text-light: #64748B !important !important;
+        --border-color: #334155 !important !important;
+        background: linear-gradient(135deg, #0B1120 0%, #1E293B 100%) !important;
+      }
+      body.midnight-theme .mp-topbar,
+      body.midnight-theme .cs-topbar {
+        background: rgba(30, 41, 59, 0.8) !important;
+      }
+      body.midnight-theme .mp-nav,
+      body.midnight-theme #p1searchbar {
+        background: rgba(30, 41, 59, 0.8) !important;
+      }
+      body.midnight-theme input,
+      body.midnight-theme select,
+      body.midnight-theme textarea {
+        background: #0F172A !important;
+        color: #F1F5F9 !important;
+        border-color: #334155 !important;
+      }
+
+      /* --- Theme: Sunrise Fitness --- */
+      body.sunrise-theme {
+        --primary-color: #F97316 !important !important;
+        --primary-dark: #C2410C !important !important;
+        --primary-light: #FB923C !important !important;
+        --background-color: #FFF7ED !important !important;
+        --surface-color: #FFFFFF !important !important;
+        --border-color: #FED7AA !important !important;
+        background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%) !important;
+      }
+      body.sunrise-theme .mp-topbar {
+        background: linear-gradient(135deg, #F97316, #EA580C) !important;
+      }
+      body.sunrise-theme .mp-nav-item.active {
+        background: rgba(249, 115, 22, 0.12) !important;
+      }
+
+      /* --- Theme: Forest Calm --- */
+      body.forest-theme {
+        --primary-color: #059669 !important !important;
+        --primary-dark: #047857 !important !important;
+        --primary-light: #34D399 !important !important;
+        --background-color: #F0FDF4 !important !important;
+        --surface-color: #FFFFFF !important !important;
+        --border-color: #D1FAE5 !important !important;
+        background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%) !important;
+      }
+      body.forest-theme .mp-topbar {
+        background: linear-gradient(135deg, #059669, #047857) !important;
+      }
+
+      /* --- Theme: Dark Steel --- */
+      body.steel-theme {
+        --background-color: #0A0A0A !important !important;
+        --surface-color: #1A1A1A !important !important;
+        --text-primary: #E5E5E5 !important !important;
+        --text-secondary: #A3A3A3 !important !important;
+        --text-light: #525252 !important !important;
+        --border-color: #2A2A2A !important !important;
+        --primary-color: #22D3EE !important !important;
+        --primary-dark: #0891B2 !important !important;
+        --primary-light: #67E8F9 !important !important;
+        background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%) !important;
+      }
+      body.steel-theme .mp-topbar,
+      body.steel-theme .cs-topbar {
+        background: rgba(26, 26, 26, 0.85) !important;
+        border-bottom: 1px solid #2A2A2A !important;
+      }
+      body.steel-theme .mp-nav,
+      body.steel-theme #p1searchbar {
+        background: rgba(26, 26, 26, 0.85) !important;
+      }
+      body.steel-theme input,
+      body.steel-theme select,
+      body.steel-theme textarea {
+        background: #0A0A0A !important;
+        color: #E5E5E5 !important;
+        border-color: #2A2A2A !important;
+      }
+      body.steel-theme .mp-exg-head:hover {
+        background: rgba(34, 211, 238, 0.05);
+      }
+
+      /* --- Theme: Pure Light --- */
+      body.pure-theme {
+        --background-color: #FAFAFA !important !important;
+        --surface-color: #FFFFFF !important !important;
+        --border-color: #F0F0F0 !important !important;
+        --shadow: 0 1px 2px rgba(0,0,0,0.03) !important !important;
+        --shadow-lg: 0 8px 24px rgba(0,0,0,0.06) !important !important;
+      }
+      body.pure-theme .mp-topbar {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-bottom: 1px solid #F0F0F0;
+      }
+      body.pure-theme .product-card,
+      body.pure-theme .mp-card {
+        border: 1px solid #F0F0F0 !important;
+        box-shadow: none !important;
+      }
+      body.pure-theme .product-card:hover,
+      body.pure-theme .mp-card:hover {
+        border-color: #E0E0E0 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
+      }
+
+      /* --- P8 Editor enhancements --- */
+      #p8ExEditorSheet {
+        border-radius: 24px !important;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.25) !important;
+      }
+      #p8ExEditorBody > div {
+        border-radius: var(--p12-radius-md) !important;
+        transition: var(--p12-transition) !important;
+      }
+      #p8ExEditorBody > div:hover {
+        box-shadow: var(--p12-shadow-sm) !important;
+      }
+
+      /* --- Toast animation --- */
+      .toast, #toast {
+        border-radius: var(--p12-radius-md) !important;
+        box-shadow: var(--p12-shadow-lg) !important;
+        animation: p12toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      }
+      @keyframes p12toastIn {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      /* --- Visual picker enhancements --- */
+      .mp-vp-svg {
+        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.1));
+      }
+      .mp-vp-ex {
+        border-radius: var(--p12-radius-sm) !important;
+        transition: var(--p12-transition) !important;
+      }
+      .mp-vp-ex:hover {
+        transform: translateX(4px);
+        background: rgba(0,0,0,0.03);
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // ============================================================
+  // 2. ADD NEW THEMES TO SETTINGS
+  // ============================================================
+  function addNewThemes() {
+    if (window.__p12themesAdded) return;
+    window.__p12themesAdded = true;
+
+    // Add theme CSS classes to body based on userSettings.color
+    function applyP12Theme() {
+      // Remove all P12 theme classes
+      document.body.classList.remove('midnight-theme', 'sunrise-theme', 'forest-theme', 'steel-theme', 'pure-theme');
+      
+      var color = (typeof userSettings !== 'undefined' && userSettings.color) || 'green';
+      var theme = (typeof userSettings !== 'undefined' && userSettings.theme) || 'light';
+      
+      // Map new theme names
+      if (color === 'midnight') document.body.classList.add('midnight-theme');
+      else if (color === 'sunrise') document.body.classList.add('sunrise-theme');
+      else if (color === 'forest') document.body.classList.add('forest-theme');
+      else if (color === 'steel') document.body.classList.add('steel-theme');
+      else if (color === 'pure') document.body.classList.add('pure-theme');
+    }
+
+    // Hook into applySettings
+    var origApply = window.applySettings;
+    if (typeof origApply === 'function') {
+      window.applySettings = function() {
+        var r = origApply.apply(this, arguments);
+        applyP12Theme();
+        return r;
+      };
+    }
+    
+    // Also apply on init
+    setTimeout(applyP12Theme, 500);
+    setTimeout(applyP12Theme, 2000);
+    
+    // Add new theme options to settings modal
+    var observer = new MutationObserver(function() {
+      var settingsModal = document.getElementById('settingsModal');
+      if (!settingsModal || settingsModal.style.display === 'none') return;
+      var themeContainer = settingsModal.querySelector('.theme-options');
+      if (!themeContainer) return;
+      if (themeContainer.querySelector('[data-color="midnight"]')) return; // already added
+      
+      var newThemes = [
+        { color: 'midnight', name: 'Midnight Pro', icon: '🌙', desc: 'Премиум тёмная' },
+        { color: 'sunrise', name: 'Sunrise', icon: '🌅', desc: 'Энергичная' },
+        { color: 'forest', name: 'Forest', icon: '🌲', desc: 'Спокойная' },
+        { color: 'steel', name: 'Dark Steel', icon: '⚙️', desc: 'Киберпанк' },
+        { color: 'pure', name: 'Pure Light', icon: '✨', desc: 'Минимализм' }
+      ];
+      
+      newThemes.forEach(function(t) {
+        var div = document.createElement('div');
+        div.className = 'theme-option';
+        div.setAttribute('data-theme', 'light');
+        div.setAttribute('data-color', t.color);
+        div.setAttribute('onclick', 'setTheme(\'light\', \'' + t.color + '\')');
+        div.style.cssText = 'border-radius:12px;cursor:pointer;padding:10px;border:2px solid var(--border-color);transition:all 0.2s;';
+        div.innerHTML = 
+          '<div class="theme-option-icon" style="font-size:24px;">' + t.icon + '</div>' +
+          '<div class="theme-option-name" style="font-weight:600;font-size:12px;">' + t.name + '</div>' +
+          '<div class="theme-option-desc" style="font-size:10px;color:var(--text-light);">' + t.desc + '</div>';
+        themeContainer.appendChild(div);
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+  }
+
+  // ============================================================
+  // 3. INIT
+  // ============================================================
+  injectCSS();
+  addNewThemes();
+  
+  // Re-inject CSS after dark theme toggle
+  var origSetTheme = window.setTheme;
+  if (typeof origSetTheme === 'function') {
+    window.setTheme = function(theme, color) {
+      origSetTheme.apply(this, arguments);
+      // Re-apply P12 theme
+      setTimeout(function() {
+        document.body.classList.remove('midnight-theme', 'sunrise-theme', 'forest-theme', 'steel-theme', 'pure-theme');
+        if (color === 'midnight') document.body.classList.add('midnight-theme');
+        else if (color === 'sunrise') document.body.classList.add('sunrise-theme');
+        else if (color === 'forest') document.body.classList.add('forest-theme');
+        else if (color === 'steel') document.body.classList.add('steel-theme');
+        else if (color === 'pure') document.body.classList.add('pure-theme');
+      }, 50);
+    };
+  }
+
+  console.log('[P12 UI Overhaul] initialized — 5 new themes + typography + shadows + animations');
+})();
+</script>
+<!-- /P12_UI_OVERHAUL -->
 
 </body>
 </html>
