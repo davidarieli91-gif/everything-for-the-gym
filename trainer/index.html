@@ -9860,13 +9860,12 @@ setTimeout(function(){
             </div>
             <!-- Scrollable content -->
             <div id="mdScroll" style="flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px 100px;">
-                <!-- Greeting -->
-                <div id="mdGreeting" style="text-align:center;margin:8px 0 16px;">
-                    <div id="mdGreetingText" style="font-size:22px;font-weight:700;color:var(--text-primary);"></div>
-                    <div id="mdGreetingDate" style="font-size:13px;color:var(--text-light);margin-top:2px;"></div>
+                <!-- Hero block: greeting + stats in gradient -->
+                <div id="mdHero" style="margin:8px 0 16px;border-radius:20px;padding:20px;background:linear-gradient(135deg,var(--primary-color),var(--primary-dark,#047857));color:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.12);">
+                    <div id="mdGreetingText" style="font-size:24px;font-weight:800;letter-spacing:-0.02em;"></div>
+                    <div id="mdGreetingDate" style="font-size:13px;opacity:0.85;margin-top:4px;"></div>
+                    <div id="mdStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px;"></div>
                 </div>
-                <!-- Quick stats -->
-                <div id="mdStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;"></div>
                 <!-- Quick actions: Nutrition + Workout -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
                     <button onclick="win11OpenApp('planner')" style="padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#10B981,#047857);color:white;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
@@ -9883,13 +9882,13 @@ setTimeout(function(){
                     <input type="search" id="mdClientSearch" placeholder="🔍 Поиск клиента..." oninput="mdFilterClients(this.value)" style="width:100%;box-sizing:border-box;padding:12px 16px;border:1px solid var(--border-color);border-radius:14px;font-size:15px;background:var(--surface-color);color:var(--text-primary);">
                 </div>
                 <!-- Client list -->
-                <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:14px;font-weight:700;color:var(--text-primary);">👥 Клиенты (<span id="mdClientCount">0</span>)</span>
-                    <button onclick="openAddUserModal()" style="padding:6px 14px;border:none;border-radius:10px;background:var(--primary-color);color:white;font-size:13px;font-weight:600;cursor:pointer;">+ Добавить</button>
+                <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.02em;">👥 Клиенты (<span id="mdClientCount">0</span>)</span>
+                    <button onclick="openAddUserModal()" style="padding:8px 18px;border:none;border-radius:12px;background:var(--primary-color);color:white;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">+ Добавить</button>
                 </div>
                 <div id="mdClientList" style="display:flex;flex-direction:column;gap:8px;"></div>
                 <!-- App grid (secondary) -->
-                <div style="margin-top:20px;font-size:13px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Приложения</div>
+                <div style="margin-top:24px;font-size:15px;font-weight:800;color:var(--text-primary);letter-spacing:-0.02em;margin-bottom:12px;">📱 Приложения</div>
                 <div id="mdAppGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;margin-bottom:20px;"></div>
             </div>
             <!-- Bottom dock -->
@@ -10060,9 +10059,9 @@ setTimeout(function(){
             var el = document.getElementById('mdStats');
             if (!el) return;
             el.innerHTML =
-                '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--primary-color);">'+users.length+'</div><div style="font-size:11px;color:var(--text-light);">Клиенты</div></div>'+
-                '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#F59E0B;">'+leads.length+'</div><div style="font-size:11px;color:var(--text-light);">Лиды</div></div>'+
-                '<div style="background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:'+(overdue>0?'#EF4444':'#10B981')+';">'+todayTasks+'</div><div style="font-size:11px;color:var(--text-light);">Задачи</div></div>';
+                '<div style="background:rgba(255,255,255,0.18);border-radius:14px;padding:12px;text-align:center;backdrop-filter:blur(8px);"><div style="font-size:28px;font-weight:800;line-height:1;">'+users.length+'</div><div style="font-size:11px;opacity:0.85;margin-top:4px;">👥 Клиенты</div></div>'+
+                '<div style="background:rgba(255,255,255,0.18);border-radius:14px;padding:12px;text-align:center;backdrop-filter:blur(8px);"><div style="font-size:28px;font-weight:800;line-height:1;">'+leads.length+'</div><div style="font-size:11px;opacity:0.85;margin-top:4px;">🌟 Лиды</div></div>'+
+                '<div style="background:rgba(255,255,255,0.18);border-radius:14px;padding:12px;text-align:center;backdrop-filter:blur(8px);"><div style="font-size:28px;font-weight:800;line-height:1;">'+todayTasks+'</div><div style="font-size:11px;opacity:0.85;margin-top:4px;">✅ Задачи</div></div>';
         }
         function mdRenderClients(q){
             q = (q||'').toLowerCase();
@@ -10083,30 +10082,37 @@ setTimeout(function(){
             var list = document.getElementById('mdClientList');
             if (!list) return;
             if (!filtered.length){
-                list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-light);font-size:14px;">Нет клиентов</div>';
+                list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-light);font-size:14px;"><div style="font-size:48px;margin-bottom:12px;opacity:0.3;">👥</div>Нет клиентов<br><span style="font-size:12px;opacity:0.7;">Нажмите «+ Добавить» чтобы создать</span></div>';
                 return;
             }
-            list.innerHTML = filtered.map(function(u){
+            list.innerHTML = filtered.map(function(u, i){
                 var name = (u.name||'Без имени')+(u.lastName?' '+u.lastName:'');
                 var avatar = u.avatar||'👤';
                 var meta = u.phone ? '📞 '+u.phone : (u.age ? '🎂 '+u.age : '');
+                var goal = u.goal || '';
+                var goalLabels = {physio:'Физио',health:'Здоровье',lose:'Похудение',maintain:'Поддержание',recomp:'Рекомп',tone:'Тонус',gain:'Набор'};
+                var goalText = goalLabels[goal] || '';
                 var hasNut = false, hasWk = false;
                 try { hasNut = !!localStorage.getItem('nutritionPlan_'+u.id); } catch(e){}
                 try { hasWk = !!(JSON.parse(localStorage.getItem('workoutPlan_'+u.id)||'[]').length); } catch(e){}
                 var badges = '';
-                if (hasNut) badges += '<span style="display:inline-block;background:rgba(16,185,129,.15);color:#10B981;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;margin-right:3px;">🍽️</span>';
-                if (hasWk) badges += '<span style="display:inline-block;background:rgba(239,68,68,.15);color:#EF4444;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">🏋️</span>';
+                if (hasNut) badges += '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:rgba(16,185,129,0.15);font-size:11px;">🍽️</span>';
+                if (hasWk) badges += '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:rgba(239,68,68,0.15);font-size:11px;">🏋️</span>';
                 var photo = u.photo
-                    ? '<img src="'+u.photo+'" alt="" referrerpolicy="no-referrer" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\'">'
-                    : '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:20px;">'+avatar+'</div>';
-                return '<div onclick="openUser(\''+u.id+'\')" style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface-color);border:1px solid var(--border-color);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;">'+
+                    ? '<img src="'+u.photo+'" alt="" referrerpolicy="no-referrer" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.3);" onerror="this.style.display=\'none\'">'
+                    : '<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--primary-color),var(--primary-dark,#047857));display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">'+avatar+'</div>';
+                return '<div onclick="openUser(\''+u.id+'\')" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface-color);border:1px solid var(--border-color);border-radius:16px;cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 1px 3px rgba(0,0,0,0.04);" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.transform=\'\';this.style.boxShadow=\'0 1px 3px rgba(0,0,0,0.04)\'">'+
                     photo+
                     '<div style="flex:1;min-width:0;">'+
-                        '<div style="font-weight:600;font-size:14px;color:var(--text-primary);">'+(typeof escapeHtml==='function'?escapeHtml(name):name)+'</div>'+
-                        (meta?'<div style="font-size:11px;color:var(--text-light);">'+(typeof escapeHtml==='function'?escapeHtml(meta):meta)+'</div>':'')+
-                        (badges?'<div style="margin-top:3px;">'+badges+'</div>':'')+
+                        '<div style="font-weight:700;font-size:15px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(typeof escapeHtml==='function'?escapeHtml(name):name)+'</div>'+
+                        '<div style="display:flex;gap:8px;align-items:center;margin-top:3px;">'+
+                            (meta?'<span style="font-size:11px;color:var(--text-light);">'+(typeof escapeHtml==='function'?escapeHtml(meta):meta)+'</span>':'')+
+                            (goalText?'<span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(59,130,246,0.1);color:#3B82F6;font-weight:600;">'+goalText+'</span>':'')+
+                        '</div>'+
                     '</div>'+
-                    '<div style="opacity:0.3;font-size:18px;">›</div>'+
+                    '<div style="display:flex;gap:4px;flex-shrink:0;">'+badges+
+                    '<button class="p5-edit-btn" style="background:rgba(59,130,246,0.12);color:#3B82F6;border:0;border-radius:8px;padding:8px 10px;cursor:pointer;font-size:14px;font-weight:600;flex-shrink:0;" onclick="event.stopPropagation(); window.__p5editClient(\''+u.id+'\')">✏️</button>'+
+                    '</div>'+
                 '</div>';
             }).join('');
         }
@@ -51211,6 +51217,26 @@ body.dark-theme ::-webkit-scrollbar-thumb,body[data-dark="true"] ::-webkit-scrol
 </script>
 <!-- /P11_VISUAL_PICKER -->
 
+<style>
+        /* P13: Dramatic theme backgrounds for main screen */
+        body.green-theme #mobileDesktop { background: linear-gradient(160deg, #ECFDF5 0%, #F0FDF4 50%, #D1FAE5 100%) !important; }
+        body.blue-theme #mobileDesktop { background: linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%) !important; }
+        body.purple-theme #mobileDesktop { background: linear-gradient(160deg, #FAF5FF 0%, #F3E8FF 50%, #E9D5FF 100%) !important; }
+        body.orange-theme #mobileDesktop { background: linear-gradient(160deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%) !important; }
+        body.red-theme #mobileDesktop { background: linear-gradient(160deg, #FEF2F2 0%, #FEE2E2 50%, #FECACA 100%) !important; }
+        body.dark-theme #mobileDesktop { background: linear-gradient(160deg, #0F172A 0%, #1E293B 50%, #0F172A 100%) !important; }
+        body.midnight-theme #mobileDesktop { background: linear-gradient(160deg, #0B1120 0%, #1E293B 50%, #0B1120 100%) !important; }
+        body.steel-theme #mobileDesktop { background: linear-gradient(160deg, #0A0A0A 0%, #1A1A1A 50%, #0A0A0A 100%) !important; }
+        body.sunrise-theme #mobileDesktop { background: linear-gradient(160deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%) !important; }
+        body.forest-theme #mobileDesktop { background: linear-gradient(160deg, #F0FDF4 0%, #DCFCE7 50%, #BBF7D0 100%) !important; }
+        body.pure-theme #mobileDesktop { background: linear-gradient(160deg, #FAFAFA 0%, #F5F5F5 50%, #FFFFFF 100%) !important; }
+        body.green-theme #mdAppDrawer { background: linear-gradient(160deg, #ECFDF5 0%, #F0FDF4 50%, #D1FAE5 100%) !important; }
+        body.blue-theme #mdAppDrawer { background: linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%) !important; }
+        body.purple-theme #mdAppDrawer { background: linear-gradient(160deg, #FAF5FF 0%, #F3E8FF 50%, #E9D5FF 100%) !important; }
+        body.orange-theme #mdAppDrawer { background: linear-gradient(160deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%) !important; }
+        body.red-theme #mdAppDrawer { background: linear-gradient(160deg, #FEF2F2 0%, #FEE2E2 50%, #FECACA 100%) !important; }
+        body.dark-theme #mdAppDrawer { background: linear-gradient(160deg, #0F172A 0%, #1E293B 50%, #0F172A 100%) !important; }
+</style>
 <!-- P12_UI_OVERHAUL -->
 <script>
 // ============================================================
